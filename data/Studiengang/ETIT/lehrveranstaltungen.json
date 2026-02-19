@@ -1,0 +1,39 @@
+{
+  "lehrveranstaltungen": [
+    {
+      "id": "123.456",
+      "name": "Einführung in die Psychologie",
+      "vortragende": {
+        "name": "Dr. Max Mustermann",
+        "email": "max.mustermann@uni.at"
+      },
+      "typ": [
+        "VO"
+      ]
+    },
+    {
+      "id": "370.007",
+      "name": "Energieversorgung – Einfluss der PV-Einspeisung",
+      "vortragende": {
+        "name": "Univ.-Prof. Dr. Erika Beispiel",
+        "email": "erika.beispiel@tuwien.ac.at"
+      },
+      "typ": [
+        "VO",
+        "UE"
+      ]
+    },
+    {
+      "id": "410.101",
+      "name": "Programmieren 1",
+      "vortragende": {
+        "name": "DI Lukas Code",
+        "email": "lukas.code@uni.at"
+      },
+      "typ": [
+        "VO",
+        "LU"
+      ]
+    }
+  ]
+}

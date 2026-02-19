@@ -1,0 +1,16 @@
+{
+  "semester": [
+    {
+      "id": "SS26",
+      "name": "Sommersemester 2026",
+      "start": "2026-02-25",
+      "end": "2026-07-15"
+    },
+    {
+      "id": "WS26",
+      "name": "Wintersemester 2026",
+      "start": "2026-09-30",
+      "end": "2027-02-15"
+    }
+  ]
+}

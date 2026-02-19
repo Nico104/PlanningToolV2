@@ -1,0 +1,164 @@
+{
+  "termine": [
+    {
+      "id": "T1",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": "2026-02-25",
+      "start_zeit": "13:00",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 30
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Einführung in das Fach",
+      "duration": 90,
+      "semester_id": "SS26"
+    },
+    {
+      "id": "T2",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2026-10-01",
+      "start_zeit": "10:00",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 25
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Praktische Übung",
+      "duration": 60,
+      "semester_id": "WS26"
+    },
+    {
+      "id": "T3",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2026-02-25",
+      "start_zeit": "11:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe C",
+        "groesse": 20
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Seminararbeit",
+      "duration": 120,
+      "semester_id": "WS26"
+    },
+    {
+      "id": "T4",
+      "lva_id": "370.007",
+      "typ": "LU",
+      "datum": "2026-09-28",
+      "start_zeit": "10:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe D",
+        "groesse": 15
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Laborübung",
+      "duration": 180,
+      "semester_id": "WS26"
+    },
+    {
+      "id": "T9",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": "2026-02-27",
+      "start_zeit": "11:30",
+      "raum_id": "E22",
+      "gruppe": {
+        "name": "Gruppe I",
+        "groesse": 28
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Zusatzvorlesung",
+      "duration": 90,
+      "semester_id": "SS26"
+    },
+    {
+      "id": "T10",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2026-09-30",
+      "start_zeit": "11:30",
+      "raum_id": "E23",
+      "gruppe": {
+        "name": "Gruppe J",
+        "groesse": 24
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Übung Zusatz",
+      "duration": 60,
+      "semester_id": "WS26"
+    },
+    {
+      "id": "T11",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2026-02-24",
+      "start_zeit": "10:30",
+      "raum_id": "E24",
+      "gruppe": {
+        "name": "Gruppe K",
+        "groesse": 18
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Seminar Ergänzung",
+      "duration": 120,
+      "semester_id": "SS26"
+    },
+    {
+      "id": "T12",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": "2026-02-25",
+      "start_zeit": "11:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe L",
+        "groesse": 32
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Konflikt mit T3",
+      "duration": 90,
+      "semester_id": "SS26"
+    },
+    {
+      "id": "T13",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2026-09-30",
+      "start_zeit": "11:30",
+      "raum_id": "E23",
+      "gruppe": {
+        "name": "Gruppe M",
+        "groesse": 20
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Konflikt mit T10",
+      "duration": 60,
+      "semester_id": "WS26"
+    },
+    {
+      "id": "T14",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2026-02-25",
+      "start_zeit": "14:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe N",
+        "groesse": 19
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Konflikt mit T1",
+      "duration": 120,
+      "semester_id": "SS26"
+    }
+  ]
+}
