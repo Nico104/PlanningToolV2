@@ -141,11 +141,18 @@ class GlobalFilterDock(QDockWidget):
         cur_typ = current.typ if current else None
         cur_dozent = current.dozent if current else None
 
+        # Use name as display, id as data for fachrichtungen
+        fach_items = []
+        for f in fachrichtungen:
+            if isinstance(f, dict):
+                fach_items.append((f.get("name", f.get("id", "")), f.get("id", "")))
+            else:
+                fach_items.append((str(f), str(f)))
         self._set_combo_items(
             self.fachrichtung_cb,
             "Fachrichtung: Alle",
             None,
-            [(f, f) for f in fachrichtungen],
+            fach_items,
             cur_fach,
         )
         # Ensure 'Semester: Alle' has None as data, others have their id and name

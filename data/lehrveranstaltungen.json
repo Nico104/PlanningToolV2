@@ -9,7 +9,8 @@
       },
       "typ": [
         "VO"
-      ]
+      ],
+      "fachrichtung": "ETIT"
     },
     {
       "id": "370.007",
@@ -21,7 +22,8 @@
       "typ": [
         "VO",
         "UE"
-      ]
+      ],
+      "fachrichtung": "ETIT"
     },
     {
       "id": "410.101",
@@ -33,7 +35,8 @@
       "typ": [
         "VO",
         "LU"
-      ]
+      ],
+      "fachrichtung": "ETIT"
     }
   ]
 }

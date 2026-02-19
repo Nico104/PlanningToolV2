@@ -71,7 +71,7 @@ class DataService:
     def load_lvas(self) -> List[Lehrveranstaltung]:
         settings = self.load_settings()
         fachrichtung = settings.get("start_fachrichtung", "ETIT")
-        path = self.data_dir / "Studiengang" / fachrichtung / "lehrveranstaltungen.json"
+        path = self.data_dir / "lehrveranstaltungen.json"
         raw = json.loads(path.read_text(encoding="utf-8"))["lehrveranstaltungen"]
         out: List[Lehrveranstaltung] = []
         for x in raw:
@@ -89,7 +89,7 @@ class DataService:
         # Load all termine from the single termine.json file for the current fachrichtung
         settings = self.load_settings()
         fachrichtung = settings.get("start_fachrichtung", "ETIT")
-        path = self.data_dir / "Studiengang" / fachrichtung / "termine.json"
+        path = self.data_dir / "termine.json"
         if not path.exists():
             return []
         raw = json.loads(path.read_text(encoding="utf-8")).get("termine", [])
@@ -144,7 +144,7 @@ class DataService:
     def save_lvas(self, lvas: List[Lehrveranstaltung]) -> None:
         settings = self.load_settings()
         fachrichtung = settings.get("start_fachrichtung", "ETIT")
-        path = self.data_dir / "Studiengang" / fachrichtung / "lehrveranstaltungen.json"
+        path = self.data_dir / "lehrveranstaltungen.json"
         path.write_text(json.dumps({
             "lehrveranstaltungen": [{
                 "id": l.id,
@@ -158,7 +158,7 @@ class DataService:
         # Save all termine into a single termine.json file (with semester_id per termin)
         settings = self.load_settings()
         fachrichtung = settings.get("start_fachrichtung", "ETIT")
-        path = self.data_dir / "Studiengang" / fachrichtung / "termine.json"
+        path = self.data_dir / "termine.json"
         path.write_text(json.dumps({
             "termine": [{
                 "id": t.id,

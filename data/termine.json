@@ -20,8 +20,8 @@
       "id": "T2",
       "lva_id": "370.007",
       "typ": "UE",
-      "datum": "2026-10-01",
-      "start_zeit": "10:00",
+      "datum": "2026-10-02",
+      "start_zeit": "11:30",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe B",
@@ -52,7 +52,7 @@
       "id": "T4",
       "lva_id": "370.007",
       "typ": "LU",
-      "datum": "2026-09-28",
+      "datum": "2026-09-29",
       "start_zeit": "10:30",
       "raum_id": "E17",
       "gruppe": {
@@ -68,8 +68,8 @@
       "id": "T9",
       "lva_id": "410.101",
       "typ": "VO",
-      "datum": "2026-02-27",
-      "start_zeit": "11:30",
+      "datum": "2026-02-25",
+      "start_zeit": "12:30",
       "raum_id": "E22",
       "gruppe": {
         "name": "Gruppe I",
@@ -85,7 +85,7 @@
       "lva_id": "370.007",
       "typ": "UE",
       "datum": "2026-09-30",
-      "start_zeit": "11:30",
+      "start_zeit": "10:00",
       "raum_id": "E23",
       "gruppe": {
         "name": "Gruppe J",
@@ -100,8 +100,8 @@
       "id": "T11",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": "2026-02-24",
-      "start_zeit": "10:30",
+      "datum": "2026-09-29",
+      "start_zeit": "11:30",
       "raum_id": "E24",
       "gruppe": {
         "name": "Gruppe K",
@@ -148,7 +148,7 @@
       "id": "T14",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": "2026-02-25",
+      "datum": "2026-09-29",
       "start_zeit": "14:30",
       "raum_id": "E17",
       "gruppe": {

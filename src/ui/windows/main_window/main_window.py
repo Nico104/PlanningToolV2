@@ -307,15 +307,15 @@ class MainWindow(QMainWindow):
 
         # keep global filter dock in sync with available data
         lva_list = getattr(self.planner.state, "lvas", None) or []
-        # Gather all fachrichtungen from data folder
+        # Gather all fachrichtungen from fachrichtungen.json
         import os
-        data_dir = os.path.join(os.getcwd(), "data", "Studiengang")
+        import json
+        fachrichtungen_path = os.path.join(os.getcwd(), "data", "fachrichtungen.json")
         fachrichtungen = []
-        if os.path.isdir(data_dir):
-            for fach in os.listdir(data_dir):
-                fach_path = os.path.join(data_dir, fach)
-                if os.path.isdir(fach_path):
-                    fachrichtungen.append(fach)
+        if os.path.isfile(fachrichtungen_path):
+            with open(fachrichtungen_path, encoding="utf-8") as f:
+                fach_data = json.load(f)
+            fachrichtungen = fach_data.get("fachrichtungen", [])
 
         # Gather all semesters from semester.json (id and name)
         semester_path = os.path.join(os.getcwd(), "data", "semester.json")
