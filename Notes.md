@@ -7,8 +7,7 @@ NON URGENT TODO:
 
 BUGS:
 
-
-
+Scaling am Laptop blockiert Dockt, nicht verschiebbar (Scaling 100% damits geht)
 
 
 

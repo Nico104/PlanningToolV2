@@ -9,7 +9,8 @@ from .main_window import MainWindow
 
 def load_global_style(app: QApplication) -> None:
     app.setStyle("Fusion")
-    
+    #app.setStyle("Windows")
+
     pal = QPalette()
 
     # Light UI base

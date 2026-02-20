@@ -29,3 +29,6 @@ Pro Semester Ansicht, Termine die in anmdere semester reichen
 Vortragender Konflikt, Vortragende und Assistenden in den einzelnen Terminen? zb Edyn Übung
 
 Keyboard Shortcuts? Delete?
+
+
+Geht Dock Scaling Problem nur bei meinem Laptop nciht?
