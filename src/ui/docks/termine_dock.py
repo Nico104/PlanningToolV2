@@ -132,6 +132,7 @@ class TermineDock(QDockWidget):
                     raum=raum_txt,
                     ap=t.anwesenheitspflicht,
                     duration=t.duration,
+                    name=getattr(t, "name", None),
                     parent=self.container,
                 )
 

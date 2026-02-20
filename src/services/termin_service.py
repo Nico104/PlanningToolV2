@@ -36,13 +36,18 @@ class TerminService:
                     if a_end_time and b_end_time:
                         # Overlap if a starts before b ends AND b starts before a ends
                         if a.start_zeit < b_end_time and b.start_zeit < a_end_time:
-                            conflicts.append(Konflikt(
-                            raum_id=room,
-                            datum=day,
-                            termin_a=a,
-                            termin_b=b,
-                            grund="Raum doppelt belegt (Zeit überschneidet sich)"
-                        ))
+                            conflicts.append(ConflictIssue(
+                                severity="conflict",
+                                category="room",
+                                termin_ids=[a.id, b.id],
+                                message="Raum doppelt belegt (Zeit überschneidet sich)",
+                                datum=day,
+                                zeit_von=a.start_zeit,
+                                zeit_bis=a.get_end_time(),
+                                raum=room,
+                                lva=getattr(a, 'lva_id', ''),
+                                gruppe=getattr(a, 'gruppe', {}).get('name', '') if hasattr(a, 'gruppe') and a.gruppe else ''
+                            ))
         return conflicts
 
     @staticmethod

@@ -46,6 +46,7 @@ class Gruppe:
 
 @dataclass(frozen=True)
 class Termin:
+    name: str
     id: str
     lva_id: str
     typ: str

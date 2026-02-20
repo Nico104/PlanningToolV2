@@ -17,7 +17,12 @@ def selected_id(table: QTableWidget) -> Optional[str]:
     row = table.currentRow()
     if row < 0:
         return None
-    it = table.item(row, 0)
+    # Wenn die erste Spalte "ID" heißt, nimm diese, sonst wie bisher die letzte
+    if table.horizontalHeaderItem(0).text().strip().upper() == "ID":
+        col = 0
+    else:
+        col = table.columnCount() - 1
+    it = table.item(row, col)
     return it.text().strip() if it else None
 
 

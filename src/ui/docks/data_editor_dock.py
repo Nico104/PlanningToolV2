@@ -41,7 +41,7 @@ class DataEditorDock(QDockWidget):
         self.tab_free = EditorTab("Freie Tage", ["Art", "Datum", "Von", "Bis", "Beschreibung"], self.tabs)
         self.tab_termine = EditorTab(
             "Termine",
-            ["ID", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe"],
+            ["Name", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe", "ID"],
             self.tabs
         )
         
@@ -99,9 +99,16 @@ class DataEditorDock(QDockWidget):
     def refresh_all(self) -> None:
         self._refresh_lvas()
         self._refresh_rooms()
-        # self._refresh_semester()  # removed, no global semester info anymore
+        self._refresh_semester()
         self._refresh_freie_tage()
         self._refresh_termine()
+
+    def _refresh_semester(self) -> None:
+        semester: List[Semester] = self.ds.load_semester()
+        rows = [
+            [s.id, s.name, s.start.strftime("%d.%m.%Y"), s.end.strftime("%d.%m.%Y")] for s in semester
+        ]
+        self._fill_table(self.tab_sem.table, rows)
 
     # Refresh tables
     def _refresh_lvas(self) -> None:
@@ -163,8 +170,20 @@ class DataEditorDock(QDockWidget):
         for tm in termine:
             start_zeit = getattr(tm, "start_zeit", None)
             end_zeit = tm.get_end_time() if hasattr(tm, "get_end_time") else None
+            gruppe = getattr(tm, "gruppe", None)
+            if gruppe and getattr(gruppe, 'name', None):
+                name = getattr(gruppe, 'name', '')
+                groesse = getattr(gruppe, 'groesse', None)
+                if groesse is not None and str(groesse) != '':
+                    gruppe_str = f"{name} ({groesse})"
+                else:
+                    gruppe_str = f"{name}"
+            else:
+                gruppe_str = ""
+            # Zeige ausschließlich die Termin-'name'-Variable
+            termin_name = getattr(tm, "name", "")
             rows.append([
-                getattr(tm, "id", ""),
+                termin_name,
                 safe_date(getattr(tm, "datum", None)),
                 safe_time(start_zeit),
                 safe_time(end_zeit),
@@ -172,7 +191,8 @@ class DataEditorDock(QDockWidget):
                 getattr(tm, "lva_id", ""),
                 getattr(tm, "raum_id", ""),
                 getattr(tm, "semester_id", ""),
-                getattr(tm, "gruppe", "") or "",
+                gruppe_str,
+                getattr(tm, "id", ""),
             ])
         self._fill_table(self.tab_termine.table, rows)
 

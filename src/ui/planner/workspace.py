@@ -155,34 +155,45 @@ class PlannerWorkspace(QWidget):
     #     # it to ensure state is loaded.
     #     return
 
-    def current_filters(self) -> Tuple[Optional[str], str, Optional[str]]:
+    def current_filters(self):
         gf = getattr(self, "_global_filter", None)
         if gf is None:
-            return None, "", None
-        return gf.raum_id, (str(gf.lva_id).strip().lower() if gf.lva_id else ""), gf.typ
+            return {
+                "raum_id": None,
+                "q": "",
+                "typ": None,
+                "dozent": None,
+                "semester_id": None,
+            }
+        return {
+            "raum_id": gf.raum_id,
+            "q": (str(gf.lva_id).strip().lower() if gf.lva_id else ""),
+            "typ": gf.typ,
+            "dozent": getattr(gf, "dozent", None),
+            "semester_id": getattr(gf, "semester", None),
+        }
 
     def refresh(self, emit: bool = True):
         # Reload EVERYTHING every refresh so UI always matches saved JSON state
         self.state.reload()
         # self._rebuild_filter_boxes()
 
-        # Only filter by room, q, typ (kein semester_id mehr)
-        room, q, typ = self.current_filters()
-        filtered = self.state.termine
-        if room:
-            filtered = [t for t in filtered if t.raum_id == room]
-        if q:
-            filtered = [t for t in filtered if q in (t.lva_id or '').lower()]
-        if typ:
-            filtered = [t for t in filtered if getattr(t, "typ", None) == typ]
+        filters = self.current_filters()
+        filtered = self.state.filtered_termine(
+            raum_id=filters["raum_id"],
+            q=filters["q"],
+            typ=filters["typ"],
+            dozent=filters["dozent"],
+            semester_id=filters["semester_id"],
+        )
 
         view = str(self.view_cb.currentData())
         if view == "day":
             self.stack.setCurrentWidget(self.day_table)
             rooms = self.state.raeume
-            if room:
-                rooms = [r for r in rooms if r.id == room]
-            self.day_view.refresh(filtered, rooms, None, room)
+            if filters["raum_id"]:
+                rooms = [r for r in rooms if r.id == filters["raum_id"]]
+            self.day_view.refresh(filtered, rooms, None, filters["raum_id"])
         else:
             self.stack.setCurrentWidget(self.week_table)
             self.week_view.refresh(filtered)

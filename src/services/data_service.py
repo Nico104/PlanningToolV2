@@ -101,6 +101,7 @@ class DataService:
             start_zeit_raw = x.get("start_zeit")
             start_zeit = self._parse_time(start_zeit_raw) if start_zeit_raw else None
             out.append(Termin(
+                name=x.get("name", ""),
                 id=x["id"],
                 lva_id=x["lva_id"],
                 typ=x["typ"],
@@ -161,6 +162,7 @@ class DataService:
         path = self.data_dir / "termine.json"
         path.write_text(json.dumps({
             "termine": [{
+                "name": t.name,
                 "id": t.id,
                 "lva_id": t.lva_id,
                 "typ": t.typ,

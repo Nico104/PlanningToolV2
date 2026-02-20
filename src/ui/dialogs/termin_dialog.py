@@ -29,6 +29,25 @@ class TerminDialog(QDialog):
         self.setModal(True)
         self.settings = settings or {}
 
+        # Erst die Felder initialisieren, dann die Logik:
+        self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
+        self.name_le.setObjectName("Field")
+        self.grp_name = QLineEdit((termin.gruppe.name if (termin and termin.gruppe) else ""))
+        self.grp_size = QSpinBox()
+        self.grp_size.setRange(0, 2000)
+        self.grp_size.setValue((termin.gruppe.groesse if (termin and termin.gruppe) else 0))
+
+        def _sync_group_fields():
+            name = self.grp_name.text().strip()
+            if name:
+                self.grp_size.setEnabled(True)
+            else:
+                self.grp_size.setEnabled(False)
+                self.grp_size.setValue(0)
+
+        self.grp_name.textChanged.connect(lambda *_: _sync_group_fields())
+        _sync_group_fields()
+
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
         lay.setSpacing(12)
@@ -155,6 +174,7 @@ class TerminDialog(QDialog):
         _sync_time_enabled()
 
 
+        form.addRow("Name:", self.name_le)
         form.addRow("LVA:", self.lva_cb)
         form.addRow("Semester:", self.semester_cb)
         form.addRow("Typ:", self.typ_le)
@@ -224,17 +244,19 @@ class TerminDialog(QDialog):
             tf = self.time_from.time()
             start_zeit = time(tf.hour(), tf.minute())
         gname = self.grp_name.text().strip()
-        gsize = int(self.grp_size.value())
         gruppe = None
-        # Create Gruppe object if name or size is provided
-        if gname or gsize > 0:
+        # Nur wenn ein Name gesetzt ist, eine Gruppe erzeugen
+        if gname:
+            gsize = int(self.grp_size.value())
             gruppe = Gruppe(name=gname, groesse=gsize)
 
         # Duration: always save the user-entered value
         duration_value = int(self.duration_sb.value())
 
+        name_value = self.name_le.text().strip()
         if self.termin is not None and hasattr(self.termin, 'id'):
             self._result = Termin(
+                name=name_value,
                 id=self.termin.id,
                 lva_id=lva_id,
                 typ=typ,
@@ -249,6 +271,7 @@ class TerminDialog(QDialog):
             )
         else:
             self._result = Termin(
+                name=name_value,
                 id=self.new_id,
                 lva_id=lva_id,
                 typ=typ,

@@ -59,6 +59,7 @@ class TerminCard(QFrame):
         raum: str,
         ap: bool,
         duration: int = 0,
+        name: str = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -74,6 +75,11 @@ class TerminCard(QFrame):
         
         root.setSpacing(6)
 
+        # Show name (if provided) above title
+        if name:
+            lbl_name = QLabel(name)
+            lbl_name.setObjectName("CardName")
+            root.addWidget(lbl_name)
         lbl_title = QLabel(title)
         lbl_title.setObjectName("CardTitle")
         root.addWidget(lbl_title)

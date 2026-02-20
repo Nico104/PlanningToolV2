@@ -65,6 +65,8 @@ class CrudHandlers:
         out = [dlg.result if t.id == tid else t for t in termine]
         self.ds.save_termine(out)
         self.planner.refresh()
+        if hasattr(self.parent, '_refresh_semester'):
+            self.parent._refresh_semester()
         return True
 
 
@@ -101,6 +103,8 @@ class CrudHandlers:
         freie.append(dlg.result)
         self._write_freie_tage(path, freie)
         self.planner.refresh()
+        if hasattr(self.parent, '_refresh_semester'):
+            self.parent._refresh_semester()
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
         if year is None:
@@ -122,6 +126,8 @@ class CrudHandlers:
         freie[row] = dlg.result
         self._write_freie_tage(path, freie)
         self.planner.refresh()
+        if hasattr(self.parent, '_refresh_semester'):
+            self.parent._refresh_semester()
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
         if year is None:
