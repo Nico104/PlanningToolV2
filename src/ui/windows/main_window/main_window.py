@@ -192,24 +192,27 @@ class MainWindow(QMainWindow):
         self.termine_dock = TermineDock(self)
         self.termine_dock.setObjectName("dock_termine")
         self.addDockWidget(Qt.LeftDockWidgetArea, self.termine_dock)
+
+        # Conflicts dock
+        self.conflicts_dock = ConflictsDock(self)
+        self.conflicts_dock.setObjectName("dock_conflicts")
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.conflicts_dock)
+        self.tabifyDockWidget(self.termine_dock, self.conflicts_dock)
+
         # Data Editor dock
         self.data_editor_dock = DataEditorDock(self, ds=self.ds, data_dir=self.data_dir, on_data_changed=self.refresh_docks)
         self.data_editor_dock.setObjectName("dock_data_editor")
         self.tabifyDockWidget(self.termine_dock, self.data_editor_dock)
         self.termine_dock.raise_()
-        # Conflicts dock
-        self.conflicts_dock = ConflictsDock(self)
-        self.conflicts_dock.setObjectName("dock_conflicts")
-        self.addDockWidget(Qt.RightDockWidgetArea, self.conflicts_dock)
 
         # Könnte Probleme mit anderen Layouts machen!
-        total_width = self.width()
-        left = int(total_width * 0.80)
-        right = int(total_width * 0.18) 
-        self.resizeDocks([
-            self.termine_dock,
-            self.conflicts_dock
-        ], [left, right], Qt.Horizontal)
+ #       total_width = self.width()
+ #       left = int(total_width * 0.80)
+ #       right = int(total_width * 0.18) 
+ #       self.resizeDocks([
+ #           self.termine_dock,
+ #           self.conflicts_dock
+ #       ], [left, right], Qt.Horizontal)
 
     def _wire_signals(self) -> None:
         # Termine

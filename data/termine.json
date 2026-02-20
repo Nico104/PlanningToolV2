@@ -68,8 +68,8 @@
       "id": "T9",
       "lva_id": "410.101",
       "typ": "VO",
-      "datum": "2026-02-25",
-      "start_zeit": "12:30",
+      "datum": "2026-02-26",
+      "start_zeit": "13:00",
       "raum_id": "E22",
       "gruppe": {
         "name": "Gruppe I",
@@ -116,8 +116,8 @@
       "id": "T12",
       "lva_id": "410.101",
       "typ": "VO",
-      "datum": "2026-02-24",
-      "start_zeit": "11:00",
+      "datum": "2026-02-26",
+      "start_zeit": "13:30",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe L",
