@@ -57,3 +57,19 @@ Custom Data Path, Serverfolder
 
 Data folder? check if json? whcih? which cn be imported, which have to be created?
 
+
+
+
+MEeting 20/02
+
+Kalendar Datum
+
+Tag / Wochen / 2 Wochen / Monat
+
+SerienTermine erstellen
+
+Feiertage und Vorlesungsfrei Zeiten (Semesterferien)
+
+Semester(Reg, Queer) als Vorlesungvaribale und Filter
+
+Termin Liste Einklappen und zb 4/7
