@@ -15,7 +15,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Einführung in das Fach",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "1. Übung Energieversorgung",
@@ -32,7 +33,8 @@
       "anwesenheitspflicht": false,
       "notiz": "Praktische Übung",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "1. Seminar Datenanalyse",
@@ -49,7 +51,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Seminararbeit",
       "duration": 120,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "2. Vorlesung Programmieren",
@@ -66,7 +69,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Zusatzvorlesung",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "2. Übung Energieversorgung",
@@ -83,7 +87,8 @@
       "anwesenheitspflicht": false,
       "notiz": "Übung Zusatz",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "2. Seminar Datenanalyse",
@@ -97,7 +102,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Seminar Ergänzung",
       "duration": 120,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "3. Vorlesung Programmieren",
@@ -114,7 +120,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T3",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "3. Übung Energieversorgung",
@@ -131,7 +138,8 @@
       "anwesenheitspflicht": false,
       "notiz": "Konflikt mit T10",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "3. Seminar Datenanalyse",
@@ -145,7 +153,293 @@
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T1",
       "duration": 120,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 65,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-02",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 65,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 65,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "cc",
+      "id": "T015_477b23c1_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "cc",
+      "id": "T015_477b23c1_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-02",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "cc",
+      "id": "T015_477b23c1_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dd",
+      "id": "T015_eabd8b_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 30,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dd",
+      "id": "T015_eabd8b_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-02",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 30,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dd",
+      "id": "T015_eabd8b_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 30,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dd",
+      "id": "T015_eabd8b_r4",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-16",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 30,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dsad",
+      "id": "T015_a7a82626_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 40,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dsad",
+      "id": "T015_a7a82626_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-02",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 40,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "dsad",
+      "id": "T015_a7a82626_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 40,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "kjhzgkjzhg",
+      "id": "T015_2a213432_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "kjhzgkjzhg",
+      "id": "T015_2a213432_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "kjhzgkjzhg",
+      "id": "T015_2a213432_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "kjhzgkjzhg",
+      "id": "T015_2a213432_r4",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-04-06",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "kjhzgkjzhg",
+      "id": "T015_2a213432_r5",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-04-20",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "ju",
+      "id": "T015_10018df7",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-23",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 60,
+      "semester_id": "SS26",
+      "serien_id": "10018df7"
     }
   ]
 }

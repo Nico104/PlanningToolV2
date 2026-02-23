@@ -29,6 +29,9 @@ class TerminDialog(QDialog):
         self.setModal(True)
         self.settings = settings or {}
 
+        # Sentinel für unassigned date ganz am Anfang setzen!
+        self._unassigned_qdate = QDate(2026, 1, 1)
+
         # Erst die Felder initialisieren, dann die Logik:
         self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
         self.name_le.setObjectName("Field")
@@ -58,6 +61,31 @@ class TerminDialog(QDialog):
         form.setVerticalSpacing(10)
         form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         lay.addLayout(form)
+
+        # ...existing code...
+
+        # Serientermin UI (nach _unassigned_qdate!)
+        from src.ui.components.widgets.tick_checkbox import TickCheckBox
+        self.serientermin_cb = TickCheckBox("Serientermin")
+        self.period_cb = QComboBox()
+        self.period_cb.addItems(["wöchentlich", "2-wöchentlich", "monatlich"])
+        self.period_cb.setEnabled(False)
+        self.end_date_de = QDateEdit()
+        self.end_date_de.setCalendarPopup(True)
+        self.end_date_de.setEnabled(False)
+        self.end_date_de.setDate(self._unassigned_qdate)
+
+        def _toggle_serientermin_fields():
+            enabled = self.serientermin_cb.isChecked()
+            self.period_cb.setEnabled(enabled)
+            self.end_date_de.setEnabled(enabled)
+            # optisch ausgrauen
+            style = "" if enabled else "background: #eee; color: #888;"
+            self.period_cb.setStyleSheet(style)
+            self.end_date_de.setStyleSheet(style)
+
+        self.serientermin_cb.stateChanged.connect(_toggle_serientermin_fields)
+        _toggle_serientermin_fields()
 
         
         
@@ -186,6 +214,18 @@ class TerminDialog(QDialog):
         form.addRow("Gruppe Größe:", self.grp_size)
         form.addRow("", self.ap_cb)
         form.addRow("Notiz:", self.note_te)
+        # Serientermin-Optionen nur beim Neuanlegen anzeigen
+        if self.termin is None:
+            form.addRow(self.serientermin_cb)
+            form.addRow("Periodizität:", self.period_cb)
+            form.addRow("Enddatum:", self.end_date_de)
+        else:
+            self.serientermin_cb.setEnabled(False)
+            self.serientermin_cb.setVisible(False)
+            self.period_cb.setEnabled(False)
+            self.period_cb.setVisible(False)
+            self.end_date_de.setEnabled(False)
+            self.end_date_de.setVisible(False)
 
         # bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         # bb.accepted.connect(self._accept)
@@ -228,9 +268,8 @@ class TerminDialog(QDialog):
                 return
 
     def _accept(self):
-        # Removed ID field validation and assignment
-
-
+        from datetime import timedelta
+        import uuid
         lva_id = str(self.lva_cb.currentData())
         raum_id = str(self.raum_cb.currentData())
         typ = self.typ_le.text().strip().upper()
@@ -245,49 +284,133 @@ class TerminDialog(QDialog):
             start_zeit = time(tf.hour(), tf.minute())
         gname = self.grp_name.text().strip()
         gruppe = None
-        # Nur wenn ein Name gesetzt ist, eine Gruppe erzeugen
         if gname:
             gsize = int(self.grp_size.value())
             gruppe = Gruppe(name=gname, groesse=gsize)
 
-        # Duration: always save the user-entered value
         duration_value = int(self.duration_sb.value())
-
         name_value = self.name_le.text().strip()
-        if self.termin is not None and hasattr(self.termin, 'id'):
-            self._result = Termin(
-                name=name_value,
-                id=self.termin.id,
-                lva_id=lva_id,
-                typ=typ,
-                datum=d,
-                start_zeit=start_zeit,
-                raum_id=raum_id,
-                gruppe=gruppe,
-                anwesenheitspflicht=bool(self.ap_cb.isChecked()),
-                notiz=self.note_te.toPlainText().strip(),
-                duration=duration_value,
-                semester_id=semester_id,
-            )
+        notiz_value = self.note_te.toPlainText().strip()
+        anwesenheitspflicht = bool(self.ap_cb.isChecked())
+
+        # Pflichtfeld-Validierung
+        errors = []
+        if not name_value:
+            errors.append("Name fehlt.")
+        if not lva_id or lva_id == 'None':
+            errors.append("LVA fehlt.")
+        if not typ:
+            errors.append("Typ fehlt.")
+        if d is None:
+            errors.append("Datum fehlt.")
+        if start_zeit is None:
+            errors.append("Startzeit fehlt.")
+        if duration_value <= 0:
+            errors.append("Dauer fehlt oder ist 0.")
+        if errors:
+            QMessageBox.warning(self, "Fehler", "Bitte füllen Sie alle Pflichtfelder aus:\n" + "\n".join(errors))
+            return
+
+        # Serientermin-Logik
+        if self.serientermin_cb.isChecked() and d is not None:
+            serien_id = uuid.uuid4().hex[:8]  # z.B. 'a1b2c3d4'
+            serien_id_short = serien_id
+            end_qd = self.end_date_de.date()
+            end_date = qdate_to_date(end_qd)
+            period = self.period_cb.currentText()
+            delta = timedelta(days=7)
+            if period == "2-wöchentlich":
+                delta = timedelta(days=14)
+                dates = []
+                current = d
+                while current <= end_date:
+                    dates.append(current)
+                    current += delta
+                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+            elif period == "monatlich":
+                def add_month(dt):
+                    month = dt.month + 1
+                    year = dt.year
+                    if month > 12:
+                        month = 1
+                        year += 1
+                    try:
+                        return dt.replace(year=year, month=month)
+                    except ValueError:
+                        from calendar import monthrange
+                        last_day = monthrange(year, month)[1]
+                        return dt.replace(year=year, month=month, day=last_day)
+                dates = []
+                current = d
+                while current <= end_date:
+                    dates.append(current)
+                    current = add_month(current)
+                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+            else:
+                dates = []
+                current = d
+                while current <= end_date:
+                    dates.append(current)
+                    current += delta
+                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+            self._result = []
+            for idx, date_val in enumerate(dates):
+                # Eindeutige ID: BasisID + Serienkürzel + Laufnummer
+                termin_id = f"{self.new_id}_{serien_id_short}_r{idx+1}" if len(dates) > 1 else f"{self.new_id}_{serien_id_short}"
+                print(f"[DEBUG] Termin {idx+1}: id={termin_id}, datum={date_val}")
+                self._result.append(Termin(
+                    name=name_value,
+                    id=termin_id,
+                    lva_id=lva_id,
+                    typ=typ,
+                    datum=date_val,
+                    start_zeit=start_zeit,
+                    raum_id=raum_id,
+                    gruppe=gruppe,
+                    anwesenheitspflicht=anwesenheitspflicht,
+                    notiz=notiz_value,
+                    duration=duration_value,
+                    semester_id=semester_id,
+                    serien_id=serien_id,
+                ))
         else:
-            self._result = Termin(
-                name=name_value,
-                id=self.new_id,
-                lva_id=lva_id,
-                typ=typ,
-                datum=d,
-                start_zeit=start_zeit,
-                raum_id=raum_id,
-                gruppe=gruppe,
-                anwesenheitspflicht=bool(self.ap_cb.isChecked()),
-                notiz=self.note_te.toPlainText().strip(),
-                duration=duration_value,
-                semester_id=semester_id,
-            )
+            serien_id = ""
+            if self.termin is not None and hasattr(self.termin, 'id'):
+                self._result = Termin(
+                    name=name_value,
+                    id=self.termin.id,
+                    lva_id=lva_id,
+                    typ=typ,
+                    datum=d,
+                    start_zeit=start_zeit,
+                    raum_id=raum_id,
+                    gruppe=gruppe,
+                    anwesenheitspflicht=anwesenheitspflicht,
+                    notiz=notiz_value,
+                    duration=duration_value,
+                    semester_id=semester_id,
+                    serien_id=serien_id,
+                )
+            else:
+                self._result = Termin(
+                    name=name_value,
+                    id=self.new_id,
+                    lva_id=lva_id,
+                    typ=typ,
+                    datum=d,
+                    start_zeit=start_zeit,
+                    raum_id=raum_id,
+                    gruppe=gruppe,
+                    anwesenheitspflicht=anwesenheitspflicht,
+                    notiz=notiz_value,
+                    duration=duration_value,
+                    semester_id=semester_id,
+                    serien_id=serien_id,
+                )
         self.accept()
 
     @property
-    def result(self) -> Optional[Termin]:
+    def result(self):
         return self._result
 
     def eventFilter(self, obj, event):

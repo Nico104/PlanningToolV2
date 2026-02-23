@@ -67,6 +67,7 @@ class Termin:
     notiz: str = ""
     duration: int = 0  # duration in minutes
     semester_id: str = ""
+    serien_id: str = ""
 
     
     def get_end_time(self) -> Optional[time]:

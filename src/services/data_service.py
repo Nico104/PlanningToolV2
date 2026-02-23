@@ -184,6 +184,7 @@ class DataService:
                 "notiz": t.notiz,
                 "duration": t.duration,
                 "semester_id": t.semester_id,
+                "serien_id": getattr(t, "serien_id", ""),
             } for t in termine]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

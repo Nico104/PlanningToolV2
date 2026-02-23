@@ -242,13 +242,29 @@ class CrudHandlers:
             return False
 
         termine = self.ds.load_termine()
-        if any(t.id == dlg.result.id for t in termine):
-            QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{dlg.result.id}' existiert bereits.")
-            return False
-
-        termine.append(dlg.result)
+        # Serientermin: Liste von Terminen
+        if isinstance(dlg.result, list):
+            print(f"[DEBUG] add_termin: {len(dlg.result)} Termine werden gespeichert")
+            # Prüfe auf doppelte IDs
+            existing_ids = {t.id for t in termine}
+            for t in dlg.result:
+                print(f"[DEBUG] Speichere Termin: id={t.id}, serien_id={getattr(t, 'serien_id', '')}")
+                if t.id in existing_ids:
+                    print(f"[DEBUG] Fehler: Termin-ID {t.id} existiert bereits!")
+                    QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{t.id}' existiert bereits.")
+                    return False
+            termine.extend(dlg.result)
+        else:
+            print(f"[DEBUG] add_termin: Einzeltermin id={dlg.result.id}")
+            if any(t.id == dlg.result.id for t in termine):
+                print(f"[DEBUG] Fehler: Termin-ID {dlg.result.id} existiert bereits!")
+                QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{dlg.result.id}' existiert bereits.")
+                return False
+            termine.append(dlg.result)
+        print(f"[DEBUG] Speichere {len(termine)} Termine insgesamt...")
         self.ds.save_termine(termine)
         self.planner.refresh()
+        print(f"[DEBUG] Speichern abgeschlossen.")
         return True
 
     def edit_termin(self) -> None:
