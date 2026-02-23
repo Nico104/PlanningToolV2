@@ -85,7 +85,11 @@ class CrudHandlers:
     def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
         if year is None:
             year = date.today().year
+        # Standardpfad
         path = Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
+        if not path.exists():
+            # Fallback auf data/freie_tage.json
+            path = Path(self.data_dir) / "freie_tage.json"
         return self._read_json_list(path, "freie_tage")
 
     def add_freie_tage(self, year: Optional[int] = None) -> None:

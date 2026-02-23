@@ -2,21 +2,25 @@
   "freie_tage": [
     {
       "datum": "2026-10-26",
-      "beschreibung": "Nationalfeiertag"
+      "beschreibung": "Nationalfeiertag",
+      "typ": "Feiertag"
     },
     {
       "von_datum": "2026-12-24",
       "bis_datum": "2026-12-26",
-      "beschreibung": "Weihnachtsferien"
+      "beschreibung": "Weihnachtsferien",
+      "typ": "Vorlesungsfrei"
     },
     {
       "datum": "2027-01-01",
-      "beschreibung": "Neujahr"
+      "beschreibung": "Neujahr",
+      "typ": "Feiertag"
     },
     {
       "von_datum": "2027-02-15",
       "bis_datum": "2027-02-21",
-      "beschreibung": "Semesterferien"
+      "beschreibung": "Semesterferien",
+      "typ": "Vorlesungsfrei"
     }
   ]
 }

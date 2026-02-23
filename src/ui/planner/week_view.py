@@ -127,6 +127,13 @@ class PlannerWeekView:
         slots = self._time_slots()
         slot_min = self._day_bounds()[2]
 
+        # Build header labels with styled date
+        header_labels = ["Zeit"]
+        for i, day in enumerate(days):
+            day_date = week_mo + timedelta(days=i)
+            # Use line break for styling via QSS
+            header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}")
+
         # Clear all cell widgets before rebuilding
         for row in range(self.week_table.rowCount()):
             for col in range(self.week_table.columnCount()):
@@ -139,7 +146,7 @@ class PlannerWeekView:
 
         self.week_table.setRowCount(len(slots))
         self.week_table.setColumnCount(1 + len(days))
-        self.week_table.setHorizontalHeaderLabels(["Zeit"] + days)
+        self.week_table.setHorizontalHeaderLabels(header_labels)
 
         #time column compact, days stretch
         h = self.week_table.horizontalHeader()

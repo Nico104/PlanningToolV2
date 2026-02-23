@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QFormLayout, QLineEdit,
     QDialogButtonBox, QMessageBox, QComboBox, QDateEdit
 )
+from ..components.widgets.tight_combobox import TightComboBox
 
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
@@ -29,6 +30,11 @@ class FreieTageDialog(QDialog):
         form.setVerticalSpacing(10)
         form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         lay.addLayout(form)
+
+
+        self.typ_cb = TightComboBox()
+        self.typ_cb.addItems(["Feiertag", "Vorlesungsfrei"])
+        self.typ_cb.setObjectName("TypCombo")
 
         self.art_cb = QComboBox()
         self.art_cb.setObjectName("HeaderCombo")
@@ -54,9 +60,11 @@ class FreieTageDialog(QDialog):
         self.von_de.setDate(date_to_qdate(today))
         self.bis_de.setDate(date_to_qdate(today))
 
+
         # load existing
         if item:
             self.beschr_le.setText(str(item.get("beschreibung", "")))
+            self.typ_cb.setCurrentText(str(item.get("typ", "Feiertag")))
 
             if "datum" in item and item.get("datum"):
                 self.art_cb.setCurrentText("single")
@@ -76,6 +84,8 @@ class FreieTageDialog(QDialog):
                     except Exception:
                         pass
 
+
+        form.addRow("Typ:", self.typ_cb)
         form.addRow("Art:", self.art_cb)
         form.addRow("Datum (single):", self.datum_de)
         form.addRow("Von (range):", self.von_de)
@@ -102,17 +112,19 @@ class FreieTageDialog(QDialog):
             QMessageBox.warning(self, "Fehler", "Beschreibung ist Pflicht.")
             return
 
+
+        typ = self.typ_cb.currentText().strip()
         art = self.art_cb.currentText().strip().lower()
         if art == "single":
             d = qdate_to_date(self.datum_de.date())
-            self._result = {"datum": d.isoformat(), "beschreibung": beschr}
+            self._result = {"datum": d.isoformat(), "beschreibung": beschr, "typ": typ}
         else:
             v = qdate_to_date(self.von_de.date())
             b = qdate_to_date(self.bis_de.date())
             if b < v:
                 QMessageBox.warning(self, "Fehler", "Bis-Datum muss >= Von-Datum sein.")
                 return
-            self._result = {"von_datum": v.isoformat(), "bis_datum": b.isoformat(), "beschreibung": beschr}
+            self._result = {"von_datum": v.isoformat(), "bis_datum": b.isoformat(), "beschreibung": beschr, "typ": typ}
 
         self.accept()
 

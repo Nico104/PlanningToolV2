@@ -1,9 +1,10 @@
+from functools import partial
 from typing import List, Dict
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QScrollArea, QMenu, QFrame, QLabel
+    QScrollArea, QMenu, QFrame, QLabel, QToolButton
 )
 
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -14,10 +15,14 @@ from datetime import date as date, time as time
 from collections import defaultdict
 
 
+
 class TermineDock(QDockWidget):
     termin_double_clicked = Signal(str)
     termin_delete_clicked = Signal(str)
     termin_unassign_requested = Signal(str)
+
+    def _init_group_states(self):
+        self._group_states = {}
 
     def __init__(self, parent=None):
         super().__init__("Termine", parent)
@@ -69,7 +74,8 @@ class TermineDock(QDockWidget):
         self._lvas = list(lvas)
         self._raeume = list(raeume)
 
-        # Global filtering is applied by MainWindow before calling set_rows
+        # Reset group states if group keys changed
+        self._init_group_states()
         self._build_cards()
 
     def _build_cards(self) -> None:
@@ -104,12 +110,51 @@ class TermineDock(QDockWidget):
         for lva_id in sorted(lva_groups.keys(), key=lva_sort_key):
             lva = next((l for l in self._lvas if l.id == lva_id), None)
             lva_name = lva.name if lva else str(lva_id)
-            
-            # Insert LVA heade
-            lva_label = QLabel(lva_name)
-            lva_label.setObjectName("LvaHeaderLabel")
-            lva_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            self.list_layout.insertWidget(self.list_layout.count() - 1, lva_label)
+
+            # Collapsible group header
+            group_key = str(lva_id)
+            if group_key not in self._group_states:
+                self._group_states[group_key] = True  # default expanded
+
+
+            # Count assigned/total termine in group
+            group_termine = lva_groups[lva_id]
+            total_count = len(group_termine)
+            assigned_count = sum(1 for t in group_termine if t.datum and t.start_zeit)
+            header_text = f"{lva_name} ({assigned_count}/{total_count})"
+
+            header_btn = QToolButton()
+            header_btn.setText(header_text)
+            header_btn.setCheckable(True)
+            header_btn.setChecked(self._group_states[group_key])
+            header_btn.setArrowType(Qt.DownArrow if self._group_states[group_key] else Qt.RightArrow)
+            header_btn.setObjectName("LvaHeaderButton")
+            header_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            header_btn.setMinimumHeight(28)
+            header_btn.setMinimumWidth(120)
+            header_btn.setStyleSheet(
+                "QToolButton#LvaHeaderButton {"
+                " color: #222;"
+                " background: transparent;"
+                " font-weight: bold;"
+                " text-align: left;"
+                " padding-left: 4px;"
+                " border: none;"
+                "}"
+                "QToolButton#LvaHeaderButton:checked {"
+                " background: #f5f5f5;"
+                "}"
+            )
+
+            group_cards = []
+            def toggle_group(checked, cards, btn, key):
+                self._group_states[key] = checked
+                btn.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
+                for card in cards:
+                    card.setVisible(checked)
+
+            header_btn.toggled.connect(partial(toggle_group, cards=group_cards, btn=header_btn, key=group_key))
+            self.list_layout.insertWidget(self.list_layout.count() - 1, header_btn)
 
             for t in lva_groups[lva_id]:
                 raum = next((r for r in self._raeume if r.id == t.raum_id), None)
@@ -138,7 +183,8 @@ class TermineDock(QDockWidget):
 
                 card.double_clicked.connect(self.termin_double_clicked.emit)
                 card.right_clicked.connect(self._open_menu)
-
+                card.setVisible(self._group_states[group_key])
+                group_cards.append(card)
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)
 
 

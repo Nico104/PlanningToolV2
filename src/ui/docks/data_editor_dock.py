@@ -38,7 +38,7 @@ class DataEditorDock(QDockWidget):
         self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen"], self.tabs)
         self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs)
         self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs)
-        self.tab_free = EditorTab("Freie Tage", ["Art", "Datum", "Von", "Bis", "Beschreibung"], self.tabs)
+        self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung"], self.tabs)
         self.tab_termine = EditorTab(
             "Termine",
             ["Name", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe", "ID"],
@@ -138,6 +138,7 @@ class DataEditorDock(QDockWidget):
         freie = self._crud.read_freie_tage()
         rows = []
         for it in freie:
+            typ = str(it.get("typ", ""))
             if "datum" in it and it.get("datum"):
                 art = "single"
                 datum = str(it.get("datum", ""))
@@ -149,7 +150,7 @@ class DataEditorDock(QDockWidget):
                 von = str(it.get("von_datum", ""))
                 bis = str(it.get("bis_datum", ""))
             beschr = str(it.get("beschreibung", ""))
-            rows.append([art, datum, von, bis, beschr])
+            rows.append([typ, art, datum, von, bis, beschr])
         self._fill_table(self.tab_free.table, rows)
         
     def _refresh_termine(self) -> None:

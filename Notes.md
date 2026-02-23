@@ -62,14 +62,14 @@ Data folder? check if json? whcih? which cn be imported, which have to be create
 
 MEeting 20/02
 
-Kalendar Datum
+Kalendar Datum X
 
 Tag / Wochen / 2 Wochen / Monat
 
 SerienTermine erstellen
 
-Feiertage und Vorlesungsfrei Zeiten (Semesterferien)
+Feiertage und Vorlesungsfrei Zeiten (Semesterferien) X
 
-Semester(Reg, Queer) als Vorlesungvaribale und Filter
+Semester(Reg, Queer) als Vorlesungvaribale und Filter 
 
-Termin Liste Einklappen und zb 4/7
+Termin Liste Einklappen und zb 4/7 X
