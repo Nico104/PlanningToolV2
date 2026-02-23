@@ -1,0 +1,64 @@
+{
+  "geplante_semester": [
+    {
+      "id": "sem1",
+      "name": "1. Semester",
+      "notiz": "Reguläres erstes Semester"
+    },
+    {
+      "id": "sem2",
+      "name": "2. Semester",
+      "notiz": "Reguläres zweites Semester"
+    },
+    {
+      "id": "sem3",
+      "name": "3. Semester",
+      "notiz": "Reguläres drittes Semester"
+    },
+    {
+      "id": "sem4",
+      "name": "4. Semester",
+      "notiz": "Reguläres viertes Semester"
+    },
+    {
+      "id": "sem5",
+      "name": "5. Semester",
+      "notiz": "Reguläres fünftes Semester"
+    },
+    {
+      "id": "sem6",
+      "name": "6. Semester",
+      "notiz": "Reguläres sechstes Semester"
+    },
+    {
+      "id": "qs1",
+      "name": "1. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im ersten Semester"
+    },
+    {
+      "id": "qs2",
+      "name": "2. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im zweiten Semester"
+    },
+    {
+      "id": "qs3",
+      "name": "3. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im dritten Semester"
+    },
+    {
+      "id": "qs4",
+      "name": "4. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im vierten Semester"
+    },
+    {
+      "id": "qs5",
+      "name": "5. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im fünften Semester"
+    },
+    {
+      "id": "qs6",
+      "name": "6. Queereinsteiger Semester",
+      "notiz": "Für Quereinsteiger im sechsten Semester"
+    }
+  ]
+}

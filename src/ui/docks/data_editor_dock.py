@@ -5,7 +5,7 @@ from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QTabWidget
 
-from ...core.models import Lehrveranstaltung, Raum, Semester, Termin
+from ...core.models import Lehrveranstaltung, Raum, Semester, Termin, GeplantesSemester
 from ..utils.crud_handlers import CrudHandlers
 from ..components.widgets.editor_tab_widget import EditorTab, make_item, selected_id
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -35,7 +35,7 @@ class DataEditorDock(QDockWidget):
         root.addWidget(self.tabs, 1)
 
         # Tabs
-        self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen"], self.tabs)
+        self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen", "Geplante Semester"], self.tabs)
         self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs)
         self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs)
         self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung"], self.tabs)
@@ -44,6 +44,7 @@ class DataEditorDock(QDockWidget):
             ["Name", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe", "ID"],
             self.tabs
         )
+        self.tab_geplante_semester = EditorTab("Geplante Semester", ["Name", "Notiz", "ID"], self.tabs)
         
         self.tabs.addTab(self.tab_termine, "Termine")
 
@@ -51,6 +52,7 @@ class DataEditorDock(QDockWidget):
         self.tabs.addTab(self.tab_rooms, "Räume")
         self.tabs.addTab(self.tab_sem, "Semester")
         self.tabs.addTab(self.tab_free, "Freie Tage")
+        self.tabs.addTab(self.tab_geplante_semester, "Geplante Semester")
 
         self.setWidget(wrap)
 
@@ -89,6 +91,10 @@ class DataEditorDock(QDockWidget):
         self.tab_termine.edit_clicked.connect(self._crud.edit_termin)
         self.tab_termine.delete_clicked.connect(self._crud.del_termin)
 
+        self.tab_geplante_semester.add_clicked.connect(self._crud.add_geplante_semester)
+        self.tab_geplante_semester.edit_clicked.connect(self._crud.edit_geplante_semester)
+        self.tab_geplante_semester.delete_clicked.connect(self._crud.del_geplante_semester)
+
     def _on_tab_changed(self, index):
         # Only trigger refresh if switching from another tab to Termine
         if self.tabs.widget(index) == self.tab_termine:
@@ -102,6 +108,17 @@ class DataEditorDock(QDockWidget):
         self._refresh_semester()
         self._refresh_freie_tage()
         self._refresh_termine()
+        self._refresh_geplante_semester()
+    def _refresh_geplante_semester(self) -> None:
+        import json
+        semester_path = self.data_dir / "geplante_semester.json"
+        try:
+            with open(semester_path, encoding="utf-8") as f:
+                semester_data = json.load(f)["geplante_semester"]
+        except Exception:
+            semester_data = []
+        rows = [[s["name"], s.get("notiz", ""), s["id"]] for s in semester_data]
+        self._fill_table(self.tab_geplante_semester.table, rows)
 
     def _refresh_semester(self) -> None:
         semester: List[Semester] = self.ds.load_semester()
@@ -113,6 +130,16 @@ class DataEditorDock(QDockWidget):
     # Refresh tables
     def _refresh_lvas(self) -> None:
         lvas: List[Lehrveranstaltung] = self.ds.load_lvas()
+        # Load semester names for display
+        import os, json
+        semester_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "..", "..", "data", "geplante_semester.json")
+        try:
+            with open(semester_path, encoding="utf-8") as f:
+                semester_data = json.load(f)["geplante_semester"]
+        except Exception:
+            semester_data = []
+        sem_id_to_name = {s["id"]: s["name"] for s in semester_data}
+
         rows = [
             [
                 l.id,
@@ -120,6 +147,7 @@ class DataEditorDock(QDockWidget):
                 getattr(l.vortragende, "name", ""),
                 getattr(l.vortragende, "email", ""),
                 ", ".join(getattr(l, "typ", []) or []),
+                " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "geplante_semester", [])])
             ]
             for l in lvas
         ]

@@ -60,6 +60,12 @@ class GlobalFilterDock(QDockWidget):
         self.room_cb.setToolTip("Raum filter")
         self.room_cb.setMinimumWidth(200)
         headerBar.addWidget(self.room_cb)
+
+        # Geplante Semester filter
+        self.geplante_semester_cb = TightComboBox()
+        self.geplante_semester_cb.setToolTip("Geplantes Semester (LVA) filter")
+        self.geplante_semester_cb.setMinimumWidth(160)
+        headerBar.addWidget(self.geplante_semester_cb)
         
         
         # View selector + navigation + dates
@@ -111,6 +117,7 @@ class GlobalFilterDock(QDockWidget):
         self.dozent_cb.currentIndexChanged.connect(self._on_change)
         self.typ_cb.currentIndexChanged.connect(self._on_change)
         self.room_cb.currentIndexChanged.connect(self._on_change)
+        self.geplante_semester_cb.currentIndexChanged.connect(self._on_change)
         self.view_cb.currentIndexChanged.connect(self._on_view_change)
         self.prev_btn.clicked.connect(self.navPrev.emit)
         self.next_btn.clicked.connect(self.navNext.emit)
@@ -127,6 +134,7 @@ class GlobalFilterDock(QDockWidget):
             raum_id=self.room_cb.currentData() or None,
             typ=self.typ_cb.currentData() or None,
             dozent=self.dozent_cb.currentData() or None,
+            geplante_semester=self.geplante_semester_cb.currentData() or None,
         )
         self.filtersChanged.emit(fs)
 
@@ -134,6 +142,29 @@ class GlobalFilterDock(QDockWidget):
         self.viewChanged.emit(str(self.view_cb.currentData()))
 
     def refresh_filter_options(self, fachrichtungen, semester_list, lva_list, raum_list, typ_list=None, dozent_list=None, current: Optional[FilterState] = None) -> None:
+        # Populate geplante_semester_cb with names
+        import os, json
+        semester_path = os.path.join(os.getcwd(), "data", "geplante_semester.json")
+        try:
+            with open(semester_path, encoding="utf-8") as f:
+                semester_data = json.load(f)["geplante_semester"]
+        except Exception:
+            semester_data = []
+        sem_id_to_display = {s["id"]: s["name"] for s in semester_data}
+        geplante_semester_ids = set()
+        for lv in lva_list:
+            for sem_id in getattr(lv, 'geplante_semester', []):
+                geplante_semester_ids.add(sem_id)
+        geplante_semester_items = [("Geplantes Semester: Alle", None)] + [ (sem_id_to_display.get(sem_id, sem_id), sem_id) for sem_id in sorted(geplante_semester_ids)]
+        self.geplante_semester_cb.blockSignals(True)
+        self.geplante_semester_cb.clear()
+        for text, data in geplante_semester_items:
+            self.geplante_semester_cb.addItem(text, data)
+        if current and getattr(current, 'geplante_semester', None):
+            i = self.geplante_semester_cb.findData(current.geplante_semester)
+            if i >= 0:
+                self.geplante_semester_cb.setCurrentIndex(i)
+        self.geplante_semester_cb.blockSignals(False)
         cur_fach = current.fachrichtung if current else None
         cur_sem = current.semester if current else None
         cur_lva = current.lva_id if current else None

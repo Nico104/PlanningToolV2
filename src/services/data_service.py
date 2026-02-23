@@ -76,11 +76,13 @@ class DataService:
         out: List[Lehrveranstaltung] = []
         for x in raw:
             v = x["vortragende"]
+            geplante_semester = x.get("geplante_semester", ["", ""])  # fallback to two empty strings
             out.append(Lehrveranstaltung(
                 id=x["id"],
                 name=x["name"],
                 vortragende=Vortragende(name=v["name"], email=v.get("email", "")),
                 typ=list(x.get("typ", [])),
+                geplante_semester=geplante_semester
             ))
         return out
 
@@ -151,7 +153,8 @@ class DataService:
                 "id": l.id,
                 "name": l.name,
                 "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
-                "typ": list(l.typ)
+                "typ": list(l.typ),
+                "geplante_semester": l.geplante_semester
             } for l in lvas]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

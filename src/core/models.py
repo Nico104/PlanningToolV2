@@ -3,6 +3,14 @@ from datetime import date, time
 from typing import Optional, List, Dict
 
 
+
+@dataclass(frozen=True)
+class GeplantesSemester:
+    id: str
+    name: str
+    notiz: Optional[str] = None
+
+
 @dataclass(frozen=True)
 class Semester:
     id: str
@@ -30,6 +38,7 @@ class Lehrveranstaltung:
     name: str
     vortragende: Vortragende
     typ: List[str]  # erlaubte Termin-Typen, z.B. ["VO", "UE"]
+    geplante_semester: List[str]  # IDs von beliebig vielen geplanten Semestern
 
 
 @dataclass(frozen=True)

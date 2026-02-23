@@ -8,12 +8,84 @@ from PySide6.QtWidgets import QDialog, QMessageBox
 
 from ...services.id_service import next_id
 from ..dialogs import LVADialog, RaumDialog, SemesterDialog
+from ...core.models import GeplantesSemester
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.termin_dialog import TerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
 
 
 class CrudHandlers:
+    def _geplante_semester_path(self):
+        return Path(self.data_dir) / "geplante_semester.json"
+
+    def read_geplante_semester(self):
+        path = self._geplante_semester_path()
+        if not path.exists():
+            return []
+        try:
+            import json
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)["geplante_semester"]
+        except Exception:
+            return []
+
+    def write_geplante_semester(self, semester_list):
+        path = self._geplante_semester_path()
+        import json
+        obj = {"geplante_semester": semester_list}
+        path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, '_refresh_geplante_semester'):
+            self.parent._refresh_geplante_semester()
+
+    def add_geplante_semester(self):
+        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
+        semester_list = self.read_geplante_semester()
+        dlg = GeplanteSemesterDialog(self.parent, None)
+        result = dlg.get_result()
+        if not result:
+            return
+        # Check for duplicate ID
+        if any(s["id"] == result.id for s in semester_list):
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
+            return
+        semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
+        self.write_geplante_semester(semester_list)
+
+    def edit_geplante_semester(self):
+        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
+        semester_list = self.read_geplante_semester()
+        # Find selected row
+        table = getattr(self.parent.tab_geplante_semester, "table", None)
+        row = table.currentRow() if table else None
+        if row is None or row < 0 or row >= len(semester_list):
+            return
+        cur = semester_list[row]
+        dlg = GeplanteSemesterDialog(self.parent, GeplantesSemester(**cur))
+        result = dlg.get_result()
+        if not result:
+            return
+        # Check for duplicate ID (if changed)
+        if result.id != cur["id"] and any(s["id"] == result.id for s in semester_list):
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
+            return
+        semester_list[row] = {"id": result.id, "name": result.name, "notiz": result.notiz}
+        self.write_geplante_semester(semester_list)
+
+    def del_geplante_semester(self):
+        semester_list = self.read_geplante_semester()
+        table = getattr(self.parent.tab_geplante_semester, "table", None)
+        row = table.currentRow() if table else None
+        if row is None or row < 0 or row >= len(semester_list):
+            return
+        from PySide6.QtWidgets import QMessageBox
+        if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
+            return
+        semester_list.pop(row)
+        self.write_geplante_semester(semester_list)
     def __init__(
         self,
         mw=None,

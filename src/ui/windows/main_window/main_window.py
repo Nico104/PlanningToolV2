@@ -354,11 +354,23 @@ class MainWindow(QMainWindow):
             typ = fs.typ
             dozent = fs.dozent
             semester_id = fs.semester
+            geplante_semester = getattr(fs, "geplante_semester", None)
         else:
-            room, q, typ = self.planner.current_filters()
-            dozent = None
-            semester_id = None
+            filters = self.planner.current_filters()
+            room = filters["raum_id"]
+            q = filters["q"]
+            typ = filters["typ"]
+            dozent = filters["dozent"]
+            semester_id = filters["semester_id"]
+            geplante_semester = filters["geplante_semester"]
 
-        terms = self.planner.state.filtered_termine(raum_id=room, q=q, typ=typ, dozent=dozent, semester_id=semester_id)
+        terms = self.planner.state.filtered_termine(
+            raum_id=room,
+            q=q,
+            typ=typ,
+            dozent=dozent,
+            semester_id=semester_id,
+            geplante_semester=geplante_semester,
+        )
         return terms
 

@@ -10,7 +10,11 @@
       "typ": [
         "VO"
       ],
-      "fachrichtung": "ETIT"
+      "geplante_semester": [
+        "sem1",
+        "sem2",
+        "sem3"
+      ]
     },
     {
       "id": "370.007",
@@ -23,7 +27,7 @@
         "VO",
         "UE"
       ],
-      "fachrichtung": "ETIT"
+      "geplante_semester": []
     },
     {
       "id": "410.101",
@@ -36,7 +40,9 @@
         "VO",
         "LU"
       ],
-      "fachrichtung": "ETIT"
+      "geplante_semester": [
+        "sem1"
+      ]
     }
   ]
 }

@@ -11,3 +11,4 @@ class FilterState:
     raum_id: Optional[str] = None
     typ: Optional[str] = None
     dozent: Optional[str] = None
+    geplante_semester: Optional[str] = None

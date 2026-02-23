@@ -70,6 +70,6 @@ SerienTermine erstellen
 
 Feiertage und Vorlesungsfrei Zeiten (Semesterferien) X
 
-Semester(Reg, Queer) als Vorlesungvaribale und Filter 
+Semester(Reg, Queer) als Vorlesungvaribale und Filter  
 
 Termin Liste Einklappen und zb 4/7 X

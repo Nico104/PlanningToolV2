@@ -164,6 +164,7 @@ class PlannerWorkspace(QWidget):
                 "typ": None,
                 "dozent": None,
                 "semester_id": None,
+                "geplante_semester": None,
             }
         return {
             "raum_id": gf.raum_id,
@@ -171,6 +172,7 @@ class PlannerWorkspace(QWidget):
             "typ": gf.typ,
             "dozent": getattr(gf, "dozent", None),
             "semester_id": getattr(gf, "semester", None),
+            "geplante_semester": getattr(gf, "geplante_semester", None),
         }
 
     def refresh(self, emit: bool = True):
@@ -185,6 +187,7 @@ class PlannerWorkspace(QWidget):
             typ=filters["typ"],
             dozent=filters["dozent"],
             semester_id=filters["semester_id"],
+            geplante_semester=filters["geplante_semester"],
         )
 
         view = str(self.view_cb.currentData())
