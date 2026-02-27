@@ -1,7 +1,8 @@
 from pathlib import Path
+import json
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QDialog, QMainWindow
+from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox
 
 from src.services.data_service import DataService
 
@@ -15,6 +16,7 @@ from .layout_manager import LayoutManager
 from src.ui.planner.workspace import PlannerWorkspace
 from ...dialogs import SettingsDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
+from src.ui.dialogs.import_dialog import ImportDialog
 import os
 
 class MainWindow(QMainWindow):
@@ -147,6 +149,14 @@ class MainWindow(QMainWindow):
         self.act_refresh = QAction("Aktualisieren", self)
         self.act_refresh.triggered.connect(self.refresh_everything)
         file_menu.addAction(self.act_refresh)
+        # Import / Export
+        self.act_export = QAction("Exportieren…", self)
+        self.act_export.triggered.connect(self.export_project)
+        file_menu.addAction(self.act_export)
+
+        self.act_import = QAction("Importieren…", self)
+        self.act_import.triggered.connect(self.import_project)
+        file_menu.addAction(self.act_import)
 
         # Removed dynamic Semester/Fachrichtung menu. All data is now always shown; filtering is handled by global filters.
 
@@ -175,6 +185,152 @@ class MainWindow(QMainWindow):
         dlg = KonflikteDialog(self, conflicts_path=conflicts_path)
         dlg.conflicts_changed.connect(self.refresh_conflicts)
         dlg.exec()
+
+    def export_project(self) -> None:
+        files = [
+            "raeume.json",
+            "lehrveranstaltungen.json",
+            "termine.json",
+            "semester.json",
+            "fachrichtungen.json",
+            "freie_tage_2026.json",
+            "konflikte.json",
+        ]
+        export_obj = {}
+        for f in files:
+            p = self.data_dir / f
+            if p.exists():
+                try:
+                    export_obj[f] = json.loads(p.read_text(encoding="utf-8"))
+                except Exception:
+                    # store raw text if it's not valid JSON
+                    export_obj[f] = p.read_text(encoding="utf-8")
+
+        fn, _ = QFileDialog.getSaveFileName(self, "Export Datei speichern", str(self.data_dir), "JSON Files (*.json)")
+        if not fn:
+            return
+        try:
+            Path(fn).write_text(json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            QMessageBox.information(self, "Export", "Projekt exportiert.")
+        except Exception as e:
+            QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
+
+    def import_project(self) -> None:
+        fn, _ = QFileDialog.getOpenFileName(self, "Import Datei öffnen", str(self.data_dir), "JSON Files (*.json)")
+        if not fn:
+            return
+        try:
+            with open(fn, encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            QMessageBox.warning(self, "Import Fehler", f"Fehler beim Lesen der Import-Datei: {e}")
+            return
+        # Normalize supported bundle formats into a mapping filename -> content
+        normalized = {}
+        known_keys = {
+            "termine": "termine.json",
+            "raeume": "raeume.json",
+            "lehrveranstaltungen": "lehrveranstaltungen.json",
+            "semester": "semester.json",
+            "fachrichtungen": "fachrichtungen.json",
+            "konflikte": "konflikte.json",
+            "freie_tage": "freie_tage_2026.json",
+        }
+
+        if isinstance(data, dict):
+            # If the dict appears to already be a filename->content mapping (keys end with .json)
+            if all(isinstance(k, str) and k.lower().endswith('.json') for k in data.keys()):
+                normalized = data
+            else:
+                # Map known top-level keys (e.g. 'termine' -> 'termine.json')
+                for k, target in known_keys.items():
+                    if k in data:
+                        normalized[target] = data[k] if isinstance(data[k], (dict, list)) else {k: data[k]}
+
+                # Try looser matching: keys that contain the known key or filename-like keys
+                if not normalized:
+                    for raw_key, val in data.items():
+                        low = raw_key.lower()
+                        for k, target in known_keys.items():
+                            if k in low or (low.endswith('.json') and low.replace('.json', '') == k):
+                                normalized[target] = val if isinstance(val, (dict, list)) else {k: val}
+
+                # Recursive search: if nested dict contains known keys, map them
+                if not normalized:
+                    def search_and_map(obj):
+                        if isinstance(obj, dict):
+                            for kk, vv in obj.items():
+                                if kk in known_keys:
+                                    normalized[known_keys[kk]] = vv if isinstance(vv, (dict, list)) else {kk: vv}
+                                else:
+                                    search_and_map(vv)
+                        elif isinstance(obj, list):
+                            for it in obj:
+                                search_and_map(it)
+                    search_and_map(data)
+        elif isinstance(data, list):
+            # Treat a bare list as a termine list
+            normalized['termine.json'] = {"termine": data}
+        else:
+            QMessageBox.warning(self, "Import Fehler", "Unbekanntes Import-Format.")
+            return
+
+        # Fallback: if we couldn't map anything, assume the payload is a termine file
+        if not normalized:
+            normalized['termine.json'] = data if isinstance(data, (dict, list)) else {"termine": data}
+
+        # Import non-termine files immediately; handle termine.json with per-termin prompts
+        written = []
+        errors = []
+
+        termine_payload = None
+        for fname, content in normalized.items():
+            if fname == 'termine.json':
+                termine_payload = content
+                continue
+            try:
+                target = self.data_dir / fname
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if isinstance(content, (dict, list)):
+                    target.write_text(json.dumps(content, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                else:
+                    target.write_text(str(content), encoding="utf-8")
+                written.append(fname)
+            except Exception as e:
+                errors.append(f"{fname}: {e}")
+
+        # If there's termine.json in the import, and it differs from existing, open interactive per-termin dialog
+        if termine_payload is not None:
+            target = self.data_dir / 'termine.json'
+            existing = None
+            if target.exists():
+                try:
+                    existing = json.loads(target.read_text(encoding='utf-8'))
+                except Exception:
+                    existing = None
+
+            different = True
+            try:
+                if existing is not None and json.dumps(existing, sort_keys=True) == json.dumps(termine_payload, sort_keys=True):
+                    different = False
+            except Exception:
+                different = True
+
+            if different:
+                # Use ImportDialog to perform per-termin interactive import. Pass only termine.json.
+                dlg = ImportDialog(self, self.data_dir, {'termine.json': termine_payload})
+                # ImportDialog runs interactive import immediately on construction; exec() ensures modal behaviour
+                dlg.exec()
+                # ImportDialog writes termine.json when accepted
+                written.append('termine.json')
+
+        if errors:
+            QMessageBox.warning(self, "Import Fehler", "Einige Dateien konnten nicht importiert werden:\n" + "\n".join(errors))
+        else:
+            QMessageBox.information(self, "Import abgeschlossen", f"Importiert: {len(written)} Dateien.")
+
+        # refresh after import
+        self.refresh_everything()
 
     
 
@@ -354,23 +510,11 @@ class MainWindow(QMainWindow):
             typ = fs.typ
             dozent = fs.dozent
             semester_id = fs.semester
-            geplante_semester = getattr(fs, "geplante_semester", None)
         else:
-            filters = self.planner.current_filters()
-            room = filters["raum_id"]
-            q = filters["q"]
-            typ = filters["typ"]
-            dozent = filters["dozent"]
-            semester_id = filters["semester_id"]
-            geplante_semester = filters["geplante_semester"]
+            room, q, typ = self.planner.current_filters()
+            dozent = None
+            semester_id = None
 
-        terms = self.planner.state.filtered_termine(
-            raum_id=room,
-            q=q,
-            typ=typ,
-            dozent=dozent,
-            semester_id=semester_id,
-            geplante_semester=geplante_semester,
-        )
+        terms = self.planner.state.filtered_termine(raum_id=room, q=q, typ=typ, dozent=dozent, semester_id=semester_id)
         return terms
 
