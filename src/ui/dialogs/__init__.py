@@ -4,6 +4,7 @@ from .semester_dialog import SemesterDialog
 from .settings_dialog import SettingsDialog
 from .termin_dialog import TerminDialog
 from .freie_tage_dialog import FreieTageDialog
+from .import_dialog import ImportDialog
 
 __all__ = [
     "LVADialog",
@@ -12,4 +13,5 @@ __all__ = [
     "SettingsDialog",
     "TerminDialog",
     "FreieTageDialog",
+    "ImportDialog",
 ]

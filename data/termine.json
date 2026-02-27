@@ -15,15 +15,14 @@
       "anwesenheitspflicht": true,
       "notiz": "Einführung in das Fach",
       "duration": 90,
-      "semester_id": "SS26",
-      "serien_id": ""
+      "semester_id": "SS26"
     },
     {
       "name": "1. Übung Energieversorgung",
       "id": "T2",
       "lva_id": "370.007",
       "typ": "UE",
-      "datum": "2025-09-29",
+      "datum": "2025-10-01",
       "start_zeit": "13:00",
       "raum_id": "E17",
       "gruppe": {
@@ -33,8 +32,7 @@
       "anwesenheitspflicht": false,
       "notiz": "Praktische Übung",
       "duration": 60,
-      "semester_id": "WS26",
-      "serien_id": ""
+      "semester_id": "WS26"
     },
     {
       "name": "1. Seminar Datenanalyse",
@@ -51,8 +49,7 @@
       "anwesenheitspflicht": true,
       "notiz": "Seminararbeit",
       "duration": 120,
-      "semester_id": "WS26",
-      "serien_id": ""
+      "semester_id": "WS26"
     },
     {
       "name": "2. Vorlesung Programmieren",
@@ -69,8 +66,7 @@
       "anwesenheitspflicht": true,
       "notiz": "Zusatzvorlesung",
       "duration": 90,
-      "semester_id": "SS26",
-      "serien_id": ""
+      "semester_id": "SS26"
     },
     {
       "name": "2. Übung Energieversorgung",
@@ -78,7 +74,7 @@
       "lva_id": "370.007",
       "typ": "UE",
       "datum": "2025-09-30",
-      "start_zeit": "11:00",
+      "start_zeit": "11:30",
       "raum_id": "E23",
       "gruppe": {
         "name": "Gruppe J",
@@ -87,8 +83,7 @@
       "anwesenheitspflicht": false,
       "notiz": "Übung Zusatz",
       "duration": 60,
-      "semester_id": "WS26",
-      "serien_id": ""
+      "semester_id": "WS26"
     },
     {
       "name": "2. Seminar Datenanalyse",
@@ -120,8 +115,7 @@
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T3",
       "duration": 90,
-      "semester_id": "SS26",
-      "serien_id": ""
+      "semester_id": "SS26"
     },
     {
       "name": "3. Übung Energieversorgung",
@@ -138,23 +132,21 @@
       "anwesenheitspflicht": false,
       "notiz": "Konflikt mit T10",
       "duration": 60,
-      "semester_id": "WS26",
-      "serien_id": ""
+      "semester_id": "WS26"
     },
     {
       "name": "3. Seminar Datenanalyse",
       "id": "T14",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": "2025-09-29",
+      "datum": "2026-02-25",
       "start_zeit": "10:00",
       "raum_id": "E17",
       "gruppe": null,
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T1",
       "duration": 120,
-      "semester_id": "SS26",
-      "serien_id": ""
+      "semester_id": "SS26"
     },
     {
       "name": "sda",

@@ -1,5 +1,8 @@
 {
   "fachrichtungen": [
-    { "id": "ETIT", "name": "Elektrotechnik" }
+    {
+      "id": "ETIT",
+      "name": "Elektrotechnik"
+    }
   ]
 }

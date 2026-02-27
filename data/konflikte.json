@@ -1,77 +1,77 @@
 [
-    {
-        "name": "Raum-Konflikt",
-        "key": "room_conflict",
-        "enabled": true,
-        "type": "conflict",
-        "description": "Zwei Termine im selben Raum, am selben Tag, mit sich überschneidenden Zeiten."
-    },
-    {
-        "name": "Gruppen-Konflikt",
-        "key": "group_conflict",
-        "enabled": true,
-        "type": "conflict",
-        "description": "Zwei Termine mit derselben LVA und Gruppe, am selben Tag, mit sich überschneidenden Zeiten."
-    },
-    {
-        "name": "Vortragenden-Konflikt",
-        "key": "lecturer_conflict",
-        "enabled": true,
-        "type": "conflict",
-        "description": "Zwei Termine mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten."
-    },
-    {
-        "name": "Unvollständiger Termin",
-        "key": "incomplete_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin hat kein Datum, keine Startzeit, keine Dauer oder keinen Raum."
-    },
-    {
-        "name": "Datum außerhalb des Planungszeitraums",
-        "key": "outside_period_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin liegt außerhalb des zugeordneten Semesters."
-    },
-    {
-        "name": "Kapazitätswarnung Übung",
-        "key": "capacity_warning_uebung",
-        "enabled": true,
-        "type": "warning",
-        "description": "Bei Übungsterminen müssen alle Gruppenmitglieder Platz haben.",
-        "min_capacity_percent": 100,
-        "event_type": "uebung"
-    },
-    {
-        "name": "Kapazitätswarnung Vorlesung",
-        "key": "capacity_warning_vorlesung",
-        "enabled": true,
-        "type": "warning",
-        "description": "Bei Vorlesungen müssen nur ein Teil der Gruppe Platz haben.",
-        "min_capacity_percent": 75,
-        "event_type": "vorlesung"
-    },
-    {
-        "name": "Dauerwarnung",
-        "key": "duration_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin ist ungewöhnlich kurz (<30min) oder lang (>4h).",
-        "min_minutes": 10
-    },
-    {
-        "name": "Samstagswarnung",
-        "key": "saturday_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin liegt auf einem Samstag."
-    },
-    {
-        "name": "Sonntagswarnung",
-        "key": "sunday_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin liegt auf einem Sonntag."
-    }
+  {
+    "name": "Raum-Konflikt",
+    "key": "room_conflict",
+    "enabled": true,
+    "type": "conflict",
+    "description": "Zwei Termine im selben Raum, am selben Tag, mit sich überschneidenden Zeiten."
+  },
+  {
+    "name": "Gruppen-Konflikt",
+    "key": "group_conflict",
+    "enabled": true,
+    "type": "conflict",
+    "description": "Zwei Termine mit derselben LVA und Gruppe, am selben Tag, mit sich überschneidenden Zeiten."
+  },
+  {
+    "name": "Vortragenden-Konflikt",
+    "key": "lecturer_conflict",
+    "enabled": true,
+    "type": "conflict",
+    "description": "Zwei Termine mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten."
+  },
+  {
+    "name": "Unvollständiger Termin",
+    "key": "incomplete_warning",
+    "enabled": true,
+    "type": "warning",
+    "description": "Termin hat kein Datum, keine Startzeit, keine Dauer oder keinen Raum."
+  },
+  {
+    "name": "Datum außerhalb des Planungszeitraums",
+    "key": "outside_period_warning",
+    "enabled": true,
+    "type": "warning",
+    "description": "Termin liegt außerhalb des zugeordneten Semesters."
+  },
+  {
+    "name": "Kapazitätswarnung Übung",
+    "key": "capacity_warning_uebung",
+    "enabled": true,
+    "type": "warning",
+    "description": "Bei Übungsterminen müssen alle Gruppenmitglieder Platz haben.",
+    "min_capacity_percent": 100,
+    "event_type": "uebung"
+  },
+  {
+    "name": "Kapazitätswarnung Vorlesung",
+    "key": "capacity_warning_vorlesung",
+    "enabled": true,
+    "type": "warning",
+    "description": "Bei Vorlesungen müssen nur ein Teil der Gruppe Platz haben.",
+    "min_capacity_percent": 75,
+    "event_type": "vorlesung"
+  },
+  {
+    "name": "Dauerwarnung",
+    "key": "duration_warning",
+    "enabled": true,
+    "type": "warning",
+    "description": "Termin ist ungewöhnlich kurz (<30min) oder lang (>4h).",
+    "min_minutes": 10
+  },
+  {
+    "name": "Samstagswarnung",
+    "key": "saturday_warning",
+    "enabled": true,
+    "type": "warning",
+    "description": "Termin liegt auf einem Samstag."
+  },
+  {
+    "name": "Sonntagswarnung",
+    "key": "sunday_warning",
+    "enabled": true,
+    "type": "warning",
+    "description": "Termin liegt auf einem Sonntag."
+  }
 ]
