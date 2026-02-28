@@ -170,8 +170,9 @@ class PlannerWeekView:
                 found[1].append(t)
             else:
                 by_day.append([t.datum, [t]])
+        from datetime import time as _time
         for bd in by_day:
-            bd[1].sort(key=lambda x: x.start_zeit)
+            bd[1].sort(key=lambda x: x.start_zeit if x.start_zeit is not None else _time(0, 0))
 
         for col in range(6):
             d0 = week_mo + timedelta(days=col)

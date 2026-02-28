@@ -73,6 +73,8 @@ class PlannerDayView:
         self._setup_table()
         self.day_table.cellDoubleClicked.connect(self._on_double_click)
         self.day_table.cellClicked.connect(self._on_cell_clicked)
+        # track last column count to avoid unnecessary column auto-resizing
+        self._last_col_count = 0
 
     # Configure table appearance and sizing
     def _setup_table(self) -> None:
@@ -260,7 +262,10 @@ class PlannerDayView:
 
         # Removed conflict_lbl usage
 
-        self.day_table.resizeColumnsToContents()
+        # Only recompute column widths when the number of columns changed
+        if self.day_table.columnCount() != getattr(self, '_last_col_count', 0):
+            self.day_table.resizeColumnsToContents()
+            self._last_col_count = self.day_table.columnCount()
         self.day_table.resizeRowsToContents()
 
     def _on_double_click(self, row: int, col: int):

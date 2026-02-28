@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
                     self.planner.week_from.setDate(date_to_qdate(self.planner._align_to_monday(start_date)))
                     self.planner.day_date.setDate(date_to_qdate(start_date))
             except Exception as e:
-                print(f"Semester date switch error: {e}")
+                pass
         QTimer.singleShot(0, set_semester_start_date)
 
     def __init__(self, data_dir: Path):
@@ -427,7 +427,7 @@ class MainWindow(QMainWindow):
                     self.planner.week_from.setDate(date_to_qdate(self.planner._align_to_monday(start_date)))
                     self.planner.day_date.setDate(date_to_qdate(start_date))
             except Exception as e:
-                print(f"Semester filter jump error: {e}")
+                pass
 
     
     def _on_unassign_termin(self, tid: str):

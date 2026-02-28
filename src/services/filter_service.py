@@ -18,9 +18,20 @@ def filter_termine(
     out = termine
 
     if semester_id:
-        # Filter termine whose LVA's geplante_semester includes the selected semester
+        # Filter termine that belong to the selected semester.
+        # Accept a termin if its `semester_id` matches OR the associated LVA
+        # lists the semester in its `geplante_semester`.
         if lva_dict is not None:
-            out = [t for t in out if getattr(t, 'semester_id', None) == semester_id and semester_id in (lva_dict.get(t.lva_id).geplante_semester if lva_dict.get(t.lva_id) else [])]
+            def _lva_has_semester(lva_id: str) -> bool:
+                lva = lva_dict.get(lva_id)
+                if not lva:
+                    return False
+                return semester_id in (getattr(lva, 'geplante_semester', []) or [])
+
+            out = [
+                t for t in out
+                if getattr(t, 'semester_id', None) == semester_id or _lva_has_semester(t.lva_id)
+            ]
         else:
             out = [t for t in out if getattr(t, 'semester_id', None) == semester_id]
     if raum_id:

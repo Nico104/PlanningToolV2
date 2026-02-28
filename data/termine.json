@@ -15,7 +15,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Einführung in das Fach",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "1. Übung Energieversorgung",
@@ -32,15 +33,16 @@
       "anwesenheitspflicht": false,
       "notiz": "Praktische Übung",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "1. Seminar Datenanalyse",
       "id": "T3",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": null,
-      "start_zeit": null,
+      "datum": "2025-09-29",
+      "start_zeit": "09:00",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe C",
@@ -49,7 +51,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Seminararbeit",
       "duration": 120,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "2. Vorlesung Programmieren",
@@ -66,7 +69,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Zusatzvorlesung",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "2. Übung Energieversorgung",
@@ -75,7 +79,7 @@
       "typ": "UE",
       "datum": "2025-09-30",
       "start_zeit": "11:30",
-      "raum_id": "E23",
+      "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe J",
         "groesse": 24
@@ -83,16 +87,17 @@
       "anwesenheitspflicht": false,
       "notiz": "Übung Zusatz",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "2. Seminar Datenanalyse",
       "id": "T11",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": null,
-      "start_zeit": null,
-      "raum_id": "E17",
+      "datum": "2025-09-17",
+      "start_zeit": "07:30",
+      "raum_id": "LAB3",
       "gruppe": null,
       "anwesenheitspflicht": true,
       "notiz": "Seminar Ergänzung",
@@ -115,7 +120,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T3",
       "duration": 90,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "3. Übung Energieversorgung",
@@ -132,7 +138,8 @@
       "anwesenheitspflicht": false,
       "notiz": "Konflikt mit T10",
       "duration": 60,
-      "semester_id": "WS26"
+      "semester_id": "WS26",
+      "serien_id": ""
     },
     {
       "name": "3. Seminar Datenanalyse",
@@ -146,7 +153,8 @@
       "anwesenheitspflicht": true,
       "notiz": "Konflikt mit T1",
       "duration": 120,
-      "semester_id": "SS26"
+      "semester_id": "SS26",
+      "serien_id": ""
     },
     {
       "name": "sda",
@@ -198,8 +206,8 @@
       "id": "T015_477b23c1_r1",
       "lva_id": "123.456",
       "typ": "VO",
-      "datum": "2026-02-23",
-      "start_zeit": "08:00",
+      "datum": "2026-02-26",
+      "start_zeit": "07:30",
       "raum_id": "E17",
       "gruppe": null,
       "anwesenheitspflicht": false,
@@ -303,7 +311,7 @@
       "id": "T015_a7a82626_r1",
       "lva_id": "123.456",
       "typ": "VO",
-      "datum": "2026-02-23",
+      "datum": "2026-02-24",
       "start_zeit": "08:00",
       "raum_id": "E17",
       "gruppe": null,
@@ -348,8 +356,8 @@
       "id": "T015_2a213432_r1",
       "lva_id": "123.456",
       "typ": "VO",
-      "datum": "2026-02-23",
-      "start_zeit": "08:00",
+      "datum": "2026-02-26",
+      "start_zeit": "12:00",
       "raum_id": "E17",
       "gruppe": null,
       "anwesenheitspflicht": false,
@@ -423,15 +431,15 @@
       "id": "T015_10018df7",
       "lva_id": "123.456",
       "typ": "VO",
-      "datum": "2026-02-23",
-      "start_zeit": "08:00",
+      "datum": "2026-02-26",
+      "start_zeit": "16:00",
       "raum_id": "E17",
       "gruppe": null,
       "anwesenheitspflicht": false,
       "notiz": "",
       "duration": 60,
       "semester_id": "SS26",
-      "serien_id": "10018df7"
+      "serien_id": ""
     }
   ]
 }

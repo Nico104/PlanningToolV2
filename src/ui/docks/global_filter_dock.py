@@ -1,7 +1,7 @@
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal, QDate
-from PySide6.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QPushButton, QDateEdit
+from PySide6.QtWidgets import QDockWidget, QWidget, QHBoxLayout, QPushButton, QDateEdit, QSizePolicy, QLabel
 
 from ..components.widgets.tight_combobox import TightComboBox
 from ...core.states import FilterState
@@ -32,39 +32,46 @@ class GlobalFilterDock(QDockWidget):
 
         self.fachrichtung_cb = TightComboBox()
         self.fachrichtung_cb.setToolTip("Fachrichtung filter")
-        self.fachrichtung_cb.setMinimumWidth(200)
+        self.fachrichtung_cb.setMinimumWidth(120)
+        self.fachrichtung_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.fachrichtung_cb)
 
         self.semester_cb = TightComboBox()
         self.semester_cb.setToolTip("Semester filter")
-        self.semester_cb.setMinimumWidth(160)
+        self.semester_cb.setMinimumWidth(110)
+        self.semester_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.semester_cb)
 
 
         self.lva_cb = TightComboBox()
         self.lva_cb.setToolTip("LVA filter")
-        self.lva_cb.setMinimumWidth(220)
+        self.lva_cb.setMinimumWidth(140)
+        self.lva_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.lva_cb)
 
         self.dozent_cb = TightComboBox()
         self.dozent_cb.setToolTip("Dozent filter")
-        self.dozent_cb.setMinimumWidth(180)
+        self.dozent_cb.setMinimumWidth(120)
+        self.dozent_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.dozent_cb)
 
         self.typ_cb = TightComboBox()
         self.typ_cb.setToolTip("Typ filter")
-        self.typ_cb.setMinimumWidth(160)
+        self.typ_cb.setMinimumWidth(110)
+        self.typ_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.typ_cb)
 
         self.room_cb = TightComboBox()
         self.room_cb.setToolTip("Raum filter")
-        self.room_cb.setMinimumWidth(200)
+        self.room_cb.setMinimumWidth(120)
+        self.room_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.room_cb)
 
         # Geplante Semester filter
         self.geplante_semester_cb = TightComboBox()
         self.geplante_semester_cb.setToolTip("Geplantes Semester (LVA) filter")
-        self.geplante_semester_cb.setMinimumWidth(160)
+        self.geplante_semester_cb.setMinimumWidth(110)
+        self.geplante_semester_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.geplante_semester_cb)
         
         
@@ -72,7 +79,8 @@ class GlobalFilterDock(QDockWidget):
         self.view_cb = TightComboBox()
         self.view_cb.addItem("Wochen", "week")
         self.view_cb.addItem("Tag", "day")
-        self.view_cb.setFixedWidth(120)
+        self.view_cb.addItem("Monat", "month")
+        self.view_cb.setFixedWidth(100)
         headerBar.addWidget(self.view_cb)
 
         self.prev_btn = QPushButton("<")
@@ -89,15 +97,41 @@ class GlobalFilterDock(QDockWidget):
         self.day_date.setObjectName("DateEdit")
         self.day_date.setCalendarPopup(True)
         self.day_date.setDate(QDate.currentDate())
-        self.day_date.setFixedWidth(150)
+        self.day_date.setMinimumWidth(110)
+        self.day_date.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.day_date)
 
         self.week_from = QDateEdit()
         self.week_from.setObjectName("DateEdit")
         self.week_from.setCalendarPopup(True)
-        self.week_from.setFixedWidth(150)
+        self.week_from.setMinimumWidth(110)
+        self.week_from.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.week_from.setDate(QDate.currentDate().addDays(-28))
         headerBar.addWidget(self.week_from)
+        # hide the internal date backing field from the UI; selectors drive it
+        self.week_from.setVisible(False)
+        
+        # Alternative selectors: week and month comboboxes (shown instead of QDateEdit)
+        self.week_selector = TightComboBox(compact_height=26, min_popup_width=200)
+        self.week_selector.setMinimumWidth(200)
+        self.week_selector.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        # match header controls' height for proper alignment
+        self.week_selector.setMinimumHeight(32)
+        headerBar.addWidget(self.week_selector)
+        self.week_selector.setObjectName("HeaderCombo")
+
+        self.month_selector = TightComboBox(compact_height=26, min_popup_width=160)
+        self.month_selector.setMinimumWidth(160)
+        self.month_selector.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        # match header controls' height for proper alignment
+        self.month_selector.setMinimumHeight(32)
+        headerBar.addWidget(self.month_selector)
+        self.month_selector.setObjectName("HeaderCombo")
+
+        # Context label to show week number or month name depending on view
+        self.period_label = QLabel("")
+        self.period_label.setMinimumWidth(140)
+        headerBar.addWidget(self.period_label)
         
         # self.sem_cb.setObjectName("HeaderCombo")
 
@@ -123,8 +157,24 @@ class GlobalFilterDock(QDockWidget):
         self.next_btn.clicked.connect(self.navNext.emit)
         self.day_date.dateChanged.connect(self.dayDateChanged.emit)
         self.week_from.dateChanged.connect(self.weekFromChanged.emit)
+        # also keep the period label in sync with the selected date
+        self.week_from.dateChanged.connect(lambda *_: self._update_period_label())
+        # keep selectors in sync when the hidden backing date changes (e.g. navigation)
+        self.week_from.dateChanged.connect(lambda *_: self._sync_selectors_with_dates())
+        self.day_date.dateChanged.connect(lambda *_: self._update_period_label())
+        self.day_date.dateChanged.connect(lambda *_: self._sync_selectors_with_dates())
+        # selector changes update the hidden week_from date field so planner remains compatible
+        self.week_selector.currentIndexChanged.connect(self._on_week_selector_changed)
+        self.month_selector.currentIndexChanged.connect(self._on_month_selector_changed)
 
         self.setWidget(self._widget)
+        # initialize visibility and period label according to current view
+        self._on_view_change()
+        # populate week and month selectors
+        self._populate_week_selector()
+        self._populate_month_selector()
+        # sync selectors with current week_from/day_date
+        self._sync_selectors_with_dates()
 
     def _on_change(self, *_) -> None:
         fs = FilterState(
@@ -138,8 +188,121 @@ class GlobalFilterDock(QDockWidget):
         )
         self.filtersChanged.emit(fs)
 
+
+
+    def _update_period_label(self, view: str | None = None) -> None:
+        if view is None:
+            view = str(self.view_cb.currentData())
+        if view == "week":
+            d = self.week_from.date()
+            wk = d.weekNumber()[0]
+            year = d.weekNumber()[1] if len(d.weekNumber()) > 1 else d.year()
+            start = d.toString("dd.MM.yyyy")
+            self.period_label.setText(f"KW {wk} {year} — {start}")
+        elif view == "month":
+            d = self.week_from.date()
+            self.period_label.setText(d.toString("MMMM yyyy"))
+        else:
+            # day view: show selected day for clarity
+            d = self.day_date.date()
+            self.period_label.setText(d.toString("dd.MM.yyyy"))
+
+    def _populate_week_selector(self) -> None:
+        self.week_selector.blockSignals(True)
+        self.week_selector.clear()
+        today = QDate.currentDate()
+        # start ~52 weeks back, align to monday
+        start = today.addDays(-365)
+        # align to Monday (ISO week starts Monday)
+        while start.dayOfWeek() != 1:
+            start = start.addDays(1)
+        d = QDate(start)
+        # generate ~156 weeks (3 years) to allow navigation
+        for i in range(0, 156):
+            wk_num = d.weekNumber()[0]
+            wk_year = d.weekNumber()[1] if len(d.weekNumber()) > 1 else d.year()
+            disp = f"KW {wk_num} {wk_year} — {d.toString('dd.MM.yyyy')}"
+            self.week_selector.addItem(disp, d)
+            d = d.addDays(7)
+        self.week_selector.blockSignals(False)
+
+    def _populate_month_selector(self) -> None:
+        self.month_selector.blockSignals(True)
+        self.month_selector.clear()
+        today = QDate.currentDate()
+        # months from -24 to +24 (~4 years)
+        for offset in range(-24, 25):
+            try:
+                dt = today.addMonths(offset)
+            except Exception:
+                # QDate.addMonths should exist; fallback to year/month calc
+                year = today.year()
+                month = today.month() + offset
+                while month < 1:
+                    month += 12
+                    year -= 1
+                while month > 12:
+                    month -= 12
+                    year += 1
+                dt = QDate(year, month, 1)
+            first = QDate(dt.year(), dt.month(), 1)
+            disp = first.toString("MMMM yyyy")
+            self.month_selector.addItem(disp, first)
+        self.month_selector.blockSignals(False)
+
+    def _sync_selectors_with_dates(self) -> None:
+        # set week_selector to match current week_from
+        cur_w = self.week_from.date()
+        # find matching data
+        idx = -1
+        for i in range(self.week_selector.count()):
+            data = self.week_selector.itemData(i)
+            if isinstance(data, QDate) and data == cur_w:
+                idx = i
+                break
+        if idx >= 0:
+            self.week_selector.setCurrentIndex(idx)
+        # set month selector to month of week_from
+        month_date = QDate(cur_w.year(), cur_w.month(), 1)
+        midx = -1
+        for i in range(self.month_selector.count()):
+            data = self.month_selector.itemData(i)
+            if isinstance(data, QDate) and data == month_date:
+                midx = i
+                break
+        if midx >= 0:
+            self.month_selector.setCurrentIndex(midx)
+
+    def _on_week_selector_changed(self, idx: int) -> None:
+        if idx < 0:
+            return
+        data = self.week_selector.itemData(idx)
+        if isinstance(data, QDate):
+            # update hidden week_from and emit change
+            self.week_from.setDate(data)
+            self.weekFromChanged.emit(data)
+
+    def _on_month_selector_changed(self, idx: int) -> None:
+        if idx < 0:
+            return
+        data = self.month_selector.itemData(idx)
+        if isinstance(data, QDate):
+            # set week_from to first of month for planner compatibility
+            self.week_from.setDate(data)
+            self.weekFromChanged.emit(data)
+
     def _on_view_change(self, *_) -> None:
-        self.viewChanged.emit(str(self.view_cb.currentData()))
+        # override previous simple emit handler to ensure only one selector is visible
+        view = str(self.view_cb.currentData())
+        # show only the appropriate selector
+        self.day_date.setVisible(view == "day")
+        self.week_selector.setVisible(view == "week")
+        self.month_selector.setVisible(view == "month")
+        # keep period label hidden so only a single interactive selector is visible
+        self.period_label.setVisible(False)
+        # sync selector values with the underlying date fields
+        self._sync_selectors_with_dates()
+        self.viewChanged.emit(view)
 
     def refresh_filter_options(self, fachrichtungen, semester_list, lva_list, raum_list, typ_list=None, dozent_list=None, current: Optional[FilterState] = None) -> None:
         # Populate geplante_semester_cb with names

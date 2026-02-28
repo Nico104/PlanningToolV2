@@ -54,9 +54,7 @@ class LVADialog(QDialog):
         try:
             with open(semester_path, encoding="utf-8") as f:
                 semester_data = json.load(f)["geplante_semester"]
-            print("DEBUG: Loaded semester_data:", semester_data)
-        except Exception as e:
-            print("DEBUG: Failed to load semester_data:", e)
+        except Exception:
             semester_data = []
         from ...core.models import GeplantesSemester
         self.sem_objects = [GeplantesSemester(

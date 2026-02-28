@@ -12,7 +12,7 @@ def load_conflicts(path=None):
         with open(abs_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        print(f"[conflict_service] Fehler beim Laden: {e}")
+        pass
         return []
 
 def save_conflicts(conflicts, path=None):
@@ -21,7 +21,7 @@ def save_conflicts(conflicts, path=None):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(conflicts, f, ensure_ascii=False, indent=4)
     except Exception as e:
-        print(f"[conflict_service] Fehler beim Speichern: {e}")
+        pass
 
 
 UNASSIGNED_DATE = date(2026, 1, 1)

@@ -36,6 +36,15 @@ class TerminService:
                     if a_end_time and b_end_time:
                         # Overlap if a starts before b ends AND b starts before a ends
                         if a.start_zeit < b_end_time and b.start_zeit < a_end_time:
+                            # Gruppe may be a domain object or a dict; handle both
+                            gruppe_val = ''
+                            if hasattr(a, 'gruppe') and a.gruppe:
+                                g = a.gruppe
+                                if isinstance(g, dict):
+                                    gruppe_val = g.get('name', '')
+                                else:
+                                    gruppe_val = getattr(g, 'name', '')
+
                             conflicts.append(ConflictIssue(
                                 severity="conflict",
                                 category="room",
@@ -46,7 +55,7 @@ class TerminService:
                                 zeit_bis=a.get_end_time(),
                                 raum=room,
                                 lva=getattr(a, 'lva_id', ''),
-                                gruppe=getattr(a, 'gruppe', {}).get('name', '') if hasattr(a, 'gruppe') and a.gruppe else ''
+                                gruppe=gruppe_val,
                             ))
         return conflicts
 

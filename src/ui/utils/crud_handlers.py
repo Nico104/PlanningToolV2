@@ -117,6 +117,8 @@ class CrudHandlers:
         if not cur:
             return False
 
+        # debug logging removed
+
         sems = []
         if hasattr(self.ds, "load_semester"):
             try:
@@ -244,27 +246,27 @@ class CrudHandlers:
         termine = self.ds.load_termine()
         # Serientermin: Liste von Terminen
         if isinstance(dlg.result, list):
-            print(f"[DEBUG] add_termin: {len(dlg.result)} Termine werden gespeichert")
+            pass
             # Prüfe auf doppelte IDs
             existing_ids = {t.id for t in termine}
             for t in dlg.result:
-                print(f"[DEBUG] Speichere Termin: id={t.id}, serien_id={getattr(t, 'serien_id', '')}")
+                pass
                 if t.id in existing_ids:
                     print(f"[DEBUG] Fehler: Termin-ID {t.id} existiert bereits!")
                     QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{t.id}' existiert bereits.")
                     return False
             termine.extend(dlg.result)
         else:
-            print(f"[DEBUG] add_termin: Einzeltermin id={dlg.result.id}")
+            pass
             if any(t.id == dlg.result.id for t in termine):
-                print(f"[DEBUG] Fehler: Termin-ID {dlg.result.id} existiert bereits!")
+                pass
                 QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{dlg.result.id}' existiert bereits.")
                 return False
             termine.append(dlg.result)
-        print(f"[DEBUG] Speichere {len(termine)} Termine insgesamt...")
+        pass
         self.ds.save_termine(termine)
         self.planner.refresh()
-        print(f"[DEBUG] Speichern abgeschlossen.")
+        pass
         return True
 
     def edit_termin(self) -> None:
@@ -361,6 +363,8 @@ class CrudHandlers:
             if new_room_id is not None:
                 t.raum_id = new_room_id
             new_t = t
+
+        # debug logging removed
 
         termine = [new_t if x.id == termin_id else x for x in termine]
         self.ds.save_termine(termine)

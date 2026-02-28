@@ -182,7 +182,7 @@ class KonflikteDialog(QDialog):
                 edit_btn.setStyleSheet("padding: 2px 10px;")
                 row_layout.addWidget(edit_btn, alignment=Qt.AlignVCenter)
                 def on_edit_details(idx=idx):
-                    print(f"Edit details for conflict: {self.conflicts[idx]['name']}")
+                    pass
                 edit_btn.clicked.connect(on_edit_details)
             row_layout.addStretch(1)
             def on_toggle(state, idx=idx):

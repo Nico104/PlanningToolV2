@@ -6,7 +6,8 @@ from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QFrame, QApplicati
 class _TightDelegate(QStyledItemDelegate):
     def sizeHint(self, option, index):
         sz = super().sizeHint(option, index)
-        sz.setHeight(max(24, sz.height() - 2))
+        # make list items compact
+        sz.setHeight(max(20, sz.height() - 4))
         return sz
 
 
@@ -29,6 +30,7 @@ class TightComboBox(QComboBox):
 
 
         self.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        # apply a compact minimum height; allow callers to override with setFixedHeight
         self.setMinimumHeight(self._compact_height)
 
         self.setItemDelegate(_TightDelegate(self))
@@ -81,6 +83,13 @@ class TightComboBox(QComboBox):
         self._sync_popup_styling()
         self._fit_popup_width()
         self._fit_popup_height()  
+        # ensure the popup window tightly wraps the view to avoid large transparent areas
+        v = self.view()
+        w = v.window()
+        try:
+            w.setFixedSize(v.width(), v.height())
+        except Exception:
+            pass
         super().showPopup()
 
 
@@ -126,14 +135,15 @@ class TightComboBox(QComboBox):
                 background: transparent;
                 border: none;
                 outline: 0;
-                padding: 6px; /* inner padding inside the rounded window */
+                    padding: 0px; /* remove inner padding so items align with popup edges */
                 selection-background-color: #4f86ff;
                 selection-color: white;
             }
 
             QAbstractItemView::item {
-                padding: 7px 12px;
-                margin: 2px;
+                /* match header combo padding vertically (6px) so selected row aligns */
+                    padding: 6px 12px;
+                    margin: 0px; /* remove item margin so selection fills width */
                 border-radius: 4px;
                 color: black;
             }

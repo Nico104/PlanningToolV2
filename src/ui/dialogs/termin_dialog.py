@@ -29,8 +29,8 @@ class TerminDialog(QDialog):
         self.setModal(True)
         self.settings = settings or {}
 
-        # Sentinel für unassigned date ganz am Anfang setzen!
-        self._unassigned_qdate = QDate(2026, 1, 1)
+        # Sentinel for unassigned date: use a far-past minimum so real dates are not clamped
+        self._unassigned_qdate = QDate(1900, 1, 1)
 
         # Erst die Felder initialisieren, dann die Logik:
         self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
@@ -108,8 +108,7 @@ class TerminDialog(QDialog):
         self.date_de = QDateEdit()
         self.date_de.setCalendarPopup(True)
 
-        # Sentinel for unassigned date
-        self._unassigned_qdate = QDate(2026, 1, 1)
+        # Sentinel for unassigned date (minimum). Keep far-past value so valid dates remain selectable.
         self.date_de.setMinimumDate(self._unassigned_qdate)
         self.date_de.setSpecialValueText("Kein Datum zugewiesen")
         self.date_de.setDate(self._unassigned_qdate)
@@ -326,7 +325,7 @@ class TerminDialog(QDialog):
                 while current <= end_date:
                     dates.append(current)
                     current += delta
-                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+                
             elif period == "monatlich":
                 def add_month(dt):
                     month = dt.month + 1
@@ -345,19 +344,19 @@ class TerminDialog(QDialog):
                 while current <= end_date:
                     dates.append(current)
                     current = add_month(current)
-                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+                
             else:
                 dates = []
                 current = d
                 while current <= end_date:
                     dates.append(current)
                     current += delta
-                print(f"[DEBUG] Serientermin: {len(dates)} Termine, serien_id={serien_id}")
+                
             self._result = []
             for idx, date_val in enumerate(dates):
                 # Eindeutige ID: BasisID + Serienkürzel + Laufnummer
                 termin_id = f"{self.new_id}_{serien_id_short}_r{idx+1}" if len(dates) > 1 else f"{self.new_id}_{serien_id_short}"
-                print(f"[DEBUG] Termin {idx+1}: id={termin_id}, datum={date_val}")
+                
                 self._result.append(Termin(
                     name=name_value,
                     id=termin_id,
