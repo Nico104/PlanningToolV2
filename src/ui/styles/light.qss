@@ -997,3 +997,14 @@ QCalendarWidget QSpinBox {
   font-size: 13px;
   color: #222222;
 }
+
+QWidget#Toast {
+  background: transparent;
+}
+
+QLabel#ToastLabel {
+  color: white;
+  background: rgba(50,50,50,0.95);
+  padding: 8px 12px;
+  border-radius: 6px;
+}

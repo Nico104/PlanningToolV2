@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout
 class Toast(QWidget):
     def __init__(self, parent, text: str, duration_ms: int = 3000):
         super().__init__(parent)
+        self.setObjectName("Toast")
         self.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.duration_ms = duration_ms
@@ -12,9 +13,7 @@ class Toast(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 12, 8)
         self.label = QLabel(text, self)
-        self.label.setStyleSheet(
-            "color: white; background: rgba(50,50,50,0.95); padding:8px 12px; border-radius:6px;"
-        )
+        self.label.setObjectName("ToastLabel")
         layout.addWidget(self.label)
 
     def show(self) -> None:

@@ -200,21 +200,6 @@
       "duration": 65,
       "semester_id": "SS26",
       "serien_id": ""
-    },
-    {
-      "name": "ju",
-      "id": "T015_10018df7",
-      "lva_id": "123.456",
-      "typ": "VO",
-      "datum": "2026-02-26",
-      "start_zeit": "16:00",
-      "raum_id": "E17",
-      "gruppe": null,
-      "anwesenheitspflicht": false,
-      "notiz": "",
-      "duration": 60,
-      "semester_id": "SS26",
-      "serien_id": "10018df7"
     }
   ]
 }
