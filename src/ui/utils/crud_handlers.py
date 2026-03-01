@@ -12,6 +12,7 @@ from ...core.models import GeplantesSemester
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.termin_dialog import TerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
+from ..components.widgets.toast import Toast
 
 
 class CrudHandlers:
@@ -279,25 +280,69 @@ class CrudHandlers:
         tid = self._selected_termin_id()
         if not tid:
             return
+        termine = self.ds.load_termine()
+        cur = next((t for t in termine if t.id == tid), None)
+        # If part of a series, offer options
+        if cur and getattr(cur, "serien_id", ""):
+            msg = QMessageBox(self.parent)
+            msg.setWindowTitle("Löschen")
+            msg.setText(f"Termin '{tid}' ist Teil einer Serie. Was möchten Sie löschen?")
+            btn_single = msg.addButton("Nur diesen Termin", QMessageBox.AcceptRole)
+            btn_series = msg.addButton("Ganze Serie", QMessageBox.DestructiveRole)
+            btn_cancel = msg.addButton(QMessageBox.Cancel)
+            msg.exec()
+            clicked = msg.clickedButton()
+            if clicked == btn_cancel:
+                return
+            if clicked == btn_single:
+                termine = [t for t in termine if t.id != tid]
+            else:
+                serien = getattr(cur, "serien_id", "")
+                original_count = len(termine)
+                termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
+                deleted_count = original_count - len(termine)
+                if deleted_count > 0:
+                    Toast(self.parent, f"{deleted_count} Termine gelöscht.", duration_ms=2500).show()
+        else:
+            dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
+            if dlg.exec() != QDialog.Accepted:
+                return
+            termine = [t for t in termine if t.id != tid]
 
-        dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
-        if dlg.exec() != QDialog.Accepted:
-            return
-
-        termine = [t for t in self.ds.load_termine() if t.id != tid]
         self.ds.save_termine(termine)
         self.planner.refresh()
 
     def del_termin_by_id(self, tid: str) -> bool:
         if not tid:
             return False
+        termine = self.ds.load_termine()
+        cur = next((t for t in termine if t.id == tid), None)
+        if cur and getattr(cur, "serien_id", ""):
+            msg = QMessageBox(self.parent)
+            msg.setWindowTitle("Löschen")
+            msg.setText(f"Termin '{tid}' ist Teil einer Serie. Was möchten Sie löschen?")
+            btn_single = msg.addButton("Nur diesen Termin", QMessageBox.AcceptRole)
+            btn_series = msg.addButton("Ganze Serie", QMessageBox.DestructiveRole)
+            btn_cancel = msg.addButton(QMessageBox.Cancel)
+            msg.exec()
+            clicked = msg.clickedButton()
+            if clicked == btn_cancel:
+                return False
+            if clicked == btn_single:
+                termine = [t for t in termine if t.id != tid]
+            else:
+                serien = getattr(cur, "serien_id", "")
+                original_count = len(termine)
+                termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
+                deleted_count = original_count - len(termine)
+                if deleted_count > 0:
+                    Toast(self.parent, f"{deleted_count} Termine gelöscht.", duration_ms=2500).show()
+        else:
+            dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
+            if dlg.exec() != QDialog.Accepted:
+                return False
+            termine = [t for t in termine if t.id != tid]
 
-        
-        dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
-        if dlg.exec() != QDialog.Accepted:
-            return False
-
-        termine = [t for t in self.ds.load_termine() if t.id != tid]
         self.ds.save_termine(termine)
         self.planner.refresh()
         return True

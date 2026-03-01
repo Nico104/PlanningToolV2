@@ -67,12 +67,18 @@ class LVADialog(QDialog):
         self.sem_chip_items = []
         if lva and getattr(lva, "geplante_semester", None):
             for sid in lva.geplante_semester:
+                sid = str(sid).strip()
+                if not sid:
+                    continue
                 sem = next((sem for sem in self.sem_objects if sem.id == sid), None)
                 if sem:
                     display = sem.name  # Only show name
-                    self.sem_chip_items.append(display)
+                    display = str(display).strip()
+                    if display and display not in self.sem_chip_items:
+                        self.sem_chip_items.append(display)
                 else:
-                    self.sem_chip_items.append(sid)
+                    if sid not in self.sem_chip_items:
+                        self.sem_chip_items.append(sid)
         self.sem_list = ChipListWidget(self.sem_chip_items)
         def refresh_sem_cb():
             self.sem_cb.clear()
@@ -153,9 +159,12 @@ class LVADialog(QDialog):
         geplante_semester = []
         # Map chip names back to IDs
         for chip_name in self.sem_list.items:
+            chip_name = str(chip_name).strip()
+            if not chip_name:
+                continue
             # Find the semester object by name
             sem = next((s for s in self.sem_objects if s.name == chip_name), None)
-            if sem:
+            if sem and sem.id not in geplante_semester:
                 geplante_semester.append(sem.id)
         self._result = Lehrveranstaltung(
             id=cid,

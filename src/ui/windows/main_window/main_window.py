@@ -17,6 +17,7 @@ from src.ui.planner.workspace import PlannerWorkspace
 from ...dialogs import SettingsDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
 from src.ui.dialogs.import_dialog import ImportDialog
+from ...components.widgets.toast import Toast
 import os
 
 class MainWindow(QMainWindow):
@@ -137,7 +138,7 @@ class MainWindow(QMainWindow):
                 subprocess.Popen([python] + sys.argv)
                 sys.exit(0)
         else:
-            QMessageBox.information(self, "Gespeichert", "Gespeichert.")
+            Toast(self, "Gespeichert.", duration_ms=2500).show()
         self.refresh_everything()
 
     def _build_menus(self) -> None:
@@ -211,7 +212,7 @@ class MainWindow(QMainWindow):
             return
         try:
             Path(fn).write_text(json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-            QMessageBox.information(self, "Export", "Projekt exportiert.")
+            Toast(self, "Projekt exportiert.", duration_ms=2500).show()
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
 
@@ -327,7 +328,7 @@ class MainWindow(QMainWindow):
         if errors:
             QMessageBox.warning(self, "Import Fehler", "Einige Dateien konnten nicht importiert werden:\n" + "\n".join(errors))
         else:
-            QMessageBox.information(self, "Import abgeschlossen", f"Importiert: {len(written)} Dateien.")
+            Toast(self, f"Importiert: {len(written)} Dateien.", duration_ms=3000).show()
 
         # refresh after import
         self.refresh_everything()

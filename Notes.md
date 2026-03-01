@@ -66,7 +66,7 @@ Kalendar Datum X
 
 Tag / Wochen / 2 Wochen / Monat
 
-SerienTermine erstellen
+SerienTermine erstellen 
 
 Feiertage und Vorlesungsfrei Zeiten (Semesterferien) X
 

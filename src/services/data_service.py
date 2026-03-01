@@ -76,7 +76,17 @@ class DataService:
         out: List[Lehrveranstaltung] = []
         for x in raw:
             v = x["vortragende"]
-            geplante_semester = x.get("geplante_semester", ["", ""])  # fallback to two empty strings
+            raw_geplante_semester = x.get("geplante_semester", [])
+            if not isinstance(raw_geplante_semester, list):
+                raw_geplante_semester = []
+            geplante_semester = []
+            seen = set()
+            for item in raw_geplante_semester:
+                semester_id = str(item).strip()
+                if not semester_id or semester_id in seen:
+                    continue
+                seen.add(semester_id)
+                geplante_semester.append(semester_id)
             out.append(Lehrveranstaltung(
                 id=x["id"],
                 name=x["name"],
@@ -119,7 +129,8 @@ class DataService:
                 anwesenheitspflicht=bool(x.get("anwesenheitspflicht", False)),
                 notiz=x.get("notiz", ""),
                 duration=int(x.get("duration", 0)),
-                semester_id=x.get("semester_id", "")
+                semester_id=x.get("semester_id", ""),
+                serien_id=x.get("serien_id", "")
             ))
         return out
 

@@ -2,7 +2,7 @@ from datetime import date, datetime
 import calendar
 from typing import List
 
-from PySide6.QtCore import Qt, QObject, QEvent
+from PySide6.QtCore import Qt, QObject, QEvent, QDate, QTimer
 from PySide6.QtWidgets import (
     QTableWidgetItem,
     QTableWidget,
@@ -204,8 +204,53 @@ class PlannerMonthView:
 
         # get stored day date
         day_date = w.property("day_date")
+        target_day = None
+        if isinstance(day_date, date):
+            target_day = day_date
+        elif isinstance(day_date, QDate):
+            target_day = qdate_to_date(day_date)
+        highlight_ids = [str(getattr(t, "id", "")) for t in term_list if getattr(t, "id", None)]
 
-        dlg = DayEventsDialog(self.table.window(), term_list, edit_cb=self.edit_by_id_cb, day=day_date)
+        def _switch_to_week() -> None:
+            mw = self.table.window()
+            if not mw or target_day is None:
+                return
+            planner = getattr(mw, "planner", None)
+            if not planner:
+                return
+            planner.day_date.setDate(date_to_qdate(target_day))
+            planner.week_from.setDate(date_to_qdate(planner._align_to_monday(target_day)))
+            idx = planner.view_cb.findData("week")
+            if idx >= 0:
+                planner.view_cb.setCurrentIndex(idx)
+            planner.refresh(emit=False)
+            if highlight_ids:
+                QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
+
+        def _switch_to_day() -> None:
+            mw = self.table.window()
+            if not mw or target_day is None:
+                return
+            planner = getattr(mw, "planner", None)
+            if not planner:
+                return
+            planner.day_date.setDate(date_to_qdate(target_day))
+            planner.week_from.setDate(date_to_qdate(planner._align_to_monday(target_day)))
+            idx = planner.view_cb.findData("day")
+            if idx >= 0:
+                planner.view_cb.setCurrentIndex(idx)
+            planner.refresh(emit=False)
+            if highlight_ids:
+                QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
+
+        dlg = DayEventsDialog(
+            self.table.window(),
+            term_list,
+            edit_cb=self.edit_by_id_cb,
+            day=target_day,
+            go_week_cb=_switch_to_week,
+            go_day_cb=_switch_to_day,
+        )
         dlg.exec()
 
     def _on_table_drop(self, termin_id: str, row: int, col: int):
