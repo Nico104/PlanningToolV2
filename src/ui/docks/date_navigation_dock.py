@@ -33,14 +33,6 @@ class DateNavigationDock(QDockWidget):
         headerBar.setContentsMargins(6, 6, 6, 6)
         headerBar.setSpacing(8)
 
-        self.view_cb = TightComboBox()
-        self.view_cb.addItem("Wochen", "week")
-        self.view_cb.addItem("Tag", "day")
-        self.view_cb.addItem("Monat", "month")
-        self.view_cb.setFixedWidth(100)
-        self.view_cb.setObjectName("HeaderCombo")
-        headerBar.addWidget(self.view_cb)
-
         self.prev_btn = QPushButton("◀")
         self.prev_btn.setObjectName("NavButton")
         self.prev_btn.setFixedWidth(36)
@@ -50,6 +42,14 @@ class DateNavigationDock(QDockWidget):
         self.next_btn.setObjectName("NavButton")
         self.next_btn.setFixedWidth(36)
         headerBar.addWidget(self.next_btn)
+
+        self.view_cb = TightComboBox()
+        self.view_cb.addItem("Wochen", "week")
+        self.view_cb.addItem("Tag", "day")
+        self.view_cb.addItem("Monat", "month")
+        self.view_cb.setFixedWidth(100)
+        self.view_cb.setObjectName("HeaderCombo")
+        headerBar.addWidget(self.view_cb)
 
         self.day_date = QDateEdit()
         self.day_date.setObjectName("DateEdit")

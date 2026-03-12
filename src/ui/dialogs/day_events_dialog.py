@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QWidget,
     QHBoxLayout,
+    QFrame,
 )
 from PySide6.QtCore import Qt
 
@@ -27,6 +28,7 @@ class DayEventsDialog(QDialog):
         go_day_cb: Optional[Callable[[], None]] = None,
     ):
         super().__init__(parent)
+        self.setObjectName("DayEventsDialog")
         self.setModal(True)
         self.setWindowTitle("Termine des Tages")
         self.edit_cb = edit_cb
@@ -54,8 +56,9 @@ class DayEventsDialog(QDialog):
         self.listw.setSelectionMode(QListWidget.SingleSelection)
         self.listw.setWordWrap(True)
         self.listw.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.listw.setAlternatingRowColors(True)
-        self.listw.setSpacing(4)
+        # use card-style rows instead of alternating colors
+        self.listw.setAlternatingRowColors(False)
+        self.listw.setSpacing(8)  # more space between cards
 
         for t in termins:
             start = fmt_time(t.start_zeit) if getattr(t, 'start_zeit', None) else ""
@@ -69,7 +72,11 @@ class DayEventsDialog(QDialog):
                 raum_id=str(getattr(t, 'raum_id', '') or ''),
                 name=str(getattr(t, 'name', '') or ''),
             )
-            it.setSizeHint(row_widget.sizeHint())
+            # make item a bit taller to accommodate card padding
+            hint = row_widget.sizeHint()
+            # add some extra height for margins
+            hint.setHeight(hint.height() + 16)
+            it.setSizeHint(hint)
             self.listw.addItem(it)
             self.listw.setItemWidget(it, row_widget)
 
@@ -77,8 +84,13 @@ class DayEventsDialog(QDialog):
         lay.addWidget(self.listw)
 
         bb = QDialogButtonBox(QDialogButtonBox.Close)
+        close_btn = bb.button(QDialogButtonBox.Close)
+        if close_btn is not None:
+            close_btn.setObjectName("PrimaryButton")
         self.btn_week = bb.addButton("Zur Wochenansicht", QDialogButtonBox.ActionRole)
+        self.btn_week.setObjectName("SecondaryButton")
         self.btn_day = bb.addButton("Zur Tagesansicht", QDialogButtonBox.ActionRole)
+        self.btn_day.setObjectName("SecondaryButton")
         self.btn_week.clicked.connect(self._go_week)
         self.btn_day.clicked.connect(self._go_day)
         bb.rejected.connect(self.reject)
@@ -88,10 +100,12 @@ class DayEventsDialog(QDialog):
         self.resize(480, 360)
 
     def _build_row_widget(self, *, start: str, end: str, typ: str, raum_id: str, name: str) -> QWidget:
-        row = QWidget(self.listw)
+        # use a frame so we can style it like a card
+        row = QFrame(self.listw)
+        row.setObjectName("DayEventCard")
         layout = QVBoxLayout(row)
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(2)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(4)
 
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
@@ -105,6 +119,7 @@ class DayEventsDialog(QDialog):
         name_lbl = QLabel(name if name else "(Ohne Titel)", row)
         name_lbl.setObjectName("DayEventTitle")
         name_lbl.setWordWrap(True)
+        name_lbl.setStyleSheet("font-weight:600;")
 
         top.addWidget(time_lbl, 0)
         top.addWidget(name_lbl, 1)
@@ -128,6 +143,8 @@ class DayEventsDialog(QDialog):
                 self.edit_cb(str(tid))
             finally:
                 self.accept()
+
+
 
     def _go_week(self):
         if self.go_week_cb:

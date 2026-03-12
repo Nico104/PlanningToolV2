@@ -24,7 +24,6 @@ class ConflictCard(QFrame):
 
         self.setObjectName("ConflictCard")
         self.setCursor(Qt.PointingHandCursor)
-        # self.setAttribute(Qt.WA_StyledBackground, True)
         self.setProperty("conflictKind", conflict_kind)
         self.setProperty("severity", severity)
 

@@ -10,7 +10,7 @@ from PySide6.QtGui import QPixmap
 class TerminCard(QLabel):
     #A compact card widget for displaying a single termin
     MIME = "application/termin-id"
-    doubleClicked = Signal(str)  # Emits termin_id
+    doubleClicked = Signal(str)
     _focused_card_ref: weakref.ref | None = None
     _highlighted_refs: list[weakref.ref] = []
 
@@ -21,7 +21,7 @@ class TerminCard(QLabel):
         self._is_dragging = False
         self._focused = False
         self._highlighted = False
-        
+
         self.setWordWrap(True)
         self._base_style = (
             f"background-color: {bg_color.name()};"
@@ -37,10 +37,10 @@ class TerminCard(QLabel):
         self.setFocusPolicy(Qt.StrongFocus)
 
     def _apply_style(self) -> None:
-        if self._focused:
+        if self._focused or self._highlighted:
             border = "border: 2px solid #111111;"
-        elif self._highlighted:
-            border = "border: 2px solid #ff9800;"
+        #elif self._highlighted:
+        #    border = "border: 2px solid #ff9800;"
         else:
             border = "border: none;"
         self.setStyleSheet(self._base_style + border)
@@ -113,10 +113,10 @@ class TerminCard(QLabel):
     def mouseMoveEvent(self, event):
         if not (event.buttons() & Qt.LeftButton):
             return
-        
+
         if not hasattr(self, '_drag_start_pos'):
             return
-            
+
         # Only start drag if moved enough distance
         distance = (event.pos() - self._drag_start_pos).manhattanLength()
         if distance < 5:  # Minimum drag distance
@@ -129,75 +129,15 @@ class TerminCard(QLabel):
         mime = QMimeData()
         mime.setData(self.MIME, str(self.termin_id).encode("utf-8"))
         drag.setMimeData(mime)
-        
+
         # Set a drag pixmap
         pixmap = QPixmap(self.size())
         pixmap.fill(Qt.transparent)
         self.render(pixmap)
         drag.setPixmap(pixmap)
-        
+
         # Execute the drag and drop operation
         # Returns Qt.MoveAction if successfully dropped
         result = drag.exec(Qt.MoveAction)
-        
+
         super().mouseMoveEvent(event)
-
-
-class TimeSlotCell(QWidget):
-    def __init__(self, target_date: date, parent=None):
-        super().__init__(parent)
-        self.target_date = target_date
-        self._grid_row_height = 0
-        self._grid_span_rows = 0
-        self.setContentsMargins(0, 0, 0, 0)
-        self.layout = QHBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(2)
-        self.setLayout(self.layout)
-        
-       
-        self.setStyleSheet("background-color: transparent;")
-
-    def set_grid_info(self, row_height: int, span_rows: int) -> None:
-        self._grid_row_height = max(0, row_height)
-        self._grid_span_rows = max(0, span_rows)
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        if self._grid_row_height <= 0 or self._grid_span_rows <= 1:
-            return
-        painter = QPainter(self)
-        pen = QPen(QColor("#f0efec"))
-        painter.setPen(pen)
-        for i in range(1, self._grid_span_rows):
-            y = i * self._grid_row_height
-            painter.drawLine(0, y, self.width(), y)
-
-    def add_termin_card(self, card: TerminCard, top_offset_px: int = 0) -> None:
-        wrapper = QWidget(self)
-        wrapper.setContentsMargins(0, 0, 0, 0)
-        vbox = QVBoxLayout(wrapper)
-        vbox.setContentsMargins(0, max(0, top_offset_px), 0, 0)
-        vbox.setSpacing(0)
-        vbox.addWidget(card)
-        self.layout.addWidget(wrapper, 1, Qt.AlignTop)  # align to top, equal horizontal space
-
-    def clear_cards(self) -> None:
-        while self.layout.count():
-            item = self.layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-    def get_termin_ids(self) -> list[str]:
-        ids = []
-        for i in range(self.layout.count()):
-            item = self.layout.itemAt(i)
-            if item and item.widget():
-                widget = item.widget()
-                if isinstance(widget, TerminCard):
-                    ids.append(widget.termin_id)
-                else:
-                    child_card = widget.findChild(TerminCard)
-                    if child_card:
-                        ids.append(child_card.termin_id)
-        return ids

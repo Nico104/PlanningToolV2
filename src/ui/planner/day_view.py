@@ -9,7 +9,8 @@ from ...core.models import Raum, Termin
 from ..utils.datetime_utils import qdate_to_date, fmt_time, fmt_date, date_to_qdate, mins_from_time
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG, DEFAULT_FG
 from .state import PlannerState
-from .cell import TimeSlotCell, TerminCard
+from .timeslotcell import TimeSlotCell
+from .termincard import TerminCard
 
 
 

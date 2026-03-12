@@ -224,8 +224,8 @@ class PlannerMonthView:
             if idx >= 0:
                 planner.view_cb.setCurrentIndex(idx)
             planner.refresh(emit=False)
-            if highlight_ids:
-                QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
+            #if highlight_ids:
+            #    QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
 
         def _switch_to_day() -> None:
             mw = self.table.window()
@@ -240,8 +240,8 @@ class PlannerMonthView:
             if idx >= 0:
                 planner.view_cb.setCurrentIndex(idx)
             planner.refresh(emit=False)
-            if highlight_ids:
-                QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
+            #if highlight_ids:
+            #    QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
 
         dlg = DayEventsDialog(
             self.table.window(),

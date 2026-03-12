@@ -10,7 +10,8 @@ from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time, mins_from
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG, DEFAULT_FG
 from .state import PlannerState
 from ..utils.datetime_utils import date_to_qdate
-from .cell import TimeSlotCell, TerminCard
+from .timeslotcell import TimeSlotCell
+from .termincard import TerminCard
 
 
 

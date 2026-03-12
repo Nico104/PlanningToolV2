@@ -16,7 +16,8 @@ from .day_view import PlannerDayView
 from .week_view import PlannerWeekView
 from .month_view import PlannerMonthView
 from ..utils.crud_handlers import CrudHandlers
-from .cell import TerminCard, TimeSlotCell
+from .termincard import TerminCard
+from .timeslotcell import TimeSlotCell
 from PySide6.QtWidgets import QLabel
 from ..components.dragdrop.week_drop_table import WeekDropTable
 from ..components.dragdrop.month_drop_table import MonthDropTable
@@ -348,14 +349,7 @@ class PlannerWorkspace(QWidget):
                 self.clear_conflict_highlights()
 
     def _jump_to_first_termin(self, ids: set[str]) -> None:
-        t = None
-        if hasattr(self.state, "termin_map"):
-            for tid in ids:
-                t = self.state.termin_map.get(tid)
-                if t:
-                    break
-        if t is None:
-            t = next((x for x in self.state.termine if str(x.id) in ids), None)
+        t = next((x for x in self.state.termine if str(x.id) in ids), None)
         if not t or not t.datum:
             return
 
