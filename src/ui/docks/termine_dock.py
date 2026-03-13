@@ -1,10 +1,10 @@
 from functools import partial
-from typing import List, Dict
+from typing import List
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QScrollArea, QMenu, QFrame, QLabel, QToolButton
+    QScrollArea, QMenu, QFrame, QToolButton
 )
 
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -17,6 +17,7 @@ from collections import defaultdict
 
 
 class TermineDock(QDockWidget):
+    """Dock widget that lists Termine as grouped cards with edit/delete/unassign signals"""
     termin_double_clicked = Signal(str)
     termin_delete_clicked = Signal(str)
     termin_unassign_requested = Signal(str)
@@ -74,7 +75,6 @@ class TermineDock(QDockWidget):
         self._lvas = list(lvas)
         self._raeume = list(raeume)
 
-        # Reset group states if group keys changed
         self._init_group_states()
         self._build_cards()
 
@@ -102,10 +102,10 @@ class TermineDock(QDockWidget):
         for t in terms:
             lva_groups[t.lva_id].append(t)
 
-        # Sort LVA groups by LVA name (if available), else by lva_id
+        # Sort LVA groups by display name, then by ID
         def lva_sort_key(lva_id):
             lva = next((l for l in self._lvas if l.id == lva_id), None)
-            return (lva.name if lva else str(lva_id))
+            return ((lva.name if lva else ""), (lva.id if lva else str(lva_id)))
 
         for lva_id in sorted(lva_groups.keys(), key=lva_sort_key):
             lva = next((l for l in self._lvas if l.id == lva_id), None)

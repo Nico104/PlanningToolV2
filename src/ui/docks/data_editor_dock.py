@@ -5,7 +5,7 @@ from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QTabWidget
 
-from ...core.models import Lehrveranstaltung, Raum, Semester, Termin, GeplantesSemester
+from ...core.models import Lehrveranstaltung, Raum, Semester, Termin
 from ..utils.crud_handlers import CrudHandlers
 from ..components.widgets.editor_tab_widget import EditorTab, make_item, selected_id
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -55,8 +55,6 @@ class DataEditorDock(QDockWidget):
         self.tabs.addTab(self.tab_geplante_semester, "Geplante Semester")
 
         self.setWidget(wrap)
-
-        # Connect tab change signal to refresh Termine tab
         self.tabs.currentChanged.connect(self._on_tab_changed)
 
         self._crud = CrudHandlers(
@@ -111,15 +109,10 @@ class DataEditorDock(QDockWidget):
         self._refresh_freie_tage()
         self._refresh_termine()
         self._refresh_geplante_semester()
+        
     def _refresh_geplante_semester(self) -> None:
-        import json
-        semester_path = self.data_dir / "geplante_semester.json"
-        try:
-            with open(semester_path, encoding="utf-8") as f:
-                semester_data = json.load(f)["geplante_semester"]
-        except Exception:
-            semester_data = []
-        rows = [[s["name"], s.get("notiz", ""), s["id"]] for s in semester_data]
+        semester_data = self._crud.read_geplante_semester()
+        rows = [[s.get("name", ""), s.get("notiz", ""), s.get("id", "")] for s in semester_data]
         self._fill_table(self.tab_geplante_semester.table, rows)
 
     def _refresh_semester(self) -> None:
@@ -132,15 +125,12 @@ class DataEditorDock(QDockWidget):
     # Refresh tables
     def _refresh_lvas(self) -> None:
         lvas: List[Lehrveranstaltung] = self.ds.load_lvas()
-        # Load semester names for display
-        import os, json
-        semester_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "..", "..", "data", "geplante_semester.json")
-        try:
-            with open(semester_path, encoding="utf-8") as f:
-                semester_data = json.load(f)["geplante_semester"]
-        except Exception:
-            semester_data = []
-        sem_id_to_name = {s["id"]: s["name"] for s in semester_data}
+        semester_data = self._crud.read_geplante_semester()
+        sem_id_to_name = {
+            str(s.get("id", "")).strip(): str(s.get("name", "")).strip()
+            for s in semester_data
+            if str(s.get("id", "")).strip()
+        }
 
         rows = [
             [
@@ -160,9 +150,6 @@ class DataEditorDock(QDockWidget):
         rows = [[r.id, r.name, str(r.kapazitaet)] for r in rooms]
         self._fill_table(self.tab_rooms.table, rows)
 
-    # def _refresh_semester(self) -> None:
-    #     # No global semester info anymore
-    #     pass
 
     def _refresh_freie_tage(self) -> None:
         freie = self._crud.read_freie_tage()
@@ -211,7 +198,6 @@ class DataEditorDock(QDockWidget):
                     gruppe_str = f"{name}"
             else:
                 gruppe_str = ""
-            # Zeige ausschließlich die Termin-'name'-Variable
             termin_name = getattr(tm, "name", "")
             rows.append([
                 termin_name,

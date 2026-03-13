@@ -13,7 +13,7 @@ from ..components.widgets.tight_combobox import TightComboBox
 
 class DateNavigationDock(QDockWidget):
     """
-    Dock for global date/view navigation only.
+    Dock for global date/view navigation only
     """
 
     viewChanged = Signal(str)
@@ -59,7 +59,6 @@ class DateNavigationDock(QDockWidget):
         self.day_date.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.day_date)
 
-        # hidden backing date for week/month navigation compatibility
         self.week_from = QDateEdit()
         self.week_from.setObjectName("DateEdit")
         self.week_from.setCalendarPopup(True)

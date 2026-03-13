@@ -7,6 +7,9 @@ from .termincard import TerminCard
 
 
 class TimeSlotCell(QWidget):
+    """Container widget for one planner table cell that can stack multiple TerminCards
+    """
+
     def __init__(self, target_date: date, parent=None):
         super().__init__(parent)
         self.target_date = target_date

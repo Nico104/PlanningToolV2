@@ -1,13 +1,10 @@
-from datetime import date, datetime
+from datetime import date
 import calendar
 from typing import List
 
-from PySide6.QtCore import Qt, QObject, QEvent, QDate, QTimer
+from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtWidgets import (
-    QTableWidgetItem,
     QTableWidget,
-    QListWidgetItem,
-    QAbstractItemView,
     QWidget,
     QLabel,
     QVBoxLayout,
@@ -18,15 +15,13 @@ from PySide6.QtWidgets import (
 from ...core.models import Termin
 from ..utils.datetime_utils import qdate_to_date, date_to_qdate
 
-from PySide6.QtWidgets import QDialog
 
 from ..dialogs.day_events_dialog import DayEventsDialog
 
 
 class PlannerMonthView:
-    """Simple monthly grid view. Shows day numbers and a +N indicator when events exist.
-
-    Clicking a day with events opens a dialog listing that day's termins.
+    """monthly grid view. Shows day numbers and a +N indicator when events exist.
+    Clicking a day with events opens a dialog listing that day's termins
     """
 
     def __init__(self, state, month_table: QTableWidget, month_from, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
@@ -39,29 +34,21 @@ class PlannerMonthView:
 
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"])
-        # no cell editing in month view
-        # Make the table expand to fill available space
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # Appearance tweaks
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setShowGrid(True)
         self.table.setWordWrap(False)
-        # Default row height; will be adjusted in refresh as well
         self.table.verticalHeader().setDefaultSectionSize(90)
-        # Simple stylesheet for month labels
         self.table.setStyleSheet("""
             QLabel#MonthDayNumber { font-weight: 600; font-size: 14px; }
             QLabel#MonthDayCount { color: #666; font-size: 11px; }
             QTableWidget { background: white; }
         """)
         self.table.cellClicked.connect(self._on_cell_clicked)
-        # hide horizontal scrollbar so columns must fit the available width
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # store last filtered set so we can re-layout on resize/show
         self._last_filtered: List[Termin] = []
 
-        # small watcher to detect resize/show events and reflow the grid
         class _Watcher(QObject):
             def __init__(self, owner, qparent=None):
                 super().__init__(qparent)
@@ -75,19 +62,13 @@ class PlannerMonthView:
                         pass
                 return False
 
-        # watcher parent should be a QObject; pass the table viewport as parent
         self._watcher = _Watcher(self, self.table.viewport())
         self.table.viewport().installEventFilter(self._watcher)
 
-        # connect drop callback if the table supports it
-        try:
-            if hasattr(self.table, 'terminDropped'):
-                self.table.terminDropped.connect(self._on_table_drop)
-        except Exception:
-            pass
+        if hasattr(self.table, 'terminDropped'):
+            self.table.terminDropped.connect(self._on_table_drop)
 
     def refresh(self, filtered_termine: List[Termin]):
-        # Determine month to show from month_from (QDateEdit)
         try:
             mf = qdate_to_date(self.month_from.date())
         except Exception:
@@ -97,27 +78,23 @@ class PlannerMonthView:
         month = mf.month
         first_weekday, days_in_month = calendar.monthrange(year, month)
 
-        # monthrange returns Mon=0..Sun=6 but first_weekday is Mon=0
-        # We want to align to Monday. first_weekday already matches our header.
-        start_offset = first_weekday  # number of blank days before 1st
+        # calendar.monthrange uses Mon=0..Sun=6, matching our column order exactly,
+        # so first_weekday is directly the number of empty cells before day 1
+        start_offset = first_weekday
 
         total_cells = start_offset + days_in_month
         weeks = (total_cells + 6) // 7
 
         self.table.setRowCount(weeks)
 
-        # Build mapping date -> list of termins
         by_date = {}
         for t in filtered_termine:
             if getattr(t, 'datum', None):
                 by_date.setdefault(t.datum, []).append(t)
 
-        # cache filtered termins for later relayout triggers
-        self._last_filtered = list(filtered_termine or [])
-        # cache filtered termins for later relayout triggers
         self._last_filtered = list(filtered_termine or [])
         day = 1
-        # Use viewport height for stable row sizing when the widget is in a stacked layout
+        
         vp_height = max(1, self.table.viewport().height())
         row_height = max(60, int(vp_height / max(1, weeks)))
         for r in range(weeks):
@@ -143,41 +120,27 @@ class PlannerMonthView:
                     day_lbl.setObjectName("MonthDayNumber")
                     day_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-                    count_lbl = QLabel("")
+                    count_lbl = QLabel(f"(+{len(items)})" if items else "")
                     count_lbl.setObjectName("MonthDayCount")
                     count_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-                    if items:
-                        count_lbl.setText(f"(+{len(items)})")
-                    else:
-                        count_lbl.setText("")
 
                     lay.addWidget(day_lbl)
                     lay.addWidget(count_lbl)
-                    w.setLayout(lay)
                     w.setProperty("day_ids", [str(t.id) for t in items])
-                    # store the actual date on the widget for click handler
                     w.setProperty("day_date", d)
                     w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
                     self.table.setCellWidget(r, c, w)
                     day += 1
 
-        # Ensure headers and columns look good
-        # Update month label if provided
         if self.month_label is not None:
-            try:
-                self.month_label.setText(f"{calendar.month_name[month]} {year}")
-            except Exception:
-                pass
+            self.month_label.setText(f"{calendar.month_name[month]} {year}")
 
-        # Calculate column widths to evenly fill the viewport and disable horizontal scrolling
         avail_w = max(1, self.table.viewport().width())
         col_w = max(48, avail_w // 7)
-        # Use Fixed resize mode so setColumnWidth takes effect
         for i in range(7):
             self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
             self.table.setColumnWidth(i, col_w)
-        # Force layout updates
         self.table.updateGeometry()
         self.table.viewport().update()
 
@@ -189,29 +152,17 @@ class PlannerMonthView:
         if not data:
             return
 
-        # Resolve termins from ids
-        ids = set(str(x) for x in (data or []))
-        term_list = []
+        ids = set(str(x) for x in data)
         if hasattr(self.state, 'termin_map'):
-            for tid in ids:
-                t = self.state.termin_map.get(tid)
-                if t:
-                    term_list.append(t)
+            term_list = [t for tid in ids if (t := self.state.termin_map.get(tid))]
         else:
-            for t in self.state.termine:
-                if str(t.id) in ids:
-                    term_list.append(t)
+            term_list = [t for t in self.state.termine if str(t.id) in ids]
 
-        # get stored day date
-        day_date = w.property("day_date")
-        target_day = None
-        if isinstance(day_date, date):
-            target_day = day_date
-        elif isinstance(day_date, QDate):
-            target_day = qdate_to_date(day_date)
-        highlight_ids = [str(getattr(t, "id", "")) for t in term_list if getattr(t, "id", None)]
+        target_day = w.property("day_date")
+        if not isinstance(target_day, date):
+            target_day = None
 
-        def _switch_to_week() -> None:
+        def _switch_view(view_key: str) -> None:
             mw = self.table.window()
             if not mw or target_day is None:
                 return
@@ -220,41 +171,22 @@ class PlannerMonthView:
                 return
             planner.day_date.setDate(date_to_qdate(target_day))
             planner.week_from.setDate(date_to_qdate(planner._align_to_monday(target_day)))
-            idx = planner.view_cb.findData("week")
+            idx = planner.view_cb.findData(view_key)
             if idx >= 0:
                 planner.view_cb.setCurrentIndex(idx)
             planner.refresh(emit=False)
-            #if highlight_ids:
-            #    QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
-
-        def _switch_to_day() -> None:
-            mw = self.table.window()
-            if not mw or target_day is None:
-                return
-            planner = getattr(mw, "planner", None)
-            if not planner:
-                return
-            planner.day_date.setDate(date_to_qdate(target_day))
-            planner.week_from.setDate(date_to_qdate(planner._align_to_monday(target_day)))
-            idx = planner.view_cb.findData("day")
-            if idx >= 0:
-                planner.view_cb.setCurrentIndex(idx)
-            planner.refresh(emit=False)
-            #if highlight_ids:
-            #    QTimer.singleShot(0, lambda: planner.highlight_termine(highlight_ids))
 
         dlg = DayEventsDialog(
             self.table.window(),
             term_list,
             edit_cb=self.edit_by_id_cb,
             day=target_day,
-            go_week_cb=_switch_to_week,
-            go_day_cb=_switch_to_day,
+            go_week_cb=lambda: _switch_view("week"),
+            go_day_cb=lambda: _switch_view("day"),
         )
         dlg.exec()
 
     def _on_table_drop(self, termin_id: str, row: int, col: int):
-        # Map dropped cell (row,col) to a calendar date using current month_from
         try:
             mf = qdate_to_date(self.month_from.date())
         except Exception:
@@ -272,13 +204,9 @@ class PlannerMonthView:
 
         new_date = date(year, month, day)
 
-        # Determine earliest available start time for the termin's room
         new_start = None
         try:
-            # find the termin object
-            t = None
-            if hasattr(self.state, 'termin_map'):
-                t = self.state.termin_map.get(str(termin_id))
+            t = (self.state.termin_map.get(str(termin_id)) if hasattr(self.state, 'termin_map') else None)
             if not t:
                 t = next((x for x in self.state.termine if str(x.id) == str(termin_id)), None)
 
@@ -287,17 +215,12 @@ class PlannerMonthView:
             if duration <= 0:
                 duration = int(self.state.settings.get('time_slot_minutes', 30))
 
-            if room_id and self.state and getattr(self.state, 'ts', None):
+            if room_id and getattr(self.state, 'ts', None):
                 free = self.state.ts.find_free_slots_in_room(self.state.termine, room_id, new_date, duration)
                 if free:
-                    # pick the first available slot's start time
                     new_start = free[0].von
         except Exception:
             new_start = None
 
         if callable(self.on_drop_cb):
-            try:
-                # follow day/week conventions: (termin_id, new_date, new_start)
-                self.on_drop_cb(str(termin_id), new_date, new_start)
-            except Exception:
-                pass
+            self.on_drop_cb(str(termin_id), new_date, new_start)

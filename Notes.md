@@ -73,3 +73,7 @@ Feiertage und Vorlesungsfrei Zeiten (Semesterferien) X
 Semester(Reg, Queer) als Vorlesungvaribale und Filter  X
 
 Termin Liste Einklappen und zb 4/7 X
+
+
+
+Week View und Day View haben noch doppelte Logik

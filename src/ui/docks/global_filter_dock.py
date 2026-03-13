@@ -16,7 +16,7 @@ from ...core.states import FilterState
 
 class GlobalFilterDock(QDockWidget):
     """
-    Dock for content filters only.
+    Dock for content filters
     """
 
     filtersChanged = Signal(object)

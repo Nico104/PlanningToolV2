@@ -1,13 +1,14 @@
-from datetime import date, time, datetime, timedelta
+from datetime import date, time, datetime
+from collections import defaultdict
 from typing import List, Optional, Tuple, Callable
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QBrush
-from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QLabel, QComboBox, QDateEdit, QHeaderView, QSizePolicy
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView, QSizePolicy
 
 from ...core.models import Raum, Termin
-from ..utils.datetime_utils import qdate_to_date, fmt_time, fmt_date, date_to_qdate, mins_from_time
-from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG, DEFAULT_FG
+from ..utils.datetime_utils import qdate_to_date, fmt_time, date_to_qdate, mins_from_time
+from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
@@ -17,8 +18,8 @@ from .termincard import TerminCard
 
 class PlannerDayView:
     """
-    Shows a day grid with time slots as rows and rooms as columns.
-    Supports drag & drop and overlapping appointments.
+    Shows a day grid with time slots as rows and rooms as columns
+    Supports drag & drop and overlapping appointments
     """
 
     def __init__(
@@ -35,7 +36,6 @@ class PlannerDayView:
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
         
-        # Track room mapping for drag and drop
         self._room_list: List[Raum] = []
 
         if hasattr(self.day_table, "terminDropped"):
@@ -72,10 +72,7 @@ class PlannerDayView:
 
         # Table setup and signal connections
         self._setup_table()
-        self.day_table.cellDoubleClicked.connect(self._on_double_click)
         self.day_table.cellClicked.connect(self._on_cell_clicked)
-        # track last column count to avoid unnecessary column auto-resizing
-        self._last_col_count = 0
 
     # Configure table appearance and sizing
     def _setup_table(self) -> None:
@@ -134,7 +131,7 @@ class PlannerDayView:
         headers = ["Zeit"] + [r.name for r in rooms]
         self.day_table.setHorizontalHeaderLabels(headers)
 
-        # header sizing: time column compact, rooms stretch
+        # header sizing: time column fixed, rooms stretch
         h = self.day_table.horizontalHeader()
         h.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         for c in range(1, 1 + len(rooms)):
@@ -157,40 +154,30 @@ class PlannerDayView:
         # Store room list for drop handler
         self._room_list = rooms
 
-        by_room = []
+        by_room = defaultdict(list)
         for t in terms:
-            if t.raum_id not in room_index:
-                continue
-            found = next((br for br in by_room if br[0] == t.raum_id), None)
-            if found:
-                found[1].append(t)
-            else:
-                by_room.append([t.raum_id, [t]])
-        for br in by_room:
-            br[1].sort(key=lambda x: x.start_zeit if x.start_zeit else time(0, 0))
+            if t.raum_id in room_index:
+                by_room[t.raum_id].append(t)
 
-        for br in by_room:
-            room_id, items = br
+        for items in by_room.values():
+            items.sort(key=lambda x: x.start_zeit if x.start_zeit else time(0, 0))
+
+        for room_id, items in by_room.items():
             if not items:
                 continue
 
             col = 1 + room_index[room_id]
 
             # Group overlapping/concurrent appointments
-            appointment_groups = self._group_concurrent_appointments(items, slots)
+            appointment_groups = self._group_concurrent_appointments(items)
 
             # Build a mapping of group_id -> list of appointments
-            groups_by_id = []
+            groups_by_id = defaultdict(list)
             for termin, group_id in appointment_groups:
-                found = next((g for g in groups_by_id if g[0] == group_id), None)
-                if found:
-                    found[1].append(termin)
-                else:
-                    groups_by_id.append([group_id, [termin]])
+                groups_by_id[group_id].append(termin)
 
             # Process each group in a single spanned cell; offset cards by start time
-            for group in groups_by_id:
-                group_id, group_appointments = group
+            for group_id, group_appointments in groups_by_id.items():
                 valid_apps = [
                     app for app in group_appointments
                     if isinstance(app.start_zeit, time)
@@ -223,7 +210,7 @@ class PlannerDayView:
                 if max_span > 1:
                     try:
                         self.day_table.setSpan(row, col_idx, max_span, 1)
-                    except:
+                    except Exception:
                         pass
 
                 row_height = self.day_table.rowHeight(row)
@@ -255,38 +242,8 @@ class PlannerDayView:
                     top_offset_px = offset_rows * row_height
                     cell_widget.add_termin_card(card, top_offset_px=top_offset_px)
 
-        # Konflikte unten (TerminService)
-        conflicts = self.state.ts.find_room_conflicts(self.state.termine, semester_id=sem)
-        conflicts = [c for c in conflicts if c.datum == d]
-        if room_filter:
-            conflicts = [c for c in conflicts if c.raum_id == room_filter]
-
-        # Removed conflict_lbl usage
-
-        # Only recompute column widths when the number of columns changed
-        if self.day_table.columnCount() != getattr(self, '_last_col_count', 0):
-            self.day_table.resizeColumnsToContents()
-            self._last_col_count = self.day_table.columnCount()
+        self.day_table.resizeColumnsToContents()
         self.day_table.resizeRowsToContents()
-
-    def _on_double_click(self, row: int, col: int):
-        if col <= 0:
-            return
-        # Get the cell widget instead of item
-        cell_widget = self.day_table.cellWidget(row, col)
-        if isinstance(cell_widget, TimeSlotCell):
-            # If there are termin cards, edit the first one
-            termin_ids = cell_widget.get_termin_ids()
-            if termin_ids:
-                self.edit_by_id_cb(termin_ids[0])
-        else:
-            # Fallback for items
-            it = self.day_table.item(row, col)
-            if not it:
-                return
-            tid = it.data(Qt.UserRole)
-            if tid:
-                self.edit_by_id_cb(str(tid))
 
     def _on_cell_clicked(self, row: int, col: int) -> None:
         # Clear focus when clicking empty calendar cells
@@ -300,16 +257,14 @@ class PlannerDayView:
         else:
             TerminCard.clear_global_focus()
 
-    def _group_concurrent_appointments(self, items: List[Termin], slots: List[time]) -> List[tuple]:
+    def _group_concurrent_appointments(self, items: List[Termin]) -> List[tuple]:
         """
         Group appointments by time overlap.
         Returns list of (termin, group_id) tuples.
-        All appointments with the same group_id overlap with each other.
         """
         if not items:
             return []
 
-        # Sweep-line grouping to include transitive overlaps
         sorted_items = sorted(
             items,
             key=lambda x: mins_from_time(x.start_zeit) if x.start_zeit else 0
@@ -349,9 +304,7 @@ class PlannerDayView:
         return groups
 
     def _format_termin_text(self, t: Termin) -> str:
-        """Format appointment text for display."""
         end_raw = t.get_end_time()
-        # Find lva by id using list iteration (use self.state.lvas for consistency)
         lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
         lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
         room_s = f"{t.raum_id}"
@@ -382,5 +335,5 @@ class PlannerDayView:
         if 0 <= room_idx < len(self._room_list):
             target_room_id = self._room_list[room_idx].id
 
-        # View only does callback (Workspace decides Save + Reload + Refresh)
+        # View only does callback
         self.on_drop_cb(str(termin_id), d, target_start, target_room_id)

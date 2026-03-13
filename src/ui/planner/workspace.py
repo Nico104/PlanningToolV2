@@ -1,11 +1,11 @@
+import calendar
 from datetime import date, timedelta
 from types import SimpleNamespace
-from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt, QDate
 from PySide6.QtGui import QColor, QBrush, QPalette
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QWidget, QVBoxLayout, QLabel,
     QStackedWidget, QTableWidget
 )
 
@@ -18,16 +18,16 @@ from .month_view import PlannerMonthView
 from ..utils.crud_handlers import CrudHandlers
 from .termincard import TerminCard
 from .timeslotcell import TimeSlotCell
-from PySide6.QtWidgets import QLabel
 from ..components.dragdrop.time_grid_drop_table import TimeGridDropTable
 from ..components.dragdrop.month_drop_table import MonthDropTable
-from PySide6.QtWidgets import QTableWidget as SimpleTableWidget
 
 class PlannerWorkspace(QWidget):
+    """Main planner container coordinating day/week/month views and shared state
+    """
+
     def __init__(self, parent: QWidget, ds: DataService, on_data_changed, global_filter_dock=None):
         super().__init__(parent)
         
-        # self._emit_enabled = False
         self.on_data_changed = on_data_changed
 
         self.state = PlannerState(ds)
@@ -45,13 +45,12 @@ class PlannerWorkspace(QWidget):
         self.day_date = global_filter_dock.day_date
         self.week_from = global_filter_dock.week_from
 
-        # Stacked widget for day/week tables
+        # Stacked widget for day/week/month tables
         self.stack = QStackedWidget()
         root.addWidget(self.stack, 1)
 
         self.day_table = TimeGridDropTable(0, 0)
         self.week_table = TimeGridDropTable(0, 0)
-        # Month view container: header label + table so we can show the month name
         self.month_table = MonthDropTable(0, 7)
         self.month_container = QWidget()
         month_layout = QVBoxLayout(self.month_container)
@@ -83,7 +82,7 @@ class PlannerWorkspace(QWidget):
             planner=SimpleNamespace(refresh=lambda: None),
         )
 
-        # Day and week view setup
+        # Day, week, month view setup
         self.day_view = PlannerDayView(
             state=self.state,
             day_table=self.day_table,
@@ -110,17 +109,14 @@ class PlannerWorkspace(QWidget):
         # Table click event connections
         self.week_table.cellClicked.connect(self._on_week_cell_clicked)
         self.day_table.cellClicked.connect(self._on_day_cell_clicked)
-        self.month_table.cellClicked.connect(self._on_day_cell_clicked)
+        self.month_table.cellClicked.connect(self._on_month_cell_clicked)
 
-        # View and navigation controls
-        # Navigation buttons are emitted by the global filter dock and handled
-        # by MainWindow which calls PlannerWorkspace._shift_period. Do not
-        # connect the buttons directly here to avoid double-calls.
+        # View change event connection
         self.view_cb.currentIndexChanged.connect(self._on_view_changed)
 
         # Date change triggers
-        self.day_date.dateChanged.connect(lambda *_: self.refresh(emit=False))
-        self.week_from.dateChanged.connect(lambda *_: self.refresh(emit=False))
+        self.day_date.dateChanged.connect(self._on_date_changed)
+        self.week_from.dateChanged.connect(self._on_date_changed)
 
         # Initial state setup
         self._init_default_dates()
@@ -154,29 +150,17 @@ class PlannerWorkspace(QWidget):
         if view == "day":
             d = self._qdate_to_pydate(self.day_date.date()) + timedelta(days=direction)
             self.day_date.setDate(date_to_qdate(d))
-        elif view == "week":
-            wf = self._qdate_to_pydate(self.week_from.date())
-            wf = self._align_to_monday(wf) + timedelta(days=7 * direction)
-            self.week_from.setDate(date_to_qdate(wf))
+        #elif view == "week":
+        #    wf = self._qdate_to_pydate(self.week_from.date())
+        #    wf = self._align_to_monday(wf) + timedelta(days=7 * direction)
+        #    self.week_from.setDate(date_to_qdate(wf))
         elif view == "month":
-            # shift by calendar months
             wf = self._qdate_to_pydate(self.week_from.date())
-            year = wf.year
-            month = wf.month + direction
-            # normalize month/year
-            while month < 1:
-                month += 12
-                year -= 1
-            while month > 12:
-                month -= 12
-                year += 1
-            # set to same day if possible, else clamp
-            day = min(wf.day, (date(year, month, 1).replace(day=1).day))
-            try:
-                newd = wf.replace(year=year, month=month)
-            except Exception:
-                # fallback to first of month
-                newd = date(year, month, 1)
+            month_index = (wf.month - 1) + direction
+            year = wf.year + (month_index // 12)
+            month = (month_index % 12) + 1
+            day = min(wf.day, calendar.monthrange(year, month)[1])
+            newd = wf.replace(year=year, month=month, day=day)
             self.week_from.setDate(date_to_qdate(newd))
         else:
             # default: treat as week
@@ -187,13 +171,17 @@ class PlannerWorkspace(QWidget):
         self.refresh(emit=False)
 
     def _init_default_dates(self):
+        """Initialize day/week controls to a stable starting point
+
+        Preference order:
+        1. Earliest dated Termin in current state.
+        2. Today, if Termine exist but none has a date.
+        """
         if not self.state.termine:
             return
 
-        # only Termine that actually have a date
         dated = [t.datum for t in self.state.termine if t.datum is not None]
         if not dated:
-            # fallback: today (or keep whatever is already set)
             self.day_date.setDate(QDate.currentDate())
             self.week_from.setDate(date_to_qdate(self._align_to_monday(date.today())))
             return
@@ -202,12 +190,6 @@ class PlannerWorkspace(QWidget):
         self.day_date.setDate(date_to_qdate(min_d))
         self.week_from.setDate(date_to_qdate(self._align_to_monday(min_d)))
 
-
-    # def _rebuild_filter_boxes(self):
-    #     # Planner no longer owns local filter comboboxes; global dock provides
-    #     # filter dropdowns. Keep this method lightweight so refresh() can call
-    #     # it to ensure state is loaded.
-    #     return
 
     def current_filters(self):
         gf = getattr(self, "_global_filter", None)
@@ -230,9 +212,7 @@ class PlannerWorkspace(QWidget):
         }
 
     def refresh(self, emit: bool = True):
-        # Reload EVERYTHING every refresh so UI always matches saved JSON state
         self.state.reload()
-        # self._rebuild_filter_boxes()
 
         filters = self.current_filters()
         filtered = self.state.filtered_termine(
@@ -255,7 +235,6 @@ class PlannerWorkspace(QWidget):
             self.stack.setCurrentWidget(self.week_table)
             self.week_view.refresh(filtered)
         elif view == "month":
-            # month view uses a container (header + table)
             self.stack.setCurrentWidget(self.month_container)
             self.month_view.refresh(filtered)
         else:
@@ -273,11 +252,11 @@ class PlannerWorkspace(QWidget):
             week_end = week_start + timedelta(days=6)
             if not (week_start <= current_day <= week_end):
                 self.day_date.setDate(date_to_qdate(week_start))
-        elif view == "week":
-            # ensure week_from aligns to monday for the week view
-            current_day = self._qdate_to_pydate(self.day_date.date())
-            week_start = self._align_to_monday(current_day)
-            self.week_from.setDate(date_to_qdate(week_start))
+        #elif view == "week":
+        #    # ensure week_from aligns to monday for the week view
+        #    current_day = self._qdate_to_pydate(self.day_date.date())
+        #    week_start = self._align_to_monday(current_day)
+        #    self.week_from.setDate(date_to_qdate(week_start))
         elif view == "month":
             # keep week_from within the same month as current day
             current_day = self._qdate_to_pydate(self.day_date.date())
@@ -293,11 +272,11 @@ class PlannerWorkspace(QWidget):
 
     def add_termin(self):
         if self.crud.add_termin(default_qdate=self.day_date.date(), auto_id=True):
-            self.reload_and_refresh_everything()  # NEW
+            self.reload_and_refresh_everything()
 
     def _edit_termin_by_id(self, tid: str):
         if self.crud.edit_termin_by_id(tid):
-            self.reload_and_refresh_everything()  # NEW
+            self.reload_and_refresh_everything()
 
     def set_on_data_changed(self, cb):
         self.on_data_changed = cb
@@ -347,6 +326,12 @@ class PlannerWorkspace(QWidget):
             it = self.day_table.item(row, col)
             if not it or not it.data(Qt.UserRole):
                 self.clear_conflict_highlights()
+
+    def _on_month_cell_clicked(self, row: int, col: int) -> None:
+        self.clear_conflict_highlights()
+
+    def _on_date_changed(self, *_args) -> None:
+        self.refresh(emit=False)
 
     def _jump_to_first_termin(self, ids: set[str]) -> None:
         t = next((x for x in self.state.termine if str(x.id) in ids), None)
@@ -408,13 +393,19 @@ class PlannerWorkspace(QWidget):
         self._day_highlights = []
 
     def _on_week_drop(self, termin_id, new_date, new_start):
-        if self.crud.move_termin(str(termin_id), new_date=new_date, new_start=new_start):
-            self.reload_and_refresh_everything()
+        self._move_termin_and_refresh(str(termin_id), new_date=new_date, new_start=new_start)
 
     def _on_month_drop(self, termin_id, new_date, new_start=None):
-        if self.crud.move_termin(str(termin_id), new_date=new_date, new_start=new_start):
-            self.reload_and_refresh_everything()
+        self._move_termin_and_refresh(str(termin_id), new_date=new_date, new_start=new_start)
 
     def _on_day_drop(self, termin_id, new_date, new_start, new_room_id=None):
-        if self.crud.move_termin(str(termin_id), new_date=new_date, new_start=new_start, new_room_id=new_room_id):
+        self._move_termin_and_refresh(
+            str(termin_id),
+            new_date=new_date,
+            new_start=new_start,
+            new_room_id=new_room_id,
+        )
+
+    def _move_termin_and_refresh(self, termin_id: str, **kwargs) -> None:
+        if self.crud.move_termin(termin_id, **kwargs):
             self.reload_and_refresh_everything()

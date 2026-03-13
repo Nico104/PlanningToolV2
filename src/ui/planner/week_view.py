@@ -1,15 +1,15 @@
+from collections import defaultdict
 from datetime import date, time, timedelta, datetime
 from typing import List, Callable
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QBrush
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView, QSizePolicy
 
 from ...core.models import Termin
-from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time, mins_from_time
-from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG, DEFAULT_FG
+from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time, mins_from_time, date_to_qdate
+from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
-from ..utils.datetime_utils import date_to_qdate
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 
@@ -164,38 +164,27 @@ class PlannerWeekView:
         
 
         # render existing Termine into grid as blocks
-        by_day = []
+        by_day = defaultdict(list)
         for t in terms:
-            found = next((bd for bd in by_day if bd[0] == t.datum), None)
-            if found:
-                found[1].append(t)
-            else:
-                by_day.append([t.datum, [t]])
-        from datetime import time as _time
-        for bd in by_day:
-            bd[1].sort(key=lambda x: x.start_zeit if x.start_zeit is not None else _time(0, 0))
+            by_day[t.datum].append(t)
+        for day_items in by_day.values():
+            day_items.sort(key=lambda x: x.start_zeit if x.start_zeit is not None else time(0, 0))
 
         for col in range(6):
             d0 = week_mo + timedelta(days=col)
-            found = next((bd for bd in by_day if bd[0] == d0), None)
-            items = found[1] if found else []
+            items = by_day.get(d0, [])
 
             if not items:
                 continue
 
             # Group overlapping
-            appointment_groups = self._group_concurrent_appointments(items, slots)
+            appointment_groups = self._group_concurrent_appointments(items)
 
-            groups_by_id = []
+            groups_by_id = defaultdict(list)
             for termin, group_id in appointment_groups:
-                found = next((g for g in groups_by_id if g[0] == group_id), None)
-                if found:
-                    found[1].append(termin)
-                else:
-                    groups_by_id.append([group_id, [termin]])
+                groups_by_id[group_id].append(termin)
 
-            for group in groups_by_id:
-                group_id, group_appointments = group
+            for _, group_appointments in sorted(groups_by_id.items()):
                 valid_apps = [
                     app for app in group_appointments
                     if isinstance(app.start_zeit, time)
@@ -227,7 +216,7 @@ class PlannerWeekView:
                 if max_span > 1:
                     try:
                         self.week_table.setSpan(row, col_idx, max_span, 1)
-                    except:
+                    except Exception:
                         pass
 
                 row_height = self.week_table.rowHeight(row)
@@ -277,11 +266,10 @@ class PlannerWeekView:
         else:
             TerminCard.clear_global_focus()
 
-    def _group_concurrent_appointments(self, items: List[Termin], slots: List[time]) -> List[tuple]:
+    def _group_concurrent_appointments(self, items: List[Termin]) -> List[tuple[Termin, int]]:
         """
         Group appointments by time overlap.
-        Returns list of (termin, group_id) tuples.
-        All appointments with the same group_id overlap with each other.
+        Returns list of (termin, group_id) tuples
         """
         if not items:
             return []
@@ -352,5 +340,5 @@ class PlannerWeekView:
             return
         target_start = slots[row]
 
-        # View macht NUR callback (Workspace entscheidet Speichern + Reload + Refresh)
+        # View macht NUR callback
         self.on_drop_cb(str(termin_id), target_date, target_start)

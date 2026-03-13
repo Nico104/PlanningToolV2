@@ -3,6 +3,11 @@ from PySide6.QtWidgets import QInputDialog
 
 
 class LayoutManager:
+    """Manage dock/window layout presets for the main window
+    """
+
+    DEFAULT_LAYOUT = "Standard"
+
     def __init__(self, mw):
         self.mw = mw
         self._layouts: dict[str, bytes] = {}
@@ -12,8 +17,8 @@ class LayoutManager:
         self.mw.act_reset_layouts.triggered.connect(self._reset_default_layouts)
 
     def init_default(self) -> None:
-        self._layouts["Standard"] = self.mw.saveState()
-        self._current_layout_name = "Standard"
+        self._layouts[self.DEFAULT_LAYOUT] = self.mw.saveState()
+        self._current_layout_name = self.DEFAULT_LAYOUT
         self._rebuild_layout_menu_items()
 
     def _rebuild_layout_menu_items(self) -> None:
@@ -27,7 +32,7 @@ class LayoutManager:
         self.mw.layout_group = QActionGroup(self.mw)
         self.mw.layout_group.setExclusive(True)
 
-        for name in self._layouts.keys():
+        for name in self._layouts:
             act = QAction(name, self.mw, checkable=True)
             act.setChecked(name == self._current_layout_name)
             act.triggered.connect(lambda checked, n=name: self.apply_layout(n))
@@ -54,13 +59,13 @@ class LayoutManager:
         self._rebuild_layout_menu_items()
 
     def _reset_default_layouts(self) -> None:
-        std = self._layouts.get("Standard")
+        std = self._layouts.get(self.DEFAULT_LAYOUT)
         self._layouts.clear()
 
         if std is None:
             std = self.mw.saveState()
 
-        self._layouts["Standard"] = std
-        self._current_layout_name = "Standard"
-        self.apply_layout("Standard")
+        self._layouts[self.DEFAULT_LAYOUT] = std
+        self._current_layout_name = self.DEFAULT_LAYOUT
+        self.mw.restoreState(std)
         self._rebuild_layout_menu_items()

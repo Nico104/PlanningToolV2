@@ -2,17 +2,17 @@
 Konflikte Dock Widget - displays schedule conflicts and warnings.
 """
 
-from typing import List, Dict, Optional
+from typing import List, Optional
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QComboBox, QScrollArea, QFrame, QStyle
+    QLabel, QPushButton, QScrollArea, QFrame, QStyle
 )
 
-from ...core.models import Termin, Lehrveranstaltung, Raum, Semester, ConflictIssue
+from ...core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
 from ...services.conflict_service import ConflictDetector
 from ..components.cards.conflict_card import ConflictCard
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -28,6 +28,7 @@ class ConflictsDock(QDockWidget):
     # Signal emitted to highlight all related termine
     conflict_items_highlight = Signal(list)
 
+    # What the user sees
     _CATEGORY_LABELS = {
         "room": "Raum",
         "lecturer": "Vortragende",
@@ -35,8 +36,15 @@ class ConflictsDock(QDockWidget):
         "group": "Gruppe",
         "semester": "Semester",
         "incomplete": "Unvollstaendig",
+        "duration": "Dauer",
+        "weekend": "Wochenende",
+        "saturday": "Samstag",
+        "sunday": "Sonntag",
+        "Kapazität Übung": "Kapazität Übung",
+        "Kapazität Vorlesung": "Kapazität Vorlesung",
     }
 
+    # categories to style keys used by QSS
     _CATEGORY_KIND_MAP = {
         "room": "raum",
         "lecturer": "vortragende",
@@ -44,6 +52,12 @@ class ConflictsDock(QDockWidget):
         "group": "gruppe",
         "semester": "semester",
         "incomplete": "unvollstaendig",
+        "duration": "dauer",
+        "weekend": "wochenende",
+        "saturday": "wochenende",
+        "sunday": "wochenende",
+        "Kapazität Übung": "kapazitaet",
+        "Kapazität Vorlesung": "kapazitaet",
     }
     
     def __init__(self, parent=None):
@@ -55,7 +69,7 @@ class ConflictsDock(QDockWidget):
         self._detector: Optional[ConflictDetector] = None
         
         # Filter state
-        self._filter_severity = "Alle"  # "Alle", "Konflikt", "Warnung"
+        self._filter_severity = "all"   # "all", "conflict", "warning"
         self._filter_category = "all"   # "all" or specific category key
         
         # Main widget
@@ -74,18 +88,16 @@ class ConflictsDock(QDockWidget):
         self.severity_filter = TightComboBox()
         self.severity_filter.setObjectName("HeaderCombo")
         self.severity_filter.setMinimumWidth(160)
-        self.severity_filter.addItem("Typ: Alle", "Alle")
-        self.severity_filter.addItem("Typ: Konflikt", "Konflikt")
-        self.severity_filter.addItem("Typ: Warnung", "Warnung")
+        self.severity_filter.addItem("Typ: Alle", "all")
+        self.severity_filter.addItem("Typ: Konflikt", "conflict")
+        self.severity_filter.addItem("Typ: Warnung", "warning")
         self.severity_filter.currentIndexChanged.connect(self._on_filter_changed)
         filter_layout.addWidget(self.severity_filter)
 
         self.category_filter = TightComboBox()
         self.category_filter.setObjectName("HeaderCombo")
         self.category_filter.setMinimumWidth(220)
-        self.category_filter.addItem("Kategorie: Alle", "all")
-        for key, label in self._CATEGORY_LABELS.items():
-            self.category_filter.addItem(f"Kategorie: {label}", key)
+        self._rebuild_category_filter_options()
         self.category_filter.currentIndexChanged.connect(self._on_filter_changed)
         filter_layout.addWidget(self.category_filter)
 
@@ -152,8 +164,8 @@ class ConflictsDock(QDockWidget):
         
         # Detect all issues
         self._issues = self._detector.detect_all(termine)
+        self._rebuild_category_filter_options()
         
-        # Update summary (using all issues, not filtered)
         conflicts = [i for i in self._issues if i.severity == "conflict"]
         warnings = [i for i in self._issues if i.severity == "warning"]
         
@@ -168,7 +180,6 @@ class ConflictsDock(QDockWidget):
                 state = "warning"
         
         self.summary_label.setProperty("state", state)
-        # self.summary_label.style().unpolish(self.summary_label)
         self.summary_label.style().polish(self.summary_label)
         self.summary_label.setText(summary)
         
@@ -229,6 +240,29 @@ class ConflictsDock(QDockWidget):
 
     def _get_category_label(self, category: str) -> str:
         return self._CATEGORY_LABELS.get(category, category)
+
+    def _rebuild_category_filter_options(self) -> None:
+        current = self.category_filter.currentData() if hasattr(self, "category_filter") else self._filter_category
+
+        categories = set(self._CATEGORY_LABELS.keys())
+        categories.update(i.category for i in self._issues if getattr(i, "category", None))
+
+        self.category_filter.blockSignals(True)
+        self.category_filter.clear()
+        self.category_filter.addItem("Kategorie: Alle", "all")
+        for category in sorted(categories, key=lambda c: self._get_category_label(c).casefold()):
+            label = self._get_category_label(category)
+            self.category_filter.addItem(f"Kategorie: {label}", category)
+        self.category_filter.blockSignals(False)
+
+        self._set_category_filter_value(current if current is not None else "all")
+
+    def _set_category_filter_value(self, value: str) -> None:
+        for i in range(self.category_filter.count()):
+            if self.category_filter.itemData(i) == value:
+                self.category_filter.setCurrentIndex(i)
+                return
+        self.category_filter.setCurrentIndex(0)
     
     def _on_refresh_clicked(self) -> None:
         # connected to the main window's refresh method
@@ -237,7 +271,7 @@ class ConflictsDock(QDockWidget):
             parent.refresh_conflicts()
     
     def _on_filter_changed(self) -> None:
-        self._filter_severity = self.severity_filter.currentData() or "Alle"
+        self._filter_severity = self.severity_filter.currentData() or "all"
         self._filter_category = self.category_filter.currentData() or "all"
         self._populate_cards()
     
@@ -245,11 +279,10 @@ class ConflictsDock(QDockWidget):
         filtered = self._issues
         
         # Filter by severity
-        if self._filter_severity == "Konflikt":
+        if self._filter_severity == "conflict":
             filtered = [i for i in filtered if i.severity == "conflict"]
-        elif self._filter_severity == "Warnung":
+        elif self._filter_severity == "warning":
             filtered = [i for i in filtered if i.severity == "warning"]
-        # "Alle" shows everything
         
         # Filter by category
         if self._filter_category != "all":

@@ -1,8 +1,11 @@
 from pathlib import Path
+from datetime import datetime
 import json
-from PySide6.QtCore import Qt
+import subprocess
+import sys
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox, QPushButton
 
 from src.services.data_service import DataService
 
@@ -11,6 +14,7 @@ from src.ui.docks.data_editor_dock import DataEditorDock
 from src.ui.docks.conflicts_dock import ConflictsDock
 from src.ui.docks.global_filter_dock import GlobalFilterDock
 from src.ui.docks.date_navigation_dock import DateNavigationDock
+from src.ui.utils.datetime_utils import date_to_qdate
 from src.core.states import FilterState
 from ...utils.crud_handlers import CrudHandlers
 from .layout_manager import LayoutManager
@@ -19,65 +23,84 @@ from ...dialogs import SettingsDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
 from src.ui.dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
-import os
 
 
 class MainWindow(QMainWindow):
+    """Main application window containing planner, docks etc...
+
+    This class wires UI components, forwards CRUD operations, keeps filters in sync
+    """
+
+    def _apply_start_date(self, start_date) -> None:
+        """Synchronize planner and navigation controls to the same start day/week"""
+
+        monday = date_to_qdate(self.planner._align_to_monday(start_date))
+        day_qdate = date_to_qdate(start_date)
+
+        self.date_navigation_dock.view_cb.setCurrentIndex(
+            self.date_navigation_dock.view_cb.findData("week")
+        )
+        self.date_navigation_dock.week_from.setDate(monday)
+        self.date_navigation_dock.day_date.setDate(day_qdate)
+
+        self.planner.view_cb.setCurrentIndex(self.planner.view_cb.findData("week"))
+        self.planner.week_from.setDate(monday)
+        self.planner.day_date.setDate(day_qdate)
+
+    @staticmethod
+    def _read_json(path: Path, default):
+        if not path.is_file():
+            return default
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return default
+
+    def _resolve_start_date_for_semester(self, semester_id: str):
+        """given a semester id, what date should the UI jump to
+        """
+
+        sem_data = self._read_json(self.data_dir / "semester.json", {})
+        sem_list = sem_data.get("semester", [])
+        sem_obj = next((s for s in sem_list if s.get("id") == semester_id), None)
+        if sem_obj and sem_obj.get("start"):
+            try:
+                return datetime.strptime(sem_obj["start"], "%Y-%m-%d").date()
+            except Exception:
+                pass
+
+        termine_data = self._read_json(self.data_dir / "termine.json", {})
+        termine = termine_data.get("termine", [])
+        dates = []
+        for t in termine:
+            if t.get("semester_id") != semester_id:
+                continue
+            d = t.get("datum")
+            if not d:
+                continue
+            try:
+                dates.append(datetime.strptime(d, "%Y-%m-%d").date())
+            except Exception:
+                continue
+        return min(dates) if dates else None
+
     def set_start_semester_and_reload(self, fachrichtung, semester):
         s = self.ds.load_settings()
         s["start_fachrichtung"] = fachrichtung
         s["start_semester"] = semester
         self.ds.save_settings(s)
 
-        self.setWindowTitle("Planungstool")
         self.refresh_everything()
 
-        from PySide6.QtCore import QTimer
-
-        def set_semester_start_date():
-            settings = self.ds.load_settings()
-            fachrichtung = settings.get("start_fachrichtung", "ETIT")
-            semester = settings.get("start_semester", "SS26")
-            filebase = f"{semester.lower()}_termine.json"
-            path = self.data_dir / "Studiengang" / fachrichtung / filebase
-            from datetime import datetime
-            from src.ui.utils.datetime_utils import date_to_qdate
-            try:
-                with open(path, encoding="utf-8") as f:
-                    data = json.load(f)
-                sem_obj = data.get("semester", {})
-                start_str = sem_obj.get("start")
-                start_date = None
-                if start_str:
-                    start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
-                else:
-                    termine = data.get("termine", [])
-                    dates = [datetime.strptime(t["datum"], "%Y-%m-%d").date() for t in termine if t.get("datum")]
-                    if dates:
-                        start_date = min(dates)
-                if start_date:
-                    self.date_navigation_dock.view_cb.setCurrentIndex(
-                        self.date_navigation_dock.view_cb.findData("week")
-                    )
-                    self.date_navigation_dock.week_from.setDate(
-                        date_to_qdate(self.planner._align_to_monday(start_date))
-                    )
-                    self.date_navigation_dock.day_date.setDate(date_to_qdate(start_date))
-
-                    self.planner.view_cb.setCurrentIndex(self.planner.view_cb.findData("week"))
-                    self.planner.week_from.setDate(date_to_qdate(self.planner._align_to_monday(start_date)))
-                    self.planner.day_date.setDate(date_to_qdate(start_date))
-            except Exception:
-                pass
-
-        QTimer.singleShot(0, set_semester_start_date)
+        start_date = self._resolve_start_date_for_semester(semester)
+        if start_date:
+            QTimer.singleShot(0, lambda: self._apply_start_date(start_date))
 
     def __init__(self, data_dir: Path):
         super().__init__()
         self.ds = DataService(data_dir)
         self.setWindowTitle("Planungstool")
         self.data_dir = data_dir
-        self.ds = DataService(data_dir)
 
         self._build_menus()
 
@@ -114,8 +137,6 @@ class MainWindow(QMainWindow):
         self.ds.save_settings(s)
 
         new_data_path = s.get("data_path", "")
-        import sys, subprocess
-        from PySide6.QtWidgets import QMessageBox, QPushButton
         if new_data_path != old_data_path:
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Information)
@@ -167,7 +188,7 @@ class MainWindow(QMainWindow):
         tools_menu.addAction(self.act_konflikte)
 
     def open_konflikte_dialog(self):
-        conflicts_path = os.path.join("data", "konflikte.json")
+        conflicts_path = str(self.data_dir / "konflikte.json")
         dlg = KonflikteDialog(self, conflicts_path=conflicts_path)
         dlg.conflicts_changed.connect(self.refresh_conflicts)
         dlg.exec()
@@ -326,6 +347,8 @@ class MainWindow(QMainWindow):
         self.date_navigation_dock.weekFromChanged.connect(self._on_week_from_changed)
 
     def _on_global_filters_changed(self, fs: FilterState) -> None:
+        """Apply global filter changes and optionally jump to semester start"""
+
         self.filter_state = fs
 
         self.planner.set_global_filter_state(fs)
@@ -333,30 +356,9 @@ class MainWindow(QMainWindow):
         self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
 
         if fs.semester:
-            from datetime import datetime
-            from src.ui.utils.datetime_utils import date_to_qdate
-            semester_path = os.path.join(os.getcwd(), "data", "semester.json")
-            try:
-                with open(semester_path, encoding="utf-8") as f:
-                    sem_data = json.load(f)
-                sem_list = sem_data.get("semester", [])
-                sem_obj = next((s for s in sem_list if s["id"] == fs.semester), None)
-                if sem_obj and sem_obj.get("start"):
-                    start_date = datetime.strptime(sem_obj["start"], "%Y-%m-%d").date()
-
-                    self.date_navigation_dock.view_cb.setCurrentIndex(
-                        self.date_navigation_dock.view_cb.findData("week")
-                    )
-                    self.date_navigation_dock.week_from.setDate(
-                        date_to_qdate(self.planner._align_to_monday(start_date))
-                    )
-                    self.date_navigation_dock.day_date.setDate(date_to_qdate(start_date))
-
-                    self.planner.view_cb.setCurrentIndex(self.planner.view_cb.findData("week"))
-                    self.planner.week_from.setDate(date_to_qdate(self.planner._align_to_monday(start_date)))
-                    self.planner.day_date.setDate(date_to_qdate(start_date))
-            except Exception:
-                pass
+            start_date = self._resolve_start_date_for_semester(fs.semester)
+            if start_date:
+                self._apply_start_date(start_date)
 
     def _on_unassign_termin(self, tid: str):
         if self.planner.crud.unassign_termin(tid):
@@ -388,23 +390,17 @@ class MainWindow(QMainWindow):
         self.conflicts_dock.refresh_conflicts(self.planner.state.termine)
 
     def refresh_docks(self) -> None:
+        """Refresh dock data and option lists based on current planner state/filters"""
+
         terms = self._compute_filtered_termine(self.filter_state)
 
         lva_list = getattr(self.planner.state, "lvas", None) or []
 
-        fachrichtungen_path = os.path.join(os.getcwd(), "data", "fachrichtungen.json")
-        fachrichtungen = []
-        if os.path.isfile(fachrichtungen_path):
-            with open(fachrichtungen_path, encoding="utf-8") as f:
-                fach_data = json.load(f)
-            fachrichtungen = fach_data.get("fachrichtungen", [])
+        fach_data = self._read_json(self.data_dir / "fachrichtungen.json", {})
+        fachrichtungen = fach_data.get("fachrichtungen", [])
 
-        semester_path = os.path.join(os.getcwd(), "data", "semester.json")
-        semester_list = []
-        if os.path.isfile(semester_path):
-            with open(semester_path, encoding="utf-8") as f:
-                sem_data = json.load(f)
-            semester_list = [(s["id"], s["name"]) for s in sem_data.get("semester", [])]
+        sem_data = self._read_json(self.data_dir / "semester.json", {})
+        semester_list = [(s["id"], s["name"]) for s in sem_data.get("semester", [])]
 
         typ_list = [t.typ for t in getattr(self.planner.state, "termine", []) if getattr(t, "typ", None)]
 
@@ -423,16 +419,24 @@ class MainWindow(QMainWindow):
         self.refresh_conflicts()
 
     def _compute_filtered_termine(self, fs: FilterState | None):
+        """Return the filtered list of Termine for the given filter state
+        """
+
         if fs:
             room = fs.raum_id
             q = (str(fs.lva_id).strip().lower() if fs.lva_id else "")
             typ = fs.typ
             dozent = fs.dozent
             semester_id = fs.semester
+            geplante_semester = getattr(fs, "geplante_semester", None)
         else:
-            room, q, typ = self.planner.current_filters()
-            dozent = None
-            semester_id = None
+            filters = self.planner.current_filters()
+            room = filters["raum_id"]
+            q = filters["q"]
+            typ = filters["typ"]
+            dozent = filters["dozent"]
+            semester_id = filters["semester_id"]
+            geplante_semester = filters["geplante_semester"]
 
         terms = self.planner.state.filtered_termine(
             raum_id=room,
@@ -440,5 +444,6 @@ class MainWindow(QMainWindow):
             typ=typ,
             dozent=dozent,
             semester_id=semester_id,
+            geplante_semester=geplante_semester,
         )
         return terms

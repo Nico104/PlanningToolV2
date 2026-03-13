@@ -8,6 +8,7 @@ def filter_termine(
     termine: List[Termin],
 
     semester_id: Optional[str] = None,
+    geplante_semester: Optional[str] = None,
     raum_id: Optional[str] = None,
     lva_id: Optional[str] = None,
     typ: Optional[str] = None,
@@ -34,6 +35,14 @@ def filter_termine(
             ]
         else:
             out = [t for t in out if getattr(t, 'semester_id', None) == semester_id]
+    if geplante_semester:
+        if lva_dict is None:
+            raise ValueError("Für den geplante_semester-Filter muss lva_dict (lva_id → LVA-Objekt) übergeben werden.")
+
+        out = [
+            t for t in out
+            if geplante_semester in (getattr(lva_dict.get(t.lva_id), 'geplante_semester', []) or [])
+        ]
     if raum_id:
         out = [t for t in out if t.raum_id == raum_id]
     if lva_id:

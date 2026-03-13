@@ -15,6 +15,10 @@ from ..components.widgets.tick_checkbox import TickCheckBox
 from ..components.widgets.tight_combobox import TightComboBox
 
 class TerminDialog(QDialog):
+    """Dialog for creating or editing Termine, including optional series creation
+
+    Supports unassigned dates via a sentinel value, validates required fields
+    """
     def __init__(self, parent: QWidget, *,
                  lvas: List[Lehrveranstaltung],
                  semester: List[Semester],
@@ -162,7 +166,7 @@ class TerminDialog(QDialog):
             self.time_from.setEnabled(has_date)
 
         def _on_date_changed():
-            """When date changes from unassigned, jump to today."""
+            #When date changes from unassigned, jump to today
             current_date = self.date_de.date()
             
             if current_date != self._unassigned_qdate and current_date == self._unassigned_qdate.addDays(1):
@@ -171,7 +175,7 @@ class TerminDialog(QDialog):
                 self.date_de.setDate(date_to_qdate(today))
             _sync_time_enabled()
 
-        self.date_de.dateChanged.connect(lambda *_: _on_date_changed())
+        self.date_de.dateChanged.connect(_on_date_changed)
 
         _sync_time_enabled()
 
@@ -200,13 +204,7 @@ class TerminDialog(QDialog):
             self.period_cb.setVisible(False)
             self.end_date_de.setEnabled(False)
             self.end_date_de.setVisible(False)
-
-        # bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        # bb.accepted.connect(self._accept)
-        # bb.rejected.connect(self.reject)
-        # lay.addWidget(bb)
         
-        # Removed ID object name
         self.lva_cb.setObjectName("HeaderCombo")
         self.semester_cb.setObjectName("HeaderCombo")
         self.typ_le.setObjectName("Field")
@@ -222,7 +220,6 @@ class TerminDialog(QDialog):
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
 
-        # QSS hooks
         bb.setObjectName("DialogButtons")
         ok_btn = bb.button(QDialogButtonBox.Ok)
         cancel_btn = bb.button(QDialogButtonBox.Cancel)
@@ -265,7 +262,7 @@ class TerminDialog(QDialog):
         notiz_value = self.note_te.toPlainText().strip()
         anwesenheitspflicht = bool(self.ap_cb.isChecked())
 
-        # Pflichtfeld-Validierung
+        #Validierung
         errors = []
         if not name_value:
             errors.append("Name fehlt.")
@@ -323,7 +320,7 @@ class TerminDialog(QDialog):
                 
             self._result = []
             for idx, date_val in enumerate(dates):
-                # Eindeutige ID: BasisID + Serienkürzel + Laufnummer
+                #Eindeutige ID: BasisID + Serienkürzel + Laufnummer
                 termin_id = f"{self.new_id}_{serien_id_short}_r{idx+1}" if len(dates) > 1 else f"{self.new_id}_{serien_id_short}"
                 
                 self._result.append(Termin(

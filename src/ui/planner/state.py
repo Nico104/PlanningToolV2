@@ -28,10 +28,15 @@ class PlannerState:
 
     def filtered_termine(self, raum_id: Optional[str], q: str, typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, geplante_semester: Optional[str] = None) -> List[Termin]:
         lva_dict = {lva.id: lva for lva in self.lvas}
-        out = filter_termine(self.termine, semester_id=semester_id, raum_id=raum_id, typ=typ, dozent=dozent, lva_dict=lva_dict)
-        # Filter by geplante_semester if set
-        if geplante_semester:
-            out = [t for t in out if geplante_semester in (lva_dict.get(t.lva_id).geplante_semester if lva_dict.get(t.lva_id) else [])]
+        out = filter_termine(
+            self.termine,
+            semester_id=semester_id,
+            geplante_semester=geplante_semester,
+            raum_id=raum_id,
+            typ=typ,
+            dozent=dozent,
+            lva_dict=lva_dict,
+        )
         q = (q or "").strip().lower()
         if q:
             def match(t: Termin) -> bool:

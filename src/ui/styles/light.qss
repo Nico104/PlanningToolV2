@@ -1,4 +1,4 @@
-/* Week planner header styling */
+﻿/* Week planner header styling */
 QHeaderView::section {
   background: #fafafa;
   border: none;
@@ -596,6 +596,33 @@ QFrame#ConflictCard[conflictKind="unvollstaendig"] {
 
 QFrame#ConflictCard[conflictKind="unvollstaendig"]:hover {
   background: #fff9f0;
+}
+
+QFrame#ConflictCard[conflictKind="dauer"] {
+  border-left: 3px solid #e59f3a;
+  background: #fffaf3;
+}
+
+QFrame#ConflictCard[conflictKind="dauer"]:hover {
+  background: #fff5e9;
+}
+
+QFrame#ConflictCard[conflictKind="wochenende"] {
+  border-left: 3px solid #d97a4e;
+  background: #fff7f3;
+}
+
+QFrame#ConflictCard[conflictKind="wochenende"]:hover {
+  background: #fff2ec;
+}
+
+QFrame#ConflictCard[conflictKind="kapazitaet"] {
+  border-left: 3px solid #2fa67a;
+  background: #f3fcf8;
+}
+
+QFrame#ConflictCard[conflictKind="kapazitaet"]:hover {
+  background: #ebfaf3;
 }
 
 

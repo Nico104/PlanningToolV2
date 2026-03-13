@@ -1,15 +1,15 @@
-from PySide6.QtCore import Qt, QSize, QMimeData, Signal
+from PySide6.QtCore import Qt, QMimeData, Signal
 from shiboken6 import isValid
 import weakref
-from PySide6.QtGui import QColor, QBrush, QDrag, QPainter, QPen
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
-from datetime import date
+from PySide6.QtGui import QColor, QDrag
+from PySide6.QtWidgets import QLabel
 from PySide6.QtGui import QPixmap
 
 
 class TerminCard(QLabel):
     #A compact card widget for displaying a single termin
     MIME = "application/termin-id"
+    DRAG_THRESHOLD = 5
     doubleClicked = Signal(str)
     _focused_card_ref: weakref.ref | None = None
     _highlighted_refs: list[weakref.ref] = []
@@ -18,7 +18,6 @@ class TerminCard(QLabel):
         super().__init__(text, parent)
         self.termin_id = termin_id
         self.bg_color = bg_color
-        self._is_dragging = False
         self._focused = False
         self._highlighted = False
 
@@ -37,12 +36,7 @@ class TerminCard(QLabel):
         self.setFocusPolicy(Qt.StrongFocus)
 
     def _apply_style(self) -> None:
-        if self._focused or self._highlighted:
-            border = "border: 2px solid #111111;"
-        #elif self._highlighted:
-        #    border = "border: 2px solid #ff9800;"
-        else:
-            border = "border: none;"
+        border = "border: 2px solid #111111;" if (self._focused or self._highlighted) else "border: none;"
         self.setStyleSheet(self._base_style + border)
 
     @classmethod
@@ -74,7 +68,6 @@ class TerminCard(QLabel):
         if event.button() == Qt.LeftButton:
             self.setFocus()
             self._drag_start_pos = event.pos()
-            self._is_dragging = False
         super().mousePressEvent(event)
 
     def focusInEvent(self, event):
@@ -95,14 +88,6 @@ class TerminCard(QLabel):
         self._apply_style()
         super().focusOutEvent(event)
 
-    def mouseReleaseEvent(self, event):
-        #Handle click if not dragging
-        if event.button() == Qt.LeftButton and not self._is_dragging:
-            #handle click
-            pass
-        self._is_dragging = False
-        super().mouseReleaseEvent(event)
-
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.doubleClicked.emit(self.termin_id)
@@ -117,27 +102,20 @@ class TerminCard(QLabel):
         if not hasattr(self, '_drag_start_pos'):
             return
 
-        # Only start drag if moved enough distance
         distance = (event.pos() - self._drag_start_pos).manhattanLength()
-        if distance < 5:  # Minimum drag distance
+        if distance < self.DRAG_THRESHOLD:
             return
 
-        self._is_dragging = True
-
-        # Create and execute drag with visual feedback
         drag = QDrag(self)
         mime = QMimeData()
         mime.setData(self.MIME, str(self.termin_id).encode("utf-8"))
         drag.setMimeData(mime)
 
-        # Set a drag pixmap
         pixmap = QPixmap(self.size())
         pixmap.fill(Qt.transparent)
         self.render(pixmap)
         drag.setPixmap(pixmap)
 
-        # Execute the drag and drop operation
-        # Returns Qt.MoveAction if successfully dropped
-        result = drag.exec(Qt.MoveAction)
+        drag.exec(Qt.MoveAction)
 
         super().mouseMoveEvent(event)
