@@ -38,7 +38,7 @@ class DataEditorDock(QDockWidget):
         self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen", "Geplante Semester"], self.tabs)
         self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs)
         self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs)
-        self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung"], self.tabs)
+        self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"], self.tabs)
         self.tab_termine = EditorTab(
             "Termine",
             ["Name", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe", "ID"],
@@ -67,9 +67,11 @@ class DataEditorDock(QDockWidget):
             room_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_rooms.table)),
             sem_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_sem.table)),
             termin_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_termine.table)),
-            freie_tage_dock=SimpleNamespace(selected_row=lambda: self.tab_free.table.currentRow()),
+            freie_tage_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_free.table)),
             data_dir=self.data_dir,
         )
+
+        self.tab_free.table.setColumnHidden(6, True)
 
         self.tab_lva.add_clicked.connect(self._crud.add_lva)
         self.tab_lva.edit_clicked.connect(self._crud.edit_lva)
@@ -178,7 +180,7 @@ class DataEditorDock(QDockWidget):
                 von = str(it.get("von_datum", ""))
                 bis = str(it.get("bis_datum", ""))
             beschr = str(it.get("beschreibung", ""))
-            rows.append([typ, art, datum, von, bis, beschr])
+            rows.append([typ, art, datum, von, bis, beschr, str(it.get("id", ""))])
         self._fill_table(self.tab_free.table, rows)
         
     def _refresh_termine(self) -> None:
@@ -235,11 +237,13 @@ class DataEditorDock(QDockWidget):
     def _fill_table(self, table, rows: List[List[object]]) -> None:
         table.setSortingEnabled(False)
         table.setRowCount(0)
+
         for row_vals in rows:
             row = table.rowCount()
             table.insertRow(row)
             for c, v in enumerate(row_vals):
                 table.setItem(row, c, make_item(str(v)))
+
         table.setSortingEnabled(True)
         table.resizeColumnsToContents()
 

@@ -18,6 +18,9 @@ from ..utils.datetime_utils import fmt_time, fmt_date
 
 
 class DayEventsDialog(QDialog):
+    """Modal dialog listing all appointments of a single day as styled cards, with double-click to edit and buttons to jump to the week or day view
+    Used to display termine in the monthly calendar view, but can be reused elsewhere if needed"""
+
     def __init__(
         self,
         parent,
@@ -35,7 +38,6 @@ class DayEventsDialog(QDialog):
         self.go_week_cb = go_week_cb
         self.go_day_cb = go_day_cb
 
-        # Header with date (if provided)
         lay = QVBoxLayout(self)
         hdr = QWidget()
         hdr_layout = QHBoxLayout(hdr)
@@ -56,25 +58,22 @@ class DayEventsDialog(QDialog):
         self.listw.setSelectionMode(QListWidget.SingleSelection)
         self.listw.setWordWrap(True)
         self.listw.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # use card-style rows instead of alternating colors
-        self.listw.setAlternatingRowColors(False)
-        self.listw.setSpacing(8)  # more space between cards
+        self.listw.setSpacing(8)  # space between cards
 
         for t in termins:
-            start = fmt_time(t.start_zeit) if getattr(t, 'start_zeit', None) else ""
-            end = fmt_time(t.get_end_time()) if getattr(t, 'get_end_time', None) else ""
+            start = fmt_time(t.start_zeit) if t.start_zeit else ""
+            end_t = t.get_end_time()
+            end = fmt_time(end_t) if end_t is not None else ""
             it = QListWidgetItem()
             it.setData(Qt.UserRole, str(t.id))
             row_widget = self._build_row_widget(
                 start=start,
                 end=end,
-                typ=str(getattr(t, 'typ', '') or ''),
-                raum_id=str(getattr(t, 'raum_id', '') or ''),
-                name=str(getattr(t, 'name', '') or ''),
+                typ=t.typ,
+                raum_id=t.raum_id,
+                name=t.name,
             )
-            # make item a bit taller to accommodate card padding
             hint = row_widget.sizeHint()
-            # add some extra height for margins
             hint.setHeight(hint.height() + 16)
             it.setSizeHint(hint)
             self.listw.addItem(it)
@@ -84,9 +83,7 @@ class DayEventsDialog(QDialog):
         lay.addWidget(self.listw)
 
         bb = QDialogButtonBox(QDialogButtonBox.Close)
-        close_btn = bb.button(QDialogButtonBox.Close)
-        if close_btn is not None:
-            close_btn.setObjectName("PrimaryButton")
+        bb.button(QDialogButtonBox.Close).setObjectName("PrimaryButton")
         self.btn_week = bb.addButton("Zur Wochenansicht", QDialogButtonBox.ActionRole)
         self.btn_week.setObjectName("SecondaryButton")
         self.btn_day = bb.addButton("Zur Tagesansicht", QDialogButtonBox.ActionRole)
@@ -96,7 +93,6 @@ class DayEventsDialog(QDialog):
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
 
-        # sizing
         self.resize(480, 360)
 
     def _build_row_widget(self, *, start: str, end: str, typ: str, raum_id: str, name: str) -> QWidget:
@@ -143,8 +139,6 @@ class DayEventsDialog(QDialog):
                 self.edit_cb(str(tid))
             finally:
                 self.accept()
-
-
 
     def _go_week(self):
         if self.go_week_cb:

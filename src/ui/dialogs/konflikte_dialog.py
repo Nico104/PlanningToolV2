@@ -7,6 +7,10 @@ from src.ui.components.widgets.tick_checkbox import TickCheckBox
 
 
 class KonflikteDialog(QDialog):
+    """Dialog for managing conflict detection settings
+
+    The dialog loads conflict definitions from the configured JSON file
+    """
     conflicts_changed = Signal()
     def __init__(self, parent=None, conflicts_path=None):
         super().__init__(parent)
@@ -56,7 +60,7 @@ class KonflikteDialog(QDialog):
             row_layout.addWidget(checkbox, alignment=Qt.AlignVCenter)
             row_layout.addWidget(label, alignment=Qt.AlignVCenter)
 
-            # Add compact, inline percent input for capacity warnings (styled like termin_dialog)
+            # Add percent input for capacity warnings
             if conflict.get('key', '').startswith('capacity_warning'):
                 percent_box = QSpinBox()
                 percent_box.setObjectName("ConflictPercentSpin")
@@ -159,11 +163,10 @@ class KonflikteDialog(QDialog):
                 max_group_layout.addWidget(max_box)
                 max_group_layout.addWidget(max_sign)
 
-                # Inline layout for min/max duration, with spacing between groups
                 duration_inline = QWidget()
                 duration_inline_layout = QHBoxLayout(duration_inline)
                 duration_inline_layout.setContentsMargins(0, 0, 0, 0)
-                duration_inline_layout.setSpacing(24)  # More space between min and max
+                duration_inline_layout.setSpacing(24) 
                 duration_inline_layout.addWidget(min_group)
                 duration_inline_layout.addWidget(max_group)
                 duration_inline_layout.addStretch(1)

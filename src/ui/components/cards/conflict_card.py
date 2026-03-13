@@ -3,6 +3,9 @@ from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
 
 
 class ConflictCard(QFrame):
+    """Clickable UI card that presents a scheduling conflict 
+    and emits affected `termin_ids` when clicked"""
+
     clicked = Signal(list)
 
     def __init__(

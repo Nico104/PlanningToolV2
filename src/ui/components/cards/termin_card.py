@@ -2,50 +2,15 @@ from PySide6.QtCore import Qt, Signal, QPoint, QMimeData
 from PySide6.QtGui import QDrag, QMouseEvent, QPixmap
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
 
-from PySide6.QtCore import QPoint, QRectF
+from PySide6.QtCore import QRectF
 from PySide6.QtGui import QPainter, QPainterPath
-
-# def mouseMoveEvent(self, e: QMouseEvent) -> None:
-#     if not (e.buttons() & Qt.LeftButton):
-#         return
-#     if self._press_pos is None:
-#         return
-
-#     if (e.pos() - self._press_pos).manhattanLength() < 8:
-#         return
-
-#     drag = QDrag(self)
-#     mime = QMimeData()
-#     mime.setText(self.termin_id)
-#     mime.setData(MIME_TERMIN_ID, self.termin_id.encode("utf-8"))
-#     drag.setMimeData(mime)
-
-#     # --- nice drag preview: transparent + rounded corners ---
-#     pm = QPixmap(self.size())
-#     pm.fill(Qt.transparent)
-
-#     p = QPainter(pm)
-#     p.setRenderHint(QPainter.Antialiasing, True)
-
-#     radius = 4  # muss zu deinem QSS border-radius passen
-#     path = QPainterPath()
-#     path.addRoundedRect(QRectF(0, 0, pm.width()-8, pm.height()-2), radius, radius)
-#     p.setClipPath(path)
-
-#     self.render(p)  # render widget into painter (clipped)
-#     p.end()
-
-#     drag.setPixmap(pm)
-#     drag.setHotSpot(self._press_pos)
-
-#     drag.exec(Qt.CopyAction)
-
-
 
 MIME_TERMIN_ID = "application/termin-id"
 
 
 class TerminCard(QFrame):
+    """Interactive Termin card with drag-and-drop plus double/right-click signals"""
+
     double_clicked = Signal(str)
     right_clicked = Signal(str)
 
@@ -75,7 +40,6 @@ class TerminCard(QFrame):
         
         root.setSpacing(6)
 
-        # Show name (if provided) above title
         if name:
             lbl_name = QLabel(name)
             lbl_name.setObjectName("CardName")
@@ -95,7 +59,7 @@ class TerminCard(QFrame):
             l = QLabel(text)
             l.setObjectName(name)
             l.setAlignment(Qt.AlignCenter)
-            l.setProperty("chip", True)  # optional für generisches Chip-Styling
+            l.setProperty("chip", True)
             return l
 
         chips.addWidget(chip(typ, "ChipType"))
@@ -124,7 +88,6 @@ class TerminCard(QFrame):
 
         drag = QDrag(self)
         mime = QMimeData()
-        mime.setText(self.termin_id)
         mime.setData(MIME_TERMIN_ID, self.termin_id.encode("utf-8"))
         drag.setMimeData(mime)
 

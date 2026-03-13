@@ -1,8 +1,6 @@
 from datetime import date
 from typing import Any, Dict, Optional
 from PySide6.QtCore import Qt
-
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog, QWidget, QVBoxLayout, QFormLayout, QLineEdit,
     QDialogButtonBox, QMessageBox, QComboBox, QDateEdit
@@ -13,6 +11,8 @@ from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
 
 class FreieTageDialog(QDialog):
+    """Form dialog for creating or editing a free day (public holiday or lecture-free day), supporting both single-date and date-range modes"""
+
     def __init__(self, parent: QWidget, item: Optional[Dict[str, Any]] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")

@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox
 
 class DeleteDialog(QDialog):
+    """Confirmation dialog for delete actions"""
+
     def __init__(self, parent, text):
         super().__init__(parent)
         self.setObjectName("AppDialog")

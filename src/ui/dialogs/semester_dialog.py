@@ -13,6 +13,7 @@ from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
 
 class SemesterDialog(QDialog):
+    """Dialog for creating or editing a semester with start and end dates"""
     def __init__(self, parent: QWidget, sem: Optional[Semester] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")

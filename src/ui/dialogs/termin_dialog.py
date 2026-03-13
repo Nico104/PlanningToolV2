@@ -1,16 +1,17 @@
-from datetime import date, time
+import uuid
+from datetime import date, time, timedelta
 from typing import List, Optional, Dict
 
-from PySide6.QtCore import QTime, QDate, Qt, QEvent, QTimer, QSize
+from PySide6.QtCore import QTime, QDate, Qt, QEvent, QTimer
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QComboBox, QDateEdit, QTimeEdit, QCheckBox, QSpinBox, QTextEdit
+    QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit
 )
-from PySide6.QtGui import QIcon
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
+from ..components.widgets.tick_checkbox import TickCheckBox
 from ..components.widgets.tight_combobox import TightComboBox
 
 class TerminDialog(QDialog):
@@ -24,33 +25,16 @@ class TerminDialog(QDialog):
                  ):
         super().__init__(parent)
         self.new_id = new_id
-        self.termin = termin  # Store for access in other methods
+        self.termin = termin
         self.setObjectName("AppDialog")
         self.setModal(True)
         self.settings = settings or {}
 
-        # Sentinel for unassigned date: use a far-past minimum so real dates are not clamped
+        # Sentinel for unassigned date
         self._unassigned_qdate = QDate(1900, 1, 1)
 
-        # Erst die Felder initialisieren, dann die Logik:
         self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
         self.name_le.setObjectName("Field")
-        self.grp_name = QLineEdit((termin.gruppe.name if (termin and termin.gruppe) else ""))
-        self.grp_size = QSpinBox()
-        self.grp_size.setRange(0, 2000)
-        self.grp_size.setValue((termin.gruppe.groesse if (termin and termin.gruppe) else 0))
-
-        def _sync_group_fields():
-            name = self.grp_name.text().strip()
-            if name:
-                self.grp_size.setEnabled(True)
-            else:
-                self.grp_size.setEnabled(False)
-                self.grp_size.setValue(0)
-
-        self.grp_name.textChanged.connect(lambda *_: _sync_group_fields())
-        _sync_group_fields()
-
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
         lay.setSpacing(12)
@@ -62,10 +46,6 @@ class TerminDialog(QDialog):
         form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         lay.addLayout(form)
 
-        # ...existing code...
-
-        # Serientermin UI (nach _unassigned_qdate!)
-        from src.ui.components.widgets.tick_checkbox import TickCheckBox
         self.serientermin_cb = TickCheckBox("Serientermin")
         self.period_cb = QComboBox()
         self.period_cb.addItems(["wöchentlich", "2-wöchentlich", "monatlich"])
@@ -79,7 +59,7 @@ class TerminDialog(QDialog):
             enabled = self.serientermin_cb.isChecked()
             self.period_cb.setEnabled(enabled)
             self.end_date_de.setEnabled(enabled)
-            # optisch ausgrauen
+            
             style = "" if enabled else "background: #eee; color: #888;"
             self.period_cb.setStyleSheet(style)
             self.end_date_de.setStyleSheet(style)
@@ -108,12 +88,11 @@ class TerminDialog(QDialog):
         self.date_de = QDateEdit()
         self.date_de.setCalendarPopup(True)
 
-        # Sentinel for unassigned date (minimum). Keep far-past value so valid dates remain selectable.
         self.date_de.setMinimumDate(self._unassigned_qdate)
         self.date_de.setSpecialValueText("Kein Datum zugewiesen")
         self.date_de.setDate(self._unassigned_qdate)
 
-        # Install event filter to detect when calendar popup opens
+        # Wenn gerade Kein Datum zugewiesen aktiv ist (Sentinel-Datum), wird beim Öffnen des Kalender-Popups automatisch der aktuelle Monat/Tag angezeigt, statt 1900
         self._calendar_shown = False
         self.date_de.installEventFilter(self)
 
@@ -134,9 +113,19 @@ class TerminDialog(QDialog):
         self.duration_sb.setValue(termin.duration if termin else 0)
         self.duration_sb.setSuffix(" min")
 
-        from src.ui.components.widgets.tick_checkbox import TickCheckBox
         self.ap_cb = TickCheckBox("Anwesenheitspflicht")
         self.ap_cb.setChecked(bool(termin.anwesenheitspflicht) if termin else False)
+
+        def _sync_group_fields():
+            name = self.grp_name.text().strip()
+            if name:
+                self.grp_size.setEnabled(True)
+            else:
+                self.grp_size.setEnabled(False)
+                self.grp_size.setValue(0)
+
+        self.grp_name.textChanged.connect(lambda *_: _sync_group_fields())
+        _sync_group_fields()
 
         self.note_te = QTextEdit()
         self.note_te.setFixedHeight(60)
@@ -168,34 +157,20 @@ class TerminDialog(QDialog):
             self.date_de.setDate(date_to_qdate(today))
             self.time_from.setTime(QTime(8, 0))
 
-        def _update_duration_display():
-            """Duration is always editable - no auto-calculation."""
-            has_date = self.date_de.date() != self._unassigned_qdate
-            if has_date:
-                self.duration_sb.setEnabled(True)
-                self.duration_sb.setToolTip("Dauer in Minuten")
-            else:
-                self.duration_sb.setEnabled(True)
-                self.duration_sb.setToolTip("Manuelle Dauer: definiert den Platzhalter-Umfang beim Ziehen in den Kalender")
-
         def _sync_time_enabled():
             has_date = self.date_de.date() != self._unassigned_qdate
             self.time_from.setEnabled(has_date)
-            self.duration_sb.setEnabled(has_date or True)  # Always enabled
-            _update_duration_display()
 
         def _on_date_changed():
             """When date changes from unassigned, jump to today."""
             current_date = self.date_de.date()
-            # If user is moving away from unassigned (clicking up arrow or editing)
+            
             if current_date != self._unassigned_qdate and current_date == self._unassigned_qdate.addDays(1):
-                # They tried to go from unassigned to next day, jump to today instead
+                
                 today = date.today()
                 self.date_de.setDate(date_to_qdate(today))
             _sync_time_enabled()
 
-        # Connect time changes to update duration
-        self.time_from.timeChanged.connect(lambda *_: _update_duration_display())
         self.date_de.dateChanged.connect(lambda *_: _on_date_changed())
 
         _sync_time_enabled()
@@ -267,8 +242,6 @@ class TerminDialog(QDialog):
                 return
 
     def _accept(self):
-        from datetime import timedelta
-        import uuid
         lva_id = str(self.lva_cb.currentData())
         raum_id = str(self.raum_cb.currentData())
         typ = self.typ_le.text().strip().upper()
@@ -300,10 +273,6 @@ class TerminDialog(QDialog):
             errors.append("LVA fehlt.")
         if not typ:
             errors.append("Typ fehlt.")
-        if d is None:
-            errors.append("Datum fehlt.")
-        if start_zeit is None:
-            errors.append("Startzeit fehlt.")
         if duration_value <= 0:
             errors.append("Dauer fehlt oder ist 0.")
         if errors:
@@ -430,6 +399,6 @@ class TerminDialog(QDialog):
                                 cal.setSelectedDate(qd)
                             self._calendar_shown = False
                         QTimer.singleShot(0, set_calendar)
-                    except:
+                    except Exception:
                         self._calendar_shown = False
         return super().eventFilter(obj, event)

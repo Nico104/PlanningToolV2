@@ -5,7 +5,9 @@ from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelec
 import math
 
 
-class WeekDropTable(QTableWidget):
+class TimeGridDropTable(QTableWidget):
+    """Drop-enabled time grid with snap preview and auto-scroll for dragging `TerminCard`s"""
+
     terminDropped = Signal(str, int, int)
     MIME = "application/termin-id"
 
@@ -17,12 +19,7 @@ class WeekDropTable(QTableWidget):
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDrop)
         self.setDefaultDropAction(Qt.MoveAction)
-
-        # self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        # self.setSelectionBehavior(QAbstractItemView.SelectItems)
         
-        # self.setDropIndicatorShown(False)
-
         # Track current hover target during drag
         self._hover_row = -1
         self._hover_col = -1

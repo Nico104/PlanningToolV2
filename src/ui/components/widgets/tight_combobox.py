@@ -4,15 +4,19 @@ from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QFrame, QApplicati
 
 
 class _TightDelegate(QStyledItemDelegate):
+    """Item delegate that reduces row height in the combo popup."""
+
     def sizeHint(self, option, index):
         sz = super().sizeHint(option, index)
-        # make list items compact
         sz.setHeight(max(20, sz.height() - 4))
         return sz
 
 
 class TightComboBox(QComboBox):
+    """Custom combo box with auto-sized popup, custom styling, and keyboard letter-jump"""
+
     def keyPressEvent(self, event):
+        # Jump to the first item whose text starts with the typed letter.
         key = event.text()
         if key and len(key) == 1 and key.isprintable():
             key_lower = key.lower()
@@ -30,7 +34,7 @@ class TightComboBox(QComboBox):
 
 
         self.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        # apply a compact minimum height; allow callers to override with setFixedHeight
+        
         self.setMinimumHeight(self._compact_height)
 
         self.setItemDelegate(_TightDelegate(self))
@@ -63,7 +67,7 @@ class TightComboBox(QComboBox):
         w.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         
         w.setAttribute(Qt.WA_TranslucentBackground, True)
-        w.setStyleSheet("background: transparent;")   # only window, not the view
+        w.setStyleSheet("background: transparent;")
 
         v.setFrameShape(QFrame.NoFrame)
         v.setContentsMargins(0, 0, 0, 0)

@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (
 from ...core.models import GeplantesSemester
 
 class GeplanteSemesterDialog(QDialog):
+    """Form dialog for creating or editing a planned semester (1. Semester, 2. Semester, etc.) with name, optional note and ID fields"""
+
     def __init__(self, parent: QWidget, geplantes_semester: Optional[GeplantesSemester] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")

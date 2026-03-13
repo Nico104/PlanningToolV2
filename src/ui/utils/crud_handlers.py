@@ -19,6 +19,16 @@ class CrudHandlers:
     def _geplante_semester_path(self):
         return Path(self.data_dir) / "geplante_semester.json"
 
+    def get_geplante_semester_models(self) -> List[GeplantesSemester]:
+        semester_list = self.read_geplante_semester()
+        models: List[GeplantesSemester] = []
+        for item in semester_list:
+            try:
+                models.append(GeplantesSemester(**item))
+            except Exception:
+                continue
+        return models
+
     def read_geplante_semester(self):
         path = self._geplante_semester_path()
         if not path.exists():
@@ -145,7 +155,11 @@ class CrudHandlers:
         return True
 
 
-    def add_freie_tage(self) -> None:
+    def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
+        path = self._freie_tage_path()
+        return self._read_json_list(path, "freie_tage")
+
+    def add_freie_tage(self, year: Optional[int] = None) -> None:
         path = self._freie_tage_path()
         if not path:
             return
@@ -155,46 +169,23 @@ class CrudHandlers:
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
-        freie.append(dlg.result)
-        self._write_freie_tage(path, freie)
-    def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
-        if year is None:
-            year = date.today().year
-        # Standardpfad
-        path = Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
-        if not path.exists():
-            # Fallback auf data/freie_tage.json
-            path = Path(self.data_dir) / "freie_tage.json"
-        return self._read_json_list(path, "freie_tage")
-
-    def add_freie_tage(self, year: Optional[int] = None) -> None:
-        if year is None:
-            year = date.today().year
-        path = Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
-        if not path:
-            return
-
-        freie = self.read_freie_tage(year)
-        dlg = FreieTageDialog(self.parent, None)
-        if dlg.exec() != QDialog.Accepted or not dlg.result:
-            return
-
-        freie.append(dlg.result)
+        item = dict(dlg.result)
+        item["id"] = self._new_freie_tage_id(freie)
+        freie.append(item)
         self._write_freie_tage(path, freie)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
-        if year is None:
-            year = date.today().year
-        path = Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
-        row = self._freie_tage_row()
-        if not path or row is None or row < 0:
+        path = self._freie_tage_path()
+        selected_id = self._selected_freie_tage_id()
+        if not path or not selected_id:
             return
 
-        freie = self.read_freie_tage(year)
-        if row >= len(freie):
+        freie = self.read_freie_tage()
+        row = next((i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None)
+        if row is None:
             return
 
         cur = freie[row]
@@ -202,25 +193,26 @@ class CrudHandlers:
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
-        freie[row] = dlg.result
+        item = dict(dlg.result)
+        item["id"] = selected_id
+        freie[row] = item
         self._write_freie_tage(path, freie)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
-        if year is None:
-            year = date.today().year
-        path = Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
-        row = self._freie_tage_row()
-        if not path or row is None or row < 0:
+        path = self._freie_tage_path()
+        selected_id = self._selected_freie_tage_id()
+        if not path or not selected_id:
             return
 
         if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
             return
 
-        freie = self.read_freie_tage(year)
-        if row >= len(freie):
+        freie = self.read_freie_tage()
+        row = next((i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None)
+        if row is None:
             return
 
         freie.pop(row)
@@ -361,18 +353,18 @@ class CrudHandlers:
         return None
 
     def _freie_tage_path(self, year: Optional[int] = None) -> Optional[Path]:
-        if year is None:
-            year = date.today().year
-        return Path(self.data_dir) / "freie_tage" / f"freie_tage_{year}.json"
+        return Path(self.data_dir) / "freie_tage.json"
 
-    def _freie_tage_row(self) -> Optional[int]:
+    def _selected_freie_tage_id(self) -> Optional[str]:
         if not self.freie_tage_dock:
             return None
-        if hasattr(self.freie_tage_dock, "selected_row"):
-            return self.freie_tage_dock.selected_row()
-        if hasattr(self.freie_tage_dock, "table"):
-            return self.freie_tage_dock.table.currentRow()
+
+        if hasattr(self.freie_tage_dock, "selected_id"):
+            return self.freie_tage_dock.selected_id()
         return None
+
+    def _new_freie_tage_id(self, freie_tage: List[Dict[str, Any]]) -> str:
+        return next_id("FT", [str(item.get("id", "")) for item in freie_tage], width=3)
 
     def _new_termin_id(self) -> str:
         termine = self.ds.load_termine()
@@ -449,7 +441,7 @@ class CrudHandlers:
         )
     
     def add_lva(self) -> None:
-        dlg = LVADialog(self.parent, None)
+        dlg = LVADialog(self.parent, None, self.get_geplante_semester_models())
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
@@ -472,7 +464,7 @@ class CrudHandlers:
         if not cur:
             return
 
-        dlg = LVADialog(self.parent, cur)
+        dlg = LVADialog(self.parent, cur, self.get_geplante_semester_models())
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 

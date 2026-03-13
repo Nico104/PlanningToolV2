@@ -19,7 +19,7 @@ from ..utils.crud_handlers import CrudHandlers
 from .termincard import TerminCard
 from .timeslotcell import TimeSlotCell
 from PySide6.QtWidgets import QLabel
-from ..components.dragdrop.week_drop_table import WeekDropTable
+from ..components.dragdrop.time_grid_drop_table import TimeGridDropTable
 from ..components.dragdrop.month_drop_table import MonthDropTable
 from PySide6.QtWidgets import QTableWidget as SimpleTableWidget
 
@@ -49,8 +49,8 @@ class PlannerWorkspace(QWidget):
         self.stack = QStackedWidget()
         root.addWidget(self.stack, 1)
 
-        self.day_table = WeekDropTable(0, 0)
-        self.week_table = WeekDropTable(0, 0)
+        self.day_table = TimeGridDropTable(0, 0)
+        self.week_table = TimeGridDropTable(0, 0)
         # Month view container: header label + table so we can show the month name
         self.month_table = MonthDropTable(0, 7)
         self.month_container = QWidget()

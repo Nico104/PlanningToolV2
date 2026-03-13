@@ -17,16 +17,25 @@ def selected_id(table: QTableWidget) -> Optional[str]:
     row = table.currentRow()
     if row < 0:
         return None
-    # Wenn die erste Spalte "ID" heißt, nimm diese, sonst wie bisher die letzte
-    if table.horizontalHeaderItem(0).text().strip().upper() == "ID":
-        col = 0
-    else:
-        col = table.columnCount() - 1
-    it = table.item(row, col)
+
+    id_col = None
+    for col in range(table.columnCount()):
+        hdr = table.horizontalHeaderItem(col)
+        if hdr and hdr.text().strip().upper() == "ID":
+            id_col = col
+            break
+
+    if id_col is None:
+        return None
+
+    it = table.item(row, id_col)
     return it.text().strip() if it else None
 
 
 class EditorTab(QWidget):
+    """Reusable table tab with Add/Edit/Delete buttons and context menu
+    Used for Date Editor"""
+
     add_clicked = Signal()
     edit_clicked = Signal()
     delete_clicked = Signal()
@@ -89,5 +98,5 @@ class EditorTab(QWidget):
             self.delete_clicked.emit()
 
     def _emit_edit_if_selected(self) -> None:
-        if selected_id(self.table):
+        if self.table.currentRow() >= 0:
             self.edit_clicked.emit()

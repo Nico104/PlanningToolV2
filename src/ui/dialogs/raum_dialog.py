@@ -5,10 +5,11 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox, QSpinBox
 )
 
-from ...core.models import Semester, Raum, Lehrveranstaltung, Vortragende, Termin, Zeitfenster, Gruppe
+from ...core.models import Raum
 
 
 class RaumDialog(QDialog):
+    """Dialog for creating or editing a room with name and capacity"""
     def __init__(self, parent: QWidget, raum: Optional[Raum] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")

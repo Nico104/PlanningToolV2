@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
             "termine.json",
             "semester.json",
             "fachrichtungen.json",
-            "freie_tage_2026.json",
+            "freie_tage.json",
             "konflikte.json",
         ]
         export_obj = {}
@@ -226,7 +226,7 @@ class MainWindow(QMainWindow):
             "semester": "semester.json",
             "fachrichtungen": "fachrichtungen.json",
             "konflikte": "konflikte.json",
-            "freie_tage": "freie_tage_2026.json",
+            "freie_tage": "freie_tage.json",
         }
 
         if isinstance(data, dict):
@@ -264,62 +264,12 @@ class MainWindow(QMainWindow):
             return
 
         if not normalized:
-            normalized["termine.json"] = data if isinstance(data, (dict, list)) else {"termine": data}
+            QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
+            return
 
-        written = []
-        errors = []
-
-        termine_payload = None
-        for fname, content in normalized.items():
-            if fname == "termine.json":
-                termine_payload = content
-                continue
-            try:
-                target = self.data_dir / fname
-                target.parent.mkdir(parents=True, exist_ok=True)
-                if isinstance(content, (dict, list)):
-                    target.write_text(
-                        json.dumps(content, ensure_ascii=False, indent=2) + "\n",
-                        encoding="utf-8",
-                    )
-                else:
-                    target.write_text(str(content), encoding="utf-8")
-                written.append(fname)
-            except Exception as e:
-                errors.append(f"{fname}: {e}")
-
-        if termine_payload is not None:
-            target = self.data_dir / "termine.json"
-            existing = None
-            if target.exists():
-                try:
-                    existing = json.loads(target.read_text(encoding="utf-8"))
-                except Exception:
-                    existing = None
-
-            different = True
-            try:
-                if existing is not None and json.dumps(existing, sort_keys=True) == json.dumps(
-                    termine_payload, sort_keys=True
-                ):
-                    different = False
-            except Exception:
-                different = True
-
-            if different:
-                dlg = ImportDialog(self, self.data_dir, {"termine.json": termine_payload})
-                dlg.exec()
-                written.append("termine.json")
-
-        if errors:
-            QMessageBox.warning(
-                self,
-                "Import Fehler",
-                "Einige Dateien konnten nicht importiert werden:\n" + "\n".join(errors),
-            )
-        else:
-            Toast(self, f"Importiert: {len(written)} Dateien.", duration_ms=3000).show()
-
+        dlg = ImportDialog(self, self.data_dir, normalized)
+        dlg.exec()
+        Toast(self, "Import abgeschlossen.", duration_ms=3000).show()
         self.refresh_everything()
 
     def _setup_docks(self) -> None:

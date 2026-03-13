@@ -4,11 +4,7 @@ from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelec
 
 
 class MonthDropTable(QTableWidget):
-    """Simpler drop-capable table for month grid.
-
-    Emits `terminDropped(termin_id, row, col)` when a `Termin` is dropped
-    onto a month cell. Provides a basic hover selection visual.
-    """
+    """Drop month grid table that emits the dropped termin ID and cell"""
 
     terminDropped = Signal(str, int, int)
     MIME = "application/termin-id"
@@ -25,7 +21,6 @@ class MonthDropTable(QTableWidget):
         self._hover_row = -1
         self._hover_col = -1
 
-        # auto-scroll for large month tables (keeps behavior similar to week)
         self._auto_scroll_timer = QTimer(self)
         self._auto_scroll_timer.setInterval(25)
         self._last_drag_pos: QPoint | None = None

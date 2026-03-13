@@ -1,25 +1,31 @@
-from typing import Optional
+from typing import Optional, Sequence
+
 from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox
+    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
+    QPushButton, QHBoxLayout,
 )
 
-from ...core.models import Semester, Raum, Lehrveranstaltung, Vortragende, Termin, Zeitfenster, Gruppe
-
-
-
-
-
-
+from ...core.models import GeplantesSemester, Lehrveranstaltung, Vortragende
+from ..components.widgets.chip_list_widget import ChipListWidget
+from ..components.widgets.tight_combobox import TightComboBox
 
 class LVADialog(QDialog):
-    def __init__(self, parent: QWidget, lva: Optional[Lehrveranstaltung] = None):
+    """Dialog for creating or editing a LVA
+    """
+    def __init__(
+        self,
+        parent: QWidget,
+        lva: Optional[Lehrveranstaltung] = None,
+        geplante_semester: Sequence[GeplantesSemester] = (),
+    ):
         super().__init__(parent)
         self.setObjectName("AppDialog")
         self.setWindowTitle("LVA bearbeiten" if lva else "LVA hinzufügen")
         self.setModal(True)
         self._result: Optional[Lehrveranstaltung] = None
+        self.sem_objects = list(geplante_semester)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
@@ -44,25 +50,6 @@ class LVADialog(QDialog):
         self.typ_le = QLineEdit(", ".join(lva.typ) if lva else "VO")
         self.typ_le.setObjectName("Field")
 
-        # Geplante Semester Auswahl (beliebig viele)
-        import os, json
-        from PySide6.QtWidgets import QComboBox, QPushButton, QHBoxLayout
-        from ..components.widgets.chip_list_widget import ChipListWidget
-        # Use workspace root for absolute path
-        workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-        semester_path = os.path.join(workspace_root, "data", "geplante_semester.json")
-        try:
-            with open(semester_path, encoding="utf-8") as f:
-                semester_data = json.load(f)["geplante_semester"]
-        except Exception:
-            semester_data = []
-        from ...core.models import GeplantesSemester
-        self.sem_objects = [GeplantesSemester(
-            id=s["id"],
-            name=s["name"],
-            notiz=s.get("notiz")
-        ) for s in semester_data]
-
         # Use ChipListWidget for semester chips
         self.sem_chip_items = []
         if lva and getattr(lva, "geplante_semester", None):
@@ -72,7 +59,7 @@ class LVADialog(QDialog):
                     continue
                 sem = next((sem for sem in self.sem_objects if sem.id == sid), None)
                 if sem:
-                    display = sem.name  # Only show name
+                    display = sem.name 
                     display = str(display).strip()
                     if display and display not in self.sem_chip_items:
                         self.sem_chip_items.append(display)
@@ -84,7 +71,7 @@ class LVADialog(QDialog):
             self.sem_cb.clear()
             chip_names = set(self.sem_list.items)
             for sem in self.sem_objects:
-                # Only show if not already in chips (by name only)
+                
                 if sem.name not in chip_names:
                     if sem.notiz:
                         display_full = f"{sem.name} - {sem.notiz}"
@@ -97,7 +84,6 @@ class LVADialog(QDialog):
         self.sem_list.chipDeleted.connect(on_chip_deleted)
 
         sem_add_layout = QHBoxLayout()
-        from ..components.widgets.tight_combobox import TightComboBox
         self.sem_cb = TightComboBox(self)
         self.sem_cb.setObjectName("HeaderCombo")
         self.sem_cb.setMinimumWidth(160)
@@ -133,8 +119,6 @@ class LVADialog(QDialog):
 
         form.addRow("Geplante Semester:", self.sem_list)
         form.addRow("Semester hinzufügen/entfernen:", sem_add_layout)
-
-        # ...existing code...
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.setObjectName("DialogButtons")

@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 
 
 class SettingsDialog(QDialog):
+    """Dialog for app settings"""
     def __init__(self, parent=None, settings: Optional[Dict] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")
