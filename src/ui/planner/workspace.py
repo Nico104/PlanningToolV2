@@ -15,6 +15,7 @@ from .state import PlannerState
 from .day_view import PlannerDayView
 from .week_view import PlannerWeekView
 from .month_view import PlannerMonthView
+from .free_day_provider import FreeDayProvider
 from ..utils.crud_handlers import CrudHandlers
 from .termincard import TerminCard
 from .timeslotcell import TimeSlotCell
@@ -32,6 +33,7 @@ class PlannerWorkspace(QWidget):
 
         self.state = PlannerState(ds)
         self.state.reload()
+        self.free_day_provider = FreeDayProvider(self.state.ds.data_dir)
 
         # Main layout setup
         root = QVBoxLayout(self)
@@ -87,6 +89,7 @@ class PlannerWorkspace(QWidget):
             state=self.state,
             day_table=self.day_table,
             day_date=self.day_date,
+            free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
             on_drop_cb=self._on_day_drop,
         )
@@ -94,6 +97,7 @@ class PlannerWorkspace(QWidget):
             state=self.state,
             week_table=self.week_table,
             week_from=self.week_from,
+            free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
             on_drop_cb=self._on_week_drop,
         )
@@ -102,6 +106,7 @@ class PlannerWorkspace(QWidget):
             month_table=self.month_table,
             month_from=self.week_from,
             month_label=self.month_header,
+            free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
             on_drop_cb=self._on_month_drop,
         )
@@ -150,10 +155,6 @@ class PlannerWorkspace(QWidget):
         if view == "day":
             d = self._qdate_to_pydate(self.day_date.date()) + timedelta(days=direction)
             self.day_date.setDate(date_to_qdate(d))
-        #elif view == "week":
-        #    wf = self._qdate_to_pydate(self.week_from.date())
-        #    wf = self._align_to_monday(wf) + timedelta(days=7 * direction)
-        #    self.week_from.setDate(date_to_qdate(wf))
         elif view == "month":
             wf = self._qdate_to_pydate(self.week_from.date())
             month_index = (wf.month - 1) + direction
@@ -230,7 +231,7 @@ class PlannerWorkspace(QWidget):
             rooms = self.state.raeume
             if filters["raum_id"]:
                 rooms = [r for r in rooms if r.id == filters["raum_id"]]
-            self.day_view.refresh(filtered, rooms, None, filters["raum_id"])
+            self.day_view.refresh(filtered, rooms)
         elif view == "week":
             self.stack.setCurrentWidget(self.week_table)
             self.week_view.refresh(filtered)
@@ -252,11 +253,6 @@ class PlannerWorkspace(QWidget):
             week_end = week_start + timedelta(days=6)
             if not (week_start <= current_day <= week_end):
                 self.day_date.setDate(date_to_qdate(week_start))
-        #elif view == "week":
-        #    # ensure week_from aligns to monday for the week view
-        #    current_day = self._qdate_to_pydate(self.day_date.date())
-        #    week_start = self._align_to_monday(current_day)
-        #    self.week_from.setDate(date_to_qdate(week_start))
         elif view == "month":
             # keep week_from within the same month as current day
             current_day = self._qdate_to_pydate(self.day_date.date())

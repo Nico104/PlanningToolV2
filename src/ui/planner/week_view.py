@@ -12,6 +12,7 @@ from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
+from .free_day_provider import FreeDayProvider
 
 
 
@@ -26,12 +27,14 @@ class PlannerWeekView:
         state: PlannerState,
         week_table: QTableWidget,
         week_from: QDateEdit,
+        free_day_provider: FreeDayProvider,
         edit_by_id_cb: Callable[[str], None],
         on_drop_cb: Callable[[str, date, time], None],
     ):
         self.state = state
         self.week_table = week_table
         self.week_from = week_from
+        self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
 
@@ -69,6 +72,8 @@ class PlannerWeekView:
 
         self._setup_table()
         self.week_table.cellClicked.connect(self._on_cell_clicked)
+        self._free_days_by_date: dict[date, str] = {}
+        self._free_day_styles = self._free_day_provider.get_styles()
 
     def _day_bounds(self) -> tuple[time, time, int]:
         s = self.state.settings
@@ -90,6 +95,8 @@ class PlannerWeekView:
         t = self.week_table
         t.setWordWrap(True)
         t.setTextElideMode(Qt.ElideRight)
+        t.setSelectionMode(QTableWidget.NoSelection)
+        t.setFocusPolicy(Qt.NoFocus)
 
         t.setShowGrid(True)
         t.verticalHeader().setVisible(False)
@@ -108,6 +115,7 @@ class PlannerWeekView:
     def refresh(self, filtered_termine: List[Termin]) -> None:
         week_mo = monday_of(qdate_to_date(self.week_from.date()))
         week_su = week_mo + timedelta(days=6)
+        self._free_days_by_date = self._free_day_provider.get_types_for_range(week_mo, week_su)
 
         # keep Mo–Sa only
         terms = [
@@ -132,8 +140,13 @@ class PlannerWeekView:
         header_labels = ["Zeit"]
         for i, day in enumerate(days):
             day_date = week_mo + timedelta(days=i)
+            free_day_type = self._free_days_by_date.get(day_date)
+            free_day_label = ""
+            label = self._free_day_provider.label_for_type(free_day_type)
+            if label:
+                free_day_label = f"\n{label}"
             # Use line break for styling via QSS
-            header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}")
+            header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}{free_day_label}")
 
         # Clear all cell widgets before rebuilding
         for row in range(self.week_table.rowCount()):
@@ -144,10 +157,39 @@ class PlannerWeekView:
                     widget.deleteLater()
 
         self.week_table.clearSpans()
+        self.week_table.clearContents()
 
         self.week_table.setRowCount(len(slots))
         self.week_table.setColumnCount(1 + len(days))
         self.week_table.setHorizontalHeaderLabels(header_labels)
+
+        # Visually mark free days in header and body columns.
+        for i in range(len(days)):
+            col_idx = 1 + i
+            day_date = week_mo + timedelta(days=i)
+            day_type = self._free_days_by_date.get(day_date)
+            if day_type == "feiertag":
+                bg = self._free_day_styles.get("holiday_bg")
+            elif day_type == "vorlesungsfrei":
+                bg = self._free_day_styles.get("lecture_bg")
+            else:
+                continue
+            if not (isinstance(bg, QColor) and bg.isValid()):
+                continue
+            day_label = self._free_day_provider.label_for_type(day_type)
+
+            hdr_item = self.week_table.horizontalHeaderItem(col_idx)
+            if hdr_item is not None:
+                hdr_item.setBackground(bg)
+
+            for r in range(len(slots)):
+                it = self.week_table.item(r, col_idx)
+                if it is None:
+                    it = QTableWidgetItem("")
+                    it.setFlags(it.flags() & ~Qt.ItemIsEditable)
+                    self.week_table.setItem(r, col_idx, it)
+                it.setBackground(bg)
+                it.setToolTip(day_label)
 
         #time column compact, days stretch
         h = self.week_table.horizontalHeader()
@@ -252,9 +294,9 @@ class PlannerWeekView:
                     top_offset_px = offset_rows * row_height
                     cell_widget.add_termin_card(card, top_offset_px=top_offset_px)
 
-
-
     def _on_cell_clicked(self, row: int, col: int) -> None:
+        self.week_table.clearSelection()
+        self.week_table.setCurrentCell(-1, -1)
         # Clear focus when clicking empty calendar cells
         if col <= 0:
             TerminCard.clear_global_focus()

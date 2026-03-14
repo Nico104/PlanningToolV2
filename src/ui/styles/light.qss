@@ -1,4 +1,9 @@
-﻿/* Week planner header styling */
+﻿QWidget#PlannerStyleTokens {
+  free-day-holiday-bg: #f3c1c6;
+  free-day-lecture-bg: #c4e0ff;
+}
+
+/* Week planner header styling */
 QHeaderView::section {
   background: #fafafa;
   border: none;

@@ -12,7 +12,7 @@ class DataService:
         path = self.data_dir / "semester.json"
         if not path.exists():
             return []
-        raw = json.loads(path.read_text(encoding="utf-8")).get("semester", [])
+        raw = json.loads(path.read_text(encoding="utf-8-sig")).get("semester", [])
         out = []
         for x in raw:
             out.append(Semester(
@@ -40,7 +40,8 @@ class DataService:
                 path = self.data_dir / fachrichtung / semester / filename
         else:
             path = self.data_dir / filename
-        return json.loads(path.read_text(encoding="utf-8"))
+        # Use utf-8-sig to transparently handle files with optional UTF-8 BOM.
+        return json.loads(path.read_text(encoding="utf-8-sig"))
 
     def _write(self, filename: str, obj: Dict[str, Any]) -> None:
         path = self.data_dir / filename
@@ -72,7 +73,7 @@ class DataService:
         settings = self.load_settings()
         fachrichtung = settings.get("start_fachrichtung", "ETIT")
         path = self.data_dir / "lehrveranstaltungen.json"
-        raw = json.loads(path.read_text(encoding="utf-8"))["lehrveranstaltungen"]
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))["lehrveranstaltungen"]
         out: List[Lehrveranstaltung] = []
         for x in raw:
             v = x["vortragende"]
@@ -104,7 +105,7 @@ class DataService:
         path = self.data_dir / "termine.json"
         if not path.exists():
             return []
-        raw = json.loads(path.read_text(encoding="utf-8")).get("termine", [])
+        raw = json.loads(path.read_text(encoding="utf-8-sig")).get("termine", [])
         out: List[Termin] = []
         for x in raw:
             g = x.get("gruppe")
@@ -138,7 +139,7 @@ class DataService:
     def load_settings(self) -> Dict[str, Any]:
         # settings.json is now in src/
         settings_path = Path(__file__).parent / "../settings.json"
-        return json.loads(settings_path.read_text(encoding="utf-8"))
+        return json.loads(settings_path.read_text(encoding="utf-8-sig"))
 
     # ---------- SAVE ----------
     def save_semester(self, semester: List[Semester]) -> None:

@@ -12,6 +12,7 @@ from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
+from .free_day_provider import FreeDayProvider
 
 
 
@@ -27,16 +28,19 @@ class PlannerDayView:
         state: PlannerState,
         day_table: QTableWidget,
         day_date: QDateEdit,
+        free_day_provider: FreeDayProvider,
         edit_by_id_cb: Callable[[str], None],
         on_drop_cb: Callable[[str, date, time, Optional[str]], None],
     ):
         self.state = state
         self.day_table = day_table
         self.day_date = day_date
+        self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
         
         self._room_list: List[Raum] = []
+        self._free_day_styles = self._free_day_provider.get_styles()
 
         if hasattr(self.day_table, "terminDropped"):
             self.day_table.terminDropped.connect(self._on_termin_dropped)
@@ -70,11 +74,9 @@ class PlannerDayView:
                 return f"{fmt_time(t.start_zeit)}–{fmt_time(t.get_end_time())} {t.typ} | {room_s} | {lva_short}{grp}{ap}"
             self.day_table.set_text_provider(_text_provider)
 
-        # Table setup and signal connections
         self._setup_table()
         self.day_table.cellClicked.connect(self._on_cell_clicked)
 
-    # Configure table appearance and sizing
     def _setup_table(self) -> None:
         t = self.day_table
         t.setWordWrap(True)
@@ -106,15 +108,16 @@ class PlannerDayView:
         return slots
 
     # Refresh table for current day and filters
-    def refresh(self, filtered_termine: List[Termin], rooms: List[Raum], sem: str = None, room_filter: str = None) -> None:
+    def refresh(self, filtered_termine: List[Termin], rooms: List[Raum]) -> None:
         assert self.state.ts is not None
 
         d = qdate_to_date(self.day_date.date())
         terms_day = [t for t in filtered_termine if t.datum == d]
-        self._build_day_grid(rooms, terms_day, d, sem, room_filter)
+        free_day_type = self._free_day_provider.get_type_for_date(d)
+        self._build_day_grid(rooms, terms_day, d, free_day_type)
 
     # Build the day grid: rows=time slots, columns=rooms
-    def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, sem: Optional[str], room_filter: Optional[str]) -> None:
+    def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, free_day_type: Optional[str]) -> None:
         assert self.state.ts is not None
 
         slots = self._time_slots()
@@ -126,9 +129,16 @@ class PlannerDayView:
                     self.day_table.removeCellWidget(row, col)
                     widget.deleteLater()
 
+            self.day_table.clearContents()
+
         self.day_table.setRowCount(len(slots))
         self.day_table.setColumnCount(1 + len(rooms))
         headers = ["Zeit"] + [r.name for r in rooms]
+
+        if free_day_type:
+            day_label = self._free_day_provider.label_for_type(free_day_type)
+            headers[0] = f"Zeit • {day_label}"
+
         self.day_table.setHorizontalHeaderLabels(headers)
 
         # header sizing: time column fixed, rooms stretch
@@ -143,6 +153,31 @@ class PlannerDayView:
             it.setFlags(it.flags() & ~Qt.ItemIsEditable)
             it.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
             self.day_table.setItem(r, 0, it)
+
+        if free_day_type:
+            if free_day_type == "feiertag":
+                bg = self._free_day_styles.get("holiday_bg")
+            else:
+                bg = self._free_day_styles.get("lecture_bg")
+            day_label = self._free_day_provider.label_for_type(free_day_type)
+
+            if isinstance(bg, QColor) and bg.isValid():
+                time_hdr = self.day_table.horizontalHeaderItem(0)
+                if time_hdr is not None:
+                    time_hdr.setToolTip(day_label)
+                for c in range(1, 1 + len(rooms)):
+                    hdr_item = self.day_table.horizontalHeaderItem(c)
+                    if hdr_item is not None:
+                        hdr_item.setBackground(bg)
+                        hdr_item.setToolTip(day_label)
+                    for r in range(len(slots)):
+                        it = self.day_table.item(r, c)
+                        if it is None:
+                            it = QTableWidgetItem("")
+                            it.setFlags(it.flags() & ~Qt.ItemIsEditable)
+                            self.day_table.setItem(r, c, it)
+                        it.setBackground(bg)
+                        it.setToolTip(day_label)
 
         self.day_table.clearSpans()
 
@@ -171,12 +206,12 @@ class PlannerDayView:
             # Group overlapping/concurrent appointments
             appointment_groups = self._group_concurrent_appointments(items)
 
-            # Build a mapping of group_id -> list of appointments
+            
             groups_by_id = defaultdict(list)
             for termin, group_id in appointment_groups:
                 groups_by_id[group_id].append(termin)
 
-            # Process each group in a single spanned cell; offset cards by start time
+            #Process each group
             for group_id, group_appointments in groups_by_id.items():
                 valid_apps = [
                     app for app in group_appointments
@@ -242,7 +277,6 @@ class PlannerDayView:
                     top_offset_px = offset_rows * row_height
                     cell_widget.add_termin_card(card, top_offset_px=top_offset_px)
 
-        self.day_table.resizeColumnsToContents()
         self.day_table.resizeRowsToContents()
 
     def _on_cell_clicked(self, row: int, col: int) -> None:
@@ -259,8 +293,7 @@ class PlannerDayView:
 
     def _group_concurrent_appointments(self, items: List[Termin]) -> List[tuple]:
         """
-        Group appointments by time overlap.
-        Returns list of (termin, group_id) tuples.
+        Group appointments by time overlap
         """
         if not items:
             return []
@@ -337,3 +370,4 @@ class PlannerDayView:
 
         # View only does callback
         self.on_drop_cb(str(termin_id), d, target_start, target_room_id)
+

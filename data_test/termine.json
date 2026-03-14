@@ -1,0 +1,205 @@
+{
+  "termine": [
+    {
+      "name": "1. Vorlesung Programmieren",
+      "id": "T1",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": "2026-02-25",
+      "start_zeit": "09:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 30
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Einführung in das Fach",
+      "duration": 90,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "1. Übung Energieversorgung",
+      "id": "T2",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2025-10-01",
+      "start_zeit": "13:00",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 25
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Praktische Übung",
+      "duration": 60,
+      "semester_id": "WS26",
+      "serien_id": ""
+    },
+    {
+      "name": "1. Seminar Datenanalyse",
+      "id": "T3",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2026-12-24",
+      "start_zeit": "10:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe C",
+        "groesse": 20
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Seminararbeit",
+      "duration": 120,
+      "semester_id": "WS26",
+      "serien_id": ""
+    },
+    {
+      "name": "2. Vorlesung Programmieren",
+      "id": "T9",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": "2026-02-25",
+      "start_zeit": "09:30",
+      "raum_id": "E22",
+      "gruppe": {
+        "name": "Gruppe I",
+        "groesse": 28
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Zusatzvorlesung",
+      "duration": 90,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "2. Übung Energieversorgung",
+      "id": "T10",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2025-09-30",
+      "start_zeit": "11:30",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe J",
+        "groesse": 24
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Übung Zusatz",
+      "duration": 60,
+      "semester_id": "WS26",
+      "serien_id": ""
+    },
+    {
+      "name": "2. Seminar Datenanalyse",
+      "id": "T11",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2025-09-17",
+      "start_zeit": "11:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": true,
+      "notiz": "Seminar Ergänzung",
+      "duration": 60,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "3. Vorlesung Programmieren",
+      "id": "T12",
+      "lva_id": "410.101",
+      "typ": "VO",
+      "datum": null,
+      "start_zeit": null,
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "Gruppe L",
+        "groesse": 32
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Konflikt mit T3",
+      "duration": 90,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "3. Übung Energieversorgung",
+      "id": "T13",
+      "lva_id": "370.007",
+      "typ": "UE",
+      "datum": "2025-10-01",
+      "start_zeit": "15:00",
+      "raum_id": "E17",
+      "gruppe": {
+        "name": "fdfcdf",
+        "groesse": 33
+      },
+      "anwesenheitspflicht": false,
+      "notiz": "Konflikt mit T10",
+      "duration": 60,
+      "semester_id": "WS26",
+      "serien_id": ""
+    },
+    {
+      "name": "3. Seminar Datenanalyse",
+      "id": "T14",
+      "lva_id": "123.456",
+      "typ": "SE",
+      "datum": "2026-02-25",
+      "start_zeit": "10:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": true,
+      "notiz": "Konflikt mit T1",
+      "duration": 120,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-10-26",
+      "start_zeit": "07:30",
+      "raum_id": "F01",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 50,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r2",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-02",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 65,
+      "semester_id": "SS26",
+      "serien_id": ""
+    },
+    {
+      "name": "sda",
+      "id": "T015_r3",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-03-09",
+      "start_zeit": "08:00",
+      "raum_id": "E17",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 65,
+      "semester_id": "SS26",
+      "serien_id": ""
+    }
+  ]
+}

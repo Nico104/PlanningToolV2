@@ -32,6 +32,9 @@ class ConflictsDock(QDockWidget):
     _CATEGORY_LABELS = {
         "room": "Raum",
         "lecturer": "Vortragende",
+        "holiday": "Feiertag",
+        "lecture_free": "Vorlesungsfrei",
+        "free_day": "Freier Tag",
         "time_period": "Zeitraum",
         "group": "Gruppe",
         "semester": "Semester",
@@ -48,6 +51,9 @@ class ConflictsDock(QDockWidget):
     _CATEGORY_KIND_MAP = {
         "room": "raum",
         "lecturer": "vortragende",
+        "holiday": "zeitraum",
+        "lecture_free": "zeitraum",
+        "free_day": "zeitraum",
         "time_period": "zeitraum",
         "group": "gruppe",
         "semester": "semester",
@@ -78,7 +84,6 @@ class ConflictsDock(QDockWidget):
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
         
-        # Filter controls (match global filter styling)
         filter_bar = QWidget(self)
         filter_bar.setObjectName("HeaderBar")
         filter_layout = QHBoxLayout(filter_bar)
@@ -105,7 +110,7 @@ class ConflictsDock(QDockWidget):
 
         layout.addWidget(filter_bar)
         
-        # Header with summary and refresh button
+        #Header
         header = QHBoxLayout()
         header.setSpacing(8)
         
@@ -153,9 +158,10 @@ class ConflictsDock(QDockWidget):
     
     def initialize_detector(self, 
                           lvas: List[Lehrveranstaltung],
-                          raeume: List[Raum]) -> None:
+                          raeume: List[Raum],
+                          data_dir=None) -> None:
         """Initialize the conflict detector with current data."""
-        self._detector = ConflictDetector(lvas, raeume)
+        self._detector = ConflictDetector(lvas, raeume, data_dir=data_dir)
     
     def refresh_conflicts(self, termine: List[Termin]) -> None:
         """Detect and display conflicts for the given Termine."""

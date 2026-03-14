@@ -6,5 +6,5 @@
   "duration_step_minutes": 15,
   "start_semester": "SS26",
   "start_fachrichtung": "ETIT",
-  "data_path": ""
+  "data_path": "data_test"
 }

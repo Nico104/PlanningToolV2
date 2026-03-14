@@ -1,0 +1,108 @@
+﻿[
+    {
+        "name": "Raum-Konflikt",
+        "key": "room_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Zwei Termine im selben Raum, am selben Tag, mit sich überschneidenden Zeiten.",
+        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+    },
+    {
+        "name": "Gruppen-Konflikt",
+        "key": "group_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Zwei Termine mit derselben LVA und Gruppe, am selben Tag, mit sich überschneidenden Zeiten.",
+        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+    },
+    {
+        "name": "Vortragenden-Konflikt",
+        "key": "lecturer_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Zwei Termine mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten.",
+        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+    },
+    {
+        "name": "Feiertags-Konflikt",
+        "key": "holiday_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Termin liegt auf einem Feiertag.",
+        "message_template": "Termin liegt auf einem Feiertag."
+    },
+    {
+        "name": "Vorlesungsfrei-Konflikt",
+        "key": "lecture_free_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Termin liegt in einer vorlesungsfreien Zeit.",
+        "message_template": "Termin liegt in einer vorlesungsfreien Zeit."
+    },
+    {
+        "name": "Unvollständiger Termin",
+        "key": "incomplete_warning",
+        "enabled": false,
+        "type": "warning",
+        "description": "Termin hat fehlende Pflichtfelder.",
+        "message_template": "Fehlende Angaben: {missing}",
+        "missing_labels": {
+            "date": "kein Datum",
+            "start_time": "keine Startzeit",
+            "duration": "keine Dauer",
+            "room": "kein Raum"
+        }
+    },
+    {
+        "name": "Datum außerhalb des Planungszeitraums",
+        "key": "outside_period_warning",
+        "enabled": true,
+        "type": "warning",
+        "description": "Termin liegt außerhalb des zugeordneten Semesters."
+    },
+    {
+        "name": "Kapazitätswarnung Übung",
+        "key": "capacity_warning_uebung",
+        "enabled": true,
+        "type": "warning",
+        "description": "Bei Übungsterminen müssen alle Gruppenmitglieder Platz haben.",
+        "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
+        "min_capacity_percent": 100,
+        "event_type": "uebung"
+    },
+    {
+        "name": "Kapazitätswarnung Vorlesung",
+        "key": "capacity_warning_vorlesung",
+        "enabled": true,
+        "type": "warning",
+        "description": "Bei Vorlesungen müssen nur ein Teil der Gruppe Platz haben.",
+        "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
+        "min_capacity_percent": 75,
+        "event_type": "vorlesung"
+    },
+    {
+        "name": "Dauerwarnung",
+        "key": "duration_warning",
+        "enabled": false,
+        "type": "warning",
+        "description": "Termin ist ungewöhnlich kurz (<30min) oder lang (>4h).",
+        "message_template": "Dauer: {duration} Minuten.",
+        "min_minutes": 10
+    },
+    {
+        "name": "Samstagswarnung",
+        "key": "saturday_warning",
+        "enabled": false,
+        "type": "warning",
+        "description": "Termin liegt auf einem Samstag.",
+        "message_template": "Termin liegt auf einem Samstag."
+    },
+    {
+        "name": "Sonntagswarnung",
+        "key": "sunday_warning",
+        "enabled": false,
+        "type": "warning",
+        "description": "Termin liegt auf einem Sonntag.",
+        "message_template": "Termin liegt auf einem Sonntag."
+    }
+]

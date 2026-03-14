@@ -1,19 +1,5 @@
-{
-  "raeume": [
-    {
-      "id": "E17",
-      "name": "Hörsaal E17",
-      "kapazitaet": 120
-    },
-    {
-      "id": "F01",
-      "name": "Seminarraum F01",
-      "kapazitaet": 35
-    },
-    {
-      "id": "LAB3",
-      "name": "Computerraum LAB3",
-      "kapazitaet": 28
-    }
-  ]
+﻿{
+    "raeume":  [
+
+               ]
 }

@@ -3,6 +3,7 @@ import calendar
 from typing import List
 
 from PySide6.QtCore import Qt, QObject, QEvent
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QTableWidget,
     QWidget,
@@ -17,6 +18,7 @@ from ..utils.datetime_utils import qdate_to_date, date_to_qdate
 
 
 from ..dialogs.day_events_dialog import DayEventsDialog
+from .free_day_provider import FreeDayProvider
 
 
 class PlannerMonthView:
@@ -24,13 +26,15 @@ class PlannerMonthView:
     Clicking a day with events opens a dialog listing that day's termins
     """
 
-    def __init__(self, state, month_table: QTableWidget, month_from, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
+    def __init__(self, state, month_table: QTableWidget, month_from, free_day_provider: FreeDayProvider, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
         self.state = state
         self.table = month_table
         self.month_from = month_from
+        self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
         self.month_label = month_label
+        self._free_day_styles = self._free_day_provider.get_styles()
 
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"])
@@ -92,6 +96,10 @@ class PlannerMonthView:
             if getattr(t, 'datum', None):
                 by_date.setdefault(t.datum, []).append(t)
 
+        first_day = date(year, month, 1)
+        last_day = date(year, month, days_in_month)
+        free_days = self._free_day_provider.get_types_for_range(first_day, last_day)
+
         self._last_filtered = list(filtered_termine or [])
         day = 1
         
@@ -109,6 +117,7 @@ class PlannerMonthView:
                 else:
                     d = date(year, month, day)
                     items = by_date.get(d, [])
+                    day_type = free_days.get(d)
 
                     # Build a small widget with day number and count
                     w = QWidget()
@@ -125,10 +134,31 @@ class PlannerMonthView:
                     count_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
                     lay.addWidget(day_lbl)
+                    if day_type:
+                        type_lbl = QLabel(self._free_day_provider.label_for_type(day_type))
+                        type_lbl.setObjectName("MonthDayType")
+                        type_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+                        lay.addWidget(type_lbl)
                     lay.addWidget(count_lbl)
                     w.setProperty("day_ids", [str(t.id) for t in items])
                     w.setProperty("day_date", d)
                     w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+                    if day_type == "feiertag":
+                        bg_color = self._free_day_styles.get("holiday_bg")
+                    elif day_type == "vorlesungsfrei":
+                        bg_color = self._free_day_styles.get("lecture_bg")
+                    else:
+                        bg_color = None
+
+                    if isinstance(bg_color, QColor) and bg_color.isValid():
+                        bg = bg_color.name()
+                        w.setObjectName("MonthFreeDayCell")
+                        w.setStyleSheet(
+                            f"QWidget#MonthFreeDayCell {{ background: {bg}; border: 1px solid #dfe6ee; border-radius: 6px; }}"
+                            " QLabel { background: transparent; border: none; }"
+                            " QLabel#MonthDayType { font-size: 10px; font-weight: 600; border: none; background: transparent; }"
+                        )
 
                     self.table.setCellWidget(r, c, w)
                     day += 1

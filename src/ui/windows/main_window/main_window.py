@@ -188,7 +188,7 @@ class MainWindow(QMainWindow):
         tools_menu.addAction(self.act_konflikte)
 
     def open_konflikte_dialog(self):
-        conflicts_path = str(self.data_dir / "konflikte.json")
+        conflicts_path = str(Path(__file__).resolve().parents[3] / "konflikte.json")
         dlg = KonflikteDialog(self, conflicts_path=conflicts_path)
         dlg.conflicts_changed.connect(self.refresh_conflicts)
         dlg.exec()
@@ -201,7 +201,6 @@ class MainWindow(QMainWindow):
             "semester.json",
             "fachrichtungen.json",
             "freie_tage.json",
-            "konflikte.json",
         ]
         export_obj = {}
         for f in files:
@@ -246,7 +245,6 @@ class MainWindow(QMainWindow):
             "lehrveranstaltungen": "lehrveranstaltungen.json",
             "semester": "semester.json",
             "fachrichtungen": "fachrichtungen.json",
-            "konflikte": "konflikte.json",
             "freie_tage": "freie_tage.json",
         }
 
@@ -386,6 +384,7 @@ class MainWindow(QMainWindow):
         self.conflicts_dock.initialize_detector(
             self.planner.state.lvas,
             self.planner.state.raeume,
+            data_dir=self.data_dir,
         )
         self.conflicts_dock.refresh_conflicts(self.planner.state.termine)
 
