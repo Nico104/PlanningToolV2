@@ -1,5 +1,9 @@
-﻿{
-    "raeume":  [
-
-               ]
+{
+  "raeume": [
+    {
+      "id": "test_room",
+      "name": "Test Raum",
+      "kapazitaet": 120
+    }
+  ]
 }

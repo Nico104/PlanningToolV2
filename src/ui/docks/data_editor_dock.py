@@ -1,5 +1,6 @@
 from pathlib import Path
 from types import SimpleNamespace
+import json
 from typing import List
 
 from PySide6.QtCore import Qt
@@ -35,7 +36,8 @@ class DataEditorDock(QDockWidget):
         root.addWidget(self.tabs, 1)
 
         # Tabs
-        self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen", "Geplante Semester"], self.tabs)
+        self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen", "Geplante Semester", "Fachrichtung"], self.tabs)
+        self.tab_fach = EditorTab("Fachrichtungen", ["ID", "Name"], self.tabs)
         self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs)
         self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs)
         self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"], self.tabs)
@@ -53,6 +55,7 @@ class DataEditorDock(QDockWidget):
         self.tabs.addTab(self.tab_sem, "Semester")
         self.tabs.addTab(self.tab_free, "Freie Tage")
         self.tabs.addTab(self.tab_geplante_semester, "Geplante Semester")
+        self.tabs.addTab(self.tab_fach, "Fachrichtungen")
 
         self.setWidget(wrap)
         self.tabs.currentChanged.connect(self._on_tab_changed)
@@ -62,6 +65,7 @@ class DataEditorDock(QDockWidget):
             parent=self,
             planner=SimpleNamespace(refresh=self._refresh_and_notify),
             lva_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_lva.table)),
+            fach_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_fach.table)),
             room_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_rooms.table)),
             sem_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_sem.table)),
             termin_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_termine.table)),
@@ -74,6 +78,10 @@ class DataEditorDock(QDockWidget):
         self.tab_lva.add_clicked.connect(self._crud.add_lva)
         self.tab_lva.edit_clicked.connect(self._crud.edit_lva)
         self.tab_lva.delete_clicked.connect(self._crud.del_lva)
+
+        self.tab_fach.add_clicked.connect(self._crud.add_fachrichtung)
+        self.tab_fach.edit_clicked.connect(self._crud.edit_fachrichtung)
+        self.tab_fach.delete_clicked.connect(self._crud.del_fachrichtung)
 
         self.tab_rooms.add_clicked.connect(self._crud.add_room)
         self.tab_rooms.edit_clicked.connect(self._crud.edit_room)
@@ -104,6 +112,7 @@ class DataEditorDock(QDockWidget):
 
     def refresh_all(self) -> None:
         self._refresh_lvas()
+        self._refresh_fachrichtungen()
         self._refresh_rooms()
         self._refresh_semester()
         self._refresh_freie_tage()
@@ -139,7 +148,8 @@ class DataEditorDock(QDockWidget):
                 getattr(l.vortragende, "name", ""),
                 getattr(l.vortragende, "email", ""),
                 ", ".join(getattr(l, "typ", []) or []),
-                " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "geplante_semester", [])])
+                " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "geplante_semester", [])]),
+                getattr(l, "fachrichtung", ""),
             ]
             for l in lvas
         ]
@@ -149,6 +159,24 @@ class DataEditorDock(QDockWidget):
         rooms: List[Raum] = self.ds.load_raeume()
         rows = [[r.id, r.name, str(r.kapazitaet)] for r in rooms]
         self._fill_table(self.tab_rooms.table, rows)
+
+    def _refresh_fachrichtungen(self) -> None:
+        path = self.data_dir / "fachrichtungen.json"
+        fachrichtungen = []
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig")) if path.exists() else {}
+            fachrichtungen = obj.get("fachrichtungen", [])
+        except Exception:
+            fachrichtungen = []
+
+        rows = []
+        for f in fachrichtungen:
+            if isinstance(f, dict):
+                rows.append([str(f.get("id", "")), str(f.get("name", ""))])
+            else:
+                txt = str(f)
+                rows.append([txt, txt])
+        self._fill_table(self.tab_fach.table, rows)
 
 
     def _refresh_freie_tage(self) -> None:

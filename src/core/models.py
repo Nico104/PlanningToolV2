@@ -39,6 +39,7 @@ class Lehrveranstaltung:
     vortragende: Vortragende
     typ: List[str]  # erlaubte Termin-Typen, z.B. ["VO", "UE"]
     geplante_semester: List[str]  # IDs von beliebig vielen geplanten Semestern
+    fachrichtung: str = "ETIT"
 
 
 @dataclass(frozen=True)

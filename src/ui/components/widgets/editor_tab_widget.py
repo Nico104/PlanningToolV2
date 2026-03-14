@@ -49,9 +49,9 @@ class EditorTab(QWidget):
 
         # Button row
         btn_row = QHBoxLayout()
-        self.btn_add = QPushButton("Add")
-        self.btn_edit = QPushButton("Edit")
-        self.btn_del = QPushButton("Delete")
+        self.btn_add = QPushButton("Hinzufügen")
+        self.btn_edit = QPushButton("Bearbeiten")
+        self.btn_del = QPushButton("Löschen")
         btn_row.addWidget(self.btn_add)
         btn_row.addWidget(self.btn_edit)
         btn_row.addWidget(self.btn_del)

@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
             "semester.json",
             "fachrichtungen.json",
             "freie_tage.json",
+            "geplante_semester.json",
         ]
         export_obj = {}
         for f in files:
@@ -246,6 +247,7 @@ class MainWindow(QMainWindow):
             "semester": "semester.json",
             "fachrichtungen": "fachrichtungen.json",
             "freie_tage": "freie_tage.json",
+            "geplante_semester": "geplante_semester.json",
         }
 
         if isinstance(data, dict):

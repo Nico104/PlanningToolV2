@@ -19,6 +19,7 @@ class LVADialog(QDialog):
         parent: QWidget,
         lva: Optional[Lehrveranstaltung] = None,
         geplante_semester: Sequence[GeplantesSemester] = (),
+        fachrichtungen: Sequence[dict] = (),
     ):
         super().__init__(parent)
         self.setObjectName("AppDialog")
@@ -26,6 +27,7 @@ class LVADialog(QDialog):
         self.setModal(True)
         self._result: Optional[Lehrveranstaltung] = None
         self.sem_objects = list(geplante_semester)
+        self._fachrichtung_value = getattr(lva, "fachrichtung", "ETIT") if lva else "ETIT"
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
@@ -49,6 +51,30 @@ class LVADialog(QDialog):
 
         self.typ_le = QLineEdit(", ".join(lva.typ) if lva else "VO")
         self.typ_le.setObjectName("Field")
+
+        self.fach_cb = TightComboBox(self)
+        self.fach_cb.setObjectName("HeaderCombo")
+        self.fach_cb.setMinimumWidth(160)
+        seen_ids = set()
+        for f in fachrichtungen:
+            if not isinstance(f, dict):
+                continue
+            fid = str(f.get("id", "")).strip()
+            fname = str(f.get("name", "")).strip()
+            if not fid or fid in seen_ids:
+                continue
+            seen_ids.add(fid)
+            label = f"{fid} - {fname}" if fname else fid
+            self.fach_cb.addItem(label, fid)
+
+        if self._fachrichtung_value and self.fach_cb.findData(self._fachrichtung_value) < 0:
+            self.fach_cb.addItem(self._fachrichtung_value, self._fachrichtung_value)
+
+        idx_fach = self.fach_cb.findData(self._fachrichtung_value)
+        if idx_fach >= 0:
+            self.fach_cb.setCurrentIndex(idx_fach)
+        elif self.fach_cb.count() > 0:
+            self.fach_cb.setCurrentIndex(0)
 
         # Use ChipListWidget for semester chips
         self.sem_chip_items = []
@@ -115,6 +141,7 @@ class LVADialog(QDialog):
         form.addRow("Name:", self.name_le)
         form.addRow("Vortragende Name:", self.vname_le)
         form.addRow("Vortragende E-Mail:", self.vmail_le)
+        form.addRow("Fachrichtung:", self.fach_cb)
         form.addRow("Erlaubte Typen (Komma):", self.typ_le)
 
         form.addRow("Geplante Semester:", self.sem_list)
@@ -139,6 +166,10 @@ class LVADialog(QDialog):
         if not cid or not name or not vname:
             QMessageBox.warning(self, "Fehler", "LVA-ID, Name und Vortragende Name sind Pflicht.")
             return
+        selected_fach = self.fach_cb.currentData()
+        if selected_fach is None or not str(selected_fach).strip():
+            QMessageBox.warning(self, "Fehler", "Fachrichtung ist Pflicht.")
+            return
         typ = [t.strip().upper() for t in self.typ_le.text().split(",") if t.strip()]
         geplante_semester = []
         # Map chip names back to IDs
@@ -155,7 +186,8 @@ class LVADialog(QDialog):
             name=name,
             vortragende=Vortragende(name=vname, email=self.vmail_le.text().strip()),
             typ=typ,
-            geplante_semester=geplante_semester
+            geplante_semester=geplante_semester,
+            fachrichtung=str(selected_fach).strip(),
         )
         self.accept()
 

@@ -155,51 +155,6 @@
       "duration": 120,
       "semester_id": "SS26",
       "serien_id": ""
-    },
-    {
-      "name": "sda",
-      "id": "T015_r1",
-      "lva_id": "123.456",
-      "typ": "VO",
-      "datum": "2026-10-26",
-      "start_zeit": "07:30",
-      "raum_id": "F01",
-      "gruppe": null,
-      "anwesenheitspflicht": false,
-      "notiz": "",
-      "duration": 50,
-      "semester_id": "SS26",
-      "serien_id": ""
-    },
-    {
-      "name": "sda",
-      "id": "T015_r2",
-      "lva_id": "123.456",
-      "typ": "VO",
-      "datum": "2026-03-02",
-      "start_zeit": "08:00",
-      "raum_id": "E17",
-      "gruppe": null,
-      "anwesenheitspflicht": false,
-      "notiz": "",
-      "duration": 65,
-      "semester_id": "SS26",
-      "serien_id": ""
-    },
-    {
-      "name": "sda",
-      "id": "T015_r3",
-      "lva_id": "123.456",
-      "typ": "VO",
-      "datum": "2026-03-09",
-      "start_zeit": "08:00",
-      "raum_id": "E17",
-      "gruppe": null,
-      "anwesenheitspflicht": false,
-      "notiz": "",
-      "duration": 65,
-      "semester_id": "SS26",
-      "serien_id": ""
     }
   ]
 }

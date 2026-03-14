@@ -93,7 +93,8 @@ class DataService:
                 name=x["name"],
                 vortragende=Vortragende(name=v["name"], email=v.get("email", "")),
                 typ=list(x.get("typ", [])),
-                geplante_semester=geplante_semester
+                geplante_semester=geplante_semester,
+                fachrichtung=str(x.get("fachrichtung", fachrichtung or "ETIT")).strip() or "ETIT",
             ))
         return out
 
@@ -166,7 +167,8 @@ class DataService:
                 "name": l.name,
                 "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
                 "typ": list(l.typ),
-                "geplante_semester": l.geplante_semester
+                "geplante_semester": l.geplante_semester,
+                "fachrichtung": str(getattr(l, "fachrichtung", fachrichtung or "ETIT")).strip() or "ETIT",
             } for l in lvas]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

@@ -10,12 +10,99 @@ from ...services.id_service import next_id
 from ..dialogs import LVADialog, RaumDialog, SemesterDialog
 from ...core.models import GeplantesSemester
 from ..dialogs.freie_tage_dialog import FreieTageDialog
+from ..dialogs.fachrichtung_dialog import FachrichtungDialog
 from ..dialogs.termin_dialog import TerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
 from ..components.widgets.toast import Toast
 
 
 class CrudHandlers:
+    def _fachrichtungen_path(self) -> Path:
+        return Path(self.data_dir) / "fachrichtungen.json"
+
+    def read_fachrichtungen(self) -> List[Dict[str, Any]]:
+        path = self._fachrichtungen_path()
+        if not path.exists():
+            return []
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
+            items = obj.get("fachrichtungen", [])
+            return items if isinstance(items, list) else []
+        except Exception:
+            return []
+
+    def write_fachrichtungen(self, fachrichtungen: List[Dict[str, Any]]) -> None:
+        path = self._fachrichtungen_path()
+        path.write_text(
+            json.dumps({"fachrichtungen": fachrichtungen}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, "_refresh_fachrichtungen"):
+            self.parent._refresh_fachrichtungen()
+
+    def add_fachrichtung(self) -> None:
+        fachrichtungen = self.read_fachrichtungen()
+        dlg = FachrichtungDialog(self.parent, None)
+        if dlg.exec() != QDialog.Accepted or not dlg.result:
+            return
+
+        new_item = dlg.result
+        new_id = str(new_item.get("id", "")).strip()
+        if any(str(f.get("id", "")).strip() == new_id for f in fachrichtungen):
+            QMessageBox.warning(self.parent, "Fehler", f"ID '{new_id}' existiert bereits.")
+            return
+
+        fachrichtungen.append({"id": new_id, "name": str(new_item.get("name", "")).strip()})
+        self.write_fachrichtungen(fachrichtungen)
+
+    def edit_fachrichtung(self) -> None:
+        fachrichtungen = self.read_fachrichtungen()
+        if not self.fach_dock:
+            return
+
+        selected_id = self.fach_dock.selected_id()
+        if not selected_id:
+            return
+
+        row = next((i for i, f in enumerate(fachrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
+        if row is None:
+            return
+
+        cur = fachrichtungen[row]
+        dlg = FachrichtungDialog(self.parent, cur)
+        if dlg.exec() != QDialog.Accepted or not dlg.result:
+            return
+
+        new_item = dlg.result
+        new_id = str(new_item.get("id", "")).strip()
+        if new_id != selected_id and any(str(f.get("id", "")).strip() == new_id for f in fachrichtungen):
+            QMessageBox.warning(self.parent, "Fehler", f"ID '{new_id}' existiert bereits.")
+            return
+
+        fachrichtungen[row] = {"id": new_id, "name": str(new_item.get("name", "")).strip()}
+        self.write_fachrichtungen(fachrichtungen)
+
+    def del_fachrichtung(self) -> None:
+        fachrichtungen = self.read_fachrichtungen()
+        if not self.fach_dock:
+            return
+
+        selected_id = self.fach_dock.selected_id()
+        if not selected_id:
+            return
+
+        row = next((i for i, f in enumerate(fachrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
+        if row is None:
+            return
+
+        if QMessageBox.question(self.parent, "Löschen", "Fachrichtung wirklich löschen?") != QMessageBox.Yes:
+            return
+
+        fachrichtungen.pop(row)
+        self.write_fachrichtungen(fachrichtungen)
+
     def _geplante_semester_path(self):
         return Path(self.data_dir) / "geplante_semester.json"
 
@@ -34,15 +121,13 @@ class CrudHandlers:
         if not path.exists():
             return []
         try:
-            import json
             with open(path, encoding="utf-8-sig") as f:
-                return json.load(f)["geplante_semester"]
+                return json.load(f).get("geplante_semester", [])
         except Exception:
             return []
 
     def write_geplante_semester(self, semester_list):
         path = self._geplante_semester_path()
-        import json
         obj = {"geplante_semester": semester_list}
         path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         if self.planner:
@@ -57,9 +142,8 @@ class CrudHandlers:
         result = dlg.get_result()
         if not result:
             return
-        # Check for duplicate ID
+        
         if any(s["id"] == result.id for s in semester_list):
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
             return
         semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
@@ -68,7 +152,6 @@ class CrudHandlers:
     def edit_geplante_semester(self):
         from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
         semester_list = self.read_geplante_semester()
-        # Find selected row
         table = getattr(self.parent.tab_geplante_semester, "table", None)
         row = table.currentRow() if table else None
         if row is None or row < 0 or row >= len(semester_list):
@@ -78,9 +161,7 @@ class CrudHandlers:
         result = dlg.get_result()
         if not result:
             return
-        # Check for duplicate ID (if changed)
         if result.id != cur["id"] and any(s["id"] == result.id for s in semester_list):
-            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
             return
         semester_list[row] = {"id": result.id, "name": result.name, "notiz": result.notiz}
@@ -92,11 +173,11 @@ class CrudHandlers:
         row = table.currentRow() if table else None
         if row is None or row < 0 or row >= len(semester_list):
             return
-        from PySide6.QtWidgets import QMessageBox
         if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
             return
         semester_list.pop(row)
         self.write_geplante_semester(semester_list)
+
     def __init__(
         self,
         mw=None,
@@ -105,6 +186,7 @@ class CrudHandlers:
         parent=None,
         planner=None,
         lva_dock=None,
+        fach_dock=None,
         room_dock=None,
         sem_dock=None,
         termin_dock=None,
@@ -116,6 +198,7 @@ class CrudHandlers:
         self.parent = parent or mw
         self.planner = planner or (mw.planner if mw else None)
         self.lva_dock = lva_dock or (getattr(mw, "lva_dock", None) if mw else None)
+        self.fach_dock = fach_dock or (getattr(mw, "fach_dock", None) if mw else None)
         self.room_dock = room_dock or (getattr(mw, "room_dock", None) if mw else None)
         self.sem_dock = sem_dock or (getattr(mw, "sem_dock", None) if mw else None)
         self.termin_dock = termin_dock or (getattr(mw, "termine_dock", None) if mw else None)
@@ -127,8 +210,6 @@ class CrudHandlers:
         cur = next((t for t in termine if t.id == tid), None)
         if not cur:
             return False
-
-        # debug logging removed
 
         sems = []
         if hasattr(self.ds, "load_semester"):
@@ -153,7 +234,6 @@ class CrudHandlers:
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
         return True
-
 
     def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
         path = self._freie_tage_path()
@@ -230,7 +310,7 @@ class CrudHandlers:
             new_id=self._new_termin_id(),
         )
 
-        # Default values for newly created Termine.
+        # Default values for newly created Termine
         dlg.duration_sb.setValue(60)
 
         if auto_id:
@@ -239,36 +319,28 @@ class CrudHandlers:
         if default_qdate is not None:
             dlg.date_de.setDate(default_qdate)
         else:
-            # For Data Editor creation: keep new entries unassigned by default.
+            # For Data Editor creation: keep new entries unassigned by default
             dlg.date_de.setDate(dlg._unassigned_qdate)
 
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return False
 
         termine = self.ds.load_termine()
-        # Serientermin: Liste von Terminen
         if isinstance(dlg.result, list):
-            pass
-            # Prüfe auf doppelte IDs
             existing_ids = {t.id for t in termine}
             for t in dlg.result:
-                pass
                 if t.id in existing_ids:
-                    print(f"[DEBUG] Fehler: Termin-ID {t.id} existiert bereits!")
                     QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{t.id}' existiert bereits.")
                     return False
             termine.extend(dlg.result)
         else:
-            pass
             if any(t.id == dlg.result.id for t in termine):
-                pass
                 QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{dlg.result.id}' existiert bereits.")
                 return False
             termine.append(dlg.result)
-        pass
+
         self.ds.save_termine(termine)
         self.planner.refresh()
-        pass
         return True
 
     def edit_termin(self) -> None:
@@ -367,10 +439,7 @@ class CrudHandlers:
     def _selected_freie_tage_id(self) -> Optional[str]:
         if not self.freie_tage_dock:
             return None
-
-        if hasattr(self.freie_tage_dock, "selected_id"):
-            return self.freie_tage_dock.selected_id()
-        return None
+        return self.freie_tage_dock.selected_id() if hasattr(self.freie_tage_dock, "selected_id") else None
 
     def _new_freie_tage_id(self, freie_tage: List[Dict[str, Any]]) -> str:
         return next_id("FT", [str(item.get("id", "")) for item in freie_tage], width=3)
@@ -410,8 +479,6 @@ class CrudHandlers:
                 t.raum_id = new_room_id
             new_t = t
 
-        # debug logging removed
-
         termine = [new_t if x.id == termin_id else x for x in termine]
         self.ds.save_termine(termine)
         self.planner.refresh()
@@ -448,9 +515,14 @@ class CrudHandlers:
             json.dumps({key: items}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-    
+
     def add_lva(self) -> None:
-        dlg = LVADialog(self.parent, None, self.get_geplante_semester_models())
+        dlg = LVADialog(
+            self.parent,
+            None,
+            self.get_geplante_semester_models(),
+            self.read_fachrichtungen(),
+        )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
@@ -473,7 +545,12 @@ class CrudHandlers:
         if not cur:
             return
 
-        dlg = LVADialog(self.parent, cur, self.get_geplante_semester_models())
+        dlg = LVADialog(
+            self.parent,
+            cur,
+            self.get_geplante_semester_models(),
+            self.read_fachrichtungen(),
+        )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
@@ -508,7 +585,7 @@ class CrudHandlers:
         self.ds.save_lvas(lvas)
         self.ds.save_termine(terms)
         self.planner.refresh()
-    
+
     def add_room(self) -> None:
         dlg = RaumDialog(self.parent, None)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
@@ -569,7 +646,6 @@ class CrudHandlers:
         self.ds.save_termine(terms)
         self.planner.refresh()
 
-    
     def add_semester(self) -> None:
         dlg = SemesterDialog(self.parent, None)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
