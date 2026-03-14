@@ -21,6 +21,7 @@ class TermineDock(QDockWidget):
     termin_double_clicked = Signal(str)
     termin_delete_clicked = Signal(str)
     termin_unassign_requested = Signal(str)
+    termin_jump_requested = Signal(str)
 
     def _init_group_states(self):
         self._group_states = {}
@@ -193,11 +194,20 @@ class TermineDock(QDockWidget):
 
     def _open_menu(self, termin_id: str) -> None:
         menu = QMenu(self)
+        t = next((x for x in self._all_termine if x.id == termin_id), None)
+        assigned = bool(t and t.datum and t.start_zeit)
+
+        act_jump = None
+        if assigned:
+            act_jump = menu.addAction("Springe zu")
+
         act_edit = menu.addAction("Bearbeiten")
         act_del = menu.addAction("Löschen")
 
         chosen = menu.exec(self.cursor().pos())
-        if chosen == act_edit:
+        if act_jump is not None and chosen == act_jump:
+            self.termin_jump_requested.emit(termin_id)
+        elif chosen == act_edit:
             self.termin_double_clicked.emit(termin_id)
         elif chosen == act_del:
             self.termin_delete_clicked.emit(termin_id)

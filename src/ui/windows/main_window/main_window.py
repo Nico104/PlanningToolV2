@@ -333,6 +333,7 @@ class MainWindow(QMainWindow):
         self.termine_dock.termin_double_clicked.connect(self.crud.edit_termin_by_id)
         self.termine_dock.termin_delete_clicked.connect(self.crud.del_termin_by_id)
         self.termine_dock.termin_unassign_requested.connect(self._on_unassign_termin)
+        self.termine_dock.termin_jump_requested.connect(self._on_jump_to_termin)
 
         self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
 
@@ -361,6 +362,9 @@ class MainWindow(QMainWindow):
     def _on_unassign_termin(self, tid: str):
         if self.planner.crud.unassign_termin(tid):
             self.refresh_everything()
+
+    def _on_jump_to_termin(self, tid: str) -> None:
+        self.planner.highlight_termine([tid])
 
     def _on_nav_prev(self) -> None:
         self.planner._shift_period(-1)

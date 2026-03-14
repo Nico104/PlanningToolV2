@@ -17,7 +17,11 @@ Erweiterungen zur letzten gezeigten Version:
 
 - Filter Dock und Navigations Dock sind jetzt 2 individuelle Docks
 
+- In der Termin Liste gibt es bei Rechtsklick jetzt eine "Springe zu" Option
 
+- In den Einstellungen ist als Data-Path "data_test" gesetzt, dies sind die Daten mit denen ich diese App entwickelt/getested habe. Wenn Sie diesen String im Settings-Dialog löschen dann wird der normale data Ordner verwendet und die App wird in einem neuen Speicherstand gestartet
+
+- Wenn Sie das Projekt als zip/ordner herunterladen müsste man dieses mit Doppelklick auf Start_PlanningTool öffnen können, alternativ die main.py starten
 
 Weitere wichtige Flows:
 
