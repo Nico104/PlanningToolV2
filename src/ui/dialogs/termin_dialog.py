@@ -1,4 +1,5 @@
 import uuid
+import calendar
 from datetime import date, time, timedelta
 from typing import List, Optional, Dict
 
@@ -57,7 +58,15 @@ class TerminDialog(QDialog):
         self.end_date_de = QDateEdit()
         self.end_date_de.setCalendarPopup(True)
         self.end_date_de.setEnabled(False)
-        self.end_date_de.setDate(self._unassigned_qdate)
+        today = date.today()
+        next_month = today.month + 1
+        next_year = today.year
+        if next_month > 12:
+            next_month = 1
+            next_year += 1
+        next_day = min(today.day, calendar.monthrange(next_year, next_month)[1])
+        default_series_end = date(next_year, next_month, next_day)
+        self.end_date_de.setDate(date_to_qdate(default_series_end))
 
         def _toggle_serientermin_fields():
             enabled = self.serientermin_cb.isChecked()

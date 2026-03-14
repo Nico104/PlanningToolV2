@@ -35,7 +35,7 @@ class CrudHandlers:
             return []
         try:
             import json
-            with open(path, encoding="utf-8") as f:
+            with open(path, encoding="utf-8-sig") as f:
                 return json.load(f)["geplante_semester"]
         except Exception:
             return []
@@ -229,10 +229,19 @@ class CrudHandlers:
             settings=self.ds.load_settings(),
             new_id=self._new_termin_id(),
         )
+
+        # Default values for newly created Termine.
+        dlg.duration_sb.setValue(60)
+
         if auto_id:
             dlg.id_le.setText(self._new_termin_id())
+
         if default_qdate is not None:
             dlg.date_de.setDate(default_qdate)
+        else:
+            # For Data Editor creation: keep new entries unassigned by default.
+            dlg.date_de.setDate(dlg._unassigned_qdate)
+
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return False
 
@@ -427,7 +436,7 @@ class CrudHandlers:
         if not path or not path.exists():
             return []
         try:
-            obj = json.loads(path.read_text(encoding="utf-8"))
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
             lst = obj.get(key, [])
             return lst if isinstance(lst, list) else []
         except Exception:

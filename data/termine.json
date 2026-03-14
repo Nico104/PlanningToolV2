@@ -1,5 +1,19 @@
-﻿{
-    "termine":  [
-
-                ]
+{
+  "termine": [
+    {
+      "name": "Test Termin",
+      "id": "T001",
+      "lva_id": "100.001",
+      "typ": "VO",
+      "datum": null,
+      "start_zeit": null,
+      "raum_id": "None",
+      "gruppe": null,
+      "anwesenheitspflicht": false,
+      "notiz": "",
+      "duration": 60,
+      "semester_id": "testsem",
+      "serien_id": ""
+    }
+  ]
 }

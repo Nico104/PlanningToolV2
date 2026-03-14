@@ -1,5 +1,19 @@
-﻿{
-    "lehrveranstaltungen":  [
-
-                            ]
+{
+  "lehrveranstaltungen": [
+    {
+      "id": "100.001",
+      "name": "Test LVA",
+      "vortragende": {
+        "name": "Test Vortragender",
+        "email": "Test Email"
+      },
+      "typ": [
+        "VO"
+      ],
+      "geplante_semester": [
+        "sem6",
+        "qs4"
+      ]
+    }
+  ]
 }

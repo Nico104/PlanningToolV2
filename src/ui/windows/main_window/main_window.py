@@ -323,7 +323,7 @@ class MainWindow(QMainWindow):
             self,
             ds=self.ds,
             data_dir=self.data_dir,
-            on_data_changed=self.refresh_docks,
+            on_data_changed=self.refresh_everything,
         )
         self.data_editor_dock.setObjectName("dock_data_editor")
         self.tabifyDockWidget(self.termine_dock, self.data_editor_dock)
@@ -390,9 +390,6 @@ class MainWindow(QMainWindow):
 
     def refresh_docks(self) -> None:
         """Refresh dock data and option lists based on current planner state/filters"""
-
-        terms = self._compute_filtered_termine(self.filter_state)
-
         lva_list = getattr(self.planner.state, "lvas", None) or []
 
         fach_data = self._read_json(self.data_dir / "fachrichtungen.json", {})
@@ -411,6 +408,18 @@ class MainWindow(QMainWindow):
             typ_list=typ_list,
             current=self.filter_state,
         )
+
+        self.filter_state = FilterState(
+            fachrichtung=self.global_filter_dock.fachrichtung_cb.currentData() or None,
+            semester=self.global_filter_dock.semester_cb.currentData() or None,
+            lva_id=self.global_filter_dock.lva_cb.currentData() or None,
+            raum_id=self.global_filter_dock.room_cb.currentData() or None,
+            typ=self.global_filter_dock.typ_cb.currentData() or None,
+            dozent=self.global_filter_dock.dozent_cb.currentData() or None,
+            geplante_semester=self.global_filter_dock.geplante_semester_cb.currentData() or None,
+        )
+
+        terms = self._compute_filtered_termine(self.filter_state)
 
         self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
 
