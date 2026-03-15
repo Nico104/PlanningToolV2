@@ -68,7 +68,7 @@ class DateNavigationDock(QDockWidget):
 
         # week selectors
         self.week_number_cb = TightComboBox()
-        self.week_number_cb.setMinimumWidth(90)
+        self.week_number_cb.setMinimumWidth(160)
         self.week_number_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.week_number_cb.setObjectName("HeaderCombo")
         headerBar.addWidget(self.week_number_cb)
@@ -129,6 +129,10 @@ class DateNavigationDock(QDockWidget):
         first_monday = jan4.addDays(1 - jan4.dayOfWeek())
         return first_monday.addDays((week - 1) * 7)
 
+    def _week_label(self, year: int, week: int) -> str:
+        start = self._iso_week_start(year, week)
+        return f"KW {week:02d} ({start.toString('dd.MM.yyyy')})"
+
     def _populate_week_year_selector(self) -> None:
         self.week_year_cb.blockSignals(True)
         self.week_year_cb.clear()
@@ -146,7 +150,7 @@ class DateNavigationDock(QDockWidget):
         max_weeks = self._weeks_in_iso_year(year)
 
         for week in range(1, max_weeks + 1):
-            self.week_number_cb.addItem(f"KW {week:02d}", week)
+            self.week_number_cb.addItem(self._week_label(year, week), week)
 
         if selected is not None:
             idx = self.week_number_cb.findData(selected)
