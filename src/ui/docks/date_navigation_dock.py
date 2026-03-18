@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QDateEdit,
     QSizePolicy,
 )
-
 from ..components.widgets.tight_combobox import TightComboBox
 
 

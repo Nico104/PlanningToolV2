@@ -15,6 +15,7 @@ def make_item(text: str) -> QTableWidgetItem:
 
 def selected_id(table: QTableWidget) -> Optional[str]:
     row = table.currentRow()
+    # gibt -1 zurück wenn keine Zeile selektiert ist
     if row < 0:
         return None
 

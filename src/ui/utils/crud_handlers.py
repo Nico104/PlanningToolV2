@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QDialog, QMessageBox
 from ...services.id_service import next_id
 from ..dialogs import LVADialog, RaumDialog, SemesterDialog
 from ...core.models import GeplantesSemester
+from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.fachrichtung_dialog import FachrichtungDialog
 from ..dialogs.termin_dialog import TerminDialog
@@ -153,9 +154,14 @@ class CrudHandlers:
         from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
         semester_list = self.read_geplante_semester()
         table = getattr(self.parent.tab_geplante_semester, "table", None)
-        row = table.currentRow() if table else None
-        if row is None or row < 0 or row >= len(semester_list):
+        selected_semester_id = selected_id(table) if table else None
+        if not selected_semester_id:
             return
+
+        row = next((i for i, s in enumerate(semester_list) if str(s.get("id", "")).strip() == selected_semester_id), None)
+        if row is None:
+            return
+
         cur = semester_list[row]
         dlg = GeplanteSemesterDialog(self.parent, GeplantesSemester(**cur))
         result = dlg.get_result()
@@ -170,9 +176,14 @@ class CrudHandlers:
     def del_geplante_semester(self):
         semester_list = self.read_geplante_semester()
         table = getattr(self.parent.tab_geplante_semester, "table", None)
-        row = table.currentRow() if table else None
-        if row is None or row < 0 or row >= len(semester_list):
+        selected_semester_id = selected_id(table) if table else None
+        if not selected_semester_id:
             return
+
+        row = next((i for i, s in enumerate(semester_list) if str(s.get("id", "")).strip() == selected_semester_id), None)
+        if row is None:
+            return
+
         if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
             return
         semester_list.pop(row)
@@ -426,11 +437,7 @@ class CrudHandlers:
         if hasattr(self.termin_dock, "selected_id"):
             return self.termin_dock.selected_id()
         if hasattr(self.termin_dock, "table"):
-            row = self.termin_dock.table.currentRow()
-            if row < 0:
-                return None
-            it = self.termin_dock.table.item(row, 0)
-            return it.text().strip() if it else None
+            return selected_id(self.termin_dock.table)
         return None
 
     def _freie_tage_path(self, year: Optional[int] = None) -> Optional[Path]:
