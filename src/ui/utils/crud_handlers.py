@@ -1,12 +1,11 @@
-import json
 from dataclasses import replace
 from datetime import date, time
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from ...services.id_service import next_id
+from ...services.undo_service import UndoService
 from ..dialogs import LVADialog, RaumDialog, SemesterDialog
 from ...core.models import GeplantesSemester
 from ..components.widgets.editor_tab_widget import selected_id
@@ -18,33 +17,13 @@ from ..components.widgets.toast import Toast
 
 
 class CrudHandlers:
-    def _fachrichtungen_path(self) -> Path:
-        return Path(self.data_dir) / "fachrichtungen.json"
+    def _record_undo_snapshot(self) -> None:
+        if self.undo_service and self.ds:
+            self.undo_service.record_snapshot(self.ds)
 
-    def read_fachrichtungen(self) -> List[Dict[str, Any]]:
-        path = self._fachrichtungen_path()
-        if not path.exists():
-            return []
-        try:
-            obj = json.loads(path.read_text(encoding="utf-8-sig"))
-            items = obj.get("fachrichtungen", [])
-            return items if isinstance(items, list) else []
-        except Exception:
-            return []
-
-    def write_fachrichtungen(self, fachrichtungen: List[Dict[str, Any]]) -> None:
-        path = self._fachrichtungen_path()
-        path.write_text(
-            json.dumps({"fachrichtungen": fachrichtungen}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        if self.planner:
-            self.planner.refresh()
-        if hasattr(self.parent, "_refresh_fachrichtungen"):
-            self.parent._refresh_fachrichtungen()
 
     def add_fachrichtung(self) -> None:
-        fachrichtungen = self.read_fachrichtungen()
+        fachrichtungen = self.ds.load_fachrichtungen()
         dlg = FachrichtungDialog(self.parent, None)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
@@ -56,10 +35,15 @@ class CrudHandlers:
             return
 
         fachrichtungen.append({"id": new_id, "name": str(new_item.get("name", "")).strip()})
-        self.write_fachrichtungen(fachrichtungen)
+        self._record_undo_snapshot()
+        self.ds.save_fachrichtungen(fachrichtungen)
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, "_refresh_fachrichtungen"):
+            self.parent._refresh_fachrichtungen()
 
     def edit_fachrichtung(self) -> None:
-        fachrichtungen = self.read_fachrichtungen()
+        fachrichtungen = self.ds.load_fachrichtungen()
         if not self.fach_dock:
             return
 
@@ -83,10 +67,15 @@ class CrudHandlers:
             return
 
         fachrichtungen[row] = {"id": new_id, "name": str(new_item.get("name", "")).strip()}
-        self.write_fachrichtungen(fachrichtungen)
+        self._record_undo_snapshot()
+        self.ds.save_fachrichtungen(fachrichtungen)
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, "_refresh_fachrichtungen"):
+            self.parent._refresh_fachrichtungen()
 
     def del_fachrichtung(self) -> None:
-        fachrichtungen = self.read_fachrichtungen()
+        fachrichtungen = self.ds.load_fachrichtungen()
         if not self.fach_dock:
             return
 
@@ -102,57 +91,48 @@ class CrudHandlers:
             return
 
         fachrichtungen.pop(row)
-        self.write_fachrichtungen(fachrichtungen)
+        self._record_undo_snapshot()
+        self.ds.save_fachrichtungen(fachrichtungen)
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, "_refresh_fachrichtungen"):
+            self.parent._refresh_fachrichtungen()
 
-    def _geplante_semester_path(self):
-        return Path(self.data_dir) / "geplante_semester.json"
+    # ------------------------------------------------------------------ #
+    # Geplante Semester                                                    #
+    # ------------------------------------------------------------------ #
 
     def get_geplante_semester_models(self) -> List[GeplantesSemester]:
-        semester_list = self.read_geplante_semester()
         models: List[GeplantesSemester] = []
-        for item in semester_list:
+        for item in self.ds.load_geplante_semester():
             try:
                 models.append(GeplantesSemester(**item))
             except Exception:
                 continue
         return models
 
-    def read_geplante_semester(self):
-        path = self._geplante_semester_path()
-        if not path.exists():
-            return []
-        try:
-            with open(path, encoding="utf-8-sig") as f:
-                return json.load(f).get("geplante_semester", [])
-        except Exception:
-            return []
+    def add_geplante_semester(self):
+        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
+        semester_list = self.ds.load_geplante_semester()
+        dlg = GeplanteSemesterDialog(self.parent, None)
+        result = dlg.get_result()
+        if not result:
+            return
 
-    def write_geplante_semester(self, semester_list):
-        path = self._geplante_semester_path()
-        obj = {"geplante_semester": semester_list}
-        path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if any(s["id"] == result.id for s in semester_list):
+            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
+            return
+        semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
+        self._record_undo_snapshot()
+        self.ds.save_geplante_semester(semester_list)
         if self.planner:
             self.planner.refresh()
         if hasattr(self.parent, '_refresh_geplante_semester'):
             self.parent._refresh_geplante_semester()
 
-    def add_geplante_semester(self):
-        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
-        semester_list = self.read_geplante_semester()
-        dlg = GeplanteSemesterDialog(self.parent, None)
-        result = dlg.get_result()
-        if not result:
-            return
-        
-        if any(s["id"] == result.id for s in semester_list):
-            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
-            return
-        semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
-        self.write_geplante_semester(semester_list)
-
     def edit_geplante_semester(self):
         from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
-        semester_list = self.read_geplante_semester()
+        semester_list = self.ds.load_geplante_semester()
         table = getattr(self.parent.tab_geplante_semester, "table", None)
         selected_semester_id = selected_id(table) if table else None
         if not selected_semester_id:
@@ -171,10 +151,15 @@ class CrudHandlers:
             QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
             return
         semester_list[row] = {"id": result.id, "name": result.name, "notiz": result.notiz}
-        self.write_geplante_semester(semester_list)
+        self._record_undo_snapshot()
+        self.ds.save_geplante_semester(semester_list)
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, '_refresh_geplante_semester'):
+            self.parent._refresh_geplante_semester()
 
     def del_geplante_semester(self):
-        semester_list = self.read_geplante_semester()
+        semester_list = self.ds.load_geplante_semester()
         table = getattr(self.parent.tab_geplante_semester, "table", None)
         selected_semester_id = selected_id(table) if table else None
         if not selected_semester_id:
@@ -187,7 +172,12 @@ class CrudHandlers:
         if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
             return
         semester_list.pop(row)
-        self.write_geplante_semester(semester_list)
+        self._record_undo_snapshot()
+        self.ds.save_geplante_semester(semester_list)
+        if self.planner:
+            self.planner.refresh()
+        if hasattr(self.parent, '_refresh_geplante_semester'):
+            self.parent._refresh_geplante_semester()
 
     def __init__(
         self,
@@ -202,7 +192,7 @@ class CrudHandlers:
         sem_dock=None,
         termin_dock=None,
         freie_tage_dock=None,
-        data_dir=None,
+        undo_service: Optional[UndoService] = None,
     ):
         self.mw = mw
         self.ds = ds or (mw.ds if mw else None)
@@ -214,7 +204,7 @@ class CrudHandlers:
         self.sem_dock = sem_dock or (getattr(mw, "sem_dock", None) if mw else None)
         self.termin_dock = termin_dock or (getattr(mw, "termine_dock", None) if mw else None)
         self.freie_tage_dock = freie_tage_dock
-        self.data_dir = data_dir
+        self.undo_service = undo_service or (getattr(mw, "undo_service", None) if mw else None)
 
     def edit_termin_by_id(self, tid: str) -> bool:
         termine = self.ds.load_termine()
@@ -240,6 +230,7 @@ class CrudHandlers:
             return False
 
         out = [dlg.result if t.id == tid else t for t in termine]
+        self._record_undo_snapshot()
         self.ds.save_termine(out)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
@@ -247,15 +238,10 @@ class CrudHandlers:
         return True
 
     def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
-        path = self._freie_tage_path()
-        return self._read_json_list(path, "freie_tage")
+        return self.ds.load_freie_tage()
 
     def add_freie_tage(self, year: Optional[int] = None) -> None:
-        path = self._freie_tage_path()
-        if not path:
-            return
-
-        freie = self.read_freie_tage()
+        freie = self.ds.load_freie_tage()
         dlg = FreieTageDialog(self.parent, None)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
@@ -263,18 +249,18 @@ class CrudHandlers:
         item = dict(dlg.result)
         item["id"] = self._new_freie_tage_id(freie)
         freie.append(item)
-        self._write_freie_tage(path, freie)
+        self._record_undo_snapshot()
+        self.ds.save_freie_tage(freie)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
-        path = self._freie_tage_path()
         selected_id = self._selected_freie_tage_id()
-        if not path or not selected_id:
+        if not selected_id:
             return
 
-        freie = self.read_freie_tage()
+        freie = self.ds.load_freie_tage()
         row = next((i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None)
         if row is None:
             return
@@ -287,27 +273,28 @@ class CrudHandlers:
         item = dict(dlg.result)
         item["id"] = selected_id
         freie[row] = item
-        self._write_freie_tage(path, freie)
+        self._record_undo_snapshot()
+        self.ds.save_freie_tage(freie)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
-        path = self._freie_tage_path()
         selected_id = self._selected_freie_tage_id()
-        if not path or not selected_id:
+        if not selected_id:
             return
 
         if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
             return
 
-        freie = self.read_freie_tage()
+        freie = self.ds.load_freie_tage()
         row = next((i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None)
         if row is None:
             return
 
         freie.pop(row)
-        self._write_freie_tage(path, freie)
+        self._record_undo_snapshot()
+        self.ds.save_freie_tage(freie)
         self.planner.refresh()
 
     def add_termin(self, default_qdate=None, auto_id: bool = False) -> bool:
@@ -325,7 +312,7 @@ class CrudHandlers:
         dlg.duration_sb.setValue(60)
 
         if auto_id:
-            dlg.id_le.setText(self._new_termin_id())
+            dlg.new_id = self._new_termin_id()
 
         if default_qdate is not None:
             dlg.date_de.setDate(default_qdate)
@@ -350,6 +337,7 @@ class CrudHandlers:
                 return False
             termine.append(dlg.result)
 
+        self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
         return True
@@ -393,6 +381,7 @@ class CrudHandlers:
                 return
             termine = [t for t in termine if t.id != tid]
 
+        self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
 
@@ -427,6 +416,7 @@ class CrudHandlers:
                 return False
             termine = [t for t in termine if t.id != tid]
 
+        self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
         return True
@@ -439,9 +429,6 @@ class CrudHandlers:
         if hasattr(self.termin_dock, "table"):
             return selected_id(self.termin_dock.table)
         return None
-
-    def _freie_tage_path(self, year: Optional[int] = None) -> Optional[Path]:
-        return Path(self.data_dir) / "freie_tage.json"
 
     def _selected_freie_tage_id(self) -> Optional[str]:
         if not self.freie_tage_dock:
@@ -487,6 +474,7 @@ class CrudHandlers:
             new_t = t
 
         termine = [new_t if x.id == termin_id else x for x in termine]
+        self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
         return True
@@ -499,36 +487,17 @@ class CrudHandlers:
 
         new_t = replace(t, datum=None, start_zeit=None)
         termine = [new_t if x.id == termin_id else x for x in termine]
+        self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
         return True
-
-    def _write_freie_tage(self, path: Path, freie_tage: List[Dict[str, Any]]) -> None:
-        self._write_json_list(path, "freie_tage", freie_tage)
-
-    def _read_json_list(self, path: Optional[Path], key: str) -> List[Dict[str, Any]]:
-        if not path or not path.exists():
-            return []
-        try:
-            obj = json.loads(path.read_text(encoding="utf-8-sig"))
-            lst = obj.get(key, [])
-            return lst if isinstance(lst, list) else []
-        except Exception:
-            return []
-
-    def _write_json_list(self, path: Path, key: str, items: List[Dict[str, Any]]) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            json.dumps({key: items}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
 
     def add_lva(self) -> None:
         dlg = LVADialog(
             self.parent,
             None,
             self.get_geplante_semester_models(),
-            self.read_fachrichtungen(),
+            self.ds.load_fachrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
@@ -539,6 +508,7 @@ class CrudHandlers:
             return
 
         lvas.append(dlg.result)
+        self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
         self.planner.refresh()
 
@@ -556,7 +526,7 @@ class CrudHandlers:
             self.parent,
             cur,
             self.get_geplante_semester_models(),
-            self.read_fachrichtungen(),
+            self.ds.load_fachrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
@@ -566,6 +536,7 @@ class CrudHandlers:
             return
 
         lvas = [dlg.result if l.id == cid else l for l in lvas]
+        self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
 
         if dlg.result.id != cid:
@@ -589,6 +560,7 @@ class CrudHandlers:
 
         lvas = [l for l in self.ds.load_lvas() if l.id != cid]
         terms = [t for t in self.ds.load_termine() if t.lva_id != cid]
+        self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
         self.ds.save_termine(terms)
         self.planner.refresh()
@@ -604,6 +576,7 @@ class CrudHandlers:
             return
 
         rooms.append(dlg.result)
+        self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
         self.planner.refresh()
 
@@ -626,6 +599,7 @@ class CrudHandlers:
             return
 
         rooms = [dlg.result if r.id == rid else r for r in rooms]
+        self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
 
         if dlg.result.id != rid:
@@ -649,6 +623,7 @@ class CrudHandlers:
 
         rooms = [r for r in self.ds.load_raeume() if r.id != rid]
         terms = [t for t in self.ds.load_termine() if t.raum_id != rid]
+        self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
         self.ds.save_termine(terms)
         self.planner.refresh()
@@ -664,6 +639,7 @@ class CrudHandlers:
             return
 
         sems.append(dlg.result)
+        self._record_undo_snapshot()
         self.ds.save_semester(sems)
         self.planner.refresh()
 
@@ -686,6 +662,7 @@ class CrudHandlers:
             return
 
         sems = [dlg.result if s.id == sid else s for s in sems]
+        self._record_undo_snapshot()
         self.ds.save_semester(sems)
 
         if dlg.result.id != sid:
@@ -709,6 +686,7 @@ class CrudHandlers:
 
         sems = [s for s in self.ds.load_semester() if s.id != sid]
         terms = [t for t in self.ds.load_termine() if t.semester_id != sid]
+        self._record_undo_snapshot()
         self.ds.save_semester(sems)
         self.ds.save_termine(terms)
         self.planner.refresh()

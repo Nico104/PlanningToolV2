@@ -1,6 +1,4 @@
-from pathlib import Path
 from types import SimpleNamespace
-import json
 from typing import List
 
 from PySide6.QtCore import Qt
@@ -19,12 +17,11 @@ class DataEditorDock(QDockWidget):
     Keine Inline-Edits
     """
 
-    def __init__(self, parent, ds, data_dir: Path, on_data_changed=None):
+    def __init__(self, parent, ds, on_data_changed=None):
         super().__init__("Data Editor", parent)
         self.setAllowedAreas(Qt.AllDockWidgetAreas)
 
         self.ds = ds
-        self.data_dir = data_dir
         self.on_data_changed = on_data_changed
 
         wrap = QWidget(self)
@@ -70,7 +67,7 @@ class DataEditorDock(QDockWidget):
             sem_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_sem.table)),
             termin_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_termine.table)),
             freie_tage_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_free.table)),
-            data_dir=self.data_dir,
+            undo_service=getattr(parent, "undo_service", None),
         )
 
         self.tab_free.table.setColumnHidden(6, True)
@@ -104,10 +101,30 @@ class DataEditorDock(QDockWidget):
         self.tab_geplante_semester.delete_clicked.connect(self._crud.del_geplante_semester)
 
     def _on_tab_changed(self, index):
-        # Only trigger refresh if switching from another tab to Termine
+        # when the user opens the Termine tab, make sure it reflects the latest planner state, but don’t trigger a global refresh on every tab switch
         if self.tabs.widget(index) == self.tab_termine:
             if self.on_data_changed:
                 self.on_data_changed()
+
+    def create_entity(self, entity: str) -> None:
+        entity_map = {
+            "termin": self.tab_termine,
+            "lva": self.tab_lva,
+            "room": self.tab_rooms,
+            "semester": self.tab_sem,
+            "free_day": self.tab_free,
+            "planned_semester": self.tab_geplante_semester,
+            "fachrichtung": self.tab_fach,
+        }
+
+        tab = entity_map.get(entity)
+        if tab is None:
+            return
+
+        self.show()
+        self.raise_()
+        self.tabs.setCurrentWidget(tab)
+        tab.btn_add.click()
 
 
     def refresh_all(self) -> None:
@@ -120,7 +137,7 @@ class DataEditorDock(QDockWidget):
         self._refresh_geplante_semester()
         
     def _refresh_geplante_semester(self) -> None:
-        semester_data = self._crud.read_geplante_semester()
+        semester_data = self.ds.load_geplante_semester()
         rows = [[s.get("name", ""), s.get("notiz", ""), s.get("id", "")] for s in semester_data]
         self._fill_table(self.tab_geplante_semester.table, rows)
 
@@ -134,7 +151,7 @@ class DataEditorDock(QDockWidget):
     # Refresh tables
     def _refresh_lvas(self) -> None:
         lvas: List[Lehrveranstaltung] = self.ds.load_lvas()
-        semester_data = self._crud.read_geplante_semester()
+        semester_data = self.ds.load_geplante_semester()
         sem_id_to_name = {
             str(s.get("id", "")).strip(): str(s.get("name", "")).strip()
             for s in semester_data
@@ -161,14 +178,7 @@ class DataEditorDock(QDockWidget):
         self._fill_table(self.tab_rooms.table, rows)
 
     def _refresh_fachrichtungen(self) -> None:
-        path = self.data_dir / "fachrichtungen.json"
-        fachrichtungen = []
-        try:
-            obj = json.loads(path.read_text(encoding="utf-8-sig")) if path.exists() else {}
-            fachrichtungen = obj.get("fachrichtungen", [])
-        except Exception:
-            fachrichtungen = []
-
+        fachrichtungen = self.ds.load_fachrichtungen()
         rows = []
         for f in fachrichtungen:
             if isinstance(f, dict):
@@ -180,7 +190,7 @@ class DataEditorDock(QDockWidget):
 
 
     def _refresh_freie_tage(self) -> None:
-        freie = self._crud.read_freie_tage()
+        freie = self.ds.load_freie_tage()
         rows = []
         for it in freie:
             typ = str(it.get("typ", ""))

@@ -1,6 +1,6 @@
 ﻿QWidget#PlannerStyleTokens {
-  free-day-holiday-bg: #f3c1c6;
-  free-day-lecture-bg: #c4e0ff;
+  free-day-holiday-bg: #f9e7c0;
+  free-day-lecture-bg: #dbeafe;
 }
 
 /* Week planner header styling */
@@ -15,13 +15,11 @@ QHeaderView::section {
   font-size: 13px;
 }
 
-/* Style weekday (first line) */
 QHeaderView::section {
   font-weight: bold;
   font-size: 15px;
 }
 
-/* Style date (second line) */
 QHeaderView::section {
   color: #888;
   font-size: 11px;
@@ -29,7 +27,7 @@ QHeaderView::section {
 }
 QLabel#LvaHeaderLabel {
   font-size: 15px;
-  color: #333;
+  color: #1f2937;
   margin-top: 8px;
   margin-bottom: 4px;
 }
@@ -66,25 +64,25 @@ QLabel#ConflictPercentSign {
   margin-left: 4px;
 }
 QFrame#TerminCard {
-  background: #ffffff;
-  border: 1px solid #ececec;
-  border-radius: 8px;
+  background: #fcfdff;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
 }
 
 QFrame#TerminCard:hover {
-  border: 1px solid #d9d9d9;
-  background: #fafafa;
+  border: 1px solid #8fb0e9;
+  background: #f3f8ff;
   /* box-shadow removed: not supported in QSS */
 }
 
 QLabel#CardTitle {
-  color: #111111;
+  color: #0f172a;
   font-weight: 650;
   font-size: 13px;
 }
 
 QLabel#CardSub {
-  color: #6b6b6b;
+  color: #475569;
   font-size: 11px;
 }
 
@@ -105,18 +103,22 @@ QLabel#ConflictsSummary[state="conflict"] {
 }
 
 QLabel[chip="true"] {
-  background: #f6f6f6;
-  border: 1px solid #e4e4e4;
+  background: #f1f5f9;
+  border: 1px solid #d8e1ea;
   border-radius: 999px;
   padding: 2px 8px;
-  color: #111111;
+  color: #1e293b;
   font-size: 10px;
 }
 
 QLabel#ChipAP {
-  background: #111111;
-  border: 1px solid #111111;
-  color: #ffffff;
+  background: #edf2f8;
+  border: 1px solid #c0ccdc;
+  border-radius: 4px;
+  padding: 1px 7px;
+  color: #34425a;
+  font-weight: 600;
+  font-size: 9px;
 }
 
 

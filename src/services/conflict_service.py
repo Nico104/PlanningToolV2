@@ -2,11 +2,69 @@ from datetime import date, time, datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 import os
 import json
+from dataclasses import replace
 from pathlib import Path
 from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
 
 
 DEFAULT_CONFLICTS_PATH = Path(__file__).resolve().parents[1] / "konflikte.json"
+
+
+def has_preview_conflict(
+    termine: List[Termin],
+    lvas: List[Lehrveranstaltung],
+    raeume: List[Raum],
+    termin_id: str,
+    target_date: Optional[date],
+    start_mins: int,
+    default_slot_mins: int,
+    target_raum_id: Optional[str] = None,
+    use_dragged_room: bool = False,
+    conflict_settings_path: Optional[str] = None,
+    data_dir: str | Path | None = None,
+) -> bool:
+    
+    if not target_date:
+        return False
+
+   
+    dragged = next((t for t in termine if t.id == termin_id), None)
+    if not dragged:
+        return False
+
+  
+    slot_mins = max(1, int(default_slot_mins or 30))
+    start_h = max(0, start_mins) // 60
+    start_m = max(0, start_mins) % 60
+    if start_h > 23:
+        return False
+    target_start = time(hour=start_h, minute=start_m)
+
+   
+    moved_room_id = dragged.raum_id if use_dragged_room else (target_raum_id or dragged.raum_id)
+    moved_dragged = replace(
+        dragged,
+        datum=target_date,
+        start_zeit=target_start,
+        raum_id=moved_room_id,
+        duration=(dragged.duration if dragged.duration > 0 else slot_mins),
+    )
+
+  
+    simulated = [moved_dragged if t.id == termin_id else t for t in termine]
+
+    detector = ConflictDetector(
+        lvas=lvas,
+        raeume=raeume,
+        conflict_settings_path=conflict_settings_path,
+        data_dir=data_dir,
+    )
+    issues = detector.detect_all(simulated)
+   
+    return any(
+        issue.severity == "conflict" and termin_id in issue.termin_ids
+        for issue in issues
+    )
 
 
 def load_conflicts(path=None):
@@ -191,10 +249,9 @@ class ConflictDetector:
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
                     if self.times_overlap(t1, t2):
-                        if t1.id < t2.id:
-                            conflicts.append(self._create_conflict(
-                                "room", t1, t2, settings
-                            ))
+                        conflicts.append(self._create_conflict(
+                            "room", t1, t2, settings
+                        ))
         return conflicts
     
     def detect_group_conflicts(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
@@ -211,10 +268,9 @@ class ConflictDetector:
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
                     if self.times_overlap(t1, t2):
-                        if t1.id < t2.id:
-                            conflicts.append(self._create_conflict(
-                                "group", t1, t2, settings
-                            ))
+                        conflicts.append(self._create_conflict(
+                            "group", t1, t2, settings
+                        ))
         return conflicts
     
     def detect_lecturer_conflicts(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
@@ -238,10 +294,9 @@ class ConflictDetector:
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
                     if self.times_overlap(t1, t2):
-                        if t1.id < t2.id:
-                            conflicts.append(self._create_conflict(
-                                "lecturer", t1, t2, settings
-                            ))
+                        conflicts.append(self._create_conflict(
+                            "lecturer", t1, t2, settings
+                        ))
         return conflicts
 
     def detect_holiday_conflicts(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:

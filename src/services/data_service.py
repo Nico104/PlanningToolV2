@@ -206,3 +206,64 @@ class DataService:
         # Save to src/settings.json
         settings_path = Path(__file__).parent / "../settings.json"
         settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    
+
+    def load_fachrichtungen(self) -> List[Dict[str, Any]]:
+        path = self.data_dir / "fachrichtungen.json"
+        if not path.exists():
+            return []
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
+            items = obj.get("fachrichtungen", [])
+            return items if isinstance(items, list) else []
+        except Exception:
+            return []
+
+    def save_fachrichtungen(self, fachrichtungen: List[Dict[str, Any]]) -> None:
+        path = self.data_dir / "fachrichtungen.json"
+        path.write_text(
+            json.dumps({"fachrichtungen": fachrichtungen}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+   
+
+    def load_freie_tage(self) -> List[Dict[str, Any]]:
+        path = self.data_dir / "freie_tage.json"
+        if not path.exists():
+            return []
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
+            items = obj.get("freie_tage", [])
+            return items if isinstance(items, list) else []
+        except Exception:
+            return []
+
+    def save_freie_tage(self, freie_tage: List[Dict[str, Any]]) -> None:
+        path = self.data_dir / "freie_tage.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"freie_tage": freie_tage}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    
+
+    def load_geplante_semester(self) -> List[Dict[str, Any]]:
+        path = self.data_dir / "geplante_semester.json"
+        if not path.exists():
+            return []
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
+            items = obj.get("geplante_semester", [])
+            return items if isinstance(items, list) else []
+        except Exception:
+            return []
+
+    def save_geplante_semester(self, semester_list: List[Dict[str, Any]]) -> None:
+        path = self.data_dir / "geplante_semester.json"
+        path.write_text(
+            json.dumps({"geplante_semester": semester_list}, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )

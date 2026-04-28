@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView, QSizePolicy
 
 from ...core.models import Termin
+from ...services.conflict_service import has_preview_conflict
 from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time, mins_from_time, date_to_qdate
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
@@ -69,6 +70,27 @@ class PlannerWeekView:
                 ap = " AP" if t.anwesenheitspflicht else ""
                 return f"{fmt_time(t.start_zeit)}–{fmt_time(t.get_end_time())} {t.typ} | {room_s} | {lva_short}{grp}{ap}"
             self.week_table.set_text_provider(_text_provider)
+        if hasattr(self.week_table, "set_conflict_checker"):
+            def _conflict_checker_week(tid: str, row: int, col: int) -> bool:
+                if col <= 0:
+                    return False
+                week_mo = monday_of(qdate_to_date(self.week_from.date()))
+                target_date = week_mo + timedelta(days=col - 1)
+                day_start, _, slot_min = self._day_bounds()
+                start_mins = day_start.hour * 60 + day_start.minute + row * slot_min
+                return has_preview_conflict(
+                    termine=self.state.termine,
+                    lvas=self.state.lvas,
+                    raeume=self.state.raeume,
+                    termin_id=tid,
+                    target_date=target_date,
+                    start_mins=start_mins,
+                    default_slot_mins=slot_min,
+                    target_raum_id=None,
+                    use_dragged_room=True,
+                    data_dir=self.state.ds.data_dir,
+                )
+            self.week_table.set_conflict_checker(_conflict_checker_week)
 
         self._setup_table()
         self.week_table.cellClicked.connect(self._on_cell_clicked)
@@ -107,9 +129,7 @@ class PlannerWeekView:
         h = t.horizontalHeader()
         v = t.verticalHeader()
         h.setStretchLastSection(False)
-        v.setSectionResizeMode(QHeaderView.Fixed)
-        
-        self.week_table.verticalHeader().setDefaultSectionSize(26)
+        v.setSectionResizeMode(QHeaderView.Stretch)
 
 
     def refresh(self, filtered_termine: List[Termin]) -> None:

@@ -82,6 +82,7 @@ class PlannerWorkspace(QWidget):
             ds=ds,
             parent=self,
             planner=SimpleNamespace(refresh=lambda: None),
+            undo_service=getattr(parent, "undo_service", None),
         )
 
         # Day, week, month view setup
@@ -265,10 +266,6 @@ class PlannerWorkspace(QWidget):
 
         # view switching should not refresh external docks/terminliste
         self.refresh(emit=False)
-
-    def add_termin(self):
-        if self.crud.add_termin(default_qdate=self.day_date.date(), auto_id=True):
-            self.reload_and_refresh_everything()
 
     def _edit_termin_by_id(self, tid: str):
         if self.crud.edit_termin_by_id(tid):

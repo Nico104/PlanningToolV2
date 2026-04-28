@@ -25,6 +25,8 @@ class TimeGridDropTable(QTableWidget):
         self._hover_col = -1
         self._hover_span = 1
         self._hover_termin_id = None
+        self._conflict_checker = None
+        self._hover_has_conflict = False
 
         # preview config
         self._duration_provider = None
@@ -116,6 +118,14 @@ class TimeGridDropTable(QTableWidget):
             return
         self._hover_row, self._hover_col, self._hover_span = r, c, span
 
+        if r >= 0 and c >= 0 and self._conflict_checker and self._hover_termin_id:
+            try:
+                self._hover_has_conflict = bool(self._conflict_checker(self._hover_termin_id, r, c))
+            except Exception:
+                self._hover_has_conflict = False
+        else:
+            self._hover_has_conflict = False
+
         if r >= 0 and c >= 0:
             self.clearSelection()
             r_end = min(self.rowCount() - 1, r + max(1, span) - 1)
@@ -165,6 +175,9 @@ class TimeGridDropTable(QTableWidget):
     def set_text_provider(self, provider) -> None:
         self._text_provider = provider
 
+    def set_conflict_checker(self, checker) -> None:
+        self._conflict_checker = checker
+
     # Drop preview
     def paintEvent(self, e):
         super().paintEvent(e)
@@ -190,12 +203,15 @@ class TimeGridDropTable(QTableWidget):
         p = QPainter(self.viewport())
         p.setRenderHint(QPainter.Antialiasing, False)
 
-        fill_color = QColor("#111111")
-        if self._color_provider and self._hover_termin_id:
-            try:
-                fill_color = self._color_provider(self._hover_termin_id)
-            except Exception:
-                pass
+        if self._hover_has_conflict:
+            fill_color = QColor("#CC3333")
+        else:
+            fill_color = QColor("#111111")
+            if self._color_provider and self._hover_termin_id:
+                try:
+                    fill_color = self._color_provider(self._hover_termin_id)
+                except Exception:
+                    pass
         
         p.setBrush(fill_color)
         p.setPen(Qt.NoPen)
@@ -206,7 +222,8 @@ class TimeGridDropTable(QTableWidget):
             try:
                 text = self._text_provider(self._hover_termin_id)
                 if text:
-                    p.setPen(QColor("#111111"))
+                    text_color = QColor("#FFFFFF") if self._hover_has_conflict else QColor("#111111")
+                    p.setPen(text_color)
                     p.drawText(rect.adjusted(5, 3, -5, -3), Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, text)
             except Exception:
                 pass

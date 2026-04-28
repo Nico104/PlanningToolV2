@@ -3,11 +3,12 @@ from datetime import datetime
 import json
 import subprocess
 import sys
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QDate
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox, QPushButton
 
 from src.services.data_service import DataService
+from src.services.undo_service import UndoService
 
 from src.ui.docks.termine_dock import TermineDock
 from src.ui.docks.data_editor_dock import DataEditorDock
@@ -18,7 +19,9 @@ from src.ui.utils.datetime_utils import date_to_qdate
 from src.core.states import FilterState
 from ...utils.crud_handlers import CrudHandlers
 from .layout_manager import LayoutManager
+from .shortcuts import install_main_window_shortcuts
 from src.ui.planner.workspace import PlannerWorkspace
+from src.ui.planner.termincard import TerminCard as PlannerTerminCard
 from ...dialogs import SettingsDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
 from src.ui.dialogs.import_dialog import ImportDialog
@@ -84,6 +87,24 @@ class MainWindow(QMainWindow):
                 continue
         return min(dates) if dates else None
 
+    def _focused_calendar_termin_id(self) -> str | None:
+        ref = PlannerTerminCard._focused_card_ref
+        card = ref() if ref else None
+        if card is None:
+            return None
+        tid = getattr(card, "termin_id", None)
+        return str(tid) if tid else None
+
+    def unassign_focused_calendar_termin(self) -> None:
+        tid = self._focused_calendar_termin_id()
+        if tid:
+            self._on_unassign_termin(tid)
+
+    def delete_focused_calendar_termin(self) -> None:
+        tid = self._focused_calendar_termin_id()
+        if tid and self.crud.del_termin_by_id(tid):
+            self.refresh_everything()
+
     def set_start_semester_and_reload(self, fachrichtung, semester):
         s = self.ds.load_settings()
         s["start_fachrichtung"] = fachrichtung
@@ -99,6 +120,8 @@ class MainWindow(QMainWindow):
     def __init__(self, data_dir: Path):
         super().__init__()
         self.ds = DataService(data_dir)
+        self.undo_service = UndoService()
+        self.undo_service.on_history_changed(self.update_undo_redo_actions)
         self.setWindowTitle("Planungstool")
         self.data_dir = data_dir
 
@@ -119,11 +142,24 @@ class MainWindow(QMainWindow):
         self.layout_mgr = LayoutManager(self)
 
         self._wire_signals()
+        install_main_window_shortcuts(self)
 
         self.refresh_everything()
+        self.update_undo_redo_actions()
         self.layout_mgr.init_default()
 
         self.showMaximized()
+        
+        # Delayed refresh to fix initial card heights after startup layout (50ms not exact time, did not work with 0)
+        QTimer.singleShot(50, self._refresh_planner_only)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        #refresh card heights
+        QTimer.singleShot(120, self._refresh_planner_only)
+
+    def _refresh_planner_only(self) -> None:
+        self.planner.refresh(emit=False)
 
     def open_settings(self) -> None:
         cur = self.ds.load_settings()
@@ -171,6 +207,14 @@ class MainWindow(QMainWindow):
         self.act_import.triggered.connect(self.import_project)
         file_menu.addAction(self.act_import)
 
+        edit_menu = mb.addMenu("Bearbeiten")
+        self.act_undo = QAction("Rückgängig", self)
+        self.act_undo.triggered.connect(self.perform_undo)
+        self.act_redo = QAction("Wiederholen", self)
+        self.act_redo.triggered.connect(self.perform_redo)
+        edit_menu.addAction(self.act_undo)
+        edit_menu.addAction(self.act_redo)
+
         self.view_menu = mb.addMenu("Ansicht")
         self.layout_menu = self.view_menu.addMenu("Layout")
         self.layout_group = QActionGroup(self)
@@ -186,6 +230,23 @@ class MainWindow(QMainWindow):
         self.act_konflikte = QAction("Konflikte…", self)
         self.act_konflikte.triggered.connect(self.open_konflikte_dialog)
         tools_menu.addAction(self.act_konflikte)
+
+    def create_data_editor_entity(self, entity: str) -> None:
+        self.data_editor_dock.create_entity(entity)
+
+    def jump_to_today(self) -> None:
+        today = QDate.currentDate()
+        monday = today.addDays(1 - today.dayOfWeek())
+
+        self.date_navigation_dock.day_date.setDate(today)
+
+        view = str(self.date_navigation_dock.view_cb.currentData())
+        if view == "month":
+            self.date_navigation_dock.week_from.setDate(QDate(today.year(), today.month(), 1))
+        else:
+            self.date_navigation_dock.week_from.setDate(monday)
+
+        self.planner.refresh(emit=False)
 
     def open_konflikte_dialog(self):
         conflicts_path = str(Path(__file__).resolve().parents[3] / "konflikte.json")
@@ -324,7 +385,6 @@ class MainWindow(QMainWindow):
         self.data_editor_dock = DataEditorDock(
             self,
             ds=self.ds,
-            data_dir=self.data_dir,
             on_data_changed=self.refresh_everything,
         )
         self.data_editor_dock.setObjectName("dock_data_editor")
@@ -386,6 +446,28 @@ class MainWindow(QMainWindow):
     def refresh_everything(self) -> None:
         self.planner.refresh(emit=True)
 
+    def update_undo_redo_actions(self) -> None:
+        self.act_undo.setEnabled(self.undo_service.can_undo())
+        self.act_redo.setEnabled(self.undo_service.can_redo())
+
+    def perform_undo(self) -> None:
+        snapshot = self.undo_service.undo(self.ds)
+        if snapshot is None:
+            return
+        self.undo_service.restore(self.ds, snapshot)
+        self.refresh_everything()
+        self.update_undo_redo_actions()
+        Toast(self, "Rückgängig", duration_ms=1500).show()
+
+    def perform_redo(self) -> None:
+        snapshot = self.undo_service.redo(self.ds)
+        if snapshot is None:
+            return
+        self.undo_service.restore(self.ds, snapshot)
+        self.refresh_everything()
+        self.update_undo_redo_actions()
+        Toast(self, "Wiederholen", duration_ms=1500).show()
+
     def refresh_conflicts(self) -> None:
         self.conflicts_dock.initialize_detector(
             self.planner.state.lvas,
@@ -398,11 +480,9 @@ class MainWindow(QMainWindow):
         """Refresh dock data and option lists based on current planner state/filters"""
         lva_list = getattr(self.planner.state, "lvas", None) or []
 
-        fach_data = self._read_json(self.data_dir / "fachrichtungen.json", {})
-        fachrichtungen = fach_data.get("fachrichtungen", [])
+        fachrichtungen = self.ds.load_fachrichtungen()
 
-        sem_data = self._read_json(self.data_dir / "semester.json", {})
-        semester_list = [(s["id"], s["name"]) for s in sem_data.get("semester", [])]
+        semester_list = [(s.id, s.name) for s in self.ds.load_semester()]
 
         typ_list = [t.typ for t in getattr(self.planner.state, "termine", []) if getattr(t, "typ", None)]
 

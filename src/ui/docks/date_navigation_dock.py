@@ -46,7 +46,7 @@ class DateNavigationDock(QDockWidget):
         self.view_cb.addItem("Wochen", "week")
         self.view_cb.addItem("Tag", "day")
         self.view_cb.addItem("Monat", "month")
-        self.view_cb.setFixedWidth(100)
+        self.view_cb.setFixedWidth(120)
         self.view_cb.setObjectName("HeaderCombo")
         headerBar.addWidget(self.view_cb)
 
