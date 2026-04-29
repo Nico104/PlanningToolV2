@@ -10,12 +10,12 @@ def _set_view(mw, view_key: str) -> None:
 
 def install_main_window_shortcuts(mw) -> None:
     # F5 refresh; Alt+Left/Alt+Right previous/next period; Ctrl+1 week; Ctrl+2 day;
-    # Ctrl+3 month; Ctrl+N new Termin; Ctrl+, settings; Ctrl+O import; Ctrl+Shift+K conflicts;
-    # Ctrl+Shift+E export; Ctrl+Shift+R reset layouts; Ctrl+T today;
+    # Ctrl+3 month; Ctrl+N new Termin; Ctrl+Shift+S settings; Ctrl+O import;
+    # Ctrl+Shift+K conflicts; Ctrl+Shift+E export; Ctrl+Shift+R reset layouts; Ctrl+T today;
     # Ctrl+Alt+T/L/S/R/F/G/H new Termin/LVA/Semester/Raum/Freier Tag/Geplantes Semester/Fachrichtung.
     # Focused calendar TerminCard: Delete/Backspace unassign; Ctrl+Delete/Ctrl+Backspace delete.
     mw.act_refresh.setShortcut(QKeySequence("F5"))
-    mw.act_settings.setShortcut(QKeySequence("Ctrl+Comma"))
+    mw.act_settings.setShortcut(QKeySequence("Ctrl+Shift+S"))
     mw.act_import.setShortcut(QKeySequence("Ctrl+O"))
     mw.act_konflikte.setShortcut(QKeySequence("Ctrl+Shift+K"))
     mw.act_export.setShortcut(QKeySequence("Ctrl+Shift+E"))
