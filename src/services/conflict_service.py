@@ -9,7 +9,6 @@ from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
 
 DEFAULT_CONFLICTS_PATH = Path(__file__).resolve().parents[1] / "konflikte.json"
 
-
 def has_preview_conflict(
     termine: List[Termin],
     lvas: List[Lehrveranstaltung],
@@ -85,9 +84,6 @@ def save_conflicts(conflicts, path=None):
         pass
 
 
-UNASSIGNED_DATE = date(2026, 1, 1)
-
-
 class ConflictDetector:
     def __init__(self, 
                  lvas: List[Lehrveranstaltung],
@@ -107,9 +103,7 @@ class ConflictDetector:
         self._free_days_by_date = self._load_free_days_map(conflict_settings_path)
     
     def is_assigned(self, termin: Termin) -> bool:
-        return (termin.datum is not None and 
-                termin.datum != UNASSIGNED_DATE and
-                termin.start_zeit is not None)
+        return termin.datum is not None and termin.start_zeit is not None
     
     def times_overlap(self, t1: Termin, t2: Termin) -> bool:
         if not t1.start_zeit or not t2.start_zeit:
@@ -161,7 +155,6 @@ class ConflictDetector:
             ("lecture_free_conflict", self.detect_lecture_free_conflicts, True),
             ("incomplete_warning", self.detect_incomplete_warnings, False),
             ("duration_warning", self.detect_duration_warnings, False),
-            ("weekend_warning", self.detect_weekend_warnings, False),
             ("saturday_warning", self.detect_saturday_warning, False),
             ("sunday_warning", self.detect_sunday_warning, False),
             ("capacity_warning_uebung", self.detect_capacity_warning_uebung, False),
@@ -195,7 +188,7 @@ class ConflictDetector:
             problems = []
             has_missing = False
             # Check for missing/unassigned date
-            if t.datum is None or t.datum == UNASSIGNED_DATE:
+            if t.datum is None:
                 has_missing = True
                 txt = label("date")
                 if txt:
@@ -227,7 +220,7 @@ class ConflictDetector:
                     category="incomplete",
                     termin_ids=[t.id],
                     message=msg,
-                    datum=t.datum if t.datum and t.datum != UNASSIGNED_DATE else None,
+                    datum=t.datum,
                     zeit_von=t.start_zeit,
                     zeit_bis=t.get_end_time(),
                     raum=raum.name if raum else "",
@@ -276,21 +269,16 @@ class ConflictDetector:
     def detect_lecturer_conflicts(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         """Detect lecturer conflicts (same lecturer, date, overlapping time). Uses settings if provided."""
         conflicts = []
-        by_lecturer_date = []
+        by_lecturer_date: Dict[Tuple[str, date], List[Termin]] = {}
         for t in termine:
             if not t.datum:
                 continue
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
             if not lva or not lva.vortragende:
                 continue
-            lecturer_key = lva.vortragende.email
-            found = next((bl for bl in by_lecturer_date if bl[0] == lecturer_key and bl[1] == t.datum), None)
-            if found:
-                found[2].append(t)
-            else:
-                by_lecturer_date.append([lecturer_key, t.datum, [t]])
-        for bl in by_lecturer_date:
-            lecturer_email, datum, terms = bl
+            key = (lva.vortragende.email, t.datum)
+            by_lecturer_date.setdefault(key, []).append(t)
+        for terms in by_lecturer_date.values():
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
                     if self.times_overlap(t1, t2):
@@ -371,8 +359,8 @@ class ConflictDetector:
     def detect_duration_warnings(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         """Detect warnings for Termine that are unusually short or long"""
         warnings = []
-        min_minutes = 30
-        max_minutes = 240
+        min_minutes = (settings or {}).get("min_minutes", 30)
+        max_minutes = (settings or {}).get("max_minutes", 240)
         for t in termine:
             if not self.is_assigned(t):
                 continue
@@ -508,19 +496,20 @@ class ConflictDetector:
             gruppe=""  # Could be enhanced to show both groups
         )
 
+
+
 # Separate capacity warning for Übung
     def detect_capacity_warning_uebung(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         warnings = []
         percent = settings.get('min_capacity_percent', 100) if settings else 100
-        event_type = settings.get('event_type', 'uebung') if settings else 'uebung'
+        event_type = settings.get('event_type', 'UE') if settings else 'UE'
         for t in termine:
             if not self.is_assigned(t):
                 continue
             raum = getattr(t, 'raum', None) or next((r for r in self.raeume if r.id == t.raum_id), None)
             gruppe = getattr(t, 'gruppe', None)
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
-            typ = getattr(t, 'typ', None) or (lva.typ if lva and hasattr(lva, 'typ') else None)
-            if raum and gruppe and (typ == event_type):
+            if raum and gruppe and (t.typ == event_type):
                 required = int(gruppe.groesse * percent / 100)
                 if raum.kapazitaet < required:
                     msg = self._render_message(
@@ -550,15 +539,14 @@ class ConflictDetector:
     def detect_capacity_warning_vorlesung(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         warnings = []
         percent = settings.get('min_capacity_percent', 60) if settings else 60
-        event_type = settings.get('event_type', 'vorlesung') if settings else 'vorlesung'
+        event_type = settings.get('event_type', 'VO') if settings else 'VO'
         for t in termine:
             if not self.is_assigned(t):
                 continue
             raum = getattr(t, 'raum', None) or next((r for r in self.raeume if r.id == t.raum_id), None)
             gruppe = getattr(t, 'gruppe', None)
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
-            typ = getattr(t, 'typ', None) or (lva.typ if lva and hasattr(lva, 'typ') else None)
-            if raum and gruppe and (typ == event_type):
+            if raum and gruppe and (t.typ == event_type):
                 required = int(gruppe.groesse * percent / 100)
                 if raum.kapazitaet < required:
                     msg = self._render_message(

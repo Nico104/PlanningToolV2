@@ -210,7 +210,13 @@ How it works internally:
 5. `init_default()` loads `layout_presets` + `layout_current`, rebuilds menu entries, and applies the last selected layout
 6. If persisted data is missing/invalid, `Standard` is used as fallback
 
-### 6.10 Termine Search Bar
+### 6.10 Atomic File Saving
+
+`DataService._write()` writes to a `.tmp` file first, then renames it over the target in one OS-level operation (`Path.replace()`). This ensures JSON files are never left in a partial/corrupt state if the app crashes mid-save.
+
+---
+
+### 6.11 Termine Search Bar
 
 The Termine dock includes a live search input for:
 - Termin name/ID

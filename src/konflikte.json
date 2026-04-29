@@ -54,13 +54,6 @@
         }
     },
     {
-        "name": "Datum außerhalb des Planungszeitraums",
-        "key": "outside_period_warning",
-        "enabled": true,
-        "type": "warning",
-        "description": "Termin liegt außerhalb des zugeordneten Semesters."
-    },
-    {
         "name": "Kapazitätswarnung Übung",
         "key": "capacity_warning_uebung",
         "enabled": true,
@@ -68,7 +61,7 @@
         "description": "Bei Übungsterminen müssen alle Gruppenmitglieder Platz haben.",
         "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
         "min_capacity_percent": 99,
-        "event_type": "uebung"
+        "event_type": "UE"
     },
     {
         "name": "Kapazitätswarnung Vorlesung",
@@ -78,7 +71,7 @@
         "description": "Bei Vorlesungen müssen nur ein Teil der Gruppe Platz haben.",
         "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
         "min_capacity_percent": 75,
-        "event_type": "vorlesung"
+        "event_type": "VO"
     },
     {
         "name": "Dauerwarnung",
@@ -87,7 +80,8 @@
         "type": "warning",
         "description": "Termin ist ungewöhnlich kurz (<30min) oder lang (>4h).",
         "message_template": "Dauer: {duration} Minuten.",
-        "min_minutes": 15
+        "min_minutes": 30,
+        "max_minutes": 200
     },
     {
         "name": "Samstagswarnung",

@@ -1,63 +1,12 @@
 from datetime import date, datetime, time, timedelta
 from typing import List, Optional, Dict, Tuple
 
-from ..core.models import Termin, Zeitfenster, ConflictIssue
+from ..core.models import Termin, Zeitfenster
 
 
 class TerminService:
     def __init__(self, settings: Dict):
         self.settings = settings
-
-    def find_room_conflicts(self, termine: List[Termin], semester_id: Optional[str] = None) -> List[ConflictIssue]:
-        # Gruppiere nach (raum_id, datum)
-        buckets: Dict[Tuple[str, date], List[Termin]] = {}
-        for t in termine:
-            if semester_id and t.semester_id != semester_id:
-                continue
-            
-            if t.datum is None or t.start_zeit is None or t.duration <= 0:
-                continue
-            
-            buckets.setdefault((t.raum_id, t.datum), []).append(t)
-
-        conflicts: List[ConflictIssue] = []
-        for (room, day), ts in buckets.items():
-            ts_sorted = sorted(ts, key=lambda x: x.start_zeit)
-            for i in range(len(ts_sorted)):
-                for j in range(i + 1, len(ts_sorted)):
-                    a, b = ts_sorted[i], ts_sorted[j]
-                    # Check if b starts after a ends
-                    a_end = a.get_end_time()
-                    if a_end and b.start_zeit >= a_end:
-                        break
-                    # Check for overlap using durations
-                    a_end_time = a.get_end_time()
-                    b_end_time = b.get_end_time()
-                    if a_end_time and b_end_time:
-                        # Overlap if a starts before b ends AND b starts before a ends
-                        if a.start_zeit < b_end_time and b.start_zeit < a_end_time:
-                            # Gruppe may be a domain object or a dict; handle both
-                            gruppe_val = ''
-                            if hasattr(a, 'gruppe') and a.gruppe:
-                                g = a.gruppe
-                                if isinstance(g, dict):
-                                    gruppe_val = g.get('name', '')
-                                else:
-                                    gruppe_val = getattr(g, 'name', '')
-
-                            conflicts.append(ConflictIssue(
-                                severity="conflict",
-                                category="room",
-                                termin_ids=[a.id, b.id],
-                                message="Raum doppelt belegt (Zeit überschneidet sich)",
-                                datum=day,
-                                zeit_von=a.start_zeit,
-                                zeit_bis=a.get_end_time(),
-                                raum=room,
-                                lva=getattr(a, 'lva_id', ''),
-                                gruppe=gruppe_val,
-                            ))
-        return conflicts
 
     @staticmethod
     def _to_dt(d: date, t: time) -> datetime:

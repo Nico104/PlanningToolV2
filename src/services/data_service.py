@@ -45,7 +45,9 @@ class DataService:
 
     def _write(self, filename: str, obj: Dict[str, Any]) -> None:
         path = self.data_dir / filename
-        path.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(path)
 
     @staticmethod
     def _parse_date(s: str) -> date:
