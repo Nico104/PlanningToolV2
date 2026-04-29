@@ -90,7 +90,7 @@ Global shortcuts (registered in `shortcuts.py`):
 - Ctrl+O: import
 - Ctrl+Shift+E: export
 - Ctrl+Shift+R: reset layouts
-- Ctrl+Shift+K: open conflicts
+- Ctrl+Shift+K: open conflict settings
 
 Planner-focused keyboard behavior:
 - Delete / Backspace on focused calendar Termin card: unassign Termin
@@ -209,5 +209,18 @@ How it works internally:
 4. On startup, `MainWindow` calls `layout_mgr.init_default()`
 5. `init_default()` loads `layout_presets` + `layout_current`, rebuilds menu entries, and applies the last selected layout
 6. If persisted data is missing/invalid, `Standard` is used as fallback
+
+### 6.10 Termine Search Bar
+
+The Termine dock includes a live search input for:
+- Termin name/ID
+- LVA name/ID
+- Raum name/ID
+- Dozent name
+
+Search is case-insensitive and uses simple substring matching.
+Pressing Enter triggers jump only if at least one matching Termin is assigned (`datum` + `start_zeit`).
+If there is no assigned match, no jump is triggered.
+The search field visibility can be toggled in `Settings` via `Termine-Suche anzeigen`.
 
 

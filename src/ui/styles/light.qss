@@ -1,9 +1,9 @@
-﻿QWidget#PlannerStyleTokens {
+QWidget#PlannerStyleTokens {
   free-day-holiday-bg: #f9e7c0;
   free-day-lecture-bg: #dbeafe;
 }
 
-/* Week planner header styling */
+
 QHeaderView::section {
   background: #fafafa;
   border: none;
@@ -72,7 +72,6 @@ QFrame#TerminCard {
 QFrame#TerminCard:hover {
   border: 1px solid #8fb0e9;
   background: #f3f8ff;
-  /* box-shadow removed: not supported in QSS */
 }
 
 QLabel#CardTitle {
@@ -123,14 +122,14 @@ QLabel#ChipAP {
 
 
 
-/* Time grid labels */
+
 QTableWidget::item:first-column {
   color: #2a2a2a;
   padding-right: 6px;
   font-size: 11px;
 }
 
-/* Menu bar */
+
 QMenuBar {
   background: #ffffff;
   color: #111111;
@@ -173,20 +172,13 @@ QMenu::separator {
   margin: 4px 0px;
 }
 
-
-
-
-/* =========================================================
-   Header / Control Bar — subtle & compact
-   ========================================================= */
-
 QWidget#HeaderBar {
   background: transparent;
   border: none;
   border-radius: 0px;
 }
 
-/* unify height + typography */
+
 QWidget#HeaderBar QComboBox,
 QWidget#HeaderBar QDateEdit,
 QWidget#HeaderBar QLineEdit,
@@ -195,14 +187,14 @@ QWidget#HeaderBar QPushButton {
   font-size: 12px;
 }
 
-/* --- Inputs --- */
+
 QLineEdit#HeaderSearch,
 QComboBox#HeaderCombo,
 QDateEdit#DateEdit {
   background: #ffffff;
   border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 7px;
+  padding: 4px 8px;
   color: #111111;
 }
 
@@ -221,12 +213,19 @@ QDateEdit#DateEdit:focus {
   outline: none;
 }
 
-/* placeholder */
+
 QLineEdit#HeaderSearch::placeholder {
   color: #9a9a9a;
 }
 
-/* --- ComboBox arrow (no divider, no rounding) --- */
+QLabel#TermineSearchResult {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+
 QComboBox#HeaderCombo {
   padding-right: 24px;
 }
@@ -242,31 +241,31 @@ QComboBox#HeaderCombo::down-arrow {
   height: 9px;
 }
 
-/* --- DateEdit arrow --- */
-/* --- DateEdit arrow (match HeaderCombo look) --- */
+
+
 QDateEdit#DateEdit {
-  padding-right: 24px;               /* space for the drop-down */
+  padding-right: 24px;               
 }
 
-/* remove the classic subcontrol divider + make it feel like one field */
+
 QDateEdit#DateEdit::drop-down {
   subcontrol-origin: padding;
   subcontrol-position: top right;
 
   width: 22px;
-  border: none;                      /* <- no vertical divider */
+  border: none;                      
   background: transparent;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
 }
 
-/* keep arrow crisp + centered (uses Qt default arrow if you don't provide an image) */
+
 QDateEdit#DateEdit::down-arrow {
   width: 9px;
   height: 9px;
 }
 
-/* make hover/focus behave as one single control (no separate button look) */
+
 QDateEdit#DateEdit:hover::drop-down {
   background: transparent;
 }
@@ -275,7 +274,7 @@ QDateEdit#DateEdit:focus::drop-down {
   background: transparent;
 }
 
-/* if spin-buttons ever show up (platform/style dependent), hide them */
+
 QDateEdit#DateEdit::up-button,
 QDateEdit#DateEdit::down-button {
   width: 0px;
@@ -291,7 +290,7 @@ QDateEdit#DateEdit::down-arrow {
 }
 
 
-/* --- Buttons (very quiet) --- */
+
 QPushButton {
   background: #f8f8f8;
   border: 1px solid #e3e3e3;
@@ -311,7 +310,7 @@ QPushButton:pressed {
   border: 1px solid #d0d0d0;
 }
 
-/* Nav buttons < > */
+
 QPushButton#NavButton {
   min-width: 32px;
   max-width: 32px;
@@ -327,7 +326,7 @@ QPushButton#NavButton:hover {
   border: 1px solid #d9d9d9;
 }
 
-/* Secondary button (Refresh) */
+
 QPushButton#SecondaryButton {
   background: #f8f8f8;
   border: 1px solid #e3e3e3;
@@ -338,7 +337,7 @@ QPushButton#SecondaryButton:hover {
   border: 1px solid #d9d9d9;
 }
 
-/* Primary button — minimal but clear */
+
 QPushButton#PrimaryButton {
   background: #111111;
   border: none;
@@ -358,9 +357,7 @@ QPushButton#PrimaryButton:pressed {
 
 
 
-/* =========================================================
-   Calendar popup (QDateEdit calendar)
-   ========================================================= */
+
 
 QCalendarWidget QWidget {
   background: #ffffff;
@@ -403,9 +400,7 @@ QCalendarWidget QAbstractItemView:disabled {
   color: #b9b9b9;
 }
 
-/* =========================================================
-   Tables (Day/Week planner)
-   ========================================================= */
+
 
 QTableWidget {
   background: #ffffff;
@@ -441,14 +436,14 @@ QHeaderView::section:first {
   border-right: 1px solid #e8e8e8;
 }
 
-/* Prevent "black selection" look */
+
 QTableWidget::item:selected {
   background: #e8f4ff;
   color: #000000;
   border: none;
 }
 
-/* Planner tables: no blue selection fill */
+
 QTableWidget#PlannerTable::item:selected,
 QTableWidget#PlannerTable::item:selected:!active {
   background: transparent;
@@ -460,9 +455,7 @@ QTableWidget#PlannerTable QAbstractItemView {
   selection-color: #111111;
 }
 
-/* =========================================================
-   Day events dialog
-   ========================================================= */
+
 QDialog#DayEventsDialog {
   background: #ffffff;
   border-radius: 12px;
@@ -485,7 +478,7 @@ QListWidget#DayEventsList {
   outline: none;
 }
 
-/* card-like row widgets */
+
 QFrame#DayEventCard {
   background: #ffffff;
   border: 1px solid #ececec;
@@ -521,15 +514,15 @@ QLabel#DayEventMeta {
   font-size: 12px;
 }
 
-/* remove default selection highlight from list to rely on card styling */
+
 QListWidget#DayEventsList::item:selected {
   background: transparent;
   color: #111111;
 }
 
-/* Dialog buttons already use SecondaryButton style above */
 
-/* Conflict cards (same style language as TerminCard) */
+
+
 QFrame#ConflictCard {
   background: #ffffff;
   border: 1px solid #ececec;
@@ -541,14 +534,14 @@ QFrame#ConflictCard:hover {
   border: 1px solid #d9d9d9;
   border-left: 3px solid #8a8a8a;
   background: #fafafa;
-  /* box-shadow removed: not supported in QSS */
+  
 }
 
 QFrame#ConflictCard:focus {
   border: 1px solid #b8b8b8;
   border-left: 3px solid #6a6a6a;
   background: #f5f5f5;
-  /* box-shadow removed: not supported in QSS */
+  
 }
 
 QFrame#ConflictCard[conflictKind="raum"] {
@@ -633,7 +626,7 @@ QFrame#ConflictCard[conflictKind="kapazitaet"]:hover {
 }
 
 
-/* ===== Scrollbars (global) ===== */
+
 
 QScrollBar:vertical {
   background: transparent;
@@ -663,7 +656,7 @@ QScrollBar::sub-page:vertical {
 }
 
 
-/* ----- Horizontal ----- */
+
 
 QScrollBar:horizontal {
   background: transparent;
@@ -691,9 +684,7 @@ QScrollBar::add-page:horizontal,
 QScrollBar::sub-page:horizontal {
   background: none;
 }
-/* ─────────────────────────────
-   Termin Dialog (clean light, coherent)
-   ───────────────────────────── */
+
 QDialog#AppDialog {
   background: #ffffff;
 }
@@ -835,9 +826,7 @@ QDialog#AppDialog QPushButton#SecondaryButton:pressed {
   background: #e8e8e8;
 }
 
-/* =========================================================
-   QTabWidget & Tabs (modern, clean)
-   ========================================================= */
+
 
 QTabWidget::pane {
   border: none;
@@ -871,9 +860,7 @@ QTabBar::tab:selected {
   padding-bottom: 8px;
 }
 
-/* =========================================================
-   Dock Widgets & Title Bars
-   ========================================================= */
+
 
 QDockWidget {
   color: #111111;
@@ -903,9 +890,7 @@ QDockWidget::float-button:hover {
   border-radius: 4px;
 }
 
-/* =========================================================
-   Spinbox & DateEdit tweaks
-   ========================================================= */
+
 
 QSpinBox,
 QDoubleSpinBox,
@@ -943,9 +928,7 @@ QTimeEdit::down-button {
   border: none;
 }
 
-/* =========================================================
-   Combobox improvements
-   ========================================================= */
+
 
 QComboBox {
   background: #ffffff;
@@ -990,9 +973,7 @@ QComboBox QAbstractItemView {
   border-bottom-right-radius: 6px;
 }
 
-/* =========================================================
-   Groupbox (minimal)
-   ========================================================= */
+
 
 QGroupBox {
   color: #111111;
@@ -1011,9 +992,7 @@ QGroupBox::title {
   font-size: 12px;
 }
 
-/* =========================================================
-   Calendar tweaks
-   ========================================================= */
+
 
 QCalendarWidget QWidget {
   background: #ffffff;
@@ -1111,3 +1090,4 @@ QLabel#ToastLabel {
   padding: 8px 12px;
   border-radius: 6px;
 }
+

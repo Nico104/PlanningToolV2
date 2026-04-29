@@ -4,7 +4,7 @@ from typing import List
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QScrollArea, QMenu, QFrame, QToolButton
+    QScrollArea, QMenu, QFrame, QToolButton, QLineEdit, QLabel
 )
 
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -33,6 +33,7 @@ class TermineDock(QDockWidget):
         self._all_termine: List[Termin] = []
         self._lvas: List[Lehrveranstaltung] = []
         self._raeume: List[Raum] = []
+        self._search_query = ""
 
         header = QWidget(self)
         header.setObjectName("HeaderBar")
@@ -42,8 +43,22 @@ class TermineDock(QDockWidget):
 
         #Header bar
         bar = QHBoxLayout()
+        bar.setContentsMargins(8, 6, 8, 2)
         bar.setSpacing(8)
         root.addLayout(bar)
+
+        self.search_input = QLineEdit(self)
+        self.search_input.setObjectName("HeaderSearch")
+        self.search_input.setPlaceholderText("Suche: Name, LVA, Raum, Dozent")
+        self.search_input.setClearButtonEnabled(True)
+        self.search_input.textChanged.connect(self._on_search_text_changed)
+        self.search_input.returnPressed.connect(self._jump_to_first_search_result)
+        bar.addWidget(self.search_input, 1)
+
+        self.result_label = QLabel("", self)
+        self.result_label.setObjectName("TermineSearchResult")
+        self.result_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        bar.addWidget(self.result_label)
 
         #Scroll area with cards
         self.scroll = QScrollArea(self)
@@ -79,6 +94,63 @@ class TermineDock(QDockWidget):
         self._init_group_states()
         self._build_cards()
 
+
+    def _normalize(self, text: str) -> str:
+        return str(text or "").strip().lower()
+
+    def _search_blob(self, termin: Termin) -> str:
+        lva = next((l for l in self._lvas if l.id == termin.lva_id), None)
+        raum = next((r for r in self._raeume if r.id == termin.raum_id), None)
+        dozent = ""
+        if lva and getattr(lva, "vortragende", None):
+            dozent = getattr(lva.vortragende, "name", "") or ""
+
+        parts = [
+            getattr(termin, "name", ""),
+            termin.id,
+            termin.lva_id,
+            termin.raum_id,
+            lva.name if lva else "",
+            raum.name if raum else "",
+            dozent,
+        ]
+        return self._normalize(" ".join(parts))
+
+    def _filtered_terms_for_search(self) -> List[Termin]:
+        terms = self._all_termine
+        query = self._normalize(self._search_query)
+        if not query:
+            return terms
+
+        filtered: List[Termin] = []
+        for t in terms:
+            blob = self._search_blob(t)
+            if query in blob:
+                filtered.append(t)
+        return filtered
+
+    def _on_search_text_changed(self, text: str) -> None:
+        self._search_query = text
+        self._build_cards()
+
+    def set_search_enabled(self, enabled: bool) -> None:
+        self.search_input.setVisible(enabled)
+        self.result_label.setVisible(enabled)
+        if not enabled:
+            self.search_input.clear()
+            self._search_query = ""
+            self._build_cards()
+
+    def _jump_to_first_search_result(self) -> None:
+        terms = self._filtered_terms_for_search()
+        if not terms:
+            return
+
+        assigned = [t for t in terms if t.datum and t.start_zeit]
+        if not assigned:
+            return
+        self.termin_jump_requested.emit(assigned[0].id)
+
     def _build_cards(self) -> None:
         # clear old cards (leave last stretch)
         while self.list_layout.count() > 1:
@@ -88,7 +160,8 @@ class TermineDock(QDockWidget):
                 w.deleteLater()
 
         # MainWindow supplies already-filtered termine to set_rows()
-        terms = self._all_termine
+        terms = self._filtered_terms_for_search()
+        self.result_label.setText(f"{len(terms)} Treffer" if self._search_query.strip() else "")
 
         def _sort_key(t: Termin):
             unassigned = (t.datum is None) or (t.start_zeit is None)

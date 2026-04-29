@@ -21,6 +21,17 @@ class CrudHandlers:
         if self.undo_service and self.ds:
             self.undo_service.record_snapshot(self.ds)
 
+    def _show_toast(self, message: str, duration_ms: int = 2500) -> None:
+        target = self.parent or self.mw
+        if target is None:
+            return
+        Toast(target, message, duration_ms=duration_ms).show()
+
+    @staticmethod
+    def _count_message(count: int, singular: str, plural: str, action: str) -> str:
+        label = singular if count == 1 else plural
+        return f"{count} {label} {action}."
+
 
     def add_fachrichtung(self) -> None:
         fachrichtungen = self.ds.load_fachrichtungen()
@@ -41,6 +52,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, "_refresh_fachrichtungen"):
             self.parent._refresh_fachrichtungen()
+        self._show_toast("Fachrichtung gespeichert.")
 
     def edit_fachrichtung(self) -> None:
         fachrichtungen = self.ds.load_fachrichtungen()
@@ -73,6 +85,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, "_refresh_fachrichtungen"):
             self.parent._refresh_fachrichtungen()
+        self._show_toast("Fachrichtung gespeichert.")
 
     def del_fachrichtung(self) -> None:
         fachrichtungen = self.ds.load_fachrichtungen()
@@ -97,6 +110,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, "_refresh_fachrichtungen"):
             self.parent._refresh_fachrichtungen()
+        self._show_toast("Fachrichtung gelöscht.")
 
     # ------------------------------------------------------------------ #
     # Geplante Semester                                                    #
@@ -129,6 +143,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, '_refresh_geplante_semester'):
             self.parent._refresh_geplante_semester()
+        self._show_toast("Geplantes Semester gespeichert.")
 
     def edit_geplante_semester(self):
         from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
@@ -157,6 +172,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, '_refresh_geplante_semester'):
             self.parent._refresh_geplante_semester()
+        self._show_toast("Geplantes Semester gespeichert.")
 
     def del_geplante_semester(self):
         semester_list = self.ds.load_geplante_semester()
@@ -178,6 +194,7 @@ class CrudHandlers:
             self.planner.refresh()
         if hasattr(self.parent, '_refresh_geplante_semester'):
             self.parent._refresh_geplante_semester()
+        self._show_toast("Geplantes Semester gelöscht.")
 
     def __init__(
         self,
@@ -235,6 +252,7 @@ class CrudHandlers:
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
+        self._show_toast("Termin gespeichert.")
         return True
 
     def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
@@ -254,6 +272,7 @@ class CrudHandlers:
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
+        self._show_toast("Freier Tag gespeichert.")
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
         selected_id = self._selected_freie_tage_id()
@@ -278,6 +297,7 @@ class CrudHandlers:
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
             self.parent._refresh_semester()
+        self._show_toast("Freier Tag gespeichert.")
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
         selected_id = self._selected_freie_tage_id()
@@ -296,6 +316,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_freie_tage(freie)
         self.planner.refresh()
+        self._show_toast("Freier Tag gelöscht.")
 
     def add_termin(self, default_qdate=None, auto_id: bool = False) -> bool:
         dlg = TerminDialog(
@@ -340,6 +361,10 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
+        if isinstance(dlg.result, list):
+            self._show_toast(self._count_message(len(dlg.result), "Termin", "Termine", "gespeichert"))
+        else:
+            self._show_toast("Termin gespeichert.")
         return True
 
     def edit_termin(self) -> None:
@@ -355,6 +380,7 @@ class CrudHandlers:
         termine = self.ds.load_termine()
         cur = next((t for t in termine if t.id == tid), None)
         # If part of a series, offer options
+        deleted_count = 1
         if cur and getattr(cur, "serien_id", ""):
             msg = QMessageBox(self.parent)
             msg.setWindowTitle("Löschen")
@@ -373,8 +399,6 @@ class CrudHandlers:
                 original_count = len(termine)
                 termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
                 deleted_count = original_count - len(termine)
-                if deleted_count > 0:
-                    Toast(self.parent, f"{deleted_count} Termine gelöscht.", duration_ms=2500).show()
         else:
             dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
             if dlg.exec() != QDialog.Accepted:
@@ -384,12 +408,14 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
+        self._show_toast(self._count_message(deleted_count, "Termin", "Termine", "gelöscht"))
 
     def del_termin_by_id(self, tid: str) -> bool:
         if not tid:
             return False
         termine = self.ds.load_termine()
         cur = next((t for t in termine if t.id == tid), None)
+        deleted_count = 1
         if cur and getattr(cur, "serien_id", ""):
             msg = QMessageBox(self.parent)
             msg.setWindowTitle("Löschen")
@@ -408,8 +434,6 @@ class CrudHandlers:
                 original_count = len(termine)
                 termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
                 deleted_count = original_count - len(termine)
-                if deleted_count > 0:
-                    Toast(self.parent, f"{deleted_count} Termine gelöscht.", duration_ms=2500).show()
         else:
             dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
             if dlg.exec() != QDialog.Accepted:
@@ -419,6 +443,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
+        self._show_toast(self._count_message(deleted_count, "Termin", "Termine", "gelöscht"))
         return True
 
     def _selected_termin_id(self) -> Optional[str]:
@@ -477,6 +502,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
+        self._show_toast("Termin verschoben.")
         return True
 
     def unassign_termin(self, termin_id: str) -> bool:
@@ -490,6 +516,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
+        self._show_toast("Termin-Zuweisung entfernt.")
         return True
 
     def add_lva(self) -> None:
@@ -511,6 +538,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
         self.planner.refresh()
+        self._show_toast("LVA gespeichert.")
 
     def edit_lva(self) -> None:
         cid = self.lva_dock.selected_id()
@@ -545,6 +573,7 @@ class CrudHandlers:
             self.ds.save_termine(terms)
 
         self.planner.refresh()
+        self._show_toast("LVA gespeichert.")
 
     def del_lva(self) -> None:
         cid = self.lva_dock.selected_id()
@@ -559,11 +588,17 @@ class CrudHandlers:
             return
 
         lvas = [l for l in self.ds.load_lvas() if l.id != cid]
-        terms = [t for t in self.ds.load_termine() if t.lva_id != cid]
+        all_terms = self.ds.load_termine()
+        terms = [t for t in all_terms if t.lva_id != cid]
+        deleted_count = len(all_terms) - len(terms)
         self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
         self.ds.save_termine(terms)
         self.planner.refresh()
+        message = "LVA gelöscht."
+        if deleted_count > 0:
+            message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
+        self._show_toast(message)
 
     def add_room(self) -> None:
         dlg = RaumDialog(self.parent, None)
@@ -579,6 +614,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
         self.planner.refresh()
+        self._show_toast("Raum gespeichert.")
 
     def edit_room(self) -> None:
         rid = self.room_dock.selected_id()
@@ -608,6 +644,7 @@ class CrudHandlers:
             self.ds.save_termine(terms)
 
         self.planner.refresh()
+        self._show_toast("Raum gespeichert.")
 
     def del_room(self) -> None:
         rid = self.room_dock.selected_id()
@@ -622,11 +659,17 @@ class CrudHandlers:
             return
 
         rooms = [r for r in self.ds.load_raeume() if r.id != rid]
-        terms = [t for t in self.ds.load_termine() if t.raum_id != rid]
+        all_terms = self.ds.load_termine()
+        terms = [t for t in all_terms if t.raum_id != rid]
+        deleted_count = len(all_terms) - len(terms)
         self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
         self.ds.save_termine(terms)
         self.planner.refresh()
+        message = "Raum gelöscht."
+        if deleted_count > 0:
+            message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
+        self._show_toast(message)
 
     def add_semester(self) -> None:
         dlg = SemesterDialog(self.parent, None)
@@ -642,6 +685,7 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_semester(sems)
         self.planner.refresh()
+        self._show_toast("Semester gespeichert.")
 
     def edit_semester(self) -> None:
         sid = self.sem_dock.selected_id()
@@ -671,6 +715,7 @@ class CrudHandlers:
             self.ds.save_termine(terms)
 
         self.planner.refresh()
+        self._show_toast("Semester gespeichert.")
 
     def del_semester(self) -> None:
         sid = self.sem_dock.selected_id()
@@ -685,8 +730,14 @@ class CrudHandlers:
             return
 
         sems = [s for s in self.ds.load_semester() if s.id != sid]
-        terms = [t for t in self.ds.load_termine() if t.semester_id != sid]
+        all_terms = self.ds.load_termine()
+        terms = [t for t in all_terms if t.semester_id != sid]
+        deleted_count = len(all_terms) - len(terms)
         self._record_undo_snapshot()
         self.ds.save_semester(sems)
         self.ds.save_termine(terms)
         self.planner.refresh()
+        message = "Semester gelöscht."
+        if deleted_count > 0:
+            message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
+        self._show_toast(message)

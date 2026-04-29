@@ -144,6 +144,9 @@ class MainWindow(QMainWindow):
         self._wire_signals()
         install_main_window_shortcuts(self)
 
+        startup_settings = self.ds.load_settings()
+        self.termine_dock.set_search_enabled(bool(startup_settings.get("show_termine_search", True)))
+
         self.refresh_everything()
         self.update_undo_redo_actions()
         self.layout_mgr.init_default()
@@ -188,7 +191,8 @@ class MainWindow(QMainWindow):
                 subprocess.Popen([python] + sys.argv)
                 sys.exit(0)
         else:
-            Toast(self, "Gespeichert.", duration_ms=2500).show()
+            Toast(self, "Einstellungen gespeichert.", duration_ms=2500).show()
+        self.termine_dock.set_search_enabled(bool(s.get("show_termine_search", True)))
         self.refresh_everything()
 
     def _build_menus(self) -> None:
@@ -350,7 +354,8 @@ class MainWindow(QMainWindow):
             return
 
         dlg = ImportDialog(self, self.data_dir, normalized)
-        dlg.exec()
+        if dlg.exec() != QDialog.Accepted:
+            return
         Toast(self, "Import abgeschlossen.", duration_ms=3000).show()
         self.refresh_everything()
 
@@ -457,7 +462,7 @@ class MainWindow(QMainWindow):
         self.undo_service.restore(self.ds, snapshot)
         self.refresh_everything()
         self.update_undo_redo_actions()
-        Toast(self, "Rückgängig", duration_ms=1500).show()
+        Toast(self, "Rückgängig ausgeführt.", duration_ms=2500).show()
 
     def perform_redo(self) -> None:
         snapshot = self.undo_service.redo(self.ds)
@@ -466,7 +471,7 @@ class MainWindow(QMainWindow):
         self.undo_service.restore(self.ds, snapshot)
         self.refresh_everything()
         self.update_undo_redo_actions()
-        Toast(self, "Wiederholen", duration_ms=1500).show()
+        Toast(self, "Wiederholen ausgeführt.", duration_ms=2500).show()
 
     def refresh_conflicts(self) -> None:
         self.conflicts_dock.initialize_detector(
