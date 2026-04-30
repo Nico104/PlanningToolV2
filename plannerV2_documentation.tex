@@ -1,0 +1,214 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{setspace}
+
+\geometry{a4paper, margin=2.5cm}
+\onehalfspacing
+
+\title{Konzeption und Implementierung eines Python-basierten Planungstools zur Unterstützung der Lehrveranstaltungsplanung}
+\author{Nicolas}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Einleitung}
+
+\subsection{Problemstellung}
+
+Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren eingeplant. Dazu müssen bei den Entscheidungen, wann welcher Termin eingeplant wird, mehrere verscheidene Informationen gleichzeitig berücksichtigt werden:
+
+\begin{itemize}
+\item zeitliche Überschneidungen von Lehrveranstaltungen, Lehrpersonen, Räumen und Gruppen
+\item Raumkapazitäten
+\item freie Tage/Feiertage
+\end{itemize}
+
+Diese Planung wird durch die hohe Menge an individuellen Termine eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über eine Zusammensetzung an Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
+Durch die manuelle Planung können auch weitere Probleme auftreten wie doppelte oder uneinheitliche Daten, Änderungen müssen an mehreren Stellen angepasst werden, schwer erkennbare Konflikte und ein generell schlechter Überblick über die einzelnen Termine. Beispiele für mögliche Konflikte könnten sein: doppelt belegte Räume, Lehrperson zeitgleich eingeplant oder ein Termin an einem Feiertag angesetzt.
+
+Auf Grund dieser Probleme und dadurch dass dies eine jährlich wiederkehrende Aufgabe ist besteht ein Bedarf an einer zentralen Softwarelösung. Diese Software soll die Planung der Termine übersichtlicher, strukturierter und nachvollziehbarer machen.
+Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstool für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software am Institut.
+
+\subsection{Zielsetzung}
+
+Ziel dieser Bachlorarbeit ist die Konzeption, Implementierung und Bewertung eines Planungstools. Dieses Tool soll den jährlichen Planungprozess der LVA-Termine digital unterstützen und damit effizienter und einfacher gestalten.
+Zentrale Ziele dieser Software sind:
+
+\begin{itemize}
+\item strukturierte und zentrale Verwaltung von Planungsdaten
+\item übersichtliche Darstellung von Terminen
+\item einfaches Verschieben mittels Drag-and-Drop und Zuweisen von Terminen
+\item bessere Erkennung von Planungskonflikten
+\item Filterung nach relevanten Kriterien
+\item Import und Export von Planungsdaten
+\end{itemize}
+
+Die Umsetzung soll in Form einer mit Python entwickelten Desktop-Anwendung erfolgen. Die Entwicklung einer einfachen, intuitiven grafischen Benutzeroberfläche ist dabei besonders wichtig, da die Bedienung dieses Tools auch ohme Programmierkentnisse möglich sein soll.
+
+Ziel dieser Anwendung ist nicht die gesamte Planung zu übernehmen, sondern es soll als Unterstützung für den User dienen, der die Planung durführt. Es soll besonders auf benutzerfreundlichkeit, nachvollziehbarkeit, erweiterbarkeit und praktische Nutzbarkeit geachtet werden.
+
+
+\subsection{Forschungsfrage}
+
+Aus der beschriebenen Problemstellung und Zielsetzung der Arbeit und dem Bedarf nach einer digitalen Unterstützung für die LVA-Jahresplanung ergibt sich die Frage, wie man ein Werkzeug entwickelt, das Planungsdaten strukturiert verwaltet, Termine übersichtlich darstellt und mögliche Konflikte leichter erkennbar macht.
+
+Die zentrale Forschungsfrage dieser Arbeit lautet daher:
+
+\begin{quote}
+Wie kann ein intuitives Python-basiertes Desktop-Planungstool entwickelt werden, um die jährliche Lehrveranstaltungsplanung an einem Institut übersichtlicher, strukturierter, effizienter und weniger fehleranfällig zu gestalten?
+\end{quote}
+
+Um diese Frage zu beantworten werden auch zusätzliche Teilfragen betrachtet:
+
+\begin{itemize}
+    \item Welche Anforderungen ergeben sich aus dem Planungsprozess?
+    \item Wie können Termine, Lehrveranstaltungen, Räume und weitere Daten sinnvoll strukturiert und verwaltet werden?
+    \item Wie kann eine Benutzeroberfläche gestalten, sodass Termine übersichtlich dargestellt, gefiltert und mittels Drag-and-Drop verschoben werden können?
+    \item Wie können typische Planungskonflikte erkannt und für den User sichtbar schnell gemacht werden?
+    \item Inwiefern erfüllt das entwickelte Tool die definierten Anforderungen?
+\end{itemize}
+
+\subsection{Aufbau der Arbeit}
+
+Die Arbeit beginnt mit der Beschreibung der Probleme, die durch die jährliche Planung der Lehrveranstaltungen entstehen. Danach werden die Ziele der Arbeit und die Forschungsfrage vorgestellt. Dadurch wird deutlich gemacht, warum diese Anwendung entwickelt wurde und welche Punkte in der Arbeit besonders wichtig sind.
+
+...
+
+\newpage
+
+\section{Grundlagen und Kontext}
+
+\subsection{Lehrveranstaltungsplanung an einem Institut}
+
+Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstaltungen eines Instituts in einen passenden zeitlichen und organisatorischen Rahmen zu bringen. Dazu müssen Veranstaltungen wie Vorlesungen, Übungen, Labore oder Prüfungen konkreten Terminen, Räumen und teilweise auch bestimmten Gruppen zugeordnet werden. Die Planung ist daher mehr als nur das Eintragen von Terminen in einen Kalender.
+
+Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden.
+
+Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören zum Beispiel die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson, der Raum oder die betroffene Studierendengruppe. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
+
+Für ein Institut ist es wichtig, dass aus diesen Informationen ein übersichtlicher und nachvollziehbarer Plan entsteht. Dieser Plan soll sowohl für die Verwaltung als auch für Lehrende und Studierende verständlich sein.
+
+In dieser Arbeit wird die Lehrveranstaltungsplanung deshalb als ein Prozess verstanden, bei dem verschiedene Planungsdaten gesammelt, miteinander verknüpft und für die weitere Bearbeitung nutzbar gemacht werden. Diese Sichtweise bildet die Grundlage für die spätere Entwicklung des Planungstools.
+
+\subsection{Herausforderungen manueller Planungsprozesse}
+
+Bei der bisherigen Planung werden viele Informationen in Tabellen gesammelt. Das ist am Anfang praktisch, weil Tabellen schnell erstellt und angepasst werden können. Wenn jedoch viele Termine eingeplant werden müssen, wird es mit der Zeit schwer, den Überblick zu behalten. Besonders bei der Jahresplanung kommen viele einzelne Termine zusammen, die sich gegenseitig beeinflussen können.
+
+Ein Problem ist, dass Änderungen nicht immer nur eine Stelle betreffen. Wenn zum Beispiel ein Termin verschoben wird, muss geprüft werden, ob der neue Zeitpunkt mit anderen Terminen zusammenpasst. Außerdem muss kontrolliert werden, ob der Raum frei ist und ob die betroffene Lehrperson zu diesem Zeitpunkt nicht bereits anders eingeplant ist. Diese Kontrolle muss bei einer manuellen Planung selbst gemacht werden.
+
+Dadurch wird die manuelle Planung mit zunehmender Anzahl an Terminen immer aufwendiger. Tabellen bleiben zwar flexibel, bieten aber nur begrenzte Unterstützung dabei, Termine übersichtlich darzustellen und mögliche Konflikte frühzeitig zu erkennen.
+
+\subsection{Softwaregestützte Planung}
+
+Eine softwaregestützte Planung kann den Planungsprozess vor allem dabei unterstützen, viele einzelne Informationen besser zusammenzuführen. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung, einem Raum oder einer Lehrperson. Dadurch wird die Planung nicht nur gesammelt, sondern auch besser nutzbar gemacht.
+
+Ein Vorteil ist, dass die Daten an einer zentralen Stelle verwaltet werden können. Wenn ein Termin geändert wird, muss diese Änderung nicht in mehreren Tabellen oder Dateien nachgetragen werden. Die angepassten Daten können direkt in der Anwendung angezeigt und weiterverwendet werden.
+
+Auch die Darstellung spielt eine wichtige Rolle. Eine Kalenderansicht ist für die Planung oft verständlicher als eine reine Tabelle, weil Termine zeitlich eingeordnet werden können. So sieht man schneller, an welchen Tagen bereits viele Termine liegen oder wo noch freie Zeiträume vorhanden sind. Durch Filter kann zusätzlich gezielt nach bestimmten Lehrveranstaltungen, Räumen, Lehrpersonen, etc. gesucht werden.
+
+Besonders hilfreich ist außerdem eine direkte Bearbeitung der Termine über die Benutzeroberfläche. Wenn Termine zum Beispiel per Drag-and-Drop verschoben oder zugewiesen werden, wird die Planung übersichtlich und schnell angepasst. Statt Werte manuell in Tabellenzellen zu ändern, kann der Nutzer einen Termin direkt an die passende Stelle ziehen. Dadurch wird der Planungsprozess näher an der tatsächlichen Kalenderansicht durchgeführt.
+
+Eine Software kann außerdem dabei helfen, mögliche Konflikte sichtbarer zu machen. Wenn ein Raum bereits belegt ist oder eine Lehrperson zur gleichen Zeit in einem anderen Termin vorkommt, kann das Programm solche Fälle erkennen und anzeigen. Die Entscheidung, wie mit einem Konflikt umgegangen wird, bleibt weiterhin beim Nutzer. Die Software übernimmt also nicht die gesamte Planung, sondern unterstützt dabei, Fehler schneller zu finden und Änderungen übersichtlicher umzusetzen.
+
+
+\subsection{Eingesetzte Technologien}
+
+Für die Umsetzung des Planungstools wurden mehrere Technologien verwendet. Die Anwendung wurde mit Python entwickelt und als Desktop-Programm umgesetzt. Für die grafische Oberfläche kommt PySide6 zum Einsatz, da damit die verschiedenen Fenster, Tabellen und Bedienbereiche der Anwendung erstellt werden können.
+
+Die Daten des Planungstools werden in JSON-Dateien gespeichert. Dadurch können die einzelnen Planungsdaten strukturiert abgelegt und beim Start der Anwendung wieder geladen werden. Außerdem eignet sich dieses Format gut für den Import und Export von Projektdaten.
+
+Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kurz beschrieben.
+
+\subsubsection{Python}
+
+\subsubsection{PySide6 und Qt}
+
+\subsubsection{JSON als Datenformat}
+
+\newpage
+
+\section{Anforderungsanalyse}
+
+\subsection{Ausgangssituation und Bedarf}
+
+\subsection{Funktionale Anforderungen}
+
+\subsection{Nicht-funktionale Anforderungen}
+
+\subsection{Abgrenzung der Software}
+
+\newpage
+
+\section{Konzeption des Planungstools}
+
+\subsection{Architektur der Anwendung}
+
+\subsection{Datenmodell}
+
+\subsection{Benutzeroberfläche und Planungsworkflow}
+
+\subsection{Konzept der Filterung}
+
+\subsection{Konzept der Konflikterkennung}
+
+\newpage
+
+\section{Implementierung}
+
+\subsection{Entwicklungsumgebung}
+
+\subsection{Kalenderansichten}
+
+\subsection{Termin- und Stammdatenverwaltung}
+
+\subsection{Drag-and-Drop-Funktionalität}
+
+\subsection{Filterlogik}
+
+\subsection{Konflikterkennung}
+
+\subsection{Import, Export und Speicherung}
+
+\newpage
+
+\section{Test und Evaluation}
+
+\subsection{Teststrategie}
+
+\subsection{Funktionale Tests}
+
+\subsection{Tests anhand typischer Planungsszenarien}
+
+\subsection{Bewertung der Ergebnisse}
+
+\newpage
+
+\section{Diskussion}
+
+\subsection{Zielerreichung}
+
+\subsection{Stärken der entwickelten Lösung}
+
+\subsection{Grenzen der Software}
+
+\subsection{Erweiterungsmöglichkeiten}
+
+\newpage
+
+\section{Fazit und Ausblick}
+
+\newpage
+
+\section{Literaturverzeichnis}
+
+\end{document}
