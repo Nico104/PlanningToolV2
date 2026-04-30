@@ -22,7 +22,15 @@ def has_preview_conflict(
     conflict_settings_path: Optional[str] = None,
     data_dir: str | Path | None = None,
 ) -> bool:
-    
+    """
+    Simulate dropping a Termin at a target position and check whether it causes any conflicts.
+
+    This is called on every dragMoveEvent to give real-time conflict feedback during drag.
+    Instead of modifying the actual data, it builds a temporary list where the dragged
+    Termin is replaced with a copy at the proposed new date/time/room, then runs the full
+    ConflictDetector on that simulated list. Only severity='conflict' issues involving the
+    dragged Termin itself are considered (warnings are ignored).
+    """
     if not target_date:
         return False
 
@@ -85,6 +93,15 @@ def save_conflicts(conflicts, path=None):
 
 
 class ConflictDetector:
+    """
+    Detects scheduling conflicts and warnings across a list of Termine.
+
+    Rules are loaded from konflikte.json and can be individually enabled/disabled.
+    Each rule maps to a dedicated detect_* method that returns ConflictIssue objects.
+    Free-day data (Feiertage, Vorlesungsfreie Tage) is read from freie_tage.json and
+    pre-processed into an in-memory date map for efficient per-Termin lookups.
+    """
+
     def __init__(self, 
                  lvas: List[Lehrveranstaltung],
                  raeume: List[Raum],
@@ -106,6 +123,12 @@ class ConflictDetector:
         return termin.datum is not None and termin.start_zeit is not None
     
     def times_overlap(self, t1: Termin, t2: Termin) -> bool:
+        """
+        Return True if the two Termine overlap in time using half-open interval logic.
+
+        Two intervals [s1, e1) and [s2, e2) overlap iff s1 < e2 AND s2 < e1.
+        A Termin without a start time or with zero/negative duration cannot overlap.
+        """
         if not t1.start_zeit or not t2.start_zeit:
             return False
         if t1.duration <= 0 or t2.duration <= 0:
@@ -120,6 +143,17 @@ class ConflictDetector:
         return (t1.start_zeit < end2) and (t2.start_zeit < end1)
 
     def _render_message(self, settings=None, values: Optional[Dict[str, object]] = None) -> str:
+        """
+        Build a conflict message from a settings entry.
+
+        The konflikte.json items may contain:
+        - 'name': short label shown as the message prefix
+        - 'message_template': a str.format-style template with named placeholders
+          (e.g. "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})")
+        - 'description': fallback text when no template is present
+
+        Defaults to the raw template (maybe not the best solution), so a misconfigured konflikte.json never crashes conflict detection
+        """
         if not settings:
             return ""
 
@@ -573,6 +607,20 @@ class ConflictDetector:
         return warnings
 
     def _load_free_days_map(self, conflict_settings_path: Optional[str]) -> Dict[date, set[str]]:
+        """
+        Read freie_tage.json and build a mapping of date -> set of day-type strings.
+
+        Each entry in the JSON is either a single date ('datum') or a date range
+        ('von_datum' / 'bis_datum'). Ranges are expanded day-by-day into individual
+        entries. A single date can carry multiple types (e.g. a date that is both a
+        Feiertag and Vorlesungsfrei), stored as a set so all types are preserved.
+
+        Supported types (from the 'typ' field, case-insensitive):
+        - 'feiertag'       → public holiday; triggers holiday_conflict
+        - 'vorlesungsfrei' → lecture-free period; triggers lecture_free_conflict
+
+        Unknown types are skipped
+        """
         if self.data_dir:
             free_path = self.data_dir / "freie_tage.json"
         elif conflict_settings_path:
@@ -598,6 +646,7 @@ class ConflictDetector:
             else:
                 continue
 
+            # Single-date entry takes priority over range fields (for malformed single entry lines)
             single_raw = str(item.get("datum", "")).strip()
             if single_raw:
                 d = self._parse_iso_date(single_raw)
@@ -605,6 +654,7 @@ class ConflictDetector:
                     out.setdefault(d, set()).add(day_type)
                 continue
 
+            # Range entry: expand every day between von_datum and bis_datum (inclusive)
             start_raw = str(item.get("von_datum", "")).strip()
             end_raw = str(item.get("bis_datum", "")).strip()
             d0 = self._parse_iso_date(start_raw)

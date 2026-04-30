@@ -3,6 +3,8 @@ from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout
 
 
 class Toast(QWidget):
+    """Overlay notification shown briefly above the main window"""
+
     def __init__(self, parent, text: str, duration_ms: int = 3000):
         super().__init__(parent)
         self.setObjectName("Toast")

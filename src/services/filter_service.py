@@ -13,32 +13,42 @@ def filter_termine(
     lva_id: Optional[str] = None,
     typ: Optional[str] = None,
     dozent: Optional[str] = None,
-    datum: Optional[str] = None,  # YYYY-MM-DD
-    lva_dict: Optional[dict] = None,  # Mapping lva_id -> LVA-Objekt
+    datum: Optional[str] = None,
+    lva_dict: Optional[dict] = None,
 ) -> List[Termin]:
+    """
+    Filter a list of Termine by any combination of criteria and return them sorted.
+
+    Filters are applied sequentially (each narrows the previous result).
+    All filter parameters are optional; omitting one means 'no restriction'.
+
+    Semester filter (semester_id):
+        Matches only Termine whose own semester_id field matches the given value (e.g., "testsem", "ws24").
+        This is for filtering by academic term/year.
+
+    Geplante-Semester filter (geplante_semester):
+        Matches only Termine whose associated LVA (course) lists the given value (e.g., "sem6", "qs4")
+        in its geplante_semester attribute.
+        Requires lva_dict; raises ValueError if it is missing.
+
+    Dozent filter (dozent):
+        Resolves the lecturer name via lva_dict (Termin -> LVA -> vortragende.name).
+        Requires lva_dict; raises ValueError if it is missing.
+
+    Sort order:
+        Unassigned Termine (datum=None) are placed first so they are always visible
+        at the top of the Termine dock regardless of date filters. Assigned Termine
+        are sorted by (date, start_time, id).
+    """
     out = termine
 
     if semester_id:
-        # Filter termine that belong to the selected semester.
-        # Accept a termin if its `semester_id` matches OR the associated LVA
-        # lists the semester in its `geplante_semester`.
-        if lva_dict is not None:
-            def _lva_has_semester(lva_id: str) -> bool:
-                lva = lva_dict.get(lva_id)
-                if not lva:
-                    return False
-                return semester_id in (getattr(lva, 'geplante_semester', []) or [])
-
-            out = [
-                t for t in out
-                if getattr(t, 'semester_id', None) == semester_id or _lva_has_semester(t.lva_id)
-            ]
-        else:
-            out = [t for t in out if getattr(t, 'semester_id', None) == semester_id]
+        # Only match Termine whose semester_id matches the filter
+        out = [t for t in out if getattr(t, 'semester_id', None) == semester_id]
     if geplante_semester:
+        # Only match Termine whose LVA's geplante_semester contains the filter value (e.g., "sem6", "qs4", ...)
         if lva_dict is None:
             raise ValueError("Für den geplante_semester-Filter muss lva_dict (lva_id → LVA-Objekt) übergeben werden.")
-
         out = [
             t for t in out
             if geplante_semester in (getattr(lva_dict.get(t.lva_id), 'geplante_semester', []) or [])
@@ -56,7 +66,7 @@ def filter_termine(
     if datum:
         out = [t for t in out if t.datum is not None and t.datum.isoformat() == datum]
 
-    # return sorted(out, key=lambda t: (t.datum, t.zeit.von, t.zeit.bis))
+    
     def _sort_key(t: Termin):
         # unassigned first
         unassigned = (t.datum is None)
@@ -64,7 +74,7 @@ def filter_termine(
         d = t.datum or _date.min
         von = (t.start_zeit if t.start_zeit else _time.min)
 
-        # (False, ...) comes before (True, ...) so invert:
+        # (False, ...) comes before (True, ...) so invert: (not)
         return (not unassigned, d, von, t.id)
 
     return sorted(out, key=_sort_key)

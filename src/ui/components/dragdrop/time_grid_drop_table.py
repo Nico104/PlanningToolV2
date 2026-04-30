@@ -6,7 +6,25 @@ import math
 
 
 class TimeGridDropTable(QTableWidget):
-    """Drop-enabled time grid with snap preview and auto-scroll for dragging `TerminCard`s"""
+    """
+    A QTableWidget subclass that acts as a drop target for TerminCard drags.
+
+    During a drag, it snaps the hover position to the grid and paints a live
+    preview block (filled with the Termin's type color, or red on conflict).
+    All context-specific knowledge (duration, color, text, conflict checking)
+    is injected via provider callbacks so this widget stays generic.
+
+    Key design decisions:
+    - MIME type 'application/termin-id' carries just the Termin ID as UTF-8 bytes.
+      The actual Termin object is never serialized into the drag; it is looked up
+      from the shared state via the injected providers.
+    - Span calculation: duration_minutes / slot_minutes (ceiling) = number of rows
+      the preview block should cover. This mirrors how TerminCards are placed.
+    - Conflict checking is done on every dragMoveEvent via a callback that runs
+      the full ConflictDetector on a simulated state (see has_preview_conflict).
+    - Auto-scroll: a 25 ms QTimer scrolls the viewport when the cursor is within
+      20 px of any edge, enabling drags to rows that are not currently visible.
+    """
 
     terminDropped = Signal(str, int, int)
     MIME = "application/termin-id"
@@ -112,8 +130,14 @@ class TimeGridDropTable(QTableWidget):
 
     # Snap hover helpers
     
-    # Update selection range and repaint hover preview
+    
     def _set_hover(self, r: int, c: int, span: int = 1):
+        """
+        Update the hover target cell and trigger a repaint of the preview.
+
+        When a valid cell is provided, the conflict checker callback is invoked
+        so the preview color can reflect whether dropping here would cause a conflict.
+        """
         if r == self._hover_row and c == self._hover_col and span == self._hover_span:
             return
         self._hover_row, self._hover_col, self._hover_span = r, c, span
@@ -137,8 +161,16 @@ class TimeGridDropTable(QTableWidget):
         # trigger repaint
         self.viewport().update()
 
-    # Scroll when dragging near edges of the viewport
+    
     def _auto_scroll_tick(self):
+        """
+        Called by the auto-scroll timer during a drag.
+
+        If the cursor is within 20 px of the top/bottom edge, the vertical scrollbar
+        is nudged by 2 pixels per tick. If it is near the left/right edge, the
+        horizontal scrollbar is nudged by 6 pixels per tick (wider columns need faster
+        scroll to feel responsive)
+        """
         if self._last_drag_pos is None:
             return
         
@@ -178,8 +210,19 @@ class TimeGridDropTable(QTableWidget):
     def set_conflict_checker(self, checker) -> None:
         self._conflict_checker = checker
 
-    # Drop preview
+    
     def paintEvent(self, e):
+        """
+        Paint the drag-drop preview block on top of the table cells.
+
+        The preview is drawn after the normal table paint so it always appears on
+        top of cell backgrounds and existing TerminCards. It consists of:
+        - A filled rectangle spanning all rows in _hover_span, colored with the
+          Termin's type color (from _color_provider) or solid red on conflict.
+        - An text label from _text_provider, rendered in white on conflict
+          or dark on normal, with word-wrap inside the block.
+        - A 2 px black border around the block.
+        """
         super().paintEvent(e)
 
         if self._hover_row < 0 or self._hover_col < 0:
@@ -236,29 +279,23 @@ class TimeGridDropTable(QTableWidget):
         p.drawRect(rect.adjusted(1, 1, -1, -1))
         p.end()
 
-    # Start a drag using the termin_id from the widget in the current cell
     def startDrag(self, supportedActions):
+        """
+        Initiate a drag from a cell that contains a TerminCard.
+
+        The cell widget is expected to expose `termin_id` directly (single TerminCard).
+        The Termin ID is encoded as UTF-8 bytes and stored under the custom MIME type so the drop
+        target can look up the full Termin from the shared application state.
+        """
         current_row = self.currentRow()
         current_col = self.currentColumn()
         
         if current_row < 0 or current_col < 0:
             return
 
-        # Check if this is a cell widget
         cell_widget = self.cellWidget(current_row, current_col)
-        if cell_widget:
-            #space behing the termin widget
-            if hasattr(cell_widget, 'get_termin_ids'):
-                termin_ids = cell_widget.get_termin_ids()
-                if termin_ids:
-                    termin_id = termin_ids[0]
-                else:
-                    return
-            elif hasattr(cell_widget, 'termin_id'):
-                # If it's a TerminCard directly, always the case
-                termin_id = cell_widget.termin_id
-            else:
-                return
+        if cell_widget and hasattr(cell_widget, 'termin_id'):
+            termin_id = cell_widget.termin_id
         else:
             return
 

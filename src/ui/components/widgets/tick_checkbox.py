@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QCheckBox
 
 class TickCheckBox(QCheckBox):
+    """Styled checkbox with a custom tick icon for use inside dialogs"""
+
     def __init__(self, label=None, parent=None):
         super().__init__(label or "", parent)
         check_icon_path = "src/ui/assets/icons/check-marksvg.svg"

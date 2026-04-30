@@ -14,6 +14,7 @@ from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 from .free_day_provider import FreeDayProvider
+from ..utils.grouping_utils import group_concurrent_appointments
 
 
 
@@ -148,10 +149,23 @@ class PlannerWeekView:
         self._build_week_table(week_mo, terms)
 
     def _build_week_table(self, week_mo: date, terms: List[Termin]) -> None:
-        # store current week monday on table (handy in other places)
-        if hasattr(self.week_table, "week_monday_qdate"):
-            self.week_table.week_monday_qdate = date_to_qdate(week_mo)
+        """
+        Populate the week table for the 6-day week starting at week_mo (Monday).
 
+        Layout:
+        - Column 0: time labels (read-only)
+        - Columns 1..6: Monday through Saturday
+        - Rows: one row per time slot (configured via day_start/day_end/time_slot_minutes)
+
+        Free-day handling: for each day that is a Feiertag or Vorlesungsfrei, the
+        day type name is appended to the column header label (second line) and a
+        background color is applied to both the header item and all row cells in
+        that column. This makes free days visually distinct without blocking drops.
+
+        Overlap handling: identical to the day view - overlapping Termine in the
+        same day column are grouped by _group_concurrent_appointments and placed
+        inside a shared TimeSlotCell that spans the combined duration.
+        """
         days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa"]
         slots = self._time_slots()
         slot_min = self._day_bounds()[2]
@@ -240,7 +254,7 @@ class PlannerWeekView:
                 continue
 
             # Group overlapping
-            appointment_groups = self._group_concurrent_appointments(items)
+            appointment_groups = group_concurrent_appointments(items)
 
             groups_by_id = defaultdict(list)
             for termin, group_id in appointment_groups:
@@ -328,51 +342,7 @@ class PlannerWeekView:
         else:
             TerminCard.clear_global_focus()
 
-    def _group_concurrent_appointments(self, items: List[Termin]) -> List[tuple[Termin, int]]:
-        """
-        Group appointments by time overlap.
-        Returns list of (termin, group_id) tuples
-        """
-        if not items:
-            return []
-        
-        sorted_items = sorted(
-            items,
-            key=lambda x: mins_from_time(x.start_zeit) if x.start_zeit else 0
-        )
 
-        groups: List[tuple] = []
-        group_counter = 0
-        current_group: List[Termin] = []
-        current_end = None
-
-        for t in sorted_items:
-            if not t.start_zeit or not t.get_end_time():
-                continue
-
-            t_start = mins_from_time(t.start_zeit)
-            t_end = mins_from_time(t.get_end_time())
-
-            if current_end is None:
-                current_group = [t]
-                current_end = t_end
-                continue
-
-            if t_start < current_end:
-                current_group.append(t)
-                current_end = max(current_end, t_end)
-            else:
-                for member in current_group:
-                    groups.append((member, group_counter))
-                group_counter += 1
-                current_group = [t]
-                current_end = t_end
-
-        if current_group:
-            for member in current_group:
-                groups.append((member, group_counter))
-
-        return groups
 
     def _format_termin_text(self, t: Termin) -> str:
         end_raw = t.get_end_time()

@@ -523,7 +523,7 @@ class MainWindow(QMainWindow):
 
         if fs:
             room = fs.raum_id
-            q = (str(fs.lva_id).strip().lower() if fs.lva_id else "")
+            lva_id = fs.lva_id
             typ = fs.typ
             dozent = fs.dozent
             semester_id = fs.semester
@@ -531,7 +531,7 @@ class MainWindow(QMainWindow):
         else:
             filters = self.planner.current_filters()
             room = filters["raum_id"]
-            q = filters["q"]
+            lva_id = filters["lva_id"]
             typ = filters["typ"]
             dozent = filters["dozent"]
             semester_id = filters["semester_id"]
@@ -539,7 +539,7 @@ class MainWindow(QMainWindow):
 
         terms = self.planner.state.filtered_termine(
             raum_id=room,
-            q=q,
+            lva_id=lva_id,
             typ=typ,
             dozent=dozent,
             semester_id=semester_id,

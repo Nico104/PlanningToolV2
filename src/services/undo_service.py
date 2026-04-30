@@ -10,6 +10,7 @@ from .data_service import DataService
 
 @dataclass
 class ProjectSnapshot:
+    """A deep-copy snapshot of all mutable project data, used as one entry on the undo stack"""
     termine: List[Termin]
     lvas: List[Lehrveranstaltung]
     raeume: List[Raum]
@@ -20,6 +21,8 @@ class ProjectSnapshot:
 
 
 class UndoService:
+    """Stack-based undo/redo manager that stores full ProjectSnapshots before each mutating operation"""
+
     def __init__(self, max_history: int = 50):
         self.max_history = max_history
         self._undo_stack: List[ProjectSnapshot] = []

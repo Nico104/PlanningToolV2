@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeader
 from ...core.models import Raum, Termin
 from ...services.conflict_service import has_preview_conflict
 from ..utils.datetime_utils import qdate_to_date, fmt_time, date_to_qdate, mins_from_time
+from ..utils.grouping_utils import group_concurrent_appointments
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
@@ -140,6 +141,23 @@ class PlannerDayView:
 
     # Build the day grid: rows=time slots, columns=rooms
     def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, free_day_type: Optional[str]) -> None:
+        """
+        Populate the day table with time-slot rows and room columns for the given date.
+
+        Layout:
+        - Column 0: time labels (read-only, right-aligned)
+        - Columns 1..N: one column per room
+        - Rows: one row per slot (e.g. every 30 min from 08:00 to 18:00)
+
+        Free-day handling: if the date is a Feiertag or Vorlesungsfrei, a colored
+        background is applied to all room columns and their header cells so the
+        user can immediately see why no Termine may be planned here.
+
+        Overlap handling: Termine in the same room that overlap in time are grouped
+        by _group_concurrent_appointments and placed inside a TimeSlotCell that
+        stacks the cards side-by-side. The cell spans as many rows as the total
+        duration of the group (ceiling-rounded to slot boundaries).
+        """
         assert self.state.ts is not None
 
         slots = self._time_slots()
@@ -226,7 +244,7 @@ class PlannerDayView:
             col = 1 + room_index[room_id]
 
             # Group overlapping/concurrent appointments
-            appointment_groups = self._group_concurrent_appointments(items)
+            appointment_groups = group_concurrent_appointments(items)
 
             
             groups_by_id = defaultdict(list)
@@ -311,50 +329,7 @@ class PlannerDayView:
         else:
             TerminCard.clear_global_focus()
 
-    def _group_concurrent_appointments(self, items: List[Termin]) -> List[tuple]:
-        """
-        Group appointments by time overlap
-        """
-        if not items:
-            return []
 
-        sorted_items = sorted(
-            items,
-            key=lambda x: mins_from_time(x.start_zeit) if x.start_zeit else 0
-        )
-
-        groups: List[tuple] = []
-        group_counter = 0
-        current_group: List[Termin] = []
-        current_end = None
-
-        for t in sorted_items:
-            if not t.start_zeit or not t.get_end_time():
-                continue
-
-            t_start = mins_from_time(t.start_zeit)
-            t_end = mins_from_time(t.get_end_time())
-
-            if current_end is None:
-                current_group = [t]
-                current_end = t_end
-                continue
-
-            if t_start < current_end:
-                current_group.append(t)
-                current_end = max(current_end, t_end)
-            else:
-                for member in current_group:
-                    groups.append((member, group_counter))
-                group_counter += 1
-                current_group = [t]
-                current_end = t_end
-
-        if current_group:
-            for member in current_group:
-                groups.append((member, group_counter))
-
-        return groups
 
     def _format_termin_text(self, t: Termin) -> str:
         end_raw = t.get_end_time()

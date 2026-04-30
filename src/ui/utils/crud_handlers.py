@@ -17,6 +17,8 @@ from ..components.widgets.toast import Toast
 
 
 class CrudHandlers:
+    """Centralises all CRUD (create, read, update, delete) operations for the data editor tabs"""
+
     def _record_undo_snapshot(self) -> None:
         if self.undo_service and self.ds:
             self.undo_service.record_snapshot(self.ds)

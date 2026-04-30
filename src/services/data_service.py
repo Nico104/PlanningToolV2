@@ -7,6 +7,10 @@ from ..core.models import Semester, Raum, Vortragende, Lehrveranstaltung, Gruppe
 
 
 class DataService:
+    """
+    Minimal JSON layer: loads and writes the project's JSON data files from the data/ directory
+    """
+
     def load_semester(self) -> List[Semester]:
         """Lädt alle Semester aus semester.json (falls vorhanden)."""
         path = self.data_dir / "semester.json"
@@ -22,9 +26,7 @@ class DataService:
                 end=datetime.strptime(x["end"], "%Y-%m-%d").date(),
             ))
         return out
-    """
-    Minimaler JSON-Speicher: lädt/schreibt die Projekt-JSON-Dateien aus dem data/-Ordner.
-    """
+
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
 

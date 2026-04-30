@@ -5,6 +5,8 @@ from ..core.models import Termin, Zeitfenster
 
 
 class TerminService:
+    """Service for Termin-related calculations, such as finding free time slots in a room"""
+
     def __init__(self, settings: Dict):
         self.settings = settings
 
@@ -21,7 +23,27 @@ class TerminService:
         semester_id: Optional[str] = None,
     ) -> List[Zeitfenster]:
         """
-        Gibt freie Zeitfenster im Raum für ein Datum zurück (innerhalb day_start/day_end).
+        Return all free time windows in a room on a given date that fit the requested duration.
+
+        Algorithm:
+
+        1. Collect busy intervals.
+        Filter Termine to those matching the room and date, then convert each one
+        to a (start_datetime, end_datetime) interval. Sort by start time.
+
+        2. Merge overlapping busy intervals.
+        Go through the sorted intervals. If the next interval starts after the
+        current merged block ends, start a new block. Otherwise, extend the current
+        block's end to cover the overlap.
+
+        3. Adjust free periods to the time grid and filter by minimum duration.
+        Find the gaps between the merged busy periods.
+        - The gap start is rounded up to the next grid line, so the returned slot
+            always starts on a valid time.
+        - The gap end is rounded down to the previous grid line.
+        After adjusting, only gaps that are at least as long as the requested duration
+        are returned. This ensures the returned Zeitfenster fit the visual grid and
+        are long enough for the event.
         """
         day_start = datetime.strptime(self.settings.get("day_start", "08:00"), "%H:%M").time()
         day_end = datetime.strptime(self.settings.get("day_end", "18:00"), "%H:%M").time()
@@ -49,13 +71,14 @@ class TerminService:
         ]
 
         # Merge busy
-        merged: List[Tuple[datetime, datetime]] = []
+        merged_tmp = []
         for b in busy:
-            if not merged or b[0] > merged[-1][1]:
-                merged.append(list(b))  # type: ignore
+            if not merged_tmp or b[0] > merged_tmp[-1][1]:
+                merged_tmp.append(list(b))  # add new interval
             else:
-                merged[-1][1] = max(merged[-1][1], b[1])  # type: ignore
-        merged = [(a,b) for a,b in merged]
+                merged_tmp[-1][1] = max(merged_tmp[-1][1], b[1]) 
+        #convert it to a list of tuples from a list of lists because tuples are not mutable
+        merged: List[Tuple[datetime, datetime]] = [(a,b) for a,b in merged_tmp]
 
         # Erzeuge freie Fenster
         free: List[Tuple[datetime, datetime]] = []

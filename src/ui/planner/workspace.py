@@ -198,7 +198,7 @@ class PlannerWorkspace(QWidget):
         if gf is None:
             return {
                 "raum_id": None,
-                "q": "",
+                "lva_id": None,
                 "typ": None,
                 "dozent": None,
                 "semester_id": None,
@@ -206,7 +206,7 @@ class PlannerWorkspace(QWidget):
             }
         return {
             "raum_id": gf.raum_id,
-            "q": (str(gf.lva_id).strip().lower() if gf.lva_id else ""),
+            "lva_id": gf.lva_id,
             "typ": gf.typ,
             "dozent": getattr(gf, "dozent", None),
             "semester_id": getattr(gf, "semester", None),
@@ -219,7 +219,7 @@ class PlannerWorkspace(QWidget):
         filters = self.current_filters()
         filtered = self.state.filtered_termine(
             raum_id=filters["raum_id"],
-            q=filters["q"],
+            lva_id=filters["lva_id"],
             typ=filters["typ"],
             dozent=filters["dozent"],
             semester_id=filters["semester_id"],

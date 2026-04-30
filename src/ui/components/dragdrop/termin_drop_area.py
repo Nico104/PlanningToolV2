@@ -4,6 +4,8 @@ from PySide6.QtWidgets import QWidget
 
 
 class TerminDropArea(QWidget):
+    """Invisible drop target that accepts Termin drags and emits terminDroppedToList to unassign them"""
+
     terminDroppedToList = Signal(str)
     MIME = "application/termin-id"
 

@@ -13,8 +13,8 @@ from ..utils.datetime_utils import fmt_date, fmt_time
 
 class DataEditorDock(QDockWidget):
     """
-    Ein Dock für Daten: LVA, Räume, Semester, Freie Tage
-    Keine Inline-Edits
+    Dock widget with tabbed CRUD editors for master data:
+    LVAs, Rooms, Semesters, Free Days, Planned Semesters, and Fachrichtungen.
     """
 
     def __init__(self, parent, ds, on_data_changed=None):

@@ -10,6 +10,10 @@ from ...services.termin_service import TerminService
 
 @dataclass
 class PlannerState:
+    """
+    Holds all loaded planner data and settings for the UI.
+    Provides methods to reload data and filter Termine.
+    """
     ds: DataService
 
     raeume: List[Raum] = field(default_factory=list)
@@ -26,26 +30,16 @@ class PlannerState:
         self.settings = self.ds.load_settings()
         self.ts = TerminService(self.settings)
 
-    def filtered_termine(self, raum_id: Optional[str], q: str, typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, geplante_semester: Optional[str] = None) -> List[Termin]:
+    def filtered_termine(self, raum_id: Optional[str], typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, geplante_semester: Optional[str] = None, lva_id: Optional[str] = None) -> List[Termin]:
         lva_dict = {lva.id: lva for lva in self.lvas}
         out = filter_termine(
             self.termine,
             semester_id=semester_id,
             geplante_semester=geplante_semester,
             raum_id=raum_id,
+            lva_id=lva_id,
             typ=typ,
             dozent=dozent,
             lva_dict=lva_dict,
         )
-        q = (q or "").strip().lower()
-        if q:
-            def match(t: Termin) -> bool:
-                lva = lva_dict.get(t.lva_id)
-                hay = " ".join([
-                    t.lva_id,
-                    lva.name if lva else "",
-                    lva.vortragende.name if lva else "",
-                ]).lower()
-                return q in hay
-            out = [t for t in out if match(t)]
         return out
