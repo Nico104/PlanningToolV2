@@ -1,7 +1,7 @@
 # PlannerV2 Documentation
 
 ## 1. Purpose
-PlannerV2 is a desktop planning tool for scheduling university events (Termine).
+This is a desktop planning tool for scheduling university events (Termine).
 It combines calendar planning (day/week/month), data administration, filtering, and conflict handling in one UI.
 
 Primary goals:
@@ -216,7 +216,19 @@ How it works internally:
 
 ---
 
-### 6.11 Termine Search Bar
+### 6.11 Data Path Behavior
+
+`Data Path` in Settings controls which folder is used as the active storage location.
+
+- If `Data Path` points to a folder (for example `data_test`), all reads/writes happen there.
+- If `Data Path` is empty, the app falls back to the default `data` folder.
+- Switching `Data Path` means switching to a different dataset/profile.
+- The same JSON filenames are used in whichever folder is active (`termine.json`, `lehrveranstaltungen.json`, etc.).
+- If the folder does not exist, startup asks for reset/new path; if folder exists but required JSON files are missing, loading can fail.
+
+---
+
+### 6.12 Termine Search Bar
 
 The Termine dock includes a live search input for:
 - Termin name/ID
