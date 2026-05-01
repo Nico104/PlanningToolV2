@@ -131,9 +131,25 @@ Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kur
 
 \subsubsection{Python}
 
+Das Planungstool wurde mit Python entwickelt. In diesem Projekt wurde Python in der Version 3.13.2 verwendet. Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
+
+Für dieses Projekt war Python passend, weil die Sprache gut lesbar ist und sich der Code übersichtlich strukturieren lässt. Ein weiterer Grund für die Verwendung von Python ist, dass die Sprache weit verbreitet ist und von vielen Personen verwendet wird. Dadurch kann die spätere Wartung oder Erweiterung des Tools erleichtert werden, da sich neue Entwicklerinnen und Entwickler schneller in den Code einarbeiten können.
+
+Außerdem unterstützt Python viele Bibliotheken. Für dieses Projekt war vor allem PySide6 wichtig, weil damit die grafische Oberfläche erstellt wurde. Dadurch konnten die verschiedenen Fenster, Tabellen und Bedienelemente des Planungstools umgesetzt werden.
+
 \subsubsection{PySide6 und Qt}
 
+Für die grafische Benutzeroberfläche des Planungstools wurde PySide6 verwendet. PySide6 verbindet Python mit dem Qt-Framework. Qt bietet viele Elemente, die für Desktop-Anwendungen gebraucht werden, zum Beispiel Fenster, Tabellen, Buttons, Menüs und Dialoge. Dadurch konnte das Tool als lokale Anwendung mit einer eigenen Benutzeroberfläche umgesetzt werden.
+
+Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, da PyQt und PySide6 ähnliche Funktionen bereitstellen und beide auf Qt basieren. Für dieses Projekt wurde jedoch PySide6 gewählt, da es das \href{https://doc.qt.io/qtforpython-6/index.html}{offizielle Qt-for-Python-Binding} ist. Außerdem kann die \href{https://www.qt.io/development/open-source-lgpl-obligations}{LGPL-Lizenz} von PySide6 bei eigenständigen Anwendungen flexibler sein.
+
+Im Planungstool wird PySide6 vor allem für die verschiedenen Bedienbereiche der Anwendung genutzt. Dazu gehören zum Beispiel Kalenderansichten, Tabellen, Eingabefenster, Filterbereiche und Listen.
+
+Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem Dialog bearbeitet, muss die Anwendung auf diese Eingaben reagieren. PySide6 stellt dafür die Verbindung zwischen der Benutzerberfläche und der Programmlogik her. Dadurch können Änderungen direkt verarbeitet und an anderen Stellen der Anwendung sichtbar gemacht werden.
+
 \subsubsection{JSON als Datenformat}
+
+
 
 \newpage
 
