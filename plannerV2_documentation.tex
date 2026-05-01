@@ -131,7 +131,7 @@ Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kur
 
 \subsubsection{Python}
 
-Das Planungstool wurde mit Python entwickelt. In diesem Projekt wurde Python in der Version 3.13.2 verwendet. Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
+Das Planungstool wurde mit Python entwickelt.\footnote{\url{https://www.python.org/}} Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
 
 Für dieses Projekt war Python passend, weil die Sprache gut lesbar ist und sich der Code übersichtlich strukturieren lässt. Ein weiterer Grund für die Verwendung von Python ist, dass die Sprache weit verbreitet ist und von vielen Personen verwendet wird. Dadurch kann die spätere Wartung oder Erweiterung des Tools erleichtert werden, da sich neue Entwicklerinnen und Entwickler schneller in den Code einarbeiten können.
 
@@ -139,9 +139,9 @@ Außerdem unterstützt Python viele Bibliotheken. Für dieses Projekt war vor al
 
 \subsubsection{PySide6 und Qt}
 
-Für die grafische Benutzeroberfläche des Planungstools wurde PySide6 verwendet. PySide6 verbindet Python mit dem Qt-Framework. Qt bietet viele Elemente, die für Desktop-Anwendungen gebraucht werden, zum Beispiel Fenster, Tabellen, Buttons, Menüs und Dialoge. Dadurch konnte das Tool als lokale Anwendung mit einer eigenen Benutzeroberfläche umgesetzt werden.
+Für die grafische Benutzeroberfläche des Planungstools wurde PySide6 verwendet. PySide6 verbindet Python mit dem Qt-Framework. Qt bietet viele Elemente, die für Desktop-Anwendungen gebraucht werden, zum Beispiel Fenster, Tabellen, Buttons, Menüs und Dialoge.\footnote{\url{https://doc.qt.io/qt-6/}} Dadurch konnte das Tool als lokale Anwendung mit einer eigenen Benutzeroberfläche umgesetzt werden.
 
-Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, da PyQt und PySide6 ähnliche Funktionen bereitstellen und beide auf Qt basieren. Für dieses Projekt wurde jedoch PySide6 gewählt, da es das \href{https://doc.qt.io/qtforpython-6/index.html}{offizielle Qt-for-Python-Binding} ist. Außerdem kann die \href{https://www.qt.io/development/open-source-lgpl-obligations}{LGPL-Lizenz} von PySide6 bei eigenständigen Anwendungen flexibler sein.
+Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, da PyQt und PySide6 ähnliche Funktionen bereitstellen und beide auf Qt basieren. Für dieses Projekt wurde jedoch PySide6 gewählt, da es das offizielle Qt-for-Python-Binding ist.\footnote{\url{https://doc.qt.io/qtforpython-6/index.html}} Außerdem kann die LGPL-Lizenz von PySide6 bei eigenständigen Anwendungen flexibler sein.\footnote{\url{https://www.qt.io/development/open-source-lgpl-obligations}}
 
 Im Planungstool wird PySide6 vor allem für die verschiedenen Bedienbereiche der Anwendung genutzt. Dazu gehören zum Beispiel Kalenderansichten, Tabellen, Eingabefenster, Filterbereiche und Listen.
 
@@ -149,39 +149,199 @@ Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem D
 
 \subsubsection{JSON als Datenformat}
 
+Die Planungsdaten werden in JSON-Dateien gespeichert.\footnote{\url{https://www.rfc-editor.org/rfc/rfc8259}} Dazu gehören zum Beispiel Termine, Lehrveranstaltungen, Räume, Semester und weitere Informationen, die für die Planung benötigt werden. JSON wurde verwendet, weil sich damit strukturierte Daten einfach speichern, laden und bei Bedarf manuell bearbeiten lassen.
 
+Da die JSON-Dateien auch außerhalb des Programms geöffnet werden können, bleibt nachvollziehbar, welche Daten gespeichert wurden. Das kann zum Beispiel hilfreich sein, wenn Fehler gesucht werden oder überprüft werden soll, ob Daten richtig übernommen wurden.
+
+Grundsätzlich hätten für die Speicherung auch CSV-Dateien verwendet werden können. CSV eignet sich vor allem für einfache tabellarische Daten. Für das Planungstool ist das jedoch nicht immer passend, da die Daten teilweise stärker miteinander verknüpft sind. Ein Termin kann zum Beispiel mehrere Eigenschaften oder Verweise auf andere Daten enthalten, wie auf eine LVA oder einen Raum.
+JSON ist dafür besser geeignet, weil zusammenhängende Informationen als Objekte gespeichert werden können. Dadurch lassen sich die Planungsdaten strukturierter abbilden als in einer einfachen Tabelle.
+
+Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
 
 \newpage
 
 \section{Anforderungsanalyse}
 
-\subsection{Ausgangssituation und Bedarf}
+\subsection{Ableitung der Anforderungen}
+
+Die Anforderungen an das Planungstool ergeben sich aus den typischen Arbeitsschritten der jährlichen Lehrveranstaltungsplanung. Dabei müssen Termine nicht nur gespeichert, sondern auch mit Informationen wie Lehrveranstaltungen, Räumen, Semestern oder Gruppen verbunden werden.
+
+Für die Anforderungsanalyse wurden daher vor allem das Anlegen und Bearbeiten von Terminen, das Verschieben von Terminen, das Filtern der Daten und das Erkennen möglicher Konflikte betrachtet. Daraus ergeben sich die folgenden funktionalen und nicht-funktionalen Anforderungen.
 
 \subsection{Funktionale Anforderungen}
 
+Funktionale Anforderungen beschreiben, welche Aufgaben die Software erfüllen soll. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:functional-requirements} dargestellt.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{4cm}|p{9cm}|}
+\hline
+\textbf{Anforderung} & \textbf{Beschreibung} \\
+\hline
+Terminverwaltung & Termine sollen erstellt, bearbeitet und gelöscht werden können. \\
+\hline
+Datenverwaltung & Lehrveranstaltungen, Räume, Semester, Fachrichtungen und weitere Daten sollen verwaltet werden können. \\
+\hline
+Terminzuordnung & Termine sollen mit Lehrveranstaltungen, Räumen, Semestern oder Gruppen verbunden werden können. \\
+\hline
+Kalenderdarstellung & Termine sollen in einer übersichtlichen Kalenderansicht dargestellt werden. \\
+\hline
+Drag-and-Drop & Termine sollen direkt über die Benutzeroberfläche verschoben oder zugewiesen werden können. \\
+\hline
+Filterung & Termine sollen nach bestimmten Kriterien gefiltert werden können. \\
+\hline
+Konflikterkennung & Mögliche Konflikte, wie doppelt belegte Räume oder zeitliche Überschneidungen, sollen erkannt und angezeigt werden. \\
+\hline
+Speicherung & Planungsdaten sollen gespeichert und beim erneuten Start wieder geladen werden können. \\
+\hline
+Import und Export & Planungsdaten sollen importiert und exportiert werden können. \\
+\hline
+\end{tabular}
+\caption{Funktionale Anforderungen an das Planungstool}
+\label{tab:functional-requirements}
+\end{table}
+
 \subsection{Nicht-funktionale Anforderungen}
 
+Nicht-funktionale Anforderungen beschreiben, welche Eigenschaften die Software haben soll. Sie beziehen sich also nicht direkt auf einzelne Funktionen, sondern auf Aspekte wie Bedienbarkeit, Wartbarkeit oder Stabilität.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{4cm}|p{9cm}|}
+\hline
+\textbf{Anforderung} & \textbf{Beschreibung} \\
+\hline
+Benutzerfreundlichkeit & Das Tool soll auch ohne Programmierkenntnisse einfach bedienbar sein. \\
+\hline
+Übersichtlichkeit & Termine und Planungsdaten sollen klar dargestellt werden. \\
+\hline
+Wartbarkeit & Der Code soll übersichtlich aufgebaut sein, damit Fehler behoben und bestehende Funktionen angepasst werden können. \\
+\hline
+Erweiterbarkeit & Neue Funktionen sollen später ergänzt werden können. \\
+\hline
+Nachvollziehbarkeit & Daten und Änderungen sollen verständlich und kontrollierbar bleiben. \\
+\hline
+Stabilität & Die Anwendung soll Daten zuverlässig speichern und laden können. \\
+\hline
+Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden können und keinen Server benötigen. \\
+\hline
+\end{tabular}
+\caption{Nicht-funktionale Anforderungen an das Planungstool}
+\label{tab:nonfunctional-requirements}
+\end{table}
+
 \subsection{Abgrenzung der Software}
+
+Das Planungstool wurde als Unterstützung für die jährliche Lehrveranstaltungsplanung entwickelt. Es soll den Planungsprozess übersichtlicher machen und bei der Bearbeitung der Termine helfen. Die organisatorischen Entscheidungen werden dabei aber alle weiterhin vom Nutzer getroffen.
+
+Nicht Teil dieser Version ist eine automatische Optimierung der gesamten Planung. Die Software erstellt also nicht selbstständig den bestmöglichen Stundenplan, sondern unterstützt den bestehenden Planungsprozess. Auch eine direkte Anbindung an offizielle Universitätssysteme oder eine automatische Raumreservierung ist aktuell nicht umgesetzt.
+
+Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen. Funktionen wie eine Anbindung an bestehende Systeme, automatische Raumreservierung oder Mehrnutzerbetrieb könnten sinnvolle Erweiterungen für eine spätere Version des Tools sein.
 
 \newpage
 
 \section{Konzeption des Planungstools}
 
-\subsection{Architektur der Anwendung}
+\subsection{Gesamtarchitektur der Anwendung}
 
-\subsection{Datenmodell}
+Das Planungstool wurde als lokale Desktop-Anwendung konzipiert und besteht nicht nur aus einer einzelnen Kalenderansicht, sondern aus mehreren Bereichen, die zusammenarbeiten. Im Mittelpunkt steht das Hauptfenster(Main Window im Code), das die verschiedenen Teile der Benutzeroberfläche verbindet und die zentralen Abläufe der Anwendung steuert.
 
-\subsection{Benutzeroberfläche und Planungsworkflow}
+Grundsätzlich lässt sich die Anwendung in drei Bereiche einteilen: die Benutzeroberfläche, die Datenverwaltung und die Planungslogik. Die Benutzeroberfläche stellt Kalenderansichten, Listen, Eingabefenster und weitere Bedienelemente bereit. Die Datenverwaltung ist dafür zuständig, Planungsdaten zu laden, zu speichern und für die anderen Teile der Anwendung verfügbar zu machen. Die Planungslogik umfasst Funktionen wie Filterung, Konflikterkennung und die Aktualisierung der Anzeige nach Änderungen.
 
-\subsection{Konzept der Filterung}
+\subsection{Aufbau der Benutzeroberfläche}
 
-\subsection{Konzept der Konflikterkennung}
+Die Benutzeroberfläche ist in mehrere Bereiche aufgeteilt. Der zentrale Bereich ist der Planner Workspace, in dem die Termine in unterschiedlichen Kalenderansichten dargestellt werden. Es eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Die Tagesansicht eignet sich besonders für eine genauere Planung nach Uhrzeit und Raum. Die Wochenansicht gibt einen Überblick über mehrere Tage, während die Monatsansicht eher zur groben zeitlichen Orientierung dient.
+
+Neben den Kalenderansichten gibt es weitere Bereiche, die als sogenannte Docks umgesetzt sind.\footnote{\url{https://doc.qt.io/qt-6/qdockwidget.html}} Dazu gehören die Terminliste, der Dateneditor, die Datumsnavigation, der globale Filterbereich und die Konfliktanzeige. Durch die verschiebbaren Docks kann jeder Benutzer seinen Arbeitsbereich so einrichten, wie es für ihn am besten passt. Das gewählte Layout lässt sich speichern und später wiederverwenden.
+
+Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Semester, Fachrichtungen oder freie Tage zu erstellen, zu bearbeiten oder zu löschen.
+
+Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrveranstaltung, Raum, Dozent oder Semester. Die Konfliktanzeige zeigt eine interaktive Liste aller aktuellen Planungskonflikte. Mit dem Navigationsbereich kann der Benutzer beliebig zwischen den Ansichten wechseln und innerhalb der jeweiligen Zeitintervalle navigieren.
+
+\subsection{Datenmodell und Datenbeziehungen}
+
+Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen die Termine, da sie die eigentlichen Planungseinträge darstellen. Ein Termin besteht aber nicht nur aus einem Datum und einer Uhrzeit, sondern ist mit weiteren Informationen verbunden. Dazu gehören zum Beispiel die zugehörige Lehrveranstaltung, ein Raum, ein Semester, ein Veranstaltungstyp oder eine Gruppe.
+
+Neben den Terminen gibt es noch andere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Semester, geplante Semester, Fachrichtungen und freie Tage. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
+
+Die Verbindung zwischen den Daten erfolgt über IDs. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
+
+Neben den Planungsdaten speichert die Anwendung auch Einstellungen und Konfliktpräferenzen in JSON-Dateien. So bleiben persönliche Anpassungen, etwa gespeicherte Layouts oder ausgewählte Konfliktregeln, auch beim nächsten Start erhalten.
+
+\subsection{Planungsworkflow}
+
+Der Arbeitsablauf im Planungstool beginnt in der Regel mit dem Laden der vorhandenen Daten. Danach können bei Bedarf Stammdaten ergänzt oder angepasst werden. Auf dieser Grundlage werden die einzelnen Termine erstellt und weiter geplant.
+
+Ein Termin kann entweder direkt mit Datum, Uhrzeit und Raum angelegt werden oder zunächst ohne feste Zuordnung bestehen. Noch nicht zugewiesene Termine können später aus der Terminliste in die Kalenderansicht per Drag-and-Drop übernommen werden. Während des Drag-and-Drops werden mögliche Konflikte direkt als rote Vorschau im Kalender angezeigt.
+
+Während der Planung können Filter genutzt werden, um nur bestimmte Termine anzuzeigen. Die Konfliktanzeige hilft zusätzlich dabei, mögliche Probleme schnell zu erkennen.
+
+Der Workflow ist so aufgebaut, dass der Nutzer die Planung weiterhin selbst steuert. Das Tool zeigt Termine und Konflikte übersichtlich an und erleichtert Änderungen.
+
+\subsection{Aktualisierung und Zusammenspiel der Komponenten}
+
+Da das Planungstool aus mehreren Bereichen besteht, müssen diese nach Änderungen miteinander abgestimmt werden. Wenn ein Termin erstellt, bearbeitet oder verschoben wird, soll diese Änderung nicht nur an einer Stelle sichtbar sein. Auch die Kalenderansicht, die Terminliste und die Konfliktanzeige müssen den neuen Stand übernehmen.
+
+Dafür ist das Hauptfenster als zentrale Stelle der Anwendung wichtig. Es verbindet die verschiedenen Bereiche miteinander und sorgt dafür, dass nach relevanten Änderungen eine Aktualisierung ausgelöst wird. Die einzelnen Komponenten laden anschließend ihre Inhalte neu oder passen ihre Darstellung an.
 
 \newpage
 
 \section{Implementierung}
 
-\subsection{Entwicklungsumgebung}
+\subsection{Entwicklungsumgebung und Projektstruktur}
+
+Die Anwendung wurde mit Python in der Version 3.13.2 entwickelt.\footnote{\url{https://www.python.org/downloads/release/python-3132/}} Für die grafische Benutzeroberfläche wird PySide6 verwendet. Die Implementierung des Planungstools erfolgte in Visual Studio Code.
+
+Der Quellcode ist in mehrere Bereiche aufgeteilt. Im \texttt{src}-Verzeichnis befinden sich die wichtigsten Bestandteile des Programms. Dazu gehören die Benutzeroberfläche, verschiedene Services, Dialoge, Hilfsfunktionen und die zentrale Programmlogik. Gestartet wird die Anwendung über die Datei \texttt{main.py}.
+
+Die Planungsdaten liegen in JSON-Dateien und befinden sich je nach ausgewähltem Datenpfad zum Beispiel im Ordner \texttt{data}. Dadurch kann das Tool mit unterschiedlichen Datensätzen verwendet werden.
+
+Für die benötigten Pakete wird eine \texttt{requirements.txt}-Datei verwendet. Zusätzlich enthält das Projekt eine \texttt{pyproject.toml}, in der weitere Projektinformationen und Einstellungen festgelegt werden.
+
+\subsection{Hauptfenster und zentrale Steuerung}
+
+Das Hauptfenster der Anwendung wird durch die Klasse \texttt{MainWindow} umgesetzt. In diesem Fenster kommen die wichtigsten Teile des Planungstools zusammen. Dazu gehören der Kalenderbereich, die Terminliste, der Dateneditor, die Filter, die Konfliktanzeige und die Datumsnavigation.
+
+Das folgende Beispiel zeigt vereinfacht, wie diese Bereiche im Hauptfenster eingebunden werden:
+
+\begin{verbatim}
+self.planner = PlannerWorkspace(self, self.ds, ...)
+self.setCentralWidget(self.planner)
+
+self.termine_dock = TermineDock(self)
+self.addDockWidget(Qt.LeftDockWidgetArea, self.termine_dock)
+\end{verbatim}
+
+Als Grundlage wird \texttt{QMainWindow} von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/qmainwindow.html}} Dadurch kann die Anwendung einen zentralen Bereich und mehrere zusätzliche Dock-Bereiche besitzen. Der zentrale Bereich enthält den Planner Workspace mit den Kalenderansichten. Die Dock-Bereiche enthalten die Terminliste, den Dateneditor, die Filter, die Datumsnavigation und die Konfliktanzeige.
+
+Im Hauptfenster werden auch die Menüs und andere Aktionen, wie Aktualisieren, Einstellungen, Undo, Importieren und Exportieren angelegt. Diese Aktionen werden mit den jeweiligen Funktionen der Anwendung verbunden. Dadurch können wichtige Arbeitsschritte direkt über die Menüleiste oder über Tastenkombinationen ausgeführt werden.
+
+Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System von Qt.\footnote{\url{https://doc.qt.io/qt-6/signalsandslots.html}} Dadurch können Aktionen aus einem Bereich an andere Bereiche der Anwendung weitergegeben werden. Ein Beispiel dafür ist die Verbindung zwischen Konfliktanzeige und dem Kalender durch Highlights:
+
+\begin{verbatim}
+self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
+\end{verbatim}^
+
+Wird ein Konflikt ausgewählt, können die betroffenen Termine im Kalender hervorgehoben werden.
+
+Eine weitere wichtige Aufgabe des Hauptfensters ist die Aktualisierung der Benutzeroberfläche. Wenn ein Termin erstellt, bearbeitet, gelöscht oder verschoben wird, müssen mehrere Bereiche den neuen Stand anzeigen. Dafür werden zentrale Aktualisierungsmethoden verwendet wie:
+
+\begin{verbatim}
+def refresh_everything(self) -> None:
+    self.planner.refresh(emit=False)
+    self.refresh_docks()
+\end{verbatim}
+
+Dabei wird zuerst der Planner Workspace aktualisiert. Anschließend werden über \texttt{refresh\_docks()} die weiteren Bereiche wie Terminliste, Filter, Dateneditor und Konfliktanzeige neu geladen.
+
+Auch Funktionen, die nicht direkt zur Terminplanung gehören, werden im Hauptfenster eingebunden. Dazu zählen zum Beispiel die Layoutverwaltung und die Tastenkombinationen. Der \texttt{LayoutManager} speichert und lädt verschiedene Anordnungen der Oberfläche. Die Tastenkombinationen werden in einer eigenen Datei gesammelt und beim Start des Hauptfensters registriert:
+
+\begin{verbatim}
+self.layout_mgr = LayoutManager(self)
+install_main_window_shortcuts(self)
+\end{verbatim}
+
+Häufige Aktionen wie Aktualisieren, Ansichtswechsel oder das Erstellen neuer Termine lassen sich dadurch schneller ausführen. Außerdem können eigene Layouts der Benutzeroberfläche gespeichert und verwaltet werden.
 
 \subsection{Kalenderansichten}
 
@@ -189,11 +349,13 @@ Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem D
 
 \subsection{Drag-and-Drop-Funktionalität}
 
-\subsection{Filterlogik}
+\subsection{Filterfunktion}
 
 \subsection{Konflikterkennung}
 
 \subsection{Import, Export und Speicherung}
+
+\subsection{Undo/Redo, Shortcuts und Layout-Verwaltung}
 
 \newpage
 

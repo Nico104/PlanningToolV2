@@ -449,7 +449,9 @@ class MainWindow(QMainWindow):
         self.planner.refresh(emit=False)
 
     def refresh_everything(self) -> None:
-        self.planner.refresh(emit=True)
+        # self.planner.refresh(emit=True) einen callback mehr
+        self.planner.refresh(emit=False)
+        self.refresh_docks()
 
     def update_undo_redo_actions(self) -> None:
         self.act_undo.setEnabled(self.undo_service.can_undo())
