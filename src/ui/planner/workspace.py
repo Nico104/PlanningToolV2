@@ -194,6 +194,7 @@ class PlannerWorkspace(QWidget):
 
 
     def current_filters(self):
+        # getattr wird verwendet, falls _global_filter noch nicht gesetzt wurde
         gf = getattr(self, "_global_filter", None)
         if gf is None:
             return {

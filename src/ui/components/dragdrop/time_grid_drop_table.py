@@ -10,7 +10,7 @@ class TimeGridDropTable(QTableWidget):
     A QTableWidget subclass that acts as a drop target for TerminCard drags.
 
     During a drag, it snaps the hover position to the grid and paints a live
-    preview block (filled with the Termin's type color, or red on conflict).
+    preview block (filled with the Termin type color, or red on conflict).
     All context-specific knowledge (duration, color, text, conflict checking)
     is injected via provider callbacks so this widget stays generic.
 
@@ -18,7 +18,7 @@ class TimeGridDropTable(QTableWidget):
     - MIME type 'application/termin-id' carries just the Termin ID as UTF-8 bytes.
       The actual Termin object is never serialized into the drag; it is looked up
       from the shared state via the injected providers.
-    - Span calculation: duration_minutes / slot_minutes (ceiling) = number of rows
+    - Span calculation: duration_minutes / slot_minutes = number of rows
       the preview block should cover. This mirrors how TerminCards are placed.
     - Conflict checking is done on every dragMoveEvent via a callback that runs
       the full ConflictDetector on a simulated state (see has_preview_conflict).
@@ -128,8 +128,6 @@ class TimeGridDropTable(QTableWidget):
         self.terminDropped.emit(termin_id, r, c)
         e.acceptProposedAction()
 
-    # Snap hover helpers
-    
     
     def _set_hover(self, r: int, c: int, span: int = 1):
         """

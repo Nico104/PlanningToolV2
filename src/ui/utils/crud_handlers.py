@@ -114,9 +114,6 @@ class CrudHandlers:
             self.parent._refresh_fachrichtungen()
         self._show_toast("Fachrichtung gelöscht.")
 
-    # ------------------------------------------------------------------ #
-    # Geplante Semester                                                    #
-    # ------------------------------------------------------------------ #
 
     def get_geplante_semester_models(self) -> List[GeplantesSemester]:
         models: List[GeplantesSemester] = []

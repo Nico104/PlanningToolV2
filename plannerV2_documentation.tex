@@ -92,7 +92,7 @@ Die Arbeit beginnt mit der Beschreibung der Probleme, die durch die jährliche P
 
 Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstaltungen eines Instituts in einen passenden zeitlichen und organisatorischen Rahmen zu bringen. Dazu müssen Veranstaltungen wie Vorlesungen, Übungen, Labore oder Prüfungen konkreten Terminen, Räumen und teilweise auch bestimmten Gruppen zugeordnet werden. Die Planung ist daher mehr als nur das Eintragen von Terminen in einen Kalender.
 
-Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden.
+Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden. Solche Anforderungen entsprechen typischen Einschränkungen der Lehrveranstaltungsplanung, bei der Veranstaltungen bestimmten Zeitfenstern und Räumen zugeordnet werden müssen (Babaei et al., 2015).
 
 Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören zum Beispiel die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson, der Raum oder die betroffene Studierendengruppe. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
 
@@ -345,17 +345,174 @@ Häufige Aktionen wie Aktualisieren, Ansichtswechsel oder das Erstellen neuer Te
 
 \subsection{Kalenderansichten}
 
+Die Kalenderansichten sind ein zentraler Teil des Planungstools. Sie werden im \texttt{PlannerWorkspace} zusammengeführt und ermöglichen es, Termine in unterschiedlichen zeitlichen Ansichten darzustellen. Dabei gibt es eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Jede Ansicht hat dabei einen etwas anderen Zweck.
+
+Die Tagesansicht ist für die genauere Planung einzelner Termine gedacht. Sie zeigt einen einzelnen Tag mit Uhrzeiten und Räumen. Die Wochenansicht zeigt mehrere Tage nebeneinander. Dadurch bekommt man einen besseren Überblick darüber, wie die Termine innerhalb einer Woche verteilt sind. Die Monatsansicht ist weniger detailliert, zeigt dafür aber einen größeren Zeitraum.
+
+Technisch werden die verschiedenen Ansichten im \texttt{PlannerWorkspace} in einem \texttt{QStackedWidget} verwaltet.\footnote{\url{https://doc.qt.io/qt-6/qstackedwidget.html}} Dadurch kann immer eine der Ansichten angezeigt werden, während die anderen im Hintergrund vorhanden bleiben. Vereinfacht sieht dieser Aufbau folgendermaßen aus:
+
+\begin{verbatim}
+self.stack = QStackedWidget()
+
+self.day_table = TimeGridDropTable(0, 0)
+self.week_table = TimeGridDropTable(0, 0)
+self.month_table = MonthDropTable(0, 7)
+
+self.stack.addWidget(self.day_table)
+self.stack.addWidget(self.week_table)
+self.stack.addWidget(self.month_container)
+\end{verbatim}
+
+Die Tages- und Wochenansicht verwenden jeweils eine zeitbasierte Tabelle mit Räumen oder Wochentagen als Spalten. Die Monatsansicht ist anders aufgebaut, weil sie keinen genauen Zeitraster wie die Tages- oder Wochenansicht verwendet.
+
+Beim Aktualisieren des Kalenders wird zuerst geprüft, welche Ansicht gerade ausgewählt ist. Danach wird nur die passende Ansicht neu aufgebaut. Dadurch muss nicht jedes Mal die gesamte Kalenderdarstellung gleich behandelt werden:
+
+\begin{verbatim}
+view = str(self.view_cb.currentData())
+
+if view == "day":
+    self.stack.setCurrentWidget(self.day_table)
+    self.day_view.refresh(filtered, rooms)
+\end{verbatim}
+
+Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. Dadurch können sie besser erkannt, ausgewählt und weiterverwendet werden. Je nach Terminart können die Karten unterschiedlich dargestellt werden. Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop verschoben werden und dabei während des Verschiebens geprüft werden, ob ein Konflikt entstehen würde.
+
+Zusätzlich wenn ein Tag als frei oder als Feiertag eingetragen ist, kann dies in der Ansicht sichtbar gemacht werden. 
+
+Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von Daten darzustellen, sondern in einen zeitlichen und räumlichen Zusammenhang zu bringen. Der Nutzer kann dadurch besser erkennen, wie Termine verteilt sind und wo Änderungen notwendig sein könnten.
+
 \subsection{Termin- und Stammdatenverwaltung}
+
+Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören nicht nur einzelne Termine, sondern auch Lehrveranstaltungen, Semester, Räume, Fachrichtungen, freie Tage und geplante Semester.
+
+Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgefuhrt werden.
+
+Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen).\footnote{\url{https://medium.com/featurepreneur/json-crud-operation-in-python-2f7f1b32195}} Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
+
+\begin{verbatim}
+def get_geplante_semester_models(self) -> List[GeplantesSemester]:
+        models: List[GeplantesSemester] = []
+        for item in self.ds.load_geplante_semester():
+            try:
+                models.append(GeplantesSemester(**item))
+            except Exception:
+                continue
+        return models
+\end{verbatim}
+
+In diesem Beispiel werden gespeicherte Daten geladen, in passende Modellobjekte umgewandelt und zurückgegeben.
+
+Die Termin- und Stammdatenverwaltung sorgt somit dafür, dass die Daten geordnet gepflegt und im restlichen Tool verwendet werden können.
 
 \subsection{Drag-and-Drop-Funktionalität}
 
+Die Drag-and-Drop Funktionalität wurde umgesetzt, damit Termine direkt über die Benutzerberfläche intuitiv geplant werden können. Der Benutzer muss dadurch Datum, Uhrzeit oder Raum nicht manuell im Dateneditor auswählen, sondern kann einen Termin direkt in den Kalender ziehen oder innerhalb der Kalenderansicht verschieben.
+
+Grundsätzlich gibt es dabei zwei wichtige Funktionalitäten. Einerseits können Termine aus der Terminliste in den Kalender gezogen und einem Datum, einer Uhrzeit oder einem Raum zugewiesen werden und bereits eingeplante Termine können innerhalb des Kalenders verschoben werden. Andererseits ist es auch möglich, einen Termin wieder in die Terminliste zu ziehen und in einen nicht zugewiesenen Zustand zu bringen.
+
+Für diese Funktion wird das Drag-and-Drop System von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/dnd.html}} Die Terminliste dient dabei als Ausgangspunkt, aus dem Termine herausgezogen werden können. Die Kalenderansichten übernehmen die Rolle der Zielbereiche, in denen ein Termin abgelegt und dadurch neu zugewiesen werden kann.
+
+Beim Drag-and-Drop wird nur die ID des jeweiligen Termins weitergegeben. Nach dem Ablegen kann die Anwendung anhand dieser ID den passenden Termin laden und die neuen Daten speichern.
+
+\begin{verbatim}
+    mime.setData(self.MIME, str(self.termin_id).encode("utf-8"))
+\end{verbatim}
+
+Beim Ablegen wird die ID wieder ausgelesen:
+
+\begin{verbatim}
+    def dropEvent(self, e: QDropEvent):
+        md = e.mimeData()
+        termin_id = bytes(md.data(self.MIME)).decode("utf-8").strip()
+        ... weitere Verarbeitung ...
+\end{verbatim}
+
+Ein weiterer Teil der Drag-and-Drop Funktion ist die Vorschau während des Verschiebens. In der Tages- und Wochenansicht kann schon während des Ziehens geprüft werden, ob der Termin einen Konflikt auslösen würde. Dafür wird die neue Position nur vorübergehend simuliert.
+
 \subsection{Filterfunktion}
+
+Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Wenn der Benutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dort wird der aktuelle Filterzustand gespeichert und für die Anzeige verwendet. Der aktuelle Zustand aller Filter wird dabei im \texttt{FilterState} gespeichert.
+
+Die Filter ändern dabei nicht die gespeicherten Daten. Es wird nur berechnet, welche Termine zu den aktuell gesetzten Filtern passen. Diese gefilterten Termine werden an die Terminliste und an die Kalenderansicht weitergegeben.
+
+\begin{verbatim}
+    self.planner.set_global_filter_state(fs)
+    terms = self._compute_filtered_termine(fs)
+    self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
+\end{verbatim}
+
+Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabei, die Planung in kleineren Ausschnitten zu betrachten.
 
 \subsection{Konflikterkennung}
 
+Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte können zum Beispiel entstehen, wenn ein Raum zur gleichen Zeit doppelt belegt ist, eine Lehrperson gleichzeitig in mehreren Terminen eingetragen wurde oder ein Termin auf einen freien Tag fällt. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen (Babaei et al., 2015).
+
+Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt{konflikte.json} geladen und können einzeln aktiviert, deaktiviert oder angepasst werden. Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
+
+\begin{verbatim}
+    {
+        "name": "Raum-Konflikt",
+        "key": "room_conflict",
+        "enabled": true,
+        "type": "conflict",
+        "description": "Zwei Termine im selben Raum, am selben Tag, mit sich überschneidenden Zeiten.",
+        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+    },
+\end{verbatim}
+
+
+Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender hervorgehoben werden. Dadurch ist sofort erkennbar, an welcher Stelle der Planung das Problem liegt.
+
+Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird der selbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige.
+
 \subsection{Import, Export und Speicherung}
 
+Die Daten des Planungstools werden in mehreren JSON-Dateien gespeichert. Für die verschiedenen Datenbereiche gibt es eigene Dateien. Beim Start der Anwendung werden diese Dateien geladen und Änderungen werden wieder in diese gespeichert.
+
+Für das Laden und Speichern wird \texttt{DataService} verwendet. Dadurch sind die Dateizugriffe an einer zentralen Stelle gesammelt. Das macht die Speicherung übersichtlicher und erleichtert es, später Änderungen an der Datenverwaltung vorzunehmen, zum Beispiel das Hinzufügen einer Datenbank oder eines zentralen Servers.
+
+Die Anwendung überschreibt eine Datei nicht direkt, sondern schreibt die neuen Daten zuerst in eine temporäre Datei. Erst danach wird die alte Datei ersetzt. Das Ersetzen erfolgt dabei als atomare Operation auf Betriebssystemebene, sodass entweder die alte oder die neue Datei vollständig vorhanden ist. Dadurch ist die Wahrscheinlichkeit geringer, dass eine JSON-Datei beschädigt wird, falls während des Speicherns ein Fehler auftritt.
+
+\begin{verbatim}
+tmp.write_text(json_text, encoding="utf-8")
+tmp.replace(path)
+\end{verbatim}
+
+Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Export werden die Stammdaten in einer gemeinsamen JSON-Datei zusammengefasst. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
+
+\begin{verbatim}
+files = [
+    "raeume.json",
+    "lehrveranstaltungen.json",
+    "termine.json",
+    "semester.json",
+    "fachrichtungen.json",
+    "freie_tage.json",
+    "geplante_semester.json",
+]
+\end{verbatim}
+
+Beim Import wird eine JSON-Datei eingelesen und zunächst überprüft, welche Daten darin enthalten sind. Danach kann entschieden werden, ob die importierten Änderungen übernommen werden sollen. Dadurch werden vorhandene Daten nicht ungeprüft ersetzt.
+
+Außerdem kann in den Einstellungen festgelegt werden, welcher Datenordner verwendet werden soll. Dadurch kann das Tool mit unterschiedlichen Datensätzen arbeiten, zum Beispiel mit Testdaten oder mit den eigentlichen Planungsdaten.
+
 \subsection{Undo/Redo, Shortcuts und Layout-Verwaltung}
+
+Neben den eigentlichen Planungsfunktionen wurden auch einige Bedienhilfen umgesetzt. Dazu gehören Undo und Redo, Tastenkombinationen und die Möglichkeit, die Anordnung der verschiedenen Docks zu speichern. Diese Funktionen sollen die Arbeit mit dem Tool erleichtern.
+
+Die Undo- und Redo-Funktion arbeitet mit gespeicherten Zwischenständen der Daten. Bevor eine Änderung durchgeführt wird, wird der aktuelle Zustand als Kopie aller Daten gespeichert. Wenn der Benutzer die Änderung rückgängig macht, wird der frühere Zustand wieder geladen und die Benutzeroberfläche aktualisiert.
+
+\begin{verbatim}
+snapshot = self.undo_service.undo(self.ds)
+self.undo_service.restore(self.ds, snapshot)
+self.refresh_everything()
+\end{verbatim}
+
+Zusätzlich gibt es Tastenkombinationen für häufig verwendete Aktionen. Dazu gehören unter anderem das Aktualisieren der Ansicht, das Wechseln zwischen Tages-, Wochen- und Monatsansicht, das Erstellen neuer Einträge sowie Import und Export. Einige Shortcuts gelten nur in bestimmten Bereichen der Anwendung, wie das Löschen von Terminen aus dem Kalender, damit sie nicht mit normalen Eingaben in Konflikt kommen.
+
+Auch die Oberfläche kann an die eigene Arbeitsweise angepasst werden. Die einzelnen Docks können verschoben und als Layout gespeichert werden. Beim nächsten Öffnen der Anwendung kann dieses Layout wieder geladen oder bei Bedarf auf das Standardlayout zurückgesetzt werden.
+
+Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber flexibler. Fehler können leichter rückgängig gemacht werden, häufige Aktionen sind schneller erreichbar und die Benutzeroberfläche muss nicht jedes Mal neu angeordnet werden.
 
 \newpage
 
@@ -388,5 +545,7 @@ Häufige Aktionen wie Aktualisieren, Ansichtswechsel oder das Erstellen neuer Te
 \newpage
 
 \section{Literaturverzeichnis}
+
+Babaei, H., Karimpour, J., & Hadidi, A. (2015). A survey of approaches for university course timetabling problem. Computers & Industrial Engineering, 86, 43–59. https://www.sciencedirect.com/science/article/abs/pii/S0360835214003714
 
 \end{document}
