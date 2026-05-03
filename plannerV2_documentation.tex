@@ -131,7 +131,7 @@ Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kur
 
 \subsubsection{Python}
 
-Das Planungstool wurde mit Python entwickelt.\footnote{\url{https://www.python.org/}} Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
+Das Planungstool wurde mit Python entwickelt.\footnote{Vgl. Python Software Foundation, o. J.} Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
 
 Für dieses Projekt war Python passend, weil die Sprache gut lesbar ist und sich der Code übersichtlich strukturieren lässt. Ein weiterer Grund für die Verwendung von Python ist, dass die Sprache weit verbreitet ist und von vielen Personen verwendet wird. Dadurch kann die spätere Wartung oder Erweiterung des Tools erleichtert werden, da sich neue Entwicklerinnen und Entwickler schneller in den Code einarbeiten können.
 
@@ -387,7 +387,7 @@ Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen ei
 
 Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgefuhrt werden.
 
-Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen).\footnote{\url{https://medium.com/featurepreneur/json-crud-operation-in-python-2f7f1b32195}} Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
+Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
 
 \begin{verbatim}
 def get_geplante_semester_models(self) -> List[GeplantesSemester]:
@@ -546,6 +546,26 @@ Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber
 
 \section{Literaturverzeichnis}
 
-Babaei, H., Karimpour, J., & Hadidi, A. (2015). A survey of approaches for university course timetabling problem. Computers & Industrial Engineering, 86, 43–59. https://www.sciencedirect.com/science/article/abs/pii/S0360835214003714
+Babaei, H., Karimpour, J., \& Hadidi, A. (2015). 
+A survey of approaches for university course timetabling problem. 
+\textit{Computers \& Industrial Engineering, 86}, 43--59. 
+https://doi.org/10.1016/j.cie.2014.11.010
+
+Bray, T. (2017). 
+\textit{The JavaScript Object Notation (JSON) Data Interchange Format}. 
+RFC 8259. 
+https://www.rfc-editor.org/rfc/rfc8259
+
+Python Software Foundation. (o. J.). 
+\textit{Python Documentation}. 
+https://docs.python.org/3/
+
+Qt Group. (o. J.). 
+\textit{Qt Documentation}. 
+https://doc.qt.io/qt-6/
+
+Qt Group. (o. J.). 
+\textit{Qt for Python Documentation}. 
+https://doc.qt.io/qtforpython-6/
 
 \end{document}
