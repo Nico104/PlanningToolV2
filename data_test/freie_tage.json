@@ -31,6 +31,12 @@
       "beschreibung": "Testtag",
       "typ": "Feiertag",
       "id": "FT005"
+    },
+    {
+      "datum": "2026-02-12",
+      "beschreibung": "test",
+      "typ": "Feiertag",
+      "id": "FT006"
     }
   ]
 }

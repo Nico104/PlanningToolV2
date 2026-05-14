@@ -6,6 +6,7 @@
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{setspace}
+\usepackage{placeins}
 
 \geometry{a4paper, margin=2.5cm}
 \onehalfspacing
@@ -520,9 +521,148 @@ Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber
 
 \subsection{Teststrategie}
 
-\subsection{Funktionale Tests}
+Die Überprüfung des Planungstools wurde durch manuelle Tests durchgeführt. Dafür wurden typische Arbeitsschritte nachgestellt, wie sie auch bei der späteren Nutzung der Anwendung auftreten können. So sollte überprüft werden, ob die wichtigsten Funktionen zuverlässig funktionieren und ob Änderungen in einem Bereich auch an den passenden Stellen der Anwendung übernommen und sichtbar werden.
 
-\subsection{Tests anhand typischer Planungsszenarien}
+Im Mittelpunkt standen dabei die zentralen Funktionen des Tools. Dazu zählen vor allem die Terminverwaltung, die verschiedenen Kalenderansichten, Drag-and-Drop-Funktionen, Filtermöglichkeiten, Konflikterkennung sowie Import, Export und die Speicherung von Daten.
+
+
+\subsection{Durchführung der Tests}
+
+Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung überprüft.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Termin erstellen & Ein neuer Termin wird über den Termin-Dialog mit gültigen Daten erstellt. & Der Termin wird gespeichert und erscheint in der Terminliste sowie in der passenden Kalenderansicht, falls er mit Datum und Uhrzeit erstellt wurde. & Erfolgreich \\
+\hline
+Termin bearbeiten & Ein bestehender Termin wird geöffnet und Datum, Uhrzeit oder Raum wird geändert. & Die Änderung wird gespeichert und in Kalenderansicht und Terminliste angezeigt. & Erfolgreich \\
+\hline
+Termin löschen & Ein bestehender Termin wird gelöscht. & Der Termin wird aus der Terminliste und aus der Kalenderansicht entfernt. & Erfolgreich \\
+\hline
+Termin-Zuweisung entfernen & Ein eingeplanter Termin wird aus dem Kalender entfernt (über Drag-and-Drop) & Der Termin ist nicht mehr im Kalender eingeplant, bleibt aber in der Terminliste vorhanden. & Erfolgreich \\
+\hline
+LVA erstellen & Eine neue Lehrveranstaltung wird über den LVA-Dialog erstellt. & Die Lehrveranstaltung wird gespeichert und kann im Termin-Dialog ausgewählt werden. & Erfolgreich \\
+\hline
+Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird gespeichert und steht bei der Terminplanung zur Auswahl. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
+\label{tab:test-stammdaten}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Tagesansicht anzeigen & Es wird in die Tagesansicht gewechselt. & Termine des ausgewählten Tages werden korrekt angezeigt. & Erfolgreich \\
+\hline
+Wochenansicht anzeigen & Es wird in die Wochenansicht gewechselt. & Termine der ausgewählten Woche werden korrekt angezeigt. & Erfolgreich \\
+\hline
+Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des ausgewählten Monats werden übersichtlich dargestellt. & Erfolgreich \\
+\hline
+Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. & Erfolgreich \\
+\hline
+Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Tag wird in der Kalenderansicht sichtbar dargestellt. & Erfolgreich \\
+\hline
+Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. & Erfolgreich \\
+\hline
+Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
+\label{tab:test-kalender}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Lehrveranstaltung, Raum oder Semester. & Die Anzeige wird jeweils auf die passenden Termine eingeschränkt. & Erfolgreich \\
+\hline
+Filter zurücksetzen & Ein gesetzter Filter wird entfernt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. & Erfolgreich \\
+\hline
+Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Terminliste kontrolliert. & Die Terminliste zeigt den aktualisierten Termin an. & Erfolgreich \\
+\hline
+Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Tests der Filterung und Aktualisierung}
+\label{tab:test-filter}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Raumkonflikt erzeugen & Zwei Termine werden zur gleichen Zeit im selben Raum eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+\hline
+Dozentenkonflikt erzeugen & Zwei Termine mit derselben Lehrperson werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+\hline
+Gruppenkonflikt erzeugen & Zwei Termine für dieselbe Gruppe werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+\hline
+Termin auf freien Tag legen & Ein Termin wird auf einen eingetragenen freien Tag gelegt. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+\hline
+Konflikt anklicken & Ein erkannter Konflikt wird in der Konfliktanzeige ausgewählt. & Die betroffenen Termine werden im Kalender hervorgehoben. & Erfolgreich \\
+\hline
+Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenansicht auf eine problematische Position gezogen. & Die Vorschau zeigt an, dass an dieser Stelle ein Konflikt entstehen kann. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Tests der Konflikterkennung}
+\label{tab:test-konflikte}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. & Erfolgreich \\
+\hline
+Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetragen. & Die Dauer bzw. die zeitliche Einordnung wird korrekt übernommen. & Erfolgreich \\
+\hline
+Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach ob der Eintrag wirklich gelöscht werden soll. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Fehler- und Validierungstests}
+\label{tab:test-validierung}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. & Erfolgreich \\
+\hline
+Projekt exportieren & Ein vorhandener Planungsstand wird exportiert. & Eine JSON-Exportdatei mit den relevanten Projektdaten wird erstellt. & Erfolgreich \\
+\hline
+Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. & Erfolgreich \\
+\hline
+Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. & Erfolgreich \\
+\hline
+Undo ausführen & Nach einer Änderung wird die Rückgängig-Funktion verwendet. & Der vorherige Zustand wird wiederhergestellt und die Oberfläche aktualisiert. & Erfolgreich \\
+\hline
+Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die zuvor rückgängig gemachte Änderung wird erneut übernommen. & Erfolgreich \\
+\hline
+Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. & Erfolgreich \\
+\hline
+\end{tabular}
+\caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
+\label{tab:test-datenmanagement}
+\end{table}
+
+\FloatBarrier
 
 \subsection{Bewertung der Ergebnisse}
 
@@ -569,3 +709,7 @@ Qt Group. (o. J.).
 https://doc.qt.io/qtforpython-6/
 
 \end{document}
+
+
+
+dauer warum erklären. unassigned termin!
