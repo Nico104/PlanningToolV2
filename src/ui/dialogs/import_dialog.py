@@ -1,10 +1,10 @@
 from pathlib import Path
 import json
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame
 )
 
 #TODO - Importlogik überarbeitung, alle files zugelassen?
@@ -12,8 +12,6 @@ from PySide6.QtWidgets import (
 class ImportDialog(QDialog):
     """Steps through every changed entry across all imported files and lets the user merge or ignore each."""
 
-    # Maps filename → (list_key, id_field).
-    # list_key=None means the file content is a top-level list (no wrapper dict).
     _FILE_SCHEMAS = {
         "termine.json":             ("termine",             "id"),
         "raeume.json":              ("raeume",              "id"),
@@ -59,55 +57,155 @@ class ImportDialog(QDialog):
     class _EntryMergePrompt(QDialog):
         """Decision dialog showing field-level differences for one entry, with import/ignore choices."""
 
+        _FIELD_LABELS = {
+            "id": "ID",
+            "name": "Name",
+            "typ": "Typ",
+            "duration": "Dauer",
+            "datum": "Datum",
+            "von_datum": "Von",
+            "bis_datum": "Bis",
+            "gruppe": "Gruppe",
+            "groesse": "Groesse",
+            "start_zeit": "Startzeit",
+            "end_zeit": "Endzeit",
+            "raum_id": "Raum",
+            "lva_id": "Lehrveranstaltung",
+            "semester_id": "Semester",
+            "serien_id": "Serie",
+            "anwesenheitspflicht": "Anwesenheitspflicht",
+            "notiz": "Notiz",
+            "beschreibung": "Beschreibung",
+            "kapazitaet": "Kapazitaet",
+            "vortragende": "Vortragende",
+            "email": "E-Mail",
+            "fachrichtung": "Fachrichtung",
+            "geplante_semester": "Geplante Semester",
+        }
+
+        @classmethod
+        def _humanize_key(cls, key: str) -> str:
+            return cls._FIELD_LABELS.get(key) or key.replace("_", " ").strip().capitalize()
+
+        @classmethod
+        def _format_value(cls, value, field: str = "") -> str:
+            if value == '<missing>':
+                return "(leer)"
+            if value is None:
+                return "(leer)"
+            if isinstance(value, bool):
+                return "Ja" if value else "Nein"
+            if isinstance(value, dict):
+                parts = []
+                for k in sorted(value.keys()):
+                    parts.append(f"{cls._humanize_key(str(k))}: {cls._format_value(value[k], str(k))}")
+                return " | ".join(parts) if parts else "(leer)"
+            if isinstance(value, list):
+                if not value:
+                    return "(leer)"
+                return ", ".join(cls._format_value(v, field) for v in value)
+
+            display = str(value)
+            if field == "duration" and display and not display.endswith(" min"):
+                return f"{display} min"
+            return display
+
+        @classmethod
+        def _build_diff_text(cls, diffs):
+            if not diffs:
+                return "Keine Unterschiede"
+
+            blocks = []
+            for field, old_value, new_value in diffs:
+                blocks.append(
+                    "\n".join([
+                        f"{cls._humanize_key(str(field))}",
+                        f"Alt: {cls._format_value(old_value, str(field))}",
+                        f"Neu: {cls._format_value(new_value, str(field))}",
+                    ])
+                )
+            return "\n\n".join(blocks)
+
+        @classmethod
+        def _build_compact_entry_text(cls, new: dict) -> str:
+            lines = [
+                f"{cls._humanize_key(str(k))}: {cls._format_value(new.get(k, ''), str(k))}"
+                for k in sorted(new.keys())
+            ][:40]
+            return "\n".join(lines)
+
         def __init__(self, parent, fname: str, new: dict, old):
             super().__init__(parent)
             self.choice = None
+            self.setObjectName("ImportEntryMergePrompt")
             entry_id = new.get('id') or new.get('datum') or new.get('key') or new.get('name') or '-'
             self.setWindowTitle(f"{fname}: {entry_id}")
-            self.setMinimumSize(680, 360)
+            self.resize(980, 620)
+            self.setMinimumSize(860, 520)
+            self.setModal(True)
+
             root = QVBoxLayout(self)
+            root.setContentsMargins(16, 14, 16, 12)
+            root.setSpacing(8)
+
             title = QLabel(f"{fname}  —  {entry_id}")
             title.setObjectName("ImportTitle")
             root.addWidget(title)
 
-            main_area = QHBoxLayout()
+            subtitle = QLabel("Bitte prufen: bestehender Eintrag wird mit den neuen Werten verglichen.")
+            subtitle.setObjectName("ImportSubHeader")
+            root.addWidget(subtitle)
 
             # left: field-level diff
             keys = sorted(set((old or {}).keys()) | set(new.keys()))
             diffs = [(k, (old or {}).get(k, '<missing>'), new.get(k, '<missing>'))
                      for k in keys if (old or {}).get(k, '<missing>') != new.get(k, '<missing>')]
 
+            content_row = QHBoxLayout()
+            content_row.setSpacing(10)
+
+            left_card = QFrame(self)
+            left_card.setObjectName("importCard")
+            left_layout = QVBoxLayout(left_card)
+            left_layout.setContentsMargins(10, 10, 10, 10)
+            left_layout.setSpacing(6)
+            left_lbl = QLabel("Anderungen")
+            left_lbl.setObjectName("ImportSubHeader")
+            left_layout.addWidget(left_lbl)
+
             diff_view = QTextEdit(self)
             diff_view.setReadOnly(True)
-            diff_view.setPlainText(
-                '\n'.join(f"{k}:\n  - alt: {ov}\n  + neu: {nv}\n" for k, ov, nv in diffs)
-                if diffs else "Keine Unterschiede"
-            )
+            diff_view.setLineWrapMode(QTextEdit.NoWrap)
+            diff_view.setPlainText(self._build_diff_text(diffs))
             diff_view.setObjectName("importPreview")
             diff_view.setFont(QFont("Consolas"))
-            diff_view.setMinimumWidth(420)
+            left_layout.addWidget(diff_view)
 
-            left = QVBoxLayout()
-            left.addWidget(diff_view)
-            main_area.addLayout(left, 3)
-
-            # right: full new entry for quick reference
-            right = QVBoxLayout()
+            right_card = QFrame(self)
+            right_card.setObjectName("importCard")
+            right_layout = QVBoxLayout(right_card)
+            right_layout.setContentsMargins(10, 10, 10, 10)
+            right_layout.setSpacing(6)
             lbl = QLabel("Neu (Gesamt)")
             lbl.setObjectName("ImportSubHeader")
-            right.addWidget(lbl)
-            meta = QLabel('\n'.join([f"{k}: {new.get(k, '')}" for k in sorted(new.keys())][:40]))
-            meta.setWordWrap(True)
-            meta.setFont(QFont("Consolas"))
-            meta.setObjectName("ImportDiff")
-            right.addWidget(meta)
-            right.addStretch()
-            main_area.addLayout(right, 2)
+            right_layout.addWidget(lbl)
 
-            root.addLayout(main_area)
+            meta = QTextEdit(self)
+            meta.setReadOnly(True)
+            meta.setLineWrapMode(QTextEdit.NoWrap)
+            meta.setFont(QFont("Consolas"))
+            meta.setObjectName("importPreview")
+            meta.setPlainText(self._build_compact_entry_text(new))
+            right_layout.addWidget(meta)
+
+            content_row.addWidget(left_card, 3)
+            content_row.addWidget(right_card, 2)
+            root.addLayout(content_row, 1)
 
             h = QHBoxLayout()
+            h.setSpacing(8)
             h.addStretch()
+            primary_btn = None
             for label, obj_name, choice in [
                 ("Importieren",        "PrimaryButton",   "import"),
                 ("Ignorieren",         "SecondaryButton", "ignore"),
@@ -118,7 +216,13 @@ class ImportDialog(QDialog):
                 btn.setObjectName(obj_name)
                 btn.clicked.connect(lambda _, c=choice: self._choose(c))
                 h.addWidget(btn)
+                if choice == "import":
+                    primary_btn = btn
             root.addLayout(h)
+
+            if primary_btn is not None:
+                primary_btn.setDefault(True)
+                primary_btn.setFocus()
 
         def _choose(self, c: str):
             self.choice = c
@@ -148,12 +252,8 @@ class ImportDialog(QDialog):
                 pass
 
 
-            if list_key is None:
-                incoming_list = content if isinstance(content, list) else []
-                existing_list = existing_raw if isinstance(existing_raw, list) else []
-            else:
-                incoming_list = content.get(list_key, []) if isinstance(content, dict) else []
-                existing_list = existing_raw.get(list_key, []) if isinstance(existing_raw, dict) else []
+            incoming_list = content.get(list_key, []) if isinstance(content, dict) else []
+            existing_list = existing_raw.get(list_key, []) if isinstance(existing_raw, dict) else []
 
 
             existing_map = {
@@ -202,17 +302,13 @@ class ImportDialog(QDialog):
                             existing_map[eid] = inc
 
             # write back
-            if list_key is None:
-                out = existing_list
-            else:
-                if not isinstance(existing_raw, dict):
-                    existing_raw = {}
-                existing_raw[list_key] = existing_list
-                out = existing_raw
+            if not isinstance(existing_raw, dict):
+                existing_raw = {}
+            existing_raw[list_key] = existing_list
 
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+                target.write_text(json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
             except Exception:
                 pass
 

@@ -26,7 +26,7 @@
 
 \subsection{Problemstellung}
 
-Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren eingeplant. Dazu müssen bei den Entscheidungen, wann welcher Termin eingeplant wird, mehrere verscheidene Informationen gleichzeitig berücksichtigt werden:
+Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren eingeplant. Dazu müssen bei den Entscheidungen, wann welcher Termin eingeplant wird, mehrere verschiedene Informationen gleichzeitig berücksichtigt werden:
 
 \begin{itemize}
 \item zeitliche Überschneidungen von Lehrveranstaltungen, Lehrpersonen, Räumen und Gruppen
@@ -34,15 +34,15 @@ Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren ein
 \item freie Tage/Feiertage
 \end{itemize}
 
-Diese Planung wird durch die hohe Menge an individuellen Termine eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über eine Zusammensetzung an Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
+Diese Planung wird durch die hohe Menge an individuellen Terminen eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über eine Zusammensetzung an Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
 Durch die manuelle Planung können auch weitere Probleme auftreten wie doppelte oder uneinheitliche Daten, Änderungen müssen an mehreren Stellen angepasst werden, schwer erkennbare Konflikte und ein generell schlechter Überblick über die einzelnen Termine. Beispiele für mögliche Konflikte könnten sein: doppelt belegte Räume, Lehrperson zeitgleich eingeplant oder ein Termin an einem Feiertag angesetzt.
 
-Auf Grund dieser Probleme und dadurch dass dies eine jährlich wiederkehrende Aufgabe ist besteht ein Bedarf an einer zentralen Softwarelösung. Diese Software soll die Planung der Termine übersichtlicher, strukturierter und nachvollziehbarer machen.
-Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstool für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software am Institut.
+Aufgrund dieser Probleme und dadurch dass dies eine jährlich wiederkehrende Aufgabe ist besteht ein Bedarf an einer zentralen Softwarelösung. Diese Software soll die Planung der Termine übersichtlicher, strukturierter und nachvollziehbarer machen.
+Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstools für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software am Institut.
 
 \subsection{Zielsetzung}
 
-Ziel dieser Bachlorarbeit ist die Konzeption, Implementierung und Bewertung eines Planungstools. Dieses Tool soll den jährlichen Planungprozess der LVA-Termine digital unterstützen und damit effizienter und einfacher gestalten.
+Ziel dieser Bachelorarbeit ist die Konzeption, Implementierung und Bewertung eines Planungstools. Dieses Tool soll den jährlichen Planungsprozess der LVA-Termine digital unterstützen und damit effizienter und einfacher gestalten.
 Zentrale Ziele dieser Software sind:
 
 \begin{itemize}
@@ -54,9 +54,9 @@ Zentrale Ziele dieser Software sind:
 \item Import und Export von Planungsdaten
 \end{itemize}
 
-Die Umsetzung soll in Form einer mit Python entwickelten Desktop-Anwendung erfolgen. Die Entwicklung einer einfachen, intuitiven grafischen Benutzeroberfläche ist dabei besonders wichtig, da die Bedienung dieses Tools auch ohme Programmierkentnisse möglich sein soll.
+Die Umsetzung soll in Form einer mit Python entwickelten Desktop-Anwendung erfolgen. Die Entwicklung einer einfachen, intuitiven grafischen Benutzeroberfläche ist dabei besonders wichtig, da die Bedienung dieses Tools auch ohne Programmierkenntnisse möglich sein soll. Benutzerfreundlichkeit wird in dieser Arbeit als Eigenschaft verstanden, die beschreibt, ob bestimmte Nutzer ihre Ziele in einem bestimmten Nutzungskontext effektiv, effizient und zufriedenstellend erreichen können \cite{nistUsability}.
 
-Ziel dieser Anwendung ist nicht die gesamte Planung zu übernehmen, sondern es soll als Unterstützung für den User dienen, der die Planung durführt. Es soll besonders auf benutzerfreundlichkeit, nachvollziehbarkeit, erweiterbarkeit und praktische Nutzbarkeit geachtet werden.
+Ziel dieser Anwendung ist nicht die gesamte Planung zu übernehmen, sondern es soll als Unterstützung für den Nutzer dienen, der die Planung durchführt. Es soll besonders auf Benutzerfreundlichkeit, Nachvollziehbarkeit, Erweiterbarkeit und praktische Nutzbarkeit geachtet werden.
 
 
 \subsection{Forschungsfrage}
@@ -66,7 +66,7 @@ Aus der beschriebenen Problemstellung und Zielsetzung der Arbeit und dem Bedarf 
 Die zentrale Forschungsfrage dieser Arbeit lautet daher:
 
 \begin{quote}
-Wie kann ein intuitives Python-basiertes Desktop-Planungstool entwickelt werden, um die jährliche Lehrveranstaltungsplanung an einem Institut übersichtlicher, strukturierter, effizienter und weniger fehleranfällig zu gestalten?
+Wie kann ein intuitives Python-basiertes Desktop-Planungstool entwickelt werden, um die jährliche Lehrveranstaltungsplanung übersichtlicher, strukturierter, effizienter und weniger fehleranfällig zu gestalten?
 \end{quote}
 
 Um diese Frage zu beantworten werden auch zusätzliche Teilfragen betrachtet:
@@ -75,15 +75,15 @@ Um diese Frage zu beantworten werden auch zusätzliche Teilfragen betrachtet:
     \item Welche Anforderungen ergeben sich aus dem Planungsprozess?
     \item Wie können Termine, Lehrveranstaltungen, Räume und weitere Daten sinnvoll strukturiert und verwaltet werden?
     \item Wie kann eine Benutzeroberfläche gestalten, sodass Termine übersichtlich dargestellt, gefiltert und mittels Drag-and-Drop verschoben werden können?
-    \item Wie können typische Planungskonflikte erkannt und für den User sichtbar schnell gemacht werden?
+    \item Wie können typische Planungskonflikte erkannt und für den Nutzer sichtbar schnell gemacht werden?
     \item Inwiefern erfüllt das entwickelte Tool die definierten Anforderungen?
 \end{itemize}
 
 \subsection{Aufbau der Arbeit}
 
-Die Arbeit beginnt mit der Beschreibung der Probleme, die durch die jährliche Planung der Lehrveranstaltungen entstehen. Danach werden die Ziele der Arbeit und die Forschungsfrage vorgestellt. Dadurch wird deutlich gemacht, warum diese Anwendung entwickelt wurde und welche Punkte in der Arbeit besonders wichtig sind.
+Die Arbeit beginnt mit einer Beschreibung der Probleme, die bei der jährlichen Planung von Lehrveranstaltungen entstehen. Anschließend werden die Ziele der Arbeit und die Forschungsfrage vorgestellt.
 
-...
+Anschließend werden die Grundlagen und Anforderungen beschrieben. Danach folgen Konzeption und Implementierung des Tools. Zum Schluss werden Tests, Ergebnisse, Grenzen und mögliche Erweiterungen dargestellt.
 
 \newpage
 
@@ -93,7 +93,7 @@ Die Arbeit beginnt mit der Beschreibung der Probleme, die durch die jährliche P
 
 Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstaltungen eines Instituts in einen passenden zeitlichen und organisatorischen Rahmen zu bringen. Dazu müssen Veranstaltungen wie Vorlesungen, Übungen, Labore oder Prüfungen konkreten Terminen, Räumen und teilweise auch bestimmten Gruppen zugeordnet werden. Die Planung ist daher mehr als nur das Eintragen von Terminen in einen Kalender.
 
-Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden. Solche Anforderungen entsprechen typischen Einschränkungen der Lehrveranstaltungsplanung, bei der Veranstaltungen bestimmten Zeitfenstern und Räumen zugeordnet werden müssen (Babaei et al., 2015).
+Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden. Solche Anforderungen entsprechen typischen Einschränkungen der Lehrveranstaltungsplanung, bei der Veranstaltungen bestimmten Zeitfenstern und Räumen zugeordnet werden müssen \cite{babaei2015survey}.
 
 Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören zum Beispiel die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson, der Raum oder die betroffene Studierendengruppe. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
 
@@ -132,7 +132,7 @@ Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kur
 
 \subsubsection{Python}
 
-Das Planungstool wurde mit Python entwickelt.\footnote{Vgl. Python Software Foundation, o. J.} Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
+Das Planungstool wurde mit Python entwickelt \cite{pythonDocs}. Python bildet dabei die Grundlage für die eigentliche Logik der Anwendung, also zum Beispiel für das Laden und Speichern der Daten, das Bearbeiten von Terminen und das Prüfen von möglichen Konflikten.
 
 Für dieses Projekt war Python passend, weil die Sprache gut lesbar ist und sich der Code übersichtlich strukturieren lässt. Ein weiterer Grund für die Verwendung von Python ist, dass die Sprache weit verbreitet ist und von vielen Personen verwendet wird. Dadurch kann die spätere Wartung oder Erweiterung des Tools erleichtert werden, da sich neue Entwicklerinnen und Entwickler schneller in den Code einarbeiten können.
 
@@ -140,9 +140,9 @@ Außerdem unterstützt Python viele Bibliotheken. Für dieses Projekt war vor al
 
 \subsubsection{PySide6 und Qt}
 
-Für die grafische Benutzeroberfläche des Planungstools wurde PySide6 verwendet. PySide6 verbindet Python mit dem Qt-Framework. Qt bietet viele Elemente, die für Desktop-Anwendungen gebraucht werden, zum Beispiel Fenster, Tabellen, Buttons, Menüs und Dialoge.\footnote{\url{https://doc.qt.io/qt-6/}} Dadurch konnte das Tool als lokale Anwendung mit einer eigenen Benutzeroberfläche umgesetzt werden.
+Für die grafische Benutzeroberfläche des Planungstools wurde PySide6 verwendet. PySide6 verbindet Python mit dem Qt-Framework. Qt bietet viele Elemente, die für Desktop-Anwendungen gebraucht werden, zum Beispiel Fenster, Tabellen, Buttons, Menüs und Dialoge \cite{qtDocs}. Dadurch konnte das Tool als lokale Anwendung mit einer eigenen Benutzeroberfläche umgesetzt werden.
 
-Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, da PyQt und PySide6 ähnliche Funktionen bereitstellen und beide auf Qt basieren. Für dieses Projekt wurde jedoch PySide6 gewählt, da es das offizielle Qt-for-Python-Binding ist.\footnote{\url{https://doc.qt.io/qtforpython-6/index.html}} Außerdem kann die LGPL-Lizenz von PySide6 bei eigenständigen Anwendungen flexibler sein.\footnote{\url{https://www.qt.io/development/open-source-lgpl-obligations}}
+Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, da PyQt und PySide6 ähnliche Funktionen bereitstellen und beide auf Qt basieren. Für dieses Projekt wurde jedoch PySide6 gewählt, da es das offizielle Qt-for-Python-Binding ist \cite{qtForPython}. Außerdem kann die LGPL-Lizenz von PySide6 bei eigenständigen Anwendungen flexibler sein.\footnote{\url{https://www.qt.io/development/open-source-lgpl-obligations}}
 
 Im Planungstool wird PySide6 vor allem für die verschiedenen Bedienbereiche der Anwendung genutzt. Dazu gehören zum Beispiel Kalenderansichten, Tabellen, Eingabefenster, Filterbereiche und Listen.
 
@@ -150,7 +150,7 @@ Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem D
 
 \subsubsection{JSON als Datenformat}
 
-Die Planungsdaten werden in JSON-Dateien gespeichert.\footnote{\url{https://www.rfc-editor.org/rfc/rfc8259}} Dazu gehören zum Beispiel Termine, Lehrveranstaltungen, Räume, Semester und weitere Informationen, die für die Planung benötigt werden. JSON wurde verwendet, weil sich damit strukturierte Daten einfach speichern, laden und bei Bedarf manuell bearbeiten lassen.
+Die Planungsdaten werden in JSON-Dateien gespeichert. Dazu gehören zum Beispiel Termine, Lehrveranstaltungen, Räume, Semester und weitere Informationen, die für die Planung benötigt werden. JSON wurde gewählt, weil sich damit strukturierte Daten unkompliziert speichern, wieder laden und bei Bedarf auch direkt in der Datei manuell bearbeiten lassen \cite{bray2017json}.
 
 Da die JSON-Dateien auch außerhalb des Programms geöffnet werden können, bleibt nachvollziehbar, welche Daten gespeichert wurden. Das kann zum Beispiel hilfreich sein, wenn Fehler gesucht werden oder überprüft werden soll, ob Daten richtig übernommen wurden.
 
@@ -167,11 +167,11 @@ Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherun
 
 Die Anforderungen an das Planungstool ergeben sich aus den typischen Arbeitsschritten der jährlichen Lehrveranstaltungsplanung. Dabei müssen Termine nicht nur gespeichert, sondern auch mit Informationen wie Lehrveranstaltungen, Räumen, Semestern oder Gruppen verbunden werden.
 
-Für die Anforderungsanalyse wurden daher vor allem das Anlegen und Bearbeiten von Terminen, das Verschieben von Terminen, das Filtern der Daten und das Erkennen möglicher Konflikte betrachtet. Daraus ergeben sich die folgenden funktionalen und nicht-funktionalen Anforderungen.
+Für die Anforderungsanalyse wurden daher vor allem das Anlegen und Bearbeiten von Terminen, das Verschieben von Terminen, das Filtern der Daten und das Erkennen möglicher Konflikte betrachtet. Daraus ergeben sich die folgenden funktionalen und nicht-funktionalen Anforderungen, wie sie in der Softwareentwicklung grundsätzlich unterschieden werden \cite{sommerville2016software}.
 
 \subsection{Funktionale Anforderungen}
 
-Funktionale Anforderungen beschreiben, welche Aufgaben die Software erfüllen soll. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:functional-requirements} dargestellt.
+Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software erfüllen bzw. bereitstellen soll \cite{sommerville2016software}. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:functional-requirements} dargestellt.
 
 \begin{table}[h]
 \centering
@@ -204,7 +204,7 @@ Import und Export & Planungsdaten sollen importiert und exportiert werden könne
 
 \subsection{Nicht-funktionale Anforderungen}
 
-Nicht-funktionale Anforderungen beschreiben, welche Eigenschaften die Software haben soll. Sie beziehen sich also nicht direkt auf einzelne Funktionen, sondern auf Aspekte wie Bedienbarkeit, Wartbarkeit oder Stabilität.
+Nicht-funktionale Anforderungen beschreiben Eigenschaften eines Systems, die sich nicht direkt auf einzelne Funktionen beziehen, sondern zum Beispiel Bedienbarkeit, Zuverlässigkeit, Wartbarkeit oder technische Einschränkungen betreffen \cite{sommerville2016software}.
 
 \begin{table}[h]
 \centering
@@ -273,7 +273,7 @@ Neben den Planungsdaten speichert die Anwendung auch Einstellungen und Konfliktp
 
 Der Arbeitsablauf im Planungstool beginnt in der Regel mit dem Laden der vorhandenen Daten. Danach können bei Bedarf Stammdaten ergänzt oder angepasst werden. Auf dieser Grundlage werden die einzelnen Termine erstellt und weiter geplant.
 
-Ein Termin kann entweder direkt mit Datum, Uhrzeit und Raum angelegt werden oder zunächst ohne feste Zuordnung bestehen. Noch nicht zugewiesene Termine können später aus der Terminliste in die Kalenderansicht per Drag-and-Drop übernommen werden. Während des Drag-and-Drops werden mögliche Konflikte direkt als rote Vorschau im Kalender angezeigt.
+Ein Termin kann entweder direkt mit Datum, Uhrzeit und Raum angelegt werden oder zunächst ohne feste Zuordnung bestehen. Dafür verwendet das Tool Startzeit und Dauer statt Start- und Endzeit. So können unzugewiesene Termine ohne Startzeit gespeichert werden und bei Drag-and-Drop ist die Dauer in der Vorschau direkt sichtbar. Noch nicht zugewiesene Termine können später aus der Terminliste in die Kalenderansicht per Drag-and-Drop übernommen werden. Während des Drag-and-Drops werden mögliche Konflikte direkt als rote Vorschau im Kalender angezeigt.
 
 Während der Planung können Filter genutzt werden, um nur bestimmte Termine anzuzeigen. Die Konfliktanzeige hilft zusätzlich dabei, mögliche Probleme schnell zu erkennen.
 
@@ -291,7 +291,7 @@ Dafür ist das Hauptfenster als zentrale Stelle der Anwendung wichtig. Es verbin
 
 \subsection{Entwicklungsumgebung und Projektstruktur}
 
-Die Anwendung wurde mit Python in der Version 3.13.2 entwickelt.\footnote{\url{https://www.python.org/downloads/release/python-3132/}} Für die grafische Benutzeroberfläche wird PySide6 verwendet. Die Implementierung des Planungstools erfolgte in Visual Studio Code.
+Die Anwendung wurde mit Python in der Version 3.13.2 entwickelt \cite{python3132}. Für die grafische Benutzeroberfläche wird PySide6 verwendet. Die Implementierung des Planungstools erfolgte in Visual Studio Code.
 
 Der Quellcode ist in mehrere Bereiche aufgeteilt. Im \texttt{src}-Verzeichnis befinden sich die wichtigsten Bestandteile des Programms. Dazu gehören die Benutzeroberfläche, verschiedene Services, Dialoge, Hilfsfunktionen und die zentrale Programmlogik. Gestartet wird die Anwendung über die Datei \texttt{main.py}.
 
@@ -321,7 +321,7 @@ Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System 
 
 \begin{verbatim}
 self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
-\end{verbatim}^
+\end{verbatim}
 
 Wird ein Konflikt ausgewählt, können die betroffenen Termine im Kalender hervorgehoben werden.
 
@@ -446,7 +446,7 @@ Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabe
 
 \subsection{Konflikterkennung}
 
-Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte können zum Beispiel entstehen, wenn ein Raum zur gleichen Zeit doppelt belegt ist, eine Lehrperson gleichzeitig in mehreren Terminen eingetragen wurde oder ein Termin auf einen freien Tag fällt. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen (Babaei et al., 2015).
+Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte können zum Beispiel entstehen, wenn ein Raum zur gleichen Zeit doppelt belegt ist, eine Lehrperson gleichzeitig in mehreren Terminen eingetragen wurde oder ein Termin auf einen freien Tag fällt. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen \cite{babaei2015survey}.
 
 Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt{konflikte.json} geladen und können einzeln aktiviert, deaktiviert oder angepasst werden. Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
 
@@ -521,7 +521,7 @@ Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber
 
 \subsection{Teststrategie}
 
-Die Überprüfung des Planungstools wurde durch manuelle Tests durchgeführt. Dafür wurden typische Arbeitsschritte nachgestellt, wie sie auch bei der späteren Nutzung der Anwendung auftreten können. So sollte überprüft werden, ob die wichtigsten Funktionen zuverlässig funktionieren und ob Änderungen in einem Bereich auch an den passenden Stellen der Anwendung übernommen und sichtbar werden.
+Die Überprüfung des Planungstools wurde durch manuelle Tests durchgeführt. Softwaretests dienen dazu, Fehler zu finden und zu prüfen, ob zentrale Funktionen wie vorgesehen arbeiten \cite{sommerville2016software}. Dafür wurden typische Arbeitsschritte nachgestellt, wie sie auch bei der späteren Nutzung der Anwendung auftreten können. So sollte überprüft werden, ob die wichtigsten Funktionen zuverlässig funktionieren und ob Änderungen in einem Bereich auch an den passenden Stellen der Anwendung übernommen und sichtbar werden.
 
 Im Mittelpunkt standen dabei die zentralen Funktionen des Tools. Dazu zählen vor allem die Terminverwaltung, die verschiedenen Kalenderansichten, Drag-and-Drop-Funktionen, Filtermöglichkeiten, Konflikterkennung sowie Import, Export und die Speicherung von Daten.
 
@@ -532,21 +532,21 @@ Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung über
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Termin erstellen & Ein neuer Termin wird über den Termin-Dialog mit gültigen Daten erstellt. & Der Termin wird gespeichert und erscheint in der Terminliste sowie in der passenden Kalenderansicht, falls er mit Datum und Uhrzeit erstellt wurde. & Erfolgreich \\
+Termin erstellen & Ein neuer Termin wird über den Termin-Dialog mit gültigen Daten erstellt. & Der Termin wird gespeichert und erscheint in der Terminliste sowie in der passenden Kalenderansicht, falls er mit Datum und Uhrzeit erstellt wurde. \\
 \hline
-Termin bearbeiten & Ein bestehender Termin wird geöffnet und Datum, Uhrzeit oder Raum wird geändert. & Die Änderung wird gespeichert und in Kalenderansicht und Terminliste angezeigt. & Erfolgreich \\
+Termin bearbeiten & Ein bestehender Termin wird geöffnet und Datum, Uhrzeit oder Raum wird geändert. & Die Änderung wird gespeichert und in Kalenderansicht und Terminliste angezeigt. \\
 \hline
-Termin löschen & Ein bestehender Termin wird gelöscht. & Der Termin wird aus der Terminliste und aus der Kalenderansicht entfernt. & Erfolgreich \\
+Termin löschen & Ein bestehender Termin wird gelöscht. & Der Termin wird aus der Terminliste und aus der Kalenderansicht entfernt. \\
 \hline
-Termin-Zuweisung entfernen & Ein eingeplanter Termin wird aus dem Kalender entfernt (über Drag-and-Drop) & Der Termin ist nicht mehr im Kalender eingeplant, bleibt aber in der Terminliste vorhanden. & Erfolgreich \\
+Termin-Zuweisung entfernen & Ein eingeplanter Termin wird aus dem Kalender entfernt (über Drag-and-Drop) & Der Termin ist nicht mehr im Kalender eingeplant, bleibt aber in der Terminliste vorhanden. \\
 \hline
-LVA erstellen & Eine neue Lehrveranstaltung wird über den LVA-Dialog erstellt. & Die Lehrveranstaltung wird gespeichert und kann im Termin-Dialog ausgewählt werden. & Erfolgreich \\
+LVA erstellen & Eine neue Lehrveranstaltung wird über den LVA-Dialog erstellt. & Die Lehrveranstaltung wird gespeichert und kann im Termin-Dialog ausgewählt werden. \\
 \hline
-Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird gespeichert und steht bei der Terminplanung zur Auswahl. & Erfolgreich \\
+Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird gespeichert und steht bei der Terminplanung zur Auswahl. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
@@ -555,23 +555,23 @@ Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Tagesansicht anzeigen & Es wird in die Tagesansicht gewechselt. & Termine des ausgewählten Tages werden korrekt angezeigt. & Erfolgreich \\
+Tagesansicht anzeigen & Es wird in die Tagesansicht gewechselt. & Termine des ausgewählten Tages werden korrekt angezeigt. \\
 \hline
-Wochenansicht anzeigen & Es wird in die Wochenansicht gewechselt. & Termine der ausgewählten Woche werden korrekt angezeigt. & Erfolgreich \\
+Wochenansicht anzeigen & Es wird in die Wochenansicht gewechselt. & Termine der ausgewählten Woche werden korrekt angezeigt. \\
 \hline
-Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des ausgewählten Monats werden übersichtlich dargestellt. & Erfolgreich \\
+Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des ausgewählten Monats werden übersichtlich dargestellt. \\
 \hline
-Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. & Erfolgreich \\
+Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. \\
 \hline
-Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Tag wird in der Kalenderansicht sichtbar dargestellt. & Erfolgreich \\
+Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Tag wird in der Kalenderansicht sichtbar dargestellt. \\
 \hline
-Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. & Erfolgreich \\
+Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. \\
 \hline
-Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. & Erfolgreich \\
+Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
@@ -580,17 +580,17 @@ Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im K
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Lehrveranstaltung, Raum oder Semester. & Die Anzeige wird jeweils auf die passenden Termine eingeschränkt. & Erfolgreich \\
+Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Lehrveranstaltung, Raum oder Semester. & Die Anzeige wird jeweils auf die passenden Termine eingeschränkt. \\
 \hline
-Filter zurücksetzen & Ein gesetzter Filter wird entfernt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. & Erfolgreich \\
+Filter zurücksetzen & Ein gesetzter Filter wird entfernt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. \\
 \hline
-Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Terminliste kontrolliert. & Die Terminliste zeigt den aktualisierten Termin an. & Erfolgreich \\
+Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Terminliste kontrolliert. & Die Terminliste zeigt den aktualisierten Termin an. \\
 \hline
-Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. & Erfolgreich \\
+Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests der Filterung und Aktualisierung}
@@ -599,21 +599,21 @@ Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Ko
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Raumkonflikt erzeugen & Zwei Termine werden zur gleichen Zeit im selben Raum eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+Raumkonflikt erzeugen & Zwei Termine werden zur gleichen Zeit im selben Raum eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
-Dozentenkonflikt erzeugen & Zwei Termine mit derselben Lehrperson werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+Dozentenkonflikt erzeugen & Zwei Termine mit derselben Lehrperson werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
-Gruppenkonflikt erzeugen & Zwei Termine für dieselbe Gruppe werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+Gruppenkonflikt erzeugen & Zwei Termine für dieselbe Gruppe werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
-Termin auf freien Tag legen & Ein Termin wird auf einen eingetragenen freien Tag gelegt. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. & Erfolgreich \\
+Termin auf freien Tag legen & Ein Termin wird auf einen eingetragenen freien Tag gelegt. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
-Konflikt anklicken & Ein erkannter Konflikt wird in der Konfliktanzeige ausgewählt. & Die betroffenen Termine werden im Kalender hervorgehoben. & Erfolgreich \\
+Konflikt anklicken & Ein erkannter Konflikt wird in der Konfliktanzeige ausgewählt. & Die betroffenen Termine werden im Kalender hervorgehoben. \\
 \hline
-Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenansicht auf eine problematische Position gezogen. & Die Vorschau zeigt an, dass an dieser Stelle ein Konflikt entstehen kann. & Erfolgreich \\
+Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenansicht auf eine problematische Position gezogen. & Die Vorschau zeigt an, dass an dieser Stelle ein Konflikt entstehen kann. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests der Konflikterkennung}
@@ -622,15 +622,15 @@ Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenan
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. & Erfolgreich \\
+Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. \\
 \hline
-Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetragen. & Die Dauer bzw. die zeitliche Einordnung wird korrekt übernommen. & Erfolgreich \\
+Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetragen. & Die Dauer bzw. die zeitliche Einordnung wird korrekt übernommen. \\
 \hline
-Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach ob der Eintrag wirklich gelöscht werden soll. & Erfolgreich \\
+Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
 \end{tabular}
 \caption{Manuelle Fehler- und Validierungstests}
@@ -639,23 +639,23 @@ Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die A
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|p{2cm}|}
+\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. & Erfolgreich \\
+Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. \\
 \hline
-Projekt exportieren & Ein vorhandener Planungsstand wird exportiert. & Eine JSON-Exportdatei mit den relevanten Projektdaten wird erstellt. & Erfolgreich \\
+Projekt exportieren & Ein vorhandener Planungsstand wird exportiert. & Eine JSON-Exportdatei mit den relevanten Projektdaten wird erstellt. \\
 \hline
-Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. & Erfolgreich \\
+Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. \\
 \hline
-Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. & Erfolgreich \\
+Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. \\
 \hline
-Undo ausführen & Nach einer Änderung wird die Rückgängig-Funktion verwendet. & Der vorherige Zustand wird wiederhergestellt und die Oberfläche aktualisiert. & Erfolgreich \\
+Undo ausführen & Nach einer Änderung wird die Rückgängig-Funktion verwendet. & Der vorherige Zustand wird wiederhergestellt und die Oberfläche aktualisiert. \\
 \hline
-Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die zuvor rückgängig gemachte Änderung wird erneut übernommen. & Erfolgreich \\
+Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die zuvor rückgängig gemachte Änderung wird erneut übernommen. \\
 \hline
-Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. & Erfolgreich \\
+Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
@@ -666,50 +666,97 @@ Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeicher
 
 \subsection{Bewertung der Ergebnisse}
 
+Die manuellen Tests zeigen, dass die zentralen Funktionen des Planungstools zuverlässig arbeiten. Termine lassen sich erstellen, bearbeiten, löschen, verschieben und speichern. Auch die Kalenderansichten, Filter, Konfliktanzeige sowie der Import und Export haben in den getesteten Fällen wie erwartet funktioniert.
+
+Außerdem wurde deutlich, dass typische Planungskonflikte erkannt werden. Dazu gehören zum Beispiel doppelte Raumbelegungen, Überschneidungen bei Lehrpersonen oder Termine an freien Tagen. Dadurch unterstützt die Anwendung den Nutzer dabei, die Planung besser zu überprüfen und Fehler frühzeitig zu erkennen.
+
 \newpage
 
 \section{Diskussion}
 
 \subsection{Zielerreichung}
 
-\subsection{Stärken der entwickelten Lösung}
+Das Ziel der Arbeit wurde im Wesentlichen erreicht. Es ist ein Python-basiertes Desktop-Tool entstanden, mit dem Lehrveranstaltungen, Termine, Räume und weitere Planungsdaten zentral verwaltet werden können.
+
+Durch Funktionen wie Kalenderansichten, Filter, Drag-and-Drop und Konflikterkennung wird die Planung übersichtlicher und einfacher zu bearbeiten. Das Tool erstellt die Planung zwar nicht automatisch, unterstützt den Nutzer aber bei typischen Aufgaben und hilft dabei, Fehler schneller zu erkennen.
+
+Damit lässt sich die Forschungsfrage beantworten: Ein solches Planungstool kann durch eine strukturierte Verwaltung der Daten, eine übersichtliche Benutzeroberfläche und eine regelbasierte Prüfung von Konflikten umgesetzt werden.
+
+%\subsection{Stärken der entwickelten Lösung}
 
 \subsection{Grenzen der Software}
 
+Die Software unterstützt den Nutzer bei der Planung, erstellt jedoch keinen Stundenplan automatisch. Die endgültigen Entscheidungen müssen weiterhin manuell getroffen werden.
+
+Außerdem ist die Anwendung für die lokale Nutzung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen.
+
+Die Speicherung in JSON-Dateien reicht für den aktuellen Umfang aus, könnte bei größeren Datenmengen jedoch unübersichtlich oder unpraktisch werden.
+
 \subsection{Erweiterungsmöglichkeiten}
+
+Mögliche Erweiterungen wären zum Beispiel eine Datenbankanbindung und ein Mehrbenutzerbetrieb.
+Auch eine halbautomatische Planung wäre eine sinnvolle Ergänzung. Das Tool könnte dann passende Termine, freie Räume oder mögliche Alternativen vorschlagen und den Nutzer bei der Entscheidung unterstützen.
+
+Eine Anbindung an bestehende Universitätssysteme wäre ebenfalls hilfreich, damit Daten nicht doppelt gepflegt werden müssen und die Anwendung besser in bestehende Abläufe integriert werden kann.
 
 \newpage
 
 \section{Fazit und Ausblick}
 
+In dieser Arbeit wurde ein Python-basiertes Planungstool für die Lehrveranstaltungsplanung entwickelt. Ziel war es, die Planung übersichtlicher, strukturierter und weniger fehleranfällig zu gestalten.
+
+Das Tool verwaltet Termine, Lehrveranstaltungen, Räume und weitere Planungsdaten. Funktionen wie Kalenderansichten, Filter, Drag-and-Drop und Konflikterkennung unterstützen den Nutzer bei der Bearbeitung der Planung.
+Die Daten werden dabei lokal in JSON-Dateien gespeichert. Das Tool übernimmt die Planung nicht automatisch, erleichtert aber typische Arbeitsschritte und macht mögliche Konflikte schneller sichtbar.
+
+Für die Zukunft wären eine Datenbankanbindung, ein Mehrbenutzerbetrieb und die Integration in bereits vorhandene Universitätssysteme sinnvolle Erweiterungen.
+
 \newpage
 
-\section{Literaturverzeichnis}
+\begin{thebibliography}{9}
 
+\bibitem{babaei2015survey}
 Babaei, H., Karimpour, J., \& Hadidi, A. (2015). 
 A survey of approaches for university course timetabling problem. 
 \textit{Computers \& Industrial Engineering, 86}, 43--59. 
 https://doi.org/10.1016/j.cie.2014.11.010
 
+\bibitem{bray2017json}
 Bray, T. (2017). 
 \textit{The JavaScript Object Notation (JSON) Data Interchange Format}. 
 RFC 8259. 
 https://www.rfc-editor.org/rfc/rfc8259
 
+\bibitem{pythonDocs}
 Python Software Foundation. (o. J.). 
 \textit{Python Documentation}. 
 https://docs.python.org/3/
 
+\bibitem{qtDocs}
 Qt Group. (o. J.). 
 \textit{Qt Documentation}. 
 https://doc.qt.io/qt-6/
 
+\bibitem{qtForPython}
 Qt Group. (o. J.). 
 \textit{Qt for Python Documentation}. 
 https://doc.qt.io/qtforpython-6/
 
+\bibitem{python3132}
+Python Software Foundation. (2025).
+\textit{Python 3.13.2 Release}.
+https://www.python.org/downloads/release/python-3132/
+
+\bibitem{sommerville2016software}
+Sommerville, I. (2016).
+\textit{Software Engineering} (10th ed., Global Edition).
+Pearson.
+
+\bibitem{nistUsability}
+National Institute of Standards and Technology. (o. J.).
+\textit{Usability}.
+Computer Security Resource Center Glossary.
+https://csrc.nist.gov/glossary/term/usability
+
+\end{thebibliography}
+
 \end{document}
-
-
-
-dauer warum erklären. unassigned termin!
