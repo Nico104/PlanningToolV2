@@ -29,7 +29,7 @@ class TimeGridDropTable(QTableWidget):
     terminDropped = Signal(str, int, int)
     MIME = "application/termin-id"
 
-    def __init__(self, rows: int, cols: int, parent=None):
+    def __init__(self, rows: int = 0, cols: int = 0, parent=None):
         super().__init__(rows, cols, parent)
 
         self.setAcceptDrops(True)

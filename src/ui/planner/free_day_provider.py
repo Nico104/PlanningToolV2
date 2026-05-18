@@ -33,7 +33,7 @@ class FreeDayProvider:
 
         out: dict[date, str] = {}
         for item in payload.get("freie_tage", []):
-            day_type = self._normalize_free_day_type(item.get("typ", ""))
+            day_type = item.get("typ", "").strip().lower()
             if not day_type:
                 continue
 
@@ -41,7 +41,7 @@ class FreeDayProvider:
             if single_raw:
                 d = self._parse_iso_date(single_raw)
                 if d is not None and start <= d <= end:
-                    out[d] = self._prefer_free_day_type(out.get(d), day_type)
+                    out[d] = day_type
                 continue
 
             start_raw = str(item.get("von_datum", "")).strip()
@@ -54,7 +54,7 @@ class FreeDayProvider:
             cur = max(d0, start)
             lim = min(d1, end)
             while cur <= lim:
-                out[cur] = self._prefer_free_day_type(out.get(cur), day_type)
+                out[cur] = day_type
                 cur += timedelta(days=1)
 
         return out
@@ -68,52 +68,35 @@ class FreeDayProvider:
         return ""
 
     def _load_free_day_styles(self) -> dict[str, object]:
+        try:
+            qss = (Path(__file__).resolve().parent.parent / "styles" / "light.qss").read_text(encoding="utf-8")
+        except OSError:
+            return {}
+
+        qss_values = self._qss_values(qss)
         styles: dict[str, object] = {}
 
-        qss_path = Path(__file__).resolve().parent.parent / "styles" / "light.qss"
-        if not qss_path.exists():
-            return styles
-
-        try:
-            qss = qss_path.read_text(encoding="utf-8")
-        except Exception:
-            return styles
-
-        def _token(name: str) -> str:
-            m = re.search(rf"{re.escape(name)}\s*:\s*([^\r\n]+)", qss, flags=re.IGNORECASE)
-            if not m:
-                return ""
-            return m.group(1).strip().rstrip(";")
-
-        for key, token in (
-            ("holiday_bg", "free-day-holiday-bg"),
-            ("lecture_bg", "free-day-lecture-bg"),
-        ):
-            raw = _token(token)
-            if raw:
-                c = QColor(raw)
-                if c.isValid():
-                    styles[key] = c
+        for token, key in {
+            "free-day-holiday-bg": "holiday_bg",
+            "free-day-lecture-bg": "lecture_bg",
+        }.items():
+            color = QColor(qss_values.get(token, ""))
+            if color.isValid():
+                styles[key] = color
 
         return styles
+
+    @staticmethod
+    def _qss_values(qss: str) -> dict[str, str]:
+        return {
+            token.strip(): value.strip().rstrip(";")
+            for line in qss.splitlines()
+            if ":" in line
+            for token, value in [line.split(":", 1)]
+        }
 
     def _parse_iso_date(self, raw: str) -> Optional[date]:
         try:
             return datetime.strptime(raw, "%Y-%m-%d").date()
         except Exception:
             return None
-
-    def _normalize_free_day_type(self, raw: str) -> Optional[str]:
-        val = str(raw).strip().lower()
-        if "feiertag" in val:
-            return "feiertag"
-        if "vorlesungsfrei" in val:
-            return "vorlesungsfrei"
-        return None
-
-    def _prefer_free_day_type(self, existing: Optional[str], new_value: str) -> str:
-        if existing == "feiertag" or new_value == existing:
-            return existing or new_value
-        if new_value == "feiertag":
-            return "feiertag"
-        return existing or new_value

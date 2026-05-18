@@ -51,9 +51,9 @@ class PlannerWorkspace(QWidget):
         self.stack = QStackedWidget()
         root.addWidget(self.stack, 1)
 
-        self.day_table = TimeGridDropTable(0, 0)
-        self.week_table = TimeGridDropTable(0, 0)
-        self.month_table = MonthDropTable(0, 7)
+        self.day_table = TimeGridDropTable()
+        self.week_table = TimeGridDropTable()
+        self.month_table = MonthDropTable()
         self.month_container = QWidget()
         month_layout = QVBoxLayout(self.month_container)
         month_layout.setContentsMargins(0, 0, 0, 0)

@@ -115,7 +115,7 @@ class CrudHandlers:
         self._show_toast("Fachrichtung gelöscht.")
 
 
-    def get_geplante_semester_models(self) -> List[GeplantesSemester]:
+    def read_geplante_semester_models(self) -> List[GeplantesSemester]:
         models: List[GeplantesSemester] = []
         for item in self.ds.load_geplante_semester():
             try:
@@ -317,7 +317,7 @@ class CrudHandlers:
         self.planner.refresh()
         self._show_toast("Freier Tag gelöscht.")
 
-    def add_termin(self, default_qdate=None, auto_id: bool = False) -> bool:
+    def add_termin(self, default_qdate=None) -> bool:
         dlg = TerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
@@ -331,9 +331,6 @@ class CrudHandlers:
         # Default values for newly created Termine
         dlg.duration_sb.setValue(60)
 
-        if auto_id:
-            dlg.new_id = self._new_termin_id()
-
         if default_qdate is not None:
             dlg.date_de.setDate(default_qdate)
         else:
@@ -344,6 +341,7 @@ class CrudHandlers:
             return False
 
         termine = self.ds.load_termine()
+        # Serientermin zum Beispiel
         if isinstance(dlg.result, list):
             existing_ids = {t.id for t in termine}
             for t in dlg.result:
@@ -522,7 +520,7 @@ class CrudHandlers:
         dlg = LVADialog(
             self.parent,
             None,
-            self.get_geplante_semester_models(),
+            self.read_geplante_semester_models(),
             self.ds.load_fachrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
@@ -552,7 +550,7 @@ class CrudHandlers:
         dlg = LVADialog(
             self.parent,
             cur,
-            self.get_geplante_semester_models(),
+            self.read_geplante_semester_models(),
             self.ds.load_fachrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:

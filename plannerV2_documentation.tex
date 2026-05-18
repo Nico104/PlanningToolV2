@@ -12,8 +12,8 @@
 \onehalfspacing
 
 \title{Konzeption und Implementierung eines Python-basierten Planungstools zur Unterstützung der Lehrveranstaltungsplanung}
-\author{Nicolas}
-\date{\today}
+\author{Nicolas Carraro}
+% \date{\today}
 
 \begin{document}
 
@@ -34,8 +34,10 @@ Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren ein
 \item freie Tage/Feiertage
 \end{itemize}
 
-Diese Planung wird durch die hohe Menge an individuellen Terminen eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über eine Zusammensetzung an Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
-Durch die manuelle Planung können auch weitere Probleme auftreten wie doppelte oder uneinheitliche Daten, Änderungen müssen an mehreren Stellen angepasst werden, schwer erkennbare Konflikte und ein generell schlechter Überblick über die einzelnen Termine. Beispiele für mögliche Konflikte könnten sein: doppelt belegte Räume, Lehrperson zeitgleich eingeplant oder ein Termin an einem Feiertag angesetzt.
+Diese Planung wird durch die hohe Menge an individuellen Terminen eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
+Durch die manuelle Planung können auch weitere Probleme auftreten wie doppelte oder uneinheitliche Daten, Änderungen müssen an mehreren Stellen angepasst werden, schwer erkennbare Konflikte und ein generell schlechter Überblick über die einzelnen Termine.
+
+Beispiele für mögliche Konflikte könnten sein: doppelt belegte Räume, Lehrperson zeitgleich eingeplant oder ein Termin an einem Feiertag angesetzt.
 
 Aufgrund dieser Probleme und dadurch dass dies eine jährlich wiederkehrende Aufgabe ist besteht ein Bedarf an einer zentralen Softwarelösung. Diese Software soll die Planung der Termine übersichtlicher, strukturierter und nachvollziehbarer machen.
 Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstools für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software am Institut.
@@ -48,7 +50,7 @@ Zentrale Ziele dieser Software sind:
 \begin{itemize}
 \item strukturierte und zentrale Verwaltung von Planungsdaten
 \item übersichtliche Darstellung von Terminen
-\item einfaches Verschieben mittels Drag-and-Drop und Zuweisen von Terminen
+\item einfaches Verschieben und Zuweisen von Terminen mittels Drag-and-Drop
 \item bessere Erkennung von Planungskonflikten
 \item Filterung nach relevanten Kriterien
 \item Import und Export von Planungsdaten
@@ -56,7 +58,7 @@ Zentrale Ziele dieser Software sind:
 
 Die Umsetzung soll in Form einer mit Python entwickelten Desktop-Anwendung erfolgen. Die Entwicklung einer einfachen, intuitiven grafischen Benutzeroberfläche ist dabei besonders wichtig, da die Bedienung dieses Tools auch ohne Programmierkenntnisse möglich sein soll. Benutzerfreundlichkeit wird in dieser Arbeit als Eigenschaft verstanden, die beschreibt, ob bestimmte Nutzer ihre Ziele in einem bestimmten Nutzungskontext effektiv, effizient und zufriedenstellend erreichen können \cite{nistUsability}.
 
-Ziel dieser Anwendung ist nicht die gesamte Planung zu übernehmen, sondern es soll als Unterstützung für den Nutzer dienen, der die Planung durchführt. Es soll besonders auf Benutzerfreundlichkeit, Nachvollziehbarkeit, Erweiterbarkeit und praktische Nutzbarkeit geachtet werden.
+Ziel dieser Anwendung ist nicht die gesamte Planung zu übernehmen, sondern es soll als Unterstützung für den Nutzer dienen, der die Planung durchführt. Es soll besonders auf Benutzerfreundlichkeit, Nachvollziehbarkeit und Erweiterbarkeit geachtet werden.
 
 
 \subsection{Forschungsfrage}
@@ -75,13 +77,13 @@ Um diese Frage zu beantworten werden auch zusätzliche Teilfragen betrachtet:
     \item Welche Anforderungen ergeben sich aus dem Planungsprozess?
     \item Wie können Termine, Lehrveranstaltungen, Räume und weitere Daten sinnvoll strukturiert und verwaltet werden?
     \item Wie kann eine Benutzeroberfläche gestalten, sodass Termine übersichtlich dargestellt, gefiltert und mittels Drag-and-Drop verschoben werden können?
-    \item Wie können typische Planungskonflikte erkannt und für den Nutzer sichtbar schnell gemacht werden?
+    \item Wie können typische Planungskonflikte erkannt und für den Nutzer schnell sichtbar gemacht werden?
     \item Inwiefern erfüllt das entwickelte Tool die definierten Anforderungen?
 \end{itemize}
 
 \subsection{Aufbau der Arbeit}
 
-Die Arbeit beginnt mit einer Beschreibung der Probleme, die bei der jährlichen Planung von Lehrveranstaltungen entstehen. Anschließend werden die Ziele der Arbeit und die Forschungsfrage vorgestellt.
+Die Arbeit beginnt mit einer Beschreibung der Probleme, die bei der jährlichen Planung von Lehrveranstaltungen entstehen. Darauf werden die Ziele der Arbeit und die Forschungsfrage vorgestellt.
 
 Anschließend werden die Grundlagen und Anforderungen beschrieben. Danach folgen Konzeption und Implementierung des Tools. Zum Schluss werden Tests, Ergebnisse, Grenzen und mögliche Erweiterungen dargestellt.
 
@@ -95,9 +97,8 @@ Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstal
 
 Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden. Solche Anforderungen entsprechen typischen Einschränkungen der Lehrveranstaltungsplanung, bei der Veranstaltungen bestimmten Zeitfenstern und Räumen zugeordnet werden müssen \cite{babaei2015survey}.
 
-Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören zum Beispiel die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson, der Raum oder die betroffene Studierendengruppe. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
-
-Für ein Institut ist es wichtig, dass aus diesen Informationen ein übersichtlicher und nachvollziehbarer Plan entsteht. Dieser Plan soll sowohl für die Verwaltung als auch für Lehrende und Studierende verständlich sein.
+Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören unter anderem die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson und der Raum. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
+Für ein Institut ist es wichtig, dass aus diesen Informationen ein übersichtlicher und nachvollziehbarer Plan entsteht.
 
 In dieser Arbeit wird die Lehrveranstaltungsplanung deshalb als ein Prozess verstanden, bei dem verschiedene Planungsdaten gesammelt, miteinander verknüpft und für die weitere Bearbeitung nutzbar gemacht werden. Diese Sichtweise bildet die Grundlage für die spätere Entwicklung des Planungstools.
 
@@ -111,7 +112,7 @@ Dadurch wird die manuelle Planung mit zunehmender Anzahl an Terminen immer aufwe
 
 \subsection{Softwaregestützte Planung}
 
-Eine softwaregestützte Planung kann den Planungsprozess vor allem dabei unterstützen, viele einzelne Informationen besser zusammenzuführen. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung, einem Raum oder einer Lehrperson. Dadurch wird die Planung nicht nur gesammelt, sondern auch besser nutzbar gemacht.
+Eine softwaregestützte Planung kann den Planungsprozess vor allem dabei unterstützen, viele einzelne Informationen besser zusammenzuführen. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung oder einem Raum.
 
 Ein Vorteil ist, dass die Daten an einer zentralen Stelle verwaltet werden können. Wenn ein Termin geändert wird, muss diese Änderung nicht in mehreren Tabellen oder Dateien nachgetragen werden. Die angepassten Daten können direkt in der Anwendung angezeigt und weiterverwendet werden.
 
@@ -245,13 +246,16 @@ Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichze
 
 \subsection{Gesamtarchitektur der Anwendung}
 
-Das Planungstool wurde als lokale Desktop-Anwendung konzipiert und besteht nicht nur aus einer einzelnen Kalenderansicht, sondern aus mehreren Bereichen, die zusammenarbeiten. Im Mittelpunkt steht das Hauptfenster(Main Window im Code), das die verschiedenen Teile der Benutzeroberfläche verbindet und die zentralen Abläufe der Anwendung steuert.
+Das Planungstool wurde als lokale Desktop-Anwendung konzipiert und besteht nicht nur aus einer einzelnen Kalenderansicht, sondern aus mehreren Bereichen, die zusammenarbeiten. Im Mittelpunkt steht das Hauptfenster, das die verschiedenen Teile der Benutzeroberfläche verbindet und die zentralen Abläufe der Anwendung steuert.
 
 Grundsätzlich lässt sich die Anwendung in drei Bereiche einteilen: die Benutzeroberfläche, die Datenverwaltung und die Planungslogik. Die Benutzeroberfläche stellt Kalenderansichten, Listen, Eingabefenster und weitere Bedienelemente bereit. Die Datenverwaltung ist dafür zuständig, Planungsdaten zu laden, zu speichern und für die anderen Teile der Anwendung verfügbar zu machen. Die Planungslogik umfasst Funktionen wie Filterung, Konflikterkennung und die Aktualisierung der Anzeige nach Änderungen.
 
+Der Start der Anwendung erfolgt über die zentrale GUI-Initialisierung. Dabei werden zunächst Einstellungen und Datenpfad geprüft. Anschließend wird das Hauptfenster erstellt, das die zentrale Steuerungsrolle übernimmt. Das Hauptfenster erzeugt den Kalender, die Terminliste, den Dateneditor, den globalen Filterbereich, die Datumsnavigation und die Konfliktanzeige.
+Damit ist das Hauptfenster nicht nur ein Container für die grafischen Elemente, sondern koordiniert die Abläufe innerhalb der Anwendung.
+
 \subsection{Aufbau der Benutzeroberfläche}
 
-Die Benutzeroberfläche ist in mehrere Bereiche aufgeteilt. Der zentrale Bereich ist der Planner Workspace, in dem die Termine in unterschiedlichen Kalenderansichten dargestellt werden. Es eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Die Tagesansicht eignet sich besonders für eine genauere Planung nach Uhrzeit und Raum. Die Wochenansicht gibt einen Überblick über mehrere Tage, während die Monatsansicht eher zur groben zeitlichen Orientierung dient.
+Die Benutzeroberfläche ist in mehrere Bereiche aufgeteilt. Der zentrale Bereich ist der Kalender (Planner Workspace im Code), in dem die Termine in unterschiedlichen Kalenderansichten dargestellt werden. Es gibt eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Die Tagesansicht eignet sich besonders für eine genauere Planung nach Uhrzeit und Raum. Die Wochenansicht gibt einen Überblick über mehrere Tage, während die Monatsansicht eher zur groben zeitlichen Orientierung dient.
 
 Neben den Kalenderansichten gibt es weitere Bereiche, die als sogenannte Docks umgesetzt sind.\footnote{\url{https://doc.qt.io/qt-6/qdockwidget.html}} Dazu gehören die Terminliste, der Dateneditor, die Datumsnavigation, der globale Filterbereich und die Konfliktanzeige. Durch die verschiebbaren Docks kann jeder Benutzer seinen Arbeitsbereich so einrichten, wie es für ihn am besten passt. Das gewählte Layout lässt sich speichern und später wiederverwenden.
 
@@ -261,7 +265,7 @@ Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrvera
 
 \subsection{Datenmodell und Datenbeziehungen}
 
-Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen die Termine, da sie die eigentlichen Planungseinträge darstellen. Ein Termin besteht aber nicht nur aus einem Datum und einer Uhrzeit, sondern ist mit weiteren Informationen verbunden. Dazu gehören zum Beispiel die zugehörige Lehrveranstaltung, ein Raum, ein Semester, ein Veranstaltungstyp oder eine Gruppe.
+Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen die Termine, da sie die eigentlichen Planungseinträge darstellen. Ein Termin besteht aber nicht nur aus einem Datum und einer Uhrzeit, sondern ist mit weiteren Informationen verbunden. Dazu gehören zum Beispiel die zugehörige LVA, ein Raum, ein Semester, ein Veranstaltungstyp oder eine Gruppe.
 
 Neben den Terminen gibt es noch andere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Semester, geplante Semester, Fachrichtungen und freie Tage. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
 
@@ -283,7 +287,11 @@ Der Workflow ist so aufgebaut, dass der Nutzer die Planung weiterhin selbst steu
 
 Da das Planungstool aus mehreren Bereichen besteht, müssen diese nach Änderungen miteinander abgestimmt werden. Wenn ein Termin erstellt, bearbeitet oder verschoben wird, soll diese Änderung nicht nur an einer Stelle sichtbar sein. Auch die Kalenderansicht, die Terminliste und die Konfliktanzeige müssen den neuen Stand übernehmen.
 
-Dafür ist das Hauptfenster als zentrale Stelle der Anwendung wichtig. Es verbindet die verschiedenen Bereiche miteinander und sorgt dafür, dass nach relevanten Änderungen eine Aktualisierung ausgelöst wird. Die einzelnen Komponenten laden anschließend ihre Inhalte neu oder passen ihre Darstellung an.
+Dafür ist das Hauptfenster als zentrale Stelle der Anwendung wichtig. 
+%Es verbindet die verschiedenen Bereiche miteinander und sorgt dafür, dass nach relevanten Änderungen eine Aktualisierung ausgelöst wird. Die einzelnen Komponenten laden anschließend ihre Inhalte neu oder passen ihre Darstellung an.
+Nach relevanten Aktionen wie dem Erstellen, Bearbeiten, Löschen oder Verschieben eines Termins wird nicht nur die unmittelbar betroffene Ansicht aktualisiert. Stattdessen stößt das Hauptfenster eine übergreifende Aktualisierung an.
+Dabei wird zunächst der Kalender mit den aktuellen Planungsdaten neu aufgebaut. Anschließend werden die Dock-Bereiche, wie Terminliste, Dateneditor, Filterbereich und Konfliktanzeige, aktualisiert. Die Konflikte werden ebenfalls neu berechnet.
+
 
 \newpage
 
@@ -295,6 +303,8 @@ Die Anwendung wurde mit Python in der Version 3.13.2 entwickelt \cite{python3132
 
 Der Quellcode ist in mehrere Bereiche aufgeteilt. Im \texttt{src}-Verzeichnis befinden sich die wichtigsten Bestandteile des Programms. Dazu gehören die Benutzeroberfläche, verschiedene Services, Dialoge, Hilfsfunktionen und die zentrale Programmlogik. Gestartet wird die Anwendung über die Datei \texttt{main.py}.
 
+Um Wartbarkeit und Übersichtlichkeit zu verbessern, wurden alle grafischen Anpassungen in einer separaten \texttt{qss}-Datei gebündelt.
+
 Die Planungsdaten liegen in JSON-Dateien und befinden sich je nach ausgewähltem Datenpfad zum Beispiel im Ordner \texttt{data}. Dadurch kann das Tool mit unterschiedlichen Datensätzen verwendet werden.
 
 Für die benötigten Pakete wird eine \texttt{requirements.txt}-Datei verwendet. Zusätzlich enthält das Projekt eine \texttt{pyproject.toml}, in der weitere Projektinformationen und Einstellungen festgelegt werden.
@@ -303,7 +313,7 @@ Für die benötigten Pakete wird eine \texttt{requirements.txt}-Datei verwendet.
 
 Das Hauptfenster der Anwendung wird durch die Klasse \texttt{MainWindow} umgesetzt. In diesem Fenster kommen die wichtigsten Teile des Planungstools zusammen. Dazu gehören der Kalenderbereich, die Terminliste, der Dateneditor, die Filter, die Konfliktanzeige und die Datumsnavigation.
 
-Das folgende Beispiel zeigt vereinfacht, wie diese Bereiche im Hauptfenster eingebunden werden:
+Das folgende Beispiel zeigt vereinfacht, wie das Hauptfenster aufgebaut ist. Der Kalenderbereich wird als zentraler Arbeitsbereich gesetzt, während zusätzliche Funktionen wie die Terminliste über Dock-Bereiche eingebunden werden.
 
 \begin{verbatim}
 self.planner = PlannerWorkspace(self, self.ds, ...)
@@ -313,17 +323,20 @@ self.termine_dock = TermineDock(self)
 self.addDockWidget(Qt.LeftDockWidgetArea, self.termine_dock)
 \end{verbatim}
 
-Als Grundlage wird \texttt{QMainWindow} von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/qmainwindow.html}} Dadurch kann die Anwendung einen zentralen Bereich und mehrere zusätzliche Dock-Bereiche besitzen. Der zentrale Bereich enthält den Planner Workspace mit den Kalenderansichten. Die Dock-Bereiche enthalten die Terminliste, den Dateneditor, die Filter, die Datumsnavigation und die Konfliktanzeige.
+Dadurch bleibt die Kalenderansicht im Mittelpunkt der Anwendung, während ergänzende Bereiche flexibel am Rand des Fensters angeordnet werden können. Das passt gut zum Planungstool, weil die eigentliche Planung sichtbar bleibt und zusätzliche Informationen wie Termine, Filter oder Konflikte trotzdem direkt verfügbar sind.
+
+Als Grundlage wird \texttt{QMainWindow} von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/qmainwindow.html}} Der zentrale Bereich enthält den Kalender mit den Kalenderansichten. Die Dock-Bereiche enthalten die Terminliste, den Dateneditor, die Filter, die Datumsnavigation und die Konfliktanzeige.
 
 Im Hauptfenster werden auch die Menüs und andere Aktionen, wie Aktualisieren, Einstellungen, Undo, Importieren und Exportieren angelegt. Diese Aktionen werden mit den jeweiligen Funktionen der Anwendung verbunden. Dadurch können wichtige Arbeitsschritte direkt über die Menüleiste oder über Tastenkombinationen ausgeführt werden.
 
-Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System von Qt.\footnote{\url{https://doc.qt.io/qt-6/signalsandslots.html}} Dadurch können Aktionen aus einem Bereich an andere Bereiche der Anwendung weitergegeben werden. Ein Beispiel dafür ist die Verbindung zwischen Konfliktanzeige und dem Kalender durch Highlights:
+Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System von Qt.\footnote{\url{https://doc.qt.io/qt-6/signalsandslots.html}} Dadurch können Aktionen aus einem Bereich an andere Bereiche der Anwendung weitergegeben werden.
+Das folgende Beispiel zeigt eine solche Signal-Verbindung. Wird in der Konfliktanzeige ein Konflikt ausgewählt, wird das entsprechende Signal an den Kalender weitergegeben.
 
 \begin{verbatim}
 self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
 \end{verbatim}
 
-Wird ein Konflikt ausgewählt, können die betroffenen Termine im Kalender hervorgehoben werden.
+Dadurch muss die Konfliktanzeige nicht selbst wissen, wie Termine im Kalender dargestellt werden. Sie löst nur ein Signal aus, während der Kalender die Hervorhebung übernimmt.
 
 Eine weitere wichtige Aufgabe des Hauptfensters ist die Aktualisierung der Benutzeroberfläche. Wenn ein Termin erstellt, bearbeitet, gelöscht oder verschoben wird, müssen mehrere Bereiche den neuen Stand anzeigen. Dafür werden zentrale Aktualisierungsmethoden verwendet wie:
 
@@ -333,7 +346,8 @@ def refresh_everything(self) -> None:
     self.refresh_docks()
 \end{verbatim}
 
-Dabei wird zuerst der Planner Workspace aktualisiert. Anschließend werden über \texttt{refresh\_docks()} die weiteren Bereiche wie Terminliste, Filter, Dateneditor und Konfliktanzeige neu geladen.
+Dabei wird zuerst der Kalender aktualisiert. Anschließend werden über \texttt{refresh\_docks()} die weiteren Bereiche wie Terminliste, Filter, Dateneditor und Konfliktanzeige neu geladen.
+Das emit=False verhindert, dass der Kalender während der Aktualisierung Signale auslöst, was zu einer Cascade von Aktualisierungen führen könnte.
 
 Auch Funktionen, die nicht direkt zur Terminplanung gehören, werden im Hauptfenster eingebunden. Dazu zählen zum Beispiel die Layoutverwaltung und die Tastenkombinationen. Der \texttt{LayoutManager} speichert und lädt verschiedene Anordnungen der Oberfläche. Die Tastenkombinationen werden in einer eigenen Datei gesammelt und beim Start des Hauptfensters registriert:
 
@@ -355,30 +369,51 @@ Technisch werden die verschiedenen Ansichten im \texttt{PlannerWorkspace} in ein
 \begin{verbatim}
 self.stack = QStackedWidget()
 
-self.day_table = TimeGridDropTable(0, 0)
-self.week_table = TimeGridDropTable(0, 0)
-self.month_table = MonthDropTable(0, 7)
+self.day_table = TimeGridDropTable()
+self.week_table = TimeGridDropTable()
+self.month_table = MonthDropTable()
 
 self.stack.addWidget(self.day_table)
 self.stack.addWidget(self.week_table)
 self.stack.addWidget(self.month_container)
 \end{verbatim}
 
-Die Tages- und Wochenansicht verwenden jeweils eine zeitbasierte Tabelle mit Räumen oder Wochentagen als Spalten. Die Monatsansicht ist anders aufgebaut, weil sie keinen genauen Zeitraster wie die Tages- oder Wochenansicht verwendet.
+Die Monatsansicht wird in einem eigenen Container eingebunden, da dort zusätzlich zur Tabelle ein Text mit dem aktuellen Monatsnamen angezeigt wird.
+Die Tages- und Wochenansicht verwenden jeweils eine zeitbasierte Tabelle mit Räumen oder Wochentagen als Spalten. Die Monatsansicht ist anders aufgebaut, weil sie keinen genauen Zeitraster wie die Tages- oder Wochenansicht verwendet, sondern ein kalendarisches Raster.
 
-Beim Aktualisieren des Kalenders wird zuerst geprüft, welche Ansicht gerade ausgewählt ist. Danach wird nur die passende Ansicht neu aufgebaut. Dadurch muss nicht jedes Mal die gesamte Kalenderdarstellung gleich behandelt werden:
+% Beim Aktualisieren des Kalenders wird zuerst geprüft, welche Ansicht gerade ausgewählt ist. Danach wird nur die passende Ansicht neu aufgebaut. Dadurch muss nicht jedes Mal die gesamte Kalenderdarstellung gleich behandelt werden:
+
+% \begin{verbatim}
+% view = str(self.view_cb.currentData())
+
+% if view == "day":
+%     self.stack.setCurrentWidget(self.day_table)
+%     self.day_view.refresh(filtered, rooms)
+% \end{verbatim}
+
+Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. Dadurch können sie besser erkannt, ausgewählt und weiterverwendet werden. Je nach Terminart können die Karten unterschiedlich dargestellt werden. Der Aufbau einer Karte erfolgt dabei über die eigene \texttt{TerminCard}-Klasse:
 
 \begin{verbatim}
-view = str(self.view_cb.currentData())
-
-if view == "day":
-    self.stack.setCurrentWidget(self.day_table)
-    self.day_view.refresh(filtered, rooms)
+class TerminCard(QFrame):
+    def __init__(self, termin_id: str, title: str, date: str, time: str,
+                 typ: str, raum: str, ap: bool, duration: int = 0, name: str = None, parent=None):
+        super().__init__(parent)
+        self.setObjectName("TerminCard")
 \end{verbatim}
 
-Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. Dadurch können sie besser erkannt, ausgewählt und weiterverwendet werden. Je nach Terminart können die Karten unterschiedlich dargestellt werden. Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop verschoben werden und dabei während des Verschiebens geprüft werden, ob ein Konflikt entstehen würde.
+Hier wird sichtbar, dass die Karte als eigenes Qt-Widget umgesetzt ist, das von \texttt{QFrame} erbt. \texttt{QFrame} ist ein einfaches Container-Widget von Qt, das hier als sichtbarer Rahmen für die Termin-Karte dient.
+Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop verschoben werden und dabei während des Verschiebens geprüft werden, ob ein Konflikt entstehen würde.
 
-Zusätzlich wenn ein Tag als frei oder als Feiertag eingetragen ist, kann dies in der Ansicht sichtbar gemacht werden. 
+Zusätzlich kann ein als vorlesungsfrei oder als Feiertag eingetragener Tag in der Kalenderansicht visuell markiert werden. In der Ansicht wird dafür je nach Typ eine Hintergrundfarbe gesetzt:
+
+\begin{verbatim}
+if free_day_type == "feiertag":
+    bg = self._free_day_styles.get("holiday_bg")
+else:
+    bg = self._free_day_styles.get("lecture_bg")
+\end{verbatim}
+
+Dadurch erkennt der Nutzer sofort, dass an diesem Datum keine reguläre Planung erfolgen soll.
 
 Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von Daten darzustellen, sondern in einen zeitlichen und räumlichen Zusammenhang zu bringen. Der Nutzer kann dadurch besser erkennen, wie Termine verteilt sind und wo Änderungen notwendig sein könnten.
 
@@ -391,17 +426,17 @@ Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch
 Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
 
 \begin{verbatim}
-def get_geplante_semester_models(self) -> List[GeplantesSemester]:
-        models: List[GeplantesSemester] = []
-        for item in self.ds.load_geplante_semester():
-            try:
-                models.append(GeplantesSemester(**item))
-            except Exception:
-                continue
-        return models
+def read_geplante_semester_models(self) -> List[GeplantesSemester]:
+    models: List[GeplantesSemester] = []
+    for item in self.ds.load_geplante_semester():
+        try:
+            models.append(GeplantesSemester(**item))
+        except Exception:
+            continue
+    return models
 \end{verbatim}
 
-In diesem Beispiel werden gespeicherte Daten geladen, in passende Modellobjekte umgewandelt und zurückgegeben.
+Diese Methode gehört zum \textbf{Read}-Teil des CRUD-Prinzips. Dabei werden gespeicherte Daten geladen, in passende Modellobjekte umgewandelt und zurückgegeben. Fehlerhafte Einträge werden übersprungen.
 
 Die Termin- und Stammdatenverwaltung sorgt somit dafür, dass die Daten geordnet gepflegt und im restlichen Tool verwendet werden können.
 
