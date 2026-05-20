@@ -451,30 +451,67 @@ Für diese Funktion wird das Drag-and-Drop System von Qt verwendet.\footnote{\ur
 Beim Drag-and-Drop wird nur die ID des jeweiligen Termins weitergegeben. Nach dem Ablegen kann die Anwendung anhand dieser ID den passenden Termin laden und die neuen Daten speichern.
 
 \begin{verbatim}
-    mime.setData(self.MIME, str(self.termin_id).encode("utf-8"))
+md = QMimeData()
+md.setText(termin_id)
+drag = QDrag(self)
+drag.setMimeData(md)
 \end{verbatim}
+
+\texttt{QMimeData} wird hier verwendet, um die Informationen für den Drag-and-Drop-Vorgang mitzugeben. In dieser Anwendung reicht es aus zu wissen, welcher Termin verschoben werden soll. Deshalb wird nur die Termin-ID als Text gespeichert und übertragen.
+\texttt{QDrag} startet anschließend den Drag-Vorgang des Termins. Beim Ablegen werden die gespeicherten Daten an das Ziel-Element übergeben. Die Anwendung kann dann über die ID den richtigen Termin wiederfinden, laden und die geänderten Daten speichern.
 
 Beim Ablegen wird die ID wieder ausgelesen:
 
 \begin{verbatim}
-    def dropEvent(self, e: QDropEvent):
-        md = e.mimeData()
-        termin_id = bytes(md.data(self.MIME)).decode("utf-8").strip()
-        ... weitere Verarbeitung ...
+def dropEvent(self, e: QDropEvent):
+    md = e.mimeData()
+    termin_id = md.text().strip()
+    ... weitere Verarbeitung ...
 \end{verbatim}
 
 Ein weiterer Teil der Drag-and-Drop Funktion ist die Vorschau während des Verschiebens. In der Tages- und Wochenansicht kann schon während des Ziehens geprüft werden, ob der Termin einen Konflikt auslösen würde. Dafür wird die neue Position nur vorübergehend simuliert.
 
+\begin{verbatim}
+if rows >= 0 and columns >= 0 and self._conflict_checker:
+    self._hover_has_conflict = bool(
+        self._conflict_checker(self._hover_termin_id, r, c)
+    )
+\end{verbatim}
+
+Während der Termin gezogen wird, prüft die Anwendung ständig, über welcher Kalenderzelle sich der Mauszeiger gerade befindet. Danach wird mit \texttt{self.\_conflict\_checker()} überprüft, ob der Termin an dieser neuen Position einen Konflikt auslösen würde.
+Diese Prüfung ist nur eine Vorschau. Die eigentlichen Termindaten werden erst geändert, wenn der Termin wirklich abgelegt wird.
+
 \subsection{Filterfunktion}
 
-Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Wenn der Benutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dort wird der aktuelle Filterzustand gespeichert und für die Anzeige verwendet. Der aktuelle Zustand aller Filter wird dabei im \texttt{FilterState} gespeichert.
-
-Die Filter ändern dabei nicht die gespeicherten Daten. Es wird nur berechnet, welche Termine zu den aktuell gesetzten Filtern passen. Diese gefilterten Termine werden an die Terminliste und an die Kalenderansicht weitergegeben.
+%Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dort wird der aktuelle Filterzustand gespeichert und für die Anzeige verwendet. Der aktuelle Zustand aller Filter wird dabei im \texttt{FilterState} gespeichert.
+Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Dieser Zustand wird als \texttt{FilterState} gespeichert und enthält alle aktuell gesetzten Filter.
 
 \begin{verbatim}
+class FilterState:
+    fachrichtung: Optional[str] = None
+    semester: Optional[str] = None
+    lva_id: Optional[str] = None
+    raum_id: Optional[str] = None
+    typ: Optional[str] = None
+    dozent: Optional[str] = None
+    geplante_semester: Optional[str] = None
+\end{verbatim}
+
+Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben.
+
+\begin{verbatim}
+self.global_filter_dock.filtersChanged.connect(self._on_global_filters_changed)
+\end{verbatim}
+
+%Anschließend wird der Zustand an den Kalender weitergegeben. Der Kalender speichert diesen Zustand und verwendet ihn intern für die Kalenderansichten.
+Die Filter ändern nicht die gespeicherten Termindaten. Stattdessen wird nur berechnet, welche Termine zu den aktuell gesetzten Filtern passen. Diese gefilterten Termine werden an die Terminliste übergeben, während der Kalender die Ansicht anhand des gespeicherten \texttt{FilterState} aktualisiert.
+
+\begin{verbatim}
+def _on_global_filters_changed(self, fs: FilterState) -> None:
+    self.filter_state = fs
     self.planner.set_global_filter_state(fs)
     terms = self._compute_filtered_termine(fs)
-    self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
+    self.termine_dock.set_rows(terms, ...)
 \end{verbatim}
 
 Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabei, die Planung in kleineren Ausschnitten zu betrachten.
@@ -483,23 +520,63 @@ Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabe
 
 Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte können zum Beispiel entstehen, wenn ein Raum zur gleichen Zeit doppelt belegt ist, eine Lehrperson gleichzeitig in mehreren Terminen eingetragen wurde oder ein Termin auf einen freien Tag fällt. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen \cite{babaei2015survey}.
 
+Das folgende vereinfachte Codebeispiel zeigt die Erkennung von Konflikten bei Lehrpersonen. Dafür werden Termine zuerst nach Lehrperson und Datum gruppiert. Anschließend werden die Termine innerhalb jeder Gruppe auf zeitliche Überschneidungen geprüft.
+
+%detect snippet
+\begin{verbatim}
+def detect_lecturer_conflicts(self, termine):
+    conflicts = []
+    groups = self.group_terms_by_lecturer_and_date(termine)
+
+    for terms in groups.values():
+        for t1, t2 in self.get_term_pairs(terms):
+            if self.times_overlap(t1, t2):
+                conflicts.append(self._create_conflict("lecturer", t1, t2))
+
+    return conflicts
+\end{verbatim}
+
 Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt{konflikte.json} geladen und können einzeln aktiviert, deaktiviert oder angepasst werden. Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
 
 \begin{verbatim}
-    {
-        "name": "Raum-Konflikt",
-        "key": "room_conflict",
-        "enabled": true,
-        "type": "conflict",
-        "description": "Zwei Termine im selben Raum, am selben Tag, mit sich überschneidenden Zeiten.",
-        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
-    },
+{
+    "name": "Raum-Konflikt",
+    "key": "room_conflict",
+    "enabled": true,
+    "type": "conflict",
+    "description": "Zwei Termine im selben Raum zur selben Zeit.",
+    "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+},
 \end{verbatim}
 
-
 Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender hervorgehoben werden. Dadurch ist sofort erkennbar, an welcher Stelle der Planung das Problem liegt.
+Dafür wird die Konfliktanzeige im Hauptfenster über ein Signal mit der Kalenderansicht verbunden.
 
-Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird der selbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige.
+\begin{verbatim}
+self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
+\end{verbatim}
+
+Beim Anklicken einer Konfliktkarte werden die betroffenen Termin-IDs gesendet. Diese IDs dienen als eindeutige Referenz auf die Termine, die im Kalender markiert werden sollen.
+
+\begin{verbatim}
+def _on_card_clicked(self, termin_ids):
+    if termin_ids:
+        self.conflict_items_highlight.emit(termin_ids)
+\end{verbatim}
+
+In der Kalenderansicht wird zuerst zum ersten betroffenen Termin gesprungen. Danach werden alte Markierungen entfernt, damit nur der aktuell ausgewählte Konflikt sichtbar bleibt. Anschließend werden die betroffenen Termine in der Tages-, Wochen- und Monatsansicht markiert.
+
+\begin{verbatim}
+def highlight_termine(self, ids):
+    self._jump_to_first_termin(ids)
+    self.clear_conflict_highlights()
+
+    self._highlight_week_cards(ids)
+    self._highlight_day_cells(ids)
+    self._highlight_month_cells(ids)
+\end{verbatim}
+
+Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird derselbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige.
 
 \subsection{Import, Export und Speicherung}
 
@@ -544,7 +621,10 @@ self.undo_service.restore(self.ds, snapshot)
 self.refresh_everything()
 \end{verbatim}
 
+\texttt{undo()} erhält dabei den \texttt{DataService} als Parameter, weil es den aktuellen Zustand vor der Wiederherstellung zunächst auf dem Redo-Stack sichert und anschließend den letzten gespeicherten Snapshot zurückgibt. \texttt{restore()} schreibt diesen Snapshot zurück in den \texttt{DataService}, und \texttt{refresh\_everything()} aktualisiert anschließend alle sichtbaren Bereiche der Anwendung.
+
 Zusätzlich gibt es Tastenkombinationen für häufig verwendete Aktionen. Dazu gehören unter anderem das Aktualisieren der Ansicht, das Wechseln zwischen Tages-, Wochen- und Monatsansicht, das Erstellen neuer Einträge sowie Import und Export. Einige Shortcuts gelten nur in bestimmten Bereichen der Anwendung, wie das Löschen von Terminen aus dem Kalender, damit sie nicht mit normalen Eingaben in Konflikt kommen.
+
 
 Auch die Benutzeroberfläche kann an die eigene Arbeitsweise angepasst werden. Die einzelnen Docks können verschoben und als Layout gespeichert werden. Beim nächsten Öffnen der Anwendung kann dieses Layout wieder geladen oder bei Bedarf auf das Standardlayout zurückgesetzt werden.
 

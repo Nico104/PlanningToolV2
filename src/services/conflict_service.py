@@ -272,7 +272,7 @@ class ConflictDetector:
                 continue
             key = (t.raum_id, t.datum)
             by_room_date.setdefault(key, []).append(t)
-        for (raum_id, datum), terms in by_room_date.items():
+        for terms in by_room_date.values():
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
                     if self.times_overlap(t1, t2):

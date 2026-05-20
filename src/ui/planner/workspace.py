@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt, QDate
-from PySide6.QtGui import QColor, QBrush, QPalette
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel,
     QStackedWidget, QTableWidget
@@ -284,24 +284,24 @@ class PlannerWorkspace(QWidget):
         self.refresh(emit=False)
 
     def highlight_termine(self, termin_ids: list[str]) -> None:
-        ids = {str(tid) for tid in (termin_ids or []) if tid}
+        ids = termin_ids
+        # ids = {str(tid) for tid in (termin_ids or []) if tid}
         if not ids:
             return
 
         self._jump_to_first_termin(ids)
 
         # Clear previous highlights
-        TerminCard.clear_global_focus()
-        TerminCard.clear_all_highlights()
-        self._clear_day_highlights()
+        self.clear_conflict_highlights()
 
         self._highlight_week_cards(ids)
         self._highlight_day_cells(ids)
+        self._highlight_month_cells(ids)
 
     def clear_conflict_highlights(self) -> None:
         TerminCard.clear_global_focus()
         TerminCard.clear_all_highlights()
-        self._clear_day_highlights()
+        self._clear_month_highlights()
 
     def _on_week_cell_clicked(self, row: int, col: int) -> None:
         cell_widget = self.week_table.cellWidget(row, col)
@@ -317,9 +317,7 @@ class PlannerWorkspace(QWidget):
             if not cell_widget.get_termin_ids():
                 self.clear_conflict_highlights()
         else:
-            it = self.day_table.item(row, col)
-            if not it or not it.data(Qt.UserRole):
-                self.clear_conflict_highlights()
+            self.clear_conflict_highlights()
 
     def _on_month_cell_clicked(self, row: int, col: int) -> None:
         self.clear_conflict_highlights()
@@ -355,8 +353,6 @@ class PlannerWorkspace(QWidget):
         first_focused = False
         rows = self.day_table.rowCount()
         cols = self.day_table.columnCount()
-        highlight_brush = QBrush(QColor(255, 244, 204))
-        self._day_highlights = []
         for r in range(rows):
             for c in range(cols):
                 cell_widget = self.day_table.cellWidget(r, c)
@@ -367,24 +363,35 @@ class PlannerWorkspace(QWidget):
                             if not first_focused:
                                 card.setFocus()
                                 first_focused = True
-                else:
-                    it = self.day_table.item(r, c)
-                    if not it:
-                        continue
-                    tid = it.data(Qt.UserRole)
-                    if tid and str(tid) in ids:
-                        it.setBackground(highlight_brush)
-                        self._day_highlights.append((r, c))
 
-    def _clear_day_highlights(self) -> None:
-        if not hasattr(self, "_day_highlights"):
-            self._day_highlights = []
-            return
-        for r, c in self._day_highlights:
-            it = self.day_table.item(r, c)
-            if it:
-                it.setBackground(QBrush())
-        self._day_highlights = []
+    def _highlight_month_cells(self, ids: set[str]) -> None:
+        rows = self.month_table.rowCount()
+        cols = self.month_table.columnCount()
+        for r in range(rows):
+            for c in range(cols):
+                cell_widget = self.month_table.cellWidget(r, c)
+                if cell_widget is None:
+                    continue
+                day_ids = cell_widget.property("day_ids") or []
+                has_match = any(str(tid) in ids for tid in day_ids)
+                cell_widget.setProperty("monthConflictHighlight", has_match)
+                cell_widget.style().unpolish(cell_widget)
+                cell_widget.style().polish(cell_widget)
+                cell_widget.update()
+
+    def _clear_month_highlights(self) -> None:
+        rows = self.month_table.rowCount()
+        cols = self.month_table.columnCount()
+        for r in range(rows):
+            for c in range(cols):
+                cell_widget = self.month_table.cellWidget(r, c)
+                if cell_widget is None:
+                    continue
+                if cell_widget.property("monthConflictHighlight"):
+                    cell_widget.setProperty("monthConflictHighlight", False)
+                    cell_widget.style().unpolish(cell_widget)
+                    cell_widget.style().polish(cell_widget)
+                    cell_widget.update()
 
     def _on_week_drop(self, termin_id, new_date, new_start):
         self._move_termin_and_refresh(str(termin_id), new_date=new_date, new_start=new_start)

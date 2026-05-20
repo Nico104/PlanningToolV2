@@ -6,8 +6,6 @@ from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView
 class TerminDragTable(QTableWidget):
     """Table for selecting Termine to drag; users can't edit cells, only drag rows"""
 
-    MIME = "application/termin-id"
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -30,7 +28,7 @@ class TerminDragTable(QTableWidget):
             return
 
         md = QMimeData()
-        md.setData(self.MIME, termin_id.encode("utf-8"))
+        md.setText(termin_id)
 
         drag = QDrag(self)
         drag.setMimeData(md)

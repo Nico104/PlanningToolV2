@@ -5,8 +5,6 @@ from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QPainter, QPainterPath
 
-MIME_TERMIN_ID = "application/termin-id"
-
 
 class TerminCard(QFrame):
     """Interactive Termin card with drag-and-drop plus double/right-click signals"""
@@ -88,7 +86,7 @@ class TerminCard(QFrame):
 
         drag = QDrag(self)
         mime = QMimeData()
-        mime.setData(MIME_TERMIN_ID, self.termin_id.encode("utf-8"))
+        mime.setText(self.termin_id)
         drag.setMimeData(mime)
 
         pm = QPixmap(self.size())

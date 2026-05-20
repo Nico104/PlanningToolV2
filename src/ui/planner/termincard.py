@@ -12,7 +12,6 @@ class TerminCard(QLabel):
     A compact card widget for displaying and dragging a single Termin in the planner grid
     Handles focus, highlighting, drag-and-drop, and double-click events for planner items
     """
-    MIME = "application/termin-id"  # Custom MIME type for drag-and-drop
     DRAG_THRESHOLD = 5  # Minimum drag distance (pixels) to start drag operation
     doubleClicked = Signal(str)
     _focused_card_ref: weakref.ref | None = None  # Tracks the currently focused card globally
@@ -123,7 +122,7 @@ class TerminCard(QLabel):
 
         drag = QDrag(self)
         mime = QMimeData()
-        mime.setData(self.MIME, str(self.termin_id).encode("utf-8"))
+        mime.setText(str(self.termin_id))
         drag.setMimeData(mime)
 
         pixmap = QPixmap(self.size())

@@ -4,17 +4,17 @@ from typing import List, Optional, Tuple, Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView, QSizePolicy
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView
 
 from ...core.models import Raum, Termin
 from ...services.conflict_service import has_preview_conflict
-from ..utils.datetime_utils import qdate_to_date, fmt_time, date_to_qdate, mins_from_time
-from ..utils.grouping_utils import group_concurrent_appointments
+from ..utils.datetime_utils import qdate_to_date, fmt_time, date_to_qdate
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 from .free_day_provider import FreeDayProvider
+from .render_helpers import render_grouped_termine_column
 
 
 
@@ -152,11 +152,6 @@ class PlannerDayView:
         Free-day handling: if the date is a Feiertag or Vorlesungsfrei, a colored
         background is applied to all room columns and their header cells so the
         user can immediately see why no Termine may be planned here.
-
-        Overlap handling: Termine in the same room that overlap in time are grouped
-        by _group_concurrent_appointments and placed inside a TimeSlotCell that
-        stacks the cards side-by-side. The cell spans as many rows as the total
-        duration of the group (ceiling-rounded to slot boundaries).
         """
         assert self.state.ts is not None
 
@@ -241,81 +236,19 @@ class PlannerDayView:
             if not items:
                 continue
 
-            col = 1 + room_index[room_id]
-
-            # Group overlapping/concurrent appointments
-            appointment_groups = group_concurrent_appointments(items)
-
-            
-            groups_by_id = defaultdict(list)
-            for termin, group_id in appointment_groups:
-                groups_by_id[group_id].append(termin)
-
-            #Process each group
-            for group_id, group_appointments in groups_by_id.items():
-                valid_apps = [
-                    app for app in group_appointments
-                    if isinstance(app.start_zeit, time)
-                    and app.get_end_time() is not None
-                ]
-                if not valid_apps:
-                    continue
-
-                group_start_min = min(mins_from_time(app.start_zeit) for app in valid_apps)
-                group_end_min = max(mins_from_time(app.get_end_time()) for app in valid_apps)
-
-                if group_end_min <= group_start_min:
-                    continue
-
-                start_t = time(hour=group_start_min // 60, minute=group_start_min % 60)
-                if start_t not in slots:
-                    continue
-
-                row = slots.index(start_t)
-                col_idx = col
-
-                slot_min = self._day_bounds()[2]
-                total_dur = group_end_min - group_start_min
-                max_span = max(1, (total_dur + slot_min - 1) // slot_min)
-                max_span = min(max_span, len(slots) - row)
-
-                cell_widget = TimeSlotCell(d)
-                self.day_table.setCellWidget(row, col_idx, cell_widget)
-
-                if max_span > 1:
-                    try:
-                        self.day_table.setSpan(row, col_idx, max_span, 1)
-                    except Exception:
-                        pass
-
-                row_height = self.day_table.rowHeight(row)
-                cell_widget.set_grid_info(row_height, max_span)
-
-                for app in valid_apps:
-                    app_start = mins_from_time(app.start_zeit)
-                    app_end = mins_from_time(app.get_end_time())
-                    if app_end <= app_start:
-                        continue
-
-                    offset_rows = max(0, (app_start - group_start_min) // slot_min)
-                    app_dur = app_end - app_start
-                    app_span_rows = max(1, (app_dur + slot_min - 1) // slot_min)
-                    app_span_rows = min(app_span_rows, len(slots) - row - offset_rows)
-
-                    app_text = self._format_termin_text(app)
-                    typ = (app.typ or "").strip().upper()
-                    bg = next((color for k, color in TYPE_COLORS if k == typ), DEFAULT_BG)
-                    card = TerminCard(app.id, app_text, bg, self.day_table)
-                    card.doubleClicked.connect(self.edit_by_id_cb)
-
-                    card_pixel_height = app_span_rows * row_height
-                    border_px = 1
-                    inner_height = max(1, card_pixel_height - (2 * border_px))
-                    card.setFixedHeight(inner_height)
-                    card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-                    top_offset_px = offset_rows * row_height
-                    cell_widget.add_termin_card(card, top_offset_px=top_offset_px)
+            render_grouped_termine_column(
+                table=self.day_table,
+                target_date=d,
+                col_idx=1 + room_index[room_id],
+                items=items,
+                slots=slots,
+                slot_min=self._day_bounds()[2],
+                lvas=self.state.lvas,
+                edit_by_id_cb=self.edit_by_id_cb,
+                card_parent=self.day_table,
+                border_px=2,
+                sort_group_ids=False,
+            )
 
     def _on_cell_clicked(self, row: int, col: int) -> None:
         # Clear focus when clicking empty calendar cells
@@ -328,22 +261,6 @@ class PlannerDayView:
                 TerminCard.clear_global_focus()
         else:
             TerminCard.clear_global_focus()
-
-
-
-    def _format_termin_text(self, t: Termin) -> str:
-        end_raw = t.get_end_time()
-        lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
-        lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
-        room_s = f"{t.raum_id}"
-        gname = (t.gruppe.name if t.gruppe else "")
-        grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
-        ap = " AP" if t.anwesenheitspflicht else ""
-
-        return (
-            f"{fmt_time(t.start_zeit)}–{fmt_time(end_raw)} "
-            f"{t.typ} | {room_s} | {lva_short}{grp}{ap}"
-        )
 
     def _on_termin_dropped(self, termin_id: str, row: int, col: int) -> None:
         # col 0 is time column

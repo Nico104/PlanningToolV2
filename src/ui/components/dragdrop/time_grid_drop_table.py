@@ -27,7 +27,6 @@ class TimeGridDropTable(QTableWidget):
     """
 
     terminDropped = Signal(str, int, int)
-    MIME = "application/termin-id"
 
     def __init__(self, rows: int = 0, cols: int = 0, parent=None):
         super().__init__(rows, cols, parent)
@@ -62,7 +61,7 @@ class TimeGridDropTable(QTableWidget):
     
     # Accept valid Termin drags and start edge auto-scroll
     def dragEnterEvent(self, e):
-        if e.mimeData().hasFormat(self.MIME):
+        if e.mimeData().hasText():
             e.acceptProposedAction()
             self._auto_scroll_timer.start()
         else:
@@ -77,11 +76,11 @@ class TimeGridDropTable(QTableWidget):
 
     # Update hover preview while dragging over the grid (does the snapping to the grid)
     def dragMoveEvent(self, e: QDragMoveEvent):
-        if not e.mimeData().hasFormat(self.MIME):
+        if not e.mimeData().hasText():
             e.ignore()
             return
 
-        termin_id = bytes(e.mimeData().data(self.MIME)).decode("utf-8").strip()
+        termin_id = e.mimeData().text().strip()
         self._hover_termin_id = termin_id
         duration = 0
         if self._duration_provider:
@@ -109,11 +108,11 @@ class TimeGridDropTable(QTableWidget):
     # emit termin + target cell, then clear hover/scroll.
     def dropEvent(self, e: QDropEvent):
         md = e.mimeData()
-        if not md.hasFormat(self.MIME):
+        if not md.hasText():
             e.ignore()
             return
 
-        termin_id = bytes(md.data(self.MIME)).decode("utf-8").strip()
+        termin_id = md.text().strip()
 
         pos: QPoint = e.position().toPoint()
         r = self.rowAt(pos.y())
@@ -299,7 +298,7 @@ class TimeGridDropTable(QTableWidget):
 
         drag = QDrag(self)
         mime = QMimeData()
-        mime.setData(self.MIME, str(termin_id).encode("utf-8"))
+        mime.setText(str(termin_id))
         drag.setMimeData(mime)
 
         drag.exec(Qt.MoveAction)

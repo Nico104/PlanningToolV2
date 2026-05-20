@@ -44,11 +44,6 @@ class PlannerMonthView:
         self.table.setShowGrid(True)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setDefaultSectionSize(90)
-        self.table.setStyleSheet("""
-            QLabel#MonthDayNumber { font-weight: 600; font-size: 14px; }
-            QLabel#MonthDayCount { color: #666; font-size: 11px; }
-            QTableWidget { background: white; }
-        """)
         self.table.cellClicked.connect(self._on_cell_clicked)
         self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._last_filtered: List[Termin] = []

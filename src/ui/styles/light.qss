@@ -3,6 +3,25 @@ QWidget#PlannerStyleTokens {
   free-day-lecture-bg: #dbeafe;
 }
 
+QTableWidget#PlannerTable {
+  background: white;
+}
+
+QTableWidget#PlannerTable QLabel#MonthDayNumber {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+QTableWidget#PlannerTable QLabel#MonthDayCount {
+  color: #666;
+  font-size: 11px;
+}
+
+QTableWidget#PlannerTable QWidget[monthConflictHighlight="true"] {
+  border: 2px solid #111111;
+  border-radius: 6px;
+}
+
 QDialog#ImportEntryMergePrompt {
   background: #f2f2f2;
 }

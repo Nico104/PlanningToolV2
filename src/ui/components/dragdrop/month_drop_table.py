@@ -7,7 +7,6 @@ class MonthDropTable(QTableWidget):
     """Drop month grid table that emits the dropped termin ID and cell"""
 
     terminDropped = Signal(str, int, int)
-    MIME = "application/termin-id"
 
     def __init__(self, rows: int = 0, cols: int = 7, parent=None):
         super().__init__(rows, cols, parent)
@@ -30,7 +29,7 @@ class MonthDropTable(QTableWidget):
         self._auto_scroll_timer.timeout.connect(self._auto_scroll_tick)
 
     def dragEnterEvent(self, e):
-        if e.mimeData().hasFormat(self.MIME):
+        if e.mimeData().hasText():
             e.acceptProposedAction()
             self._auto_scroll_timer.start()
         else:
@@ -43,11 +42,11 @@ class MonthDropTable(QTableWidget):
         super().dragLeaveEvent(e)
 
     def dragMoveEvent(self, e: QDragMoveEvent):
-        if not e.mimeData().hasFormat(self.MIME):
+        if not e.mimeData().hasText():
             e.ignore()
             return
 
-        self._hover_termin_id = bytes(e.mimeData().data(self.MIME)).decode("utf-8").strip()
+        self._hover_termin_id = e.mimeData().text().strip()
         self._last_drag_pos = e.position().toPoint()
 
         r = self.rowAt(self._last_drag_pos.y())
@@ -62,11 +61,11 @@ class MonthDropTable(QTableWidget):
 
     def dropEvent(self, e: QDropEvent):
         md = e.mimeData()
-        if not md.hasFormat(self.MIME):
+        if not md.hasText():
             e.ignore()
             return
 
-        termin_id = bytes(md.data(self.MIME)).decode("utf-8").strip()
+        termin_id = md.text().strip()
 
         pos = e.position().toPoint()
         r = self.rowAt(pos.y())
