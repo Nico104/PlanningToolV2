@@ -7,6 +7,8 @@
 \usepackage{hyperref}
 \usepackage{setspace}
 \usepackage{placeins}
+\usepackage{graphicx}
+\usepackage{float}
 
 \geometry{a4paper, margin=2.5cm}
 \onehalfspacing
@@ -31,7 +33,7 @@ Es werden jährlich neue Lehrveranstaltungen, Übungen, Labore und Klausuren ein
 \begin{itemize}
 \item zeitliche Überschneidungen von Lehrveranstaltungen, Lehrpersonen, Räumen und Gruppen
 \item Raumkapazitäten
-\item freie Tage/Feiertage
+\item freie Tage und Feiertage
 \end{itemize}
 
 Diese Planung wird durch die hohe Menge an individuellen Terminen eine komplexe Aufgabe. Die manuelle Planung erfolgt bisher über Excel-Tabellen, welche die Verschiebung oder Veränderung einzelner Termine nicht effizient erlauben.
@@ -112,7 +114,7 @@ Dadurch wird die manuelle Planung mit zunehmender Anzahl an Terminen immer aufwe
 
 \subsection{Softwaregestützte Planung}
 
-Eine softwaregestützte Planung kann den Planungsprozess vor allem dabei unterstützen, viele einzelne Informationen besser zusammenzuführen. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung oder einem Raum.
+Eine softwaregestützte Planung unterstützt den Planungsprozess vor allem dadurch, dass viele einzelne Informationen besser zusammenzuführen werden. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung oder einem Raum.
 
 Ein Vorteil ist, dass die Daten an einer zentralen Stelle verwaltet werden können. Wenn ein Termin geändert wird, muss diese Änderung nicht in mehreren Tabellen oder Dateien nachgetragen werden. Die angepassten Daten können direkt in der Anwendung angezeigt und weiterverwendet werden.
 
@@ -147,7 +149,7 @@ Grundsätzlich hätte die Oberfläche auch mit PyQt entwickelt werden können, d
 
 Im Planungstool wird PySide6 vor allem für die verschiedenen Bedienbereiche der Anwendung genutzt. Dazu gehören zum Beispiel Kalenderansichten, Tabellen, Eingabefenster, Filterbereiche und Listen.
 
-Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem Dialog bearbeitet, muss die Anwendung auf diese Eingaben reagieren. PySide6 stellt dafür die Verbindung zwischen der Benutzerberfläche und der Programmlogik her. Dadurch können Änderungen direkt verarbeitet und an anderen Stellen der Anwendung sichtbar gemacht werden.
+Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem Dialog bearbeitet, muss die Anwendung auf diese Eingaben reagieren. PySide6 stellt dafür die Verbindung zwischen der Benutzeroberfläche und der Programmlogik her. Dadurch können Änderungen direkt verarbeitet und an anderen Stellen der Anwendung sichtbar gemacht werden.
 
 \subsubsection{JSON als Datenformat}
 
@@ -203,6 +205,8 @@ Import und Export & Planungsdaten sollen importiert und exportiert werden könne
 \label{tab:functional-requirements}
 \end{table}
 
+Die funktionalen Anforderungen bilden damit die wichtigsten Arbeitsschritte der späteren Anwendung ab: Daten erfassen und speichern, Termine planen, Ansichten filtern und Konflikte erkennen.
+
 \subsection{Nicht-funktionale Anforderungen}
 
 Nicht-funktionale Anforderungen beschreiben Eigenschaften eines Systems, die sich nicht direkt auf einzelne Funktionen beziehen, sondern zum Beispiel Bedienbarkeit, Zuverlässigkeit, Wartbarkeit oder technische Einschränkungen betreffen \cite{sommerville2016software}.
@@ -232,6 +236,8 @@ Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden 
 \label{tab:nonfunctional-requirements}
 \end{table}
 
+Die nicht-funktionalen Anforderungen sind besonders wichtig, weil das Tool nicht nur technisch funktionieren, sondern verständlich und zuverlässig nutzbar sein soll.
+
 \subsection{Abgrenzung der Software}
 
 Das Planungstool wurde als Unterstützung für die jährliche Lehrveranstaltungsplanung entwickelt. Es soll den Planungsprozess übersichtlicher machen und bei der Bearbeitung der Termine helfen. Die organisatorischen Entscheidungen werden dabei aber alle weiterhin vom Nutzer getroffen.
@@ -258,6 +264,17 @@ Damit ist das Hauptfenster nicht nur ein Container für die grafischen Elemente,
 Die Benutzeroberfläche ist in mehrere Bereiche aufgeteilt. Der zentrale Bereich ist der Kalender (Planner Workspace im Code), in dem die Termine in unterschiedlichen Kalenderansichten dargestellt werden. Es gibt eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Die Tagesansicht eignet sich besonders für eine genauere Planung nach Uhrzeit und Raum. Die Wochenansicht gibt einen Überblick über mehrere Tage, während die Monatsansicht eher zur groben zeitlichen Orientierung dient.
 
 Neben den Kalenderansichten gibt es weitere Bereiche, die als sogenannte Docks umgesetzt sind.\footnote{\url{https://doc.qt.io/qt-6/qdockwidget.html}} Dazu gehören die Terminliste, der Dateneditor, die Datumsnavigation, der globale Filterbereich und die Konfliktanzeige. Durch die verschiebbaren Docks kann jeder Benutzer seinen Arbeitsbereich so einrichten, wie es für ihn am besten passt. Das gewählte Layout lässt sich speichern und später wiederverwenden.
+
+Die grundlegende Aufteilung der Benutzeroberfläche ist in Abbildung \ref{fig:hauptfenster} dargestellt.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{bilder/Hauptfenster.png}
+    \caption{Hauptfenster des Planungstools mit Kalenderbereich und Dock-Bereichen}
+    \label{fig:hauptfenster}
+\end{figure}
+
+Dadurch wird sichtbar, dass die Kalenderansicht den zentralen Arbeitsbereich bildet, während andere Bereiche wie Terminliste, Filter und Konfliktanzeige als Docks am Rand angeordnet sind.
 
 Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Semester, Fachrichtungen oder freie Tage zu erstellen, zu bearbeiten oder zu löschen.
 
@@ -347,7 +364,7 @@ def refresh_everything(self) -> None:
 \end{verbatim}
 
 Dabei wird zuerst der Kalender aktualisiert. Anschließend werden über \texttt{refresh\_docks()} die weiteren Bereiche wie Terminliste, Filter, Dateneditor und Konfliktanzeige neu geladen.
-Das emit=False verhindert, dass der Kalender während der Aktualisierung Signale auslöst, was zu einer Cascade von Aktualisierungen führen könnte.
+Das emit=False verhindert, dass der Kalender während der Aktualisierung Signale auslöst, was zu einer Kaskade von Aktualisierungen führen könnte.
 
 Auch Funktionen, die nicht direkt zur Terminplanung gehören, werden im Hauptfenster eingebunden. Dazu zählen zum Beispiel die Layoutverwaltung und die Tastenkombinationen. Der \texttt{LayoutManager} speichert und lädt verschiedene Anordnungen der Oberfläche. Die Tastenkombinationen werden in einer eigenen Datei gesammelt und beim Start des Hauptfensters registriert:
 
@@ -363,6 +380,15 @@ Häufige Aktionen wie Aktualisieren, Ansichtswechsel oder das Erstellen neuer Te
 Die Kalenderansichten sind ein zentraler Teil des Planungstools. Sie werden im \texttt{PlannerWorkspace} zusammengeführt und ermöglichen es, Termine in unterschiedlichen zeitlichen Ansichten darzustellen. Dabei gibt es eine Tagesansicht, eine Wochenansicht und eine Monatsansicht. Jede Ansicht hat dabei einen etwas anderen Zweck.
 
 Die Tagesansicht ist für die genauere Planung einzelner Termine gedacht. Sie zeigt einen einzelnen Tag mit Uhrzeiten und Räumen. Die Wochenansicht zeigt mehrere Tage nebeneinander. Dadurch bekommt man einen besseren Überblick darüber, wie die Termine innerhalb einer Woche verteilt sind. Die Monatsansicht ist weniger detailliert, zeigt dafür aber einen größeren Zeitraum.
+
+Ein Beispiel für die genaue zeitliche Darstellung einzelner Termine zeigt Abbildung \ref{fig:tagesansicht}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{bilder/Tagesansicht.png}
+    \caption{Tagesansicht mit zeitlicher Einordnung der Termine}
+    \label{fig:tagesansicht}
+\end{figure}
 
 Technisch werden die verschiedenen Ansichten im \texttt{PlannerWorkspace} in einem \texttt{QStackedWidget} verwaltet.\footnote{\url{https://doc.qt.io/qt-6/qstackedwidget.html}} Dadurch kann immer eine der Ansichten angezeigt werden, während die anderen im Hintergrund vorhanden bleiben. Vereinfacht sieht dieser Aufbau folgendermaßen aus:
 
@@ -421,7 +447,16 @@ Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von
 
 Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören nicht nur einzelne Termine, sondern auch Lehrveranstaltungen, Semester, Räume, Fachrichtungen, freie Tage und geplante Semester.
 
-Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgefuhrt werden.
+Der Dateneditor ist in Abbildung \ref{fig:dateneditor} dargestellt.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{bilder/data_editor.png}
+    \caption{Dateneditor zur Verwaltung von Terminen und Stammdaten}
+    \label{fig:dateneditor}
+\end{figure}
+
+Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgeführt werden.
 
 Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
 
@@ -442,9 +477,18 @@ Die Termin- und Stammdatenverwaltung sorgt somit dafür, dass die Daten geordnet
 
 \subsection{Drag-and-Drop-Funktionalität}
 
-Die Drag-and-Drop Funktionalität wurde umgesetzt, damit Termine direkt über die Benutzerberfläche intuitiv geplant werden können. Der Benutzer muss dadurch Datum, Uhrzeit oder Raum nicht manuell im Dateneditor auswählen, sondern kann einen Termin direkt in den Kalender ziehen oder innerhalb der Kalenderansicht verschieben.
+Die Drag-and-Drop Funktionalität wurde umgesetzt, damit Termine direkt über die Benutzeroberfläche intuitiv geplant werden können. Der Benutzer muss dadurch Datum, Uhrzeit oder Raum nicht manuell im Dateneditor auswählen, sondern kann einen Termin direkt in den Kalender ziehen oder innerhalb der Kalenderansicht verschieben.
 
 Grundsätzlich gibt es dabei zwei wichtige Funktionalitäten. Einerseits können Termine aus der Terminliste in den Kalender gezogen und einem Datum, einer Uhrzeit oder einem Raum zugewiesen werden und bereits eingeplante Termine können innerhalb des Kalenders verschoben werden. Andererseits ist es auch möglich, einen Termin wieder in die Terminliste zu ziehen und in einen nicht zugewiesenen Zustand zu bringen.
+
+Abbildung \ref{fig:terminliste} zeigt die Terminliste.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{bilder/terminliste.png}
+    \caption{Terminliste mit noch nicht vollständig eingeplanten Terminen}
+    \label{fig:terminliste}
+\end{figure}
 
 Für diese Funktion wird das Drag-and-Drop System von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/dnd.html}} Die Terminliste dient dabei als Ausgangspunkt, aus dem Termine herausgezogen werden können. Die Kalenderansichten übernehmen die Rolle der Zielbereiche, in denen ein Termin abgelegt und dadurch neu zugewiesen werden kann.
 
@@ -479,6 +523,16 @@ if rows >= 0 and columns >= 0 and self._conflict_checker:
 \end{verbatim}
 
 Während der Termin gezogen wird, prüft die Anwendung ständig, über welcher Kalenderzelle sich der Mauszeiger gerade befindet. Danach wird mit \texttt{self.\_conflict\_checker()} überprüft, ob der Termin an dieser neuen Position einen Konflikt auslösen würde.
+
+Eine solche Konfliktvorschau während des Verschiebens zeigt Abbildung \ref{fig:dragdropkonflikt}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{bilder/Drag_and_Drop_conflict.png}
+    \caption{Drag-and-Drop-Vorschau eines Termins mit erkanntem Konflikt}
+    \label{fig:dragdropkonflikt}
+\end{figure}
+
 Diese Prüfung ist nur eine Vorschau. Die eigentlichen Termindaten werden erst geändert, wenn der Termin wirklich abgelegt wird.
 
 \subsection{Filterfunktion}
@@ -549,7 +603,18 @@ Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt
 },
 \end{verbatim}
 
-Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender hervorgehoben werden. Dadurch ist sofort erkennbar, an welcher Stelle der Planung das Problem liegt.
+Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. 
+Die Darstellung erkannter Konflikte ist in Abbildung \ref{fig:konfliktanzeige} zu sehen.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.45\textwidth]{bilder/Konfliktanzeige.png}
+    \caption{Konfliktanzeige mit aufgelisteten Planungskonflikten}
+    \label{fig:konfliktanzeige}
+\end{figure}
+
+Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender hervorgehoben werden. Dadurch ist sofort erkennbar, an welcher Stelle der Planung das Problem liegt.
+
 Dafür wird die Konfliktanzeige im Hauptfenster über ein Signal mit der Kalenderansicht verbunden.
 
 \begin{verbatim}
@@ -623,14 +688,23 @@ self.refresh_everything()
 
 \texttt{undo()} erhält dabei den \texttt{DataService} als Parameter, weil es den aktuellen Zustand vor der Wiederherstellung zunächst auf dem Redo-Stack sichert und anschließend den letzten gespeicherten Snapshot zurückgibt. \texttt{restore()} schreibt diesen Snapshot zurück in den \texttt{DataService}, und \texttt{refresh\_everything()} aktualisiert anschließend alle sichtbaren Bereiche der Anwendung.
 
+
 Zusätzlich gibt es Tastenkombinationen für häufig verwendete Aktionen. Dazu gehören unter anderem das Aktualisieren der Ansicht, das Wechseln zwischen Tages-, Wochen- und Monatsansicht, das Erstellen neuer Einträge sowie Import und Export. Einige Shortcuts gelten nur in bestimmten Bereichen der Anwendung, wie das Löschen von Terminen aus dem Kalender, damit sie nicht mit normalen Eingaben in Konflikt kommen.
+
+Das folgende Beispiel zeigt die Zuweisung eines Shortcuts für die Exportfunktion:
+
+\begin{verbatim}
+mw.act_export.setShortcut(QKeySequence("Ctrl+E"))
+\end{verbatim}
+
+Damit kann der Export direkt über die Tastenkombination \texttt{Ctrl+E} gestartet werden, ohne die Aktion über das Menü auswählen zu müssen.
 
 
 Auch die Benutzeroberfläche kann an die eigene Arbeitsweise angepasst werden. Die einzelnen Docks können verschoben und als Layout gespeichert werden. Beim nächsten Öffnen der Anwendung kann dieses Layout wieder geladen oder bei Bedarf auf das Standardlayout zurückgesetzt werden.
 
 Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber flexibler. Fehler können leichter rückgängig gemacht werden, häufige Aktionen sind schneller erreichbar und die Benutzeroberfläche muss nicht jedes Mal neu angeordnet werden.
 
-\newpage
+\clearpage
 
 \section{Test und Evaluation}
 
@@ -745,7 +819,7 @@ Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausge
 \hline
 Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetragen. & Die Dauer bzw. die zeitliche Einordnung wird korrekt übernommen. \\
 \hline
-Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach ob der Eintrag wirklich gelöscht werden soll. \\
+Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
 \end{tabular}
 \caption{Manuelle Fehler- und Validierungstests}
@@ -783,9 +857,9 @@ Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeicher
 
 Die manuellen Tests zeigen, dass die zentralen Funktionen des Planungstools zuverlässig arbeiten. Termine lassen sich erstellen, bearbeiten, löschen, verschieben und speichern. Auch die Kalenderansichten, Filter, Konfliktanzeige sowie der Import und Export haben in den getesteten Fällen wie erwartet funktioniert.
 
-Außerdem wurde deutlich, dass typische Planungskonflikte erkannt werden. Dazu gehören zum Beispiel doppelte Raumbelegungen, Überschneidungen bei Lehrpersonen oder Termine an freien Tagen. Dadurch unterstützt die Anwendung den Nutzer dabei, die Planung besser zu überprüfen und Fehler frühzeitig zu erkennen.
+Außerdem wurde deutlich, dass typische Planungskonflikte erkannt werden. Dazu gehören zum Beispiel doppelte Raumbelegungen, Überschneidungen bei Lehrpersonen oder Termine an freien Tagen.
 
-\newpage
+\clearpage
 
 \section{Diskussion}
 
