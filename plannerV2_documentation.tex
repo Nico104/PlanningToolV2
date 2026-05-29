@@ -129,7 +129,7 @@ Eine Software kann außerdem dabei helfen, mögliche Konflikte sichtbarer zu mac
 
 Für die Umsetzung des Planungstools wurden mehrere Technologien verwendet. Die Anwendung wurde mit Python entwickelt und als Desktop-Programm umgesetzt. Für die grafische Oberfläche kommt PySide6 zum Einsatz, da damit die verschiedenen Fenster, Tabellen und Bedienbereiche der Anwendung erstellt werden können.
 
-Die Daten des Planungstools werden in JSON-Dateien gespeichert. Dadurch können die einzelnen Planungsdaten strukturiert abgelegt und beim Start der Anwendung wieder geladen werden. Außerdem eignet sich dieses Format gut für den Import und Export von Projektdaten.
+Die Daten des Planungstools werden in JSON-Dateien gespeichert. Dadurch können die einzelnen Planungsdaten strukturiert abgelegt und beim Start der Anwendung wieder geladen werden. Für den Datenaustausch mit externen Beteiligten wird zusätzlich ein Excel-Format unterstützt, damit bestehende Excel-basierte Arbeitsabläufe weiterverwendet werden können.
 
 Die wichtigsten verwendeten Technologien werden in den folgenden Abschnitten kurz beschrieben.
 
@@ -160,7 +160,7 @@ Da die JSON-Dateien auch außerhalb des Programms geöffnet werden können, blei
 Grundsätzlich hätten für die Speicherung auch CSV-Dateien verwendet werden können. CSV eignet sich vor allem für einfache tabellarische Daten. Für das Planungstool ist das jedoch nicht immer passend, da die Daten teilweise stärker miteinander verknüpft sind. Ein Termin kann zum Beispiel mehrere Eigenschaften oder Verweise auf andere Daten enthalten, wie auf eine LVA oder einen Raum.
 JSON ist dafür besser geeignet, weil zusammenhängende Informationen als Objekte gespeichert werden können. Dadurch lassen sich die Planungsdaten strukturierter abbilden als in einer einfachen Tabelle.
 
-Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
+Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Für den Austausch mit Lehrenden kann das Tool die Planungsdaten zusätzlich in eine Excel-Datei exportieren und wieder importieren. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
 
 \newpage
 

@@ -55,8 +55,8 @@
       "serien_id": ""
     },
     {
-      "name": "2. Vorlesung Programmieren",
       "id": "T9",
+      "name": "2. Vorlesung Programmieren",
       "lva_id": "410.101",
       "typ": "VO",
       "datum": "2026-02-10",
@@ -67,10 +67,10 @@
         "groesse": 28
       },
       "anwesenheitspflicht": true,
-      "notiz": "Zusatzvorlesung",
       "duration": 90,
       "semester_id": "SS26",
-      "serien_id": ""
+      "serien_id": "",
+      "notiz": "Zusatzvorlesung"
     },
     {
       "name": "2. Übung Energieversorgung",

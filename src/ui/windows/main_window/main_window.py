@@ -8,6 +8,12 @@ from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox, QPushButton
 
 from src.services.data_service import DataService
+from src.services.excel_exchange_service import (
+    export_project_to_excel,
+    export_terms_for_teachers_to_excel,
+    get_teacher_export_options,
+    import_project_from_excel,
+)
 from src.services.undo_service import UndoService
 
 from src.ui.docks.termine_dock import TermineDock
@@ -22,7 +28,7 @@ from .layout_manager import LayoutManager
 from .shortcuts import install_main_window_shortcuts
 from src.ui.planner.workspace import PlannerWorkspace
 from src.ui.planner.termincard import TerminCard as PlannerTerminCard
-from ...dialogs import SettingsDialog
+from ...dialogs import SettingsDialog, TeacherExportDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
 from src.ui.dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
@@ -207,6 +213,10 @@ class MainWindow(QMainWindow):
         self.act_export.triggered.connect(self.export_project)
         file_menu.addAction(self.act_export)
 
+        self.act_export_teachers = QAction("Export für Lehrende…", self)
+        self.act_export_teachers.triggered.connect(self.export_teacher_terms)
+        file_menu.addAction(self.act_export_teachers)
+
         self.act_import = QAction("Importieren…", self)
         self.act_import.triggered.connect(self.import_project)
         file_menu.addAction(self.act_import)
@@ -259,6 +269,7 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def export_project(self) -> None:
+        default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         files = [
             "raeume.json",
             "lehrveranstaltungen.json",
@@ -277,33 +288,82 @@ class MainWindow(QMainWindow):
                 except Exception:
                     export_obj[f] = p.read_text(encoding="utf-8")
 
-        fn, _ = QFileDialog.getSaveFileName(
-            self, "Export Datei speichern", str(self.data_dir), "JSON Files (*.json)"
+        fn, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Export Datei speichern",
+            str(self.data_dir / default_name),
+            "Excel Files (*.xlsx);;JSON Files (*.json)",
+            "Excel Files (*.xlsx)",
         )
         if not fn:
             return
         try:
-            Path(fn).write_text(
-                json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
-            )
+            out_path = Path(fn)
+            if not out_path.suffix:
+                if selected_filter.startswith("JSON"):
+                    out_path = out_path.with_suffix(".json")
+                else:
+                    out_path = out_path.with_suffix(".xlsx")
+            if out_path.suffix.lower() == ".xlsx":
+                export_project_to_excel(self.data_dir, out_path)
+            else:
+                out_path.write_text(
+                    json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
             Toast(self, "Projekt exportiert.", duration_ms=2500).show()
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
 
-    def import_project(self) -> None:
-        fn, _ = QFileDialog.getOpenFileName(
-            self, "Import Datei öffnen", str(self.data_dir), "JSON Files (*.json)"
+    def export_teacher_terms(self) -> None:
+        try:
+            teacher_options = get_teacher_export_options(self.data_dir)
+        except Exception as e:
+            QMessageBox.warning(self, "Export Fehler", f"Lehrende konnten nicht geladen werden: {e}")
+            return
+
+        if not teacher_options:
+            QMessageBox.warning(self, "Keine Lehrende", "Keine Lehrende gefunden.")
+            return
+
+        dlg = TeacherExportDialog(teacher_options, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        selected_teachers = dlg.selected_teachers()
+
+        selected_names = [name for name, _email in selected_teachers if name]
+        if len(selected_names) == 1:
+            export_name = selected_names[0]
+        elif len(selected_names) <= 3:
+            export_name = "_".join(selected_names)
+        else:
+            export_name = "Mehrere_Lehrende"
+        safe_export_name = "".join(
+            char if char.isalnum() or char in (" ", "-", "_") else "_"
+            for char in export_name
+        ).strip().replace(" ", "_")
+        default_name = f"Termine_{safe_export_name}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+        fn, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export für Lehrende speichern",
+            str(self.data_dir / default_name),
+            "Excel Files (*.xlsx)",
         )
         if not fn:
             return
-        try:
-            with open(fn, encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception as e:
-            QMessageBox.warning(self, "Import Fehler", f"Fehler beim Lesen der Import-Datei: {e}")
-            return
+        out_path = Path(fn)
+        if not out_path.suffix:
+            out_path = out_path.with_suffix(".xlsx")
+        if out_path.suffix.lower() != ".xlsx":
+            out_path = out_path.with_suffix(".xlsx")
 
+        try:
+            export_terms_for_teachers_to_excel(self.data_dir, out_path, teacher_filter=selected_teachers)
+            Toast(self, "Export für Lehrende erstellt.", duration_ms=2500).show()
+        except Exception as e:
+            QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export für Lehrende: {e}")
+
+    def _normalize_import_payload(self, data):
         normalized = {}
         known_keys = {
             "termine": "termine.json",
@@ -331,6 +391,7 @@ class MainWindow(QMainWindow):
                                 normalized[target] = val if isinstance(val, (dict, list)) else {k: val}
 
                 if not normalized:
+
                     def search_and_map(obj):
                         if isinstance(obj, dict):
                             for kk, vv in obj.items():
@@ -345,8 +406,29 @@ class MainWindow(QMainWindow):
                     search_and_map(data)
         elif isinstance(data, list):
             normalized["termine.json"] = {"termine": data}
-        else:
-            QMessageBox.warning(self, "Import Fehler", "Unbekanntes Import-Format.")
+
+        return normalized
+
+    def import_project(self) -> None:
+        fn, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Datei öffnen",
+            str(self.data_dir),
+            "Excel/JSON Files (*.xlsx *.json);;Excel Files (*.xlsx);;JSON Files (*.json)",
+        )
+        if not fn:
+            return
+
+        in_path = Path(fn)
+        try:
+            if in_path.suffix.lower() == ".xlsx":
+                normalized = import_project_from_excel(in_path)
+            else:
+                with open(fn, encoding="utf-8") as f:
+                    data = json.load(f)
+                normalized = self._normalize_import_payload(data)
+        except Exception as e:
+            QMessageBox.warning(self, "Import Fehler", f"Fehler beim Lesen der Import-Datei: {e}")
             return
 
         if not normalized:

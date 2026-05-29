@@ -13,7 +13,9 @@ Erweiterungen zur letzten gezeigten Version:
 
 - Termin Drag and Drop Liste wird nach LVA gruppiert und es wird angezeigt wie viele von den Terminen einem Datum und Zeitslot zugewiesen sind
 
-- Export/Import Funktion mit User Entscheidung ob eine Änderung behalten oder ignoriert werden soll (Diese Logik muss wahrscheinlich besser definiert und überarbeitet werden)
+- Export/Import Funktion (JSON und Excel) mit User Entscheidung ob eine Änderung behalten oder ignoriert werden soll (Diese Logik muss wahrscheinlich besser definiert und überarbeitet werden)
+
+- Zusätzlicher Excel-Export für Lehrende mit Tabellenblatt pro Lehrperson und einem Gesamtblatt
 
 - Filter Dock und Navigations Dock sind jetzt 2 individuelle Docks
 
@@ -45,4 +47,4 @@ Weitere wichtige Flows:
 
 - Import-Flow: Importdaten werden normalisiert, über einen Dialog bestätigt und anschließend vollständig übernommen/aktualisiert.
 
-- Export-Flow: Alle relevanten JSON-Daten werden zu einer Projektdatei zusammengeführt und exportiert.
+- Export-Flow: Alle relevanten Daten können als JSON-Projektdatei oder als Excel-Austauschdatei exportiert werden.

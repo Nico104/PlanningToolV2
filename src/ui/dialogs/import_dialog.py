@@ -269,10 +269,15 @@ class ImportDialog(QDialog):
                 eid = ImportDialog._get_entry_id(inc, id_field)
                 ex = existing_map.get(eid) if eid else None
 
-                try:
-                    different = ex is None or json.dumps(ex, sort_keys=True) != json.dumps(inc, sort_keys=True)
-                except Exception:
-                    different = True
+                if fname == "termine.json":
+                    ex_cmp = dict(ex or {})
+                    inc_cmp = dict(inc or {})
+                    ex_cmp["serien_id"] = ex_cmp.get("serien_id") or ""
+                    inc_cmp["serien_id"] = inc_cmp.get("serien_id") or ""
+                    different = ex is None or ex_cmp != inc_cmp
+                else:
+                    different = ex is None or ex != inc
+
                 if not different:
                     continue
 
