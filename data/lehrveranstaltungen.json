@@ -10,11 +10,11 @@
       "typ": [
         "VO"
       ],
-      "geplante_semester": [
+      "studiensemester": [
         "sem6",
         "qs4"
       ],
-      "fachrichtung": "ETIT"
+      "studienrichtung": "ETIT"
     }
   ]
 }

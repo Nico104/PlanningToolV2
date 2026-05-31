@@ -5,13 +5,13 @@ from PySide6.QtWidgets import (
 )
 
 
-class FachrichtungDialog(QDialog):
-    """Dialog for creating or editing a Fachrichtung with id and name"""
+class StudienrichtungDialog(QDialog):
+    """Dialog for creating or editing a Studienrichtung with id and name"""
 
-    def __init__(self, parent: QWidget, fachrichtung: Optional[dict] = None):
+    def __init__(self, parent: QWidget, studienrichtung: Optional[dict] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")
-        self.setWindowTitle("Fachrichtung bearbeiten" if fachrichtung else "Fachrichtung hinzufügen")
+        self.setWindowTitle("Studienrichtung bearbeiten" if studienrichtung else "Studienrichtung hinzufügen")
         self.setModal(True)
         self._result: Optional[dict] = None
 
@@ -26,9 +26,9 @@ class FachrichtungDialog(QDialog):
         form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         lay.addLayout(form)
 
-        self.id_le = QLineEdit((fachrichtung or {}).get("id", ""))
+        self.id_le = QLineEdit((studienrichtung or {}).get("id", ""))
         self.id_le.setObjectName("Field")
-        self.name_le = QLineEdit((fachrichtung or {}).get("name", ""))
+        self.name_le = QLineEdit((studienrichtung or {}).get("name", ""))
         self.name_le.setObjectName("Field")
 
         form.addRow("ID:", self.id_le)

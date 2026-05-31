@@ -14,7 +14,7 @@ from ..utils.datetime_utils import fmt_date, fmt_time
 class DataEditorDock(QDockWidget):
     """
     Dock widget with tabbed CRUD editors for master data:
-    LVAs, Rooms, Semesters, Free Days, Planned Semesters, and Fachrichtungen.
+    LVAs, Rooms, Semesters, Free Days, Studiensemester, and Studienrichtungen.
     """
 
     def __init__(self, parent, ds, on_data_changed=None):
@@ -33,17 +33,33 @@ class DataEditorDock(QDockWidget):
         root.addWidget(self.tabs, 1)
 
         # Tabs
-        self.tab_lva = EditorTab("LVA", ["ID", "Name", "Vortragende", "E-Mail", "Typen", "Geplante Semester", "Fachrichtung"], self.tabs)
-        self.tab_fach = EditorTab("Fachrichtungen", ["ID", "Name"], self.tabs)
-        self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs)
-        self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs)
-        self.tab_free = EditorTab("Freie Tage", ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"], self.tabs)
+        self.tab_lva = EditorTab(
+            "LVA",
+            ["LVA-Nr.", "Name", "ECTS", "Vortragende", "E-Mail", "Typen", "Studiensemester", "Studienrichtung"],
+            self.tabs,
+            id_column=0,
+        )
+        self.tab_studienrichtung = EditorTab("Studienrichtungen", ["ID", "Name"], self.tabs, id_column=0)
+        self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs, id_column=0)
+        self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs, id_column=0)
+        self.tab_free = EditorTab(
+            "Freie Tage",
+            ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"],
+            self.tabs,
+            id_column=6,
+        )
         self.tab_termine = EditorTab(
             "Termine",
-            ["Name", "Datum", "Von", "Bis", "Typ", "LVA", "Raum", "Semester", "Gruppe", "ID"],
-            self.tabs
+            ["Name", "Datum", "Datum bis", "Periodizität", "Von", "Bis", "Typ", "LVA-Nr.", "Raum", "Semester", "Gruppe", "ID"],
+            self.tabs,
+            id_column=11,
         )
-        self.tab_geplante_semester = EditorTab("Geplante Semester", ["Name", "Notiz", "ID"], self.tabs)
+        self.tab_studiensemester = EditorTab(
+            "Studiensemester",
+            ["Name", "Notiz", "ID"],
+            self.tabs,
+            id_column=2,
+        )
         
         self.tabs.addTab(self.tab_termine, "Termine")
 
@@ -51,8 +67,8 @@ class DataEditorDock(QDockWidget):
         self.tabs.addTab(self.tab_rooms, "Räume")
         self.tabs.addTab(self.tab_sem, "Semester")
         self.tabs.addTab(self.tab_free, "Freie Tage")
-        self.tabs.addTab(self.tab_geplante_semester, "Geplante Semester")
-        self.tabs.addTab(self.tab_fach, "Fachrichtungen")
+        self.tabs.addTab(self.tab_studiensemester, "Studiensemester")
+        self.tabs.addTab(self.tab_studienrichtung, "Studienrichtungen")
 
         self.setWidget(wrap)
         self.tabs.currentChanged.connect(self._on_tab_changed)
@@ -62,9 +78,8 @@ class DataEditorDock(QDockWidget):
             parent=self,
             planner=SimpleNamespace(refresh=self._refresh_and_notify),
             lva_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_lva.table)),
-            fach_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_fach.table)),
+            studienrichtung_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_studienrichtung.table)),
             room_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_rooms.table)),
-            sem_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_sem.table)),
             termin_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_termine.table)),
             freie_tage_dock=SimpleNamespace(selected_id=lambda: selected_id(self.tab_free.table)),
             undo_service=getattr(parent, "undo_service", None),
@@ -76,29 +91,29 @@ class DataEditorDock(QDockWidget):
         self.tab_lva.edit_clicked.connect(self._crud.edit_lva)
         self.tab_lva.delete_clicked.connect(self._crud.del_lva)
 
-        self.tab_fach.add_clicked.connect(self._crud.add_fachrichtung)
-        self.tab_fach.edit_clicked.connect(self._crud.edit_fachrichtung)
-        self.tab_fach.delete_clicked.connect(self._crud.del_fachrichtung)
+        self.tab_studienrichtung.add_clicked.connect(self._crud.add_studienrichtung)
+        self.tab_studienrichtung.edit_clicked.connect(self._crud.edit_studienrichtung)
+        self.tab_studienrichtung.delete_clicked.connect(self._crud.del_studienrichtung)
 
         self.tab_rooms.add_clicked.connect(self._crud.add_room)
         self.tab_rooms.edit_clicked.connect(self._crud.edit_room)
         self.tab_rooms.delete_clicked.connect(self._crud.del_room)
 
-        self.tab_sem.add_clicked.connect(self._crud.add_semester)
-        self.tab_sem.edit_clicked.connect(self._crud.edit_semester)
-        self.tab_sem.delete_clicked.connect(self._crud.del_semester)
+        for btn in (self.tab_sem.btn_add, self.tab_sem.btn_edit, self.tab_sem.btn_del):
+            btn.setEnabled(False)
+            btn.setToolTip("Semester werden automatisch aus SS/WS-Regeln generiert.")
 
         self.tab_free.add_clicked.connect(self._crud.add_freie_tage)
         self.tab_free.edit_clicked.connect(self._crud.edit_freie_tage)
         self.tab_free.delete_clicked.connect(self._crud.del_freie_tage)
         
-        self.tab_termine.add_clicked.connect(self._crud.add_termin)
-        self.tab_termine.edit_clicked.connect(self._crud.edit_termin)
+        self.tab_termine.add_clicked.connect(self._crud.add_termin_from_data_editor)
+        self.tab_termine.edit_clicked.connect(self._crud.edit_termin_from_data_editor)
         self.tab_termine.delete_clicked.connect(self._crud.del_termin)
 
-        self.tab_geplante_semester.add_clicked.connect(self._crud.add_geplante_semester)
-        self.tab_geplante_semester.edit_clicked.connect(self._crud.edit_geplante_semester)
-        self.tab_geplante_semester.delete_clicked.connect(self._crud.del_geplante_semester)
+        self.tab_studiensemester.add_clicked.connect(self._crud.add_studiensemester)
+        self.tab_studiensemester.edit_clicked.connect(self._crud.edit_studiensemester)
+        self.tab_studiensemester.delete_clicked.connect(self._crud.del_studiensemester)
 
     def _on_tab_changed(self, index):
         # when the user opens the Termine tab, make sure it reflects the latest planner state, but don’t trigger a global refresh on every tab switch
@@ -113,8 +128,8 @@ class DataEditorDock(QDockWidget):
             "room": self.tab_rooms,
             "semester": self.tab_sem,
             "free_day": self.tab_free,
-            "planned_semester": self.tab_geplante_semester,
-            "fachrichtung": self.tab_fach,
+            "studiensemester": self.tab_studiensemester,
+            "studienrichtung": self.tab_studienrichtung,
         }
 
         tab = entity_map.get(entity)
@@ -124,22 +139,24 @@ class DataEditorDock(QDockWidget):
         self.show()
         self.raise_()
         self.tabs.setCurrentWidget(tab)
+        if entity == "semester":
+            return
         tab.btn_add.click()
 
 
     def refresh_all(self) -> None:
         self._refresh_lvas()
-        self._refresh_fachrichtungen()
+        self._refresh_studienrichtungen()
         self._refresh_rooms()
         self._refresh_semester()
         self._refresh_freie_tage()
         self._refresh_termine()
-        self._refresh_geplante_semester()
+        self._refresh_studiensemester()
         
-    def _refresh_geplante_semester(self) -> None:
-        semester_data = self.ds.load_geplante_semester()
+    def _refresh_studiensemester(self) -> None:
+        semester_data = self.ds.load_studiensemester()
         rows = [[s.get("name", ""), s.get("notiz", ""), s.get("id", "")] for s in semester_data]
-        self._fill_table(self.tab_geplante_semester.table, rows)
+        self._fill_table(self.tab_studiensemester.table, rows)
 
     def _refresh_semester(self) -> None:
         semester: List[Semester] = self.ds.load_semester()
@@ -151,7 +168,7 @@ class DataEditorDock(QDockWidget):
     # Refresh tables
     def _refresh_lvas(self) -> None:
         lvas: List[Lehrveranstaltung] = self.ds.load_lvas()
-        semester_data = self.ds.load_geplante_semester()
+        semester_data = self.ds.load_studiensemester()
         sem_id_to_name = {
             str(s.get("id", "")).strip(): str(s.get("name", "")).strip()
             for s in semester_data
@@ -162,11 +179,12 @@ class DataEditorDock(QDockWidget):
             [
                 l.id,
                 l.name,
+                getattr(l, "ects", ""),
                 getattr(l.vortragende, "name", ""),
                 getattr(l.vortragende, "email", ""),
                 ", ".join(getattr(l, "typ", []) or []),
-                " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "geplante_semester", [])]),
-                getattr(l, "fachrichtung", ""),
+                " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "studiensemester", [])]),
+                getattr(l, "studienrichtung", ""),
             ]
             for l in lvas
         ]
@@ -177,16 +195,16 @@ class DataEditorDock(QDockWidget):
         rows = [[r.id, r.name, str(r.kapazitaet)] for r in rooms]
         self._fill_table(self.tab_rooms.table, rows)
 
-    def _refresh_fachrichtungen(self) -> None:
-        fachrichtungen = self.ds.load_fachrichtungen()
+    def _refresh_studienrichtungen(self) -> None:
+        studienrichtungen = self.ds.load_studienrichtungen()
         rows = []
-        for f in fachrichtungen:
+        for f in studienrichtungen:
             if isinstance(f, dict):
                 rows.append([str(f.get("id", "")), str(f.get("name", ""))])
             else:
                 txt = str(f)
                 rows.append([txt, txt])
-        self._fill_table(self.tab_fach.table, rows)
+        self._fill_table(self.tab_studienrichtung.table, rows)
 
 
     def _refresh_freie_tage(self) -> None:
@@ -240,6 +258,8 @@ class DataEditorDock(QDockWidget):
             rows.append([
                 termin_name,
                 safe_date(getattr(tm, "datum", None)),
+                safe_date(getattr(tm, "datum_bis", None)),
+                getattr(tm, "periodizitaet", "") or "",
                 safe_time(start_zeit),
                 safe_time(end_zeit),
                 getattr(tm, "typ", ""),

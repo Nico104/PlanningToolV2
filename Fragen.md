@@ -3,10 +3,10 @@ Fragen:
 Wie wollen wir "Semester Bearbeitungen" Exportieren bzw importieren bzw Zusammearbeit mehrerer User machen? API
     Freie Tage, woher, im Export? 
     Räume, woher, im Export?
-    LVA, Tiss API?, Fachrichtungspezifisch und im Export oder eine große globale Liste?
+    LVA, Tiss API?, studienrichtungsspezifisch und im Export oder eine große globale Liste?
     Tiss API (Oder eventuelle Zwischenapi) schafft hier wahrswcheinlich Klarheit 
 
-    Optionale Kooperation auch durch geteiltem Custom Data Path, aber müssen die notwendigen json irgendwie regeln (Räume, Lva, freie Tage, manuell in den Ordner geshcoben werdn) - Mit Tiss Api (Oder eventuelle Zwischen Api) kann man villeicht automatisch importieren und die semester können in der App erstellt werden, löst auch export/import problem da man nur die semester files brauchen würde (In diesem Fall ist es vileicht überscihtlicher wenn man die fachrichutng in diesen Files abspeichern würde statt in einer Ordnerstruktur)
+    Optionale Kooperation auch durch geteiltem Custom Data Path, aber müssen die notwendigen json irgendwie regeln (Räume, Lva, freie Tage, manuell in den Ordner geshcoben werdn) - Mit Tiss Api (Oder eventuelle Zwischen Api) kann man villeicht automatisch importieren und die semester können in der App erstellt werden, löst auch export/import problem da man nur die semester files brauchen würde (In diesem Fall ist es vileicht überscihtlicher wenn man die studienrichtung in diesen Files abspeichern würde statt in einer Ordnerstruktur)
 
     Lehrveranstalungen? Kann mit einer erwaretten bzw angemeldet Menge an Personen gerechnet werden für Raumkapazitäten?
     -LVA Semesterübergreifend oder eine neue LVA pro Semester -> **Generell beste Daten Struktur**

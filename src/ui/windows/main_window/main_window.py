@@ -15,6 +15,7 @@ from src.services.excel_exchange_service import (
     import_project_from_excel,
 )
 from src.services.undo_service import UndoService
+from src.services.semester_tools_service import copy_semester_termine, delete_semester_termine
 
 from src.ui.docks.termine_dock import TermineDock
 from src.ui.docks.data_editor_dock import DataEditorDock
@@ -28,7 +29,7 @@ from .layout_manager import LayoutManager
 from .shortcuts import install_main_window_shortcuts
 from src.ui.planner.workspace import PlannerWorkspace
 from src.ui.planner.termincard import TerminCard as PlannerTerminCard
-from ...dialogs import SettingsDialog, TeacherExportDialog
+from ...dialogs import SettingsDialog, TeacherExportDialog, SemesterToolsDialog
 from src.ui.dialogs.konflikte_dialog import KonflikteDialog
 from src.ui.dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
@@ -69,14 +70,9 @@ class MainWindow(QMainWindow):
         """given a semester id, what date should the UI jump to
         """
 
-        sem_data = self._read_json(self.data_dir / "semester.json", {})
-        sem_list = sem_data.get("semester", [])
-        sem_obj = next((s for s in sem_list if s.get("id") == semester_id), None)
-        if sem_obj and sem_obj.get("start"):
-            try:
-                return datetime.strptime(sem_obj["start"], "%Y-%m-%d").date()
-            except Exception:
-                pass
+        sem_obj = next((s for s in self.ds.load_semester() if s.id == semester_id), None)
+        if sem_obj:
+            return sem_obj.start
 
         termine_data = self._read_json(self.data_dir / "termine.json", {})
         termine = termine_data.get("termine", [])
@@ -111,9 +107,9 @@ class MainWindow(QMainWindow):
         if tid and self.crud.del_termin_by_id(tid):
             self.refresh_everything()
 
-    def set_start_semester_and_reload(self, fachrichtung, semester):
+    def set_start_semester_and_reload(self, studienrichtung, semester):
         s = self.ds.load_settings()
-        s["start_fachrichtung"] = fachrichtung
+        s["start_studienrichtung"] = studienrichtung
         s["start_semester"] = semester
         self.ds.save_settings(s)
 
@@ -205,6 +201,11 @@ class MainWindow(QMainWindow):
         mb = self.menuBar()
 
         file_menu = mb.addMenu("Datei")
+        self.act_new_termin = QAction("Neuer Termin…", self)
+        self.act_new_termin.triggered.connect(self.create_termin)
+        file_menu.addAction(self.act_new_termin)
+        file_menu.addSeparator()
+
         self.act_refresh = QAction("Aktualisieren", self)
         self.act_refresh.triggered.connect(self.refresh_everything)
         file_menu.addAction(self.act_refresh)
@@ -245,8 +246,17 @@ class MainWindow(QMainWindow):
         self.act_konflikte.triggered.connect(self.open_konflikte_dialog)
         tools_menu.addAction(self.act_konflikte)
 
+        tools_menu.addSeparator()
+        self.act_semester_tools = QAction("Semester-Werkzeuge…", self)
+        self.act_semester_tools.triggered.connect(self.open_semester_tools)
+        tools_menu.addAction(self.act_semester_tools)
+
     def create_data_editor_entity(self, entity: str) -> None:
         self.data_editor_dock.create_entity(entity)
+
+    def create_termin(self) -> None:
+        if self.crud.add_termin():
+            self.refresh_everything()
 
     def jump_to_today(self) -> None:
         today = QDate.currentDate()
@@ -268,16 +278,55 @@ class MainWindow(QMainWindow):
         dlg.conflicts_changed.connect(self.refresh_conflicts)
         dlg.exec()
 
+    def open_semester_tools(self) -> None:
+        dlg = SemesterToolsDialog(
+            self,
+            termine=self.ds.load_termine(),
+            lvas=self.ds.load_lvas(),
+            semester=self.ds.load_semester(),
+            default_semester_id=self.ds.load_settings().get("start_semester"),
+        )
+        if dlg.exec() != QDialog.Accepted or not dlg.result_request:
+            return
+
+        request = dlg.result_request
+        try:
+            termine = self.ds.load_termine()
+            if request.action == "copy" and request.source and request.target:
+                updated, changed_count = copy_semester_termine(
+                    termine,
+                    source=request.source,
+                    target=request.target,
+                    lva_ids=request.lva_ids,
+                    date_mode=request.date_mode,
+                    copy_ausfall_daten=request.copy_ausfall_daten,
+                )
+                message = f"{changed_count} Termine nach {request.target.name} kopiert."
+            elif request.action == "clear" and request.semester:
+                updated, changed_count = delete_semester_termine(termine, request.semester.id)
+                message = f"{changed_count} Termine aus {request.semester.name} gelöscht."
+            else:
+                return
+
+            if changed_count <= 0:
+                return
+
+            self.undo_service.record_snapshot(self.ds)
+            self.ds.save_termine(updated)
+            self.refresh_everything()
+            Toast(self, message, duration_ms=3000).show()
+        except Exception as e:
+            QMessageBox.warning(self, "Semester-Werkzeuge", f"Aktion konnte nicht ausgeführt werden: {e}")
+
     def export_project(self) -> None:
         default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         files = [
             "raeume.json",
             "lehrveranstaltungen.json",
             "termine.json",
-            "semester.json",
-            "fachrichtungen.json",
+            "studienrichtungen.json",
             "freie_tage.json",
-            "geplante_semester.json",
+            "studiensemester.json",
         ]
         export_obj = {}
         for f in files:
@@ -369,10 +418,9 @@ class MainWindow(QMainWindow):
             "termine": "termine.json",
             "raeume": "raeume.json",
             "lehrveranstaltungen": "lehrveranstaltungen.json",
-            "semester": "semester.json",
-            "fachrichtungen": "fachrichtungen.json",
+            "studienrichtungen": "studienrichtungen.json",
             "freie_tage": "freie_tage.json",
-            "geplante_semester": "geplante_semester.json",
+            "studiensemester": "studiensemester.json",
         }
 
         if isinstance(data, dict):
@@ -569,29 +617,28 @@ class MainWindow(QMainWindow):
         """Refresh dock data and option lists based on current planner state/filters"""
         lva_list = getattr(self.planner.state, "lvas", None) or []
 
-        fachrichtungen = self.ds.load_fachrichtungen()
-
-        semester_list = [(s.id, s.name) for s in self.ds.load_semester()]
+        studienrichtungen = self.ds.load_studienrichtungen()
 
         typ_list = [t.typ for t in getattr(self.planner.state, "termine", []) if getattr(t, "typ", None)]
 
         self.global_filter_dock.refresh_filter_options(
-            fachrichtungen,
-            semester_list,
+            studienrichtungen,
+            [],
             lva_list,
             self.planner.state.raeume,
+            studiensemester_list=self.ds.load_studiensemester(),
             typ_list=typ_list,
             current=self.filter_state,
         )
 
         self.filter_state = FilterState(
-            fachrichtung=self.global_filter_dock.fachrichtung_cb.currentData() or None,
-            semester=self.global_filter_dock.semester_cb.currentData() or None,
+            studienrichtung=self.global_filter_dock.studienrichtung_cb.currentData() or None,
+            semester=self.global_filter_dock.semester_selector.current_semester_id(),
             lva_id=self.global_filter_dock.lva_cb.currentData() or None,
             raum_id=self.global_filter_dock.room_cb.currentData() or None,
             typ=self.global_filter_dock.typ_cb.currentData() or None,
             dozent=self.global_filter_dock.dozent_cb.currentData() or None,
-            geplante_semester=self.global_filter_dock.geplante_semester_cb.currentData() or None,
+            studiensemester=self.global_filter_dock.studiensemester_cb.currentData() or None,
         )
 
         terms = self._compute_filtered_termine(self.filter_state)
@@ -610,23 +657,26 @@ class MainWindow(QMainWindow):
             lva_id = fs.lva_id
             typ = fs.typ
             dozent = fs.dozent
+            studienrichtung = fs.studienrichtung
             semester_id = fs.semester
-            geplante_semester = getattr(fs, "geplante_semester", None)
+            studiensemester = getattr(fs, "studiensemester", None)
         else:
             filters = self.planner.current_filters()
             room = filters["raum_id"]
             lva_id = filters["lva_id"]
             typ = filters["typ"]
             dozent = filters["dozent"]
+            studienrichtung = filters["studienrichtung"]
             semester_id = filters["semester_id"]
-            geplante_semester = filters["geplante_semester"]
+            studiensemester = filters["studiensemester"]
 
         terms = self.planner.state.filtered_termine(
             raum_id=room,
             lva_id=lva_id,
             typ=typ,
             dozent=dozent,
+            studienrichtung=studienrichtung,
             semester_id=semester_id,
-            geplante_semester=geplante_semester,
+            studiensemester=studiensemester,
         )
         return terms

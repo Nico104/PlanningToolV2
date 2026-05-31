@@ -5,13 +5,14 @@ from typing import Any, Dict, List, Optional
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from ...services.id_service import next_id
+from ...services.termin_occurrence_service import occurrence_date_from_id, source_termin_id
 from ...services.undo_service import UndoService
-from ..dialogs import LVADialog, RaumDialog, SemesterDialog
-from ...core.models import GeplantesSemester
+from ..dialogs import LVADialog, RaumDialog
+from ...core.models import Studiensemester
 from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
-from ..dialogs.fachrichtung_dialog import FachrichtungDialog
-from ..dialogs.termin_dialog import TerminDialog
+from ..dialogs.studienrichtung_dialog import StudienrichtungDialog
+from ..dialogs.lva_termin_dialog import LVATerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
 from ..components.widgets.toast import Toast
 
@@ -34,100 +35,111 @@ class CrudHandlers:
         label = singular if count == 1 else plural
         return f"{count} {label} {action}."
 
+    @staticmethod
+    def _upsert_by_id(items, item, old_id: Optional[str] = None):
+        if not item:
+            return items
+        target_id = old_id or item.id
+        if any(existing.id == target_id for existing in items):
+            return [item if existing.id == target_id else existing for existing in items]
+        if any(existing.id == item.id for existing in items):
+            return [item if existing.id == item.id else existing for existing in items]
+        return [*items, item]
 
-    def add_fachrichtung(self) -> None:
-        fachrichtungen = self.ds.load_fachrichtungen()
-        dlg = FachrichtungDialog(self.parent, None)
+
+    def add_studienrichtung(self) -> None:
+        studienrichtungen = self.ds.load_studienrichtungen()
+        dlg = StudienrichtungDialog(self.parent, None)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
         new_item = dlg.result
         new_id = str(new_item.get("id", "")).strip()
-        if any(str(f.get("id", "")).strip() == new_id for f in fachrichtungen):
+        if any(str(f.get("id", "")).strip() == new_id for f in studienrichtungen):
             QMessageBox.warning(self.parent, "Fehler", f"ID '{new_id}' existiert bereits.")
             return
 
-        fachrichtungen.append({"id": new_id, "name": str(new_item.get("name", "")).strip()})
+        studienrichtungen.append({"id": new_id, "name": str(new_item.get("name", "")).strip()})
         self._record_undo_snapshot()
-        self.ds.save_fachrichtungen(fachrichtungen)
+        self.ds.save_studienrichtungen(studienrichtungen)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, "_refresh_fachrichtungen"):
-            self.parent._refresh_fachrichtungen()
-        self._show_toast("Fachrichtung gespeichert.")
+        if hasattr(self.parent, "_refresh_studienrichtungen"):
+            self.parent._refresh_studienrichtungen()
+        self._show_toast("Studienrichtung gespeichert.")
 
-    def edit_fachrichtung(self) -> None:
-        fachrichtungen = self.ds.load_fachrichtungen()
-        if not self.fach_dock:
+    def edit_studienrichtung(self) -> None:
+        studienrichtungen = self.ds.load_studienrichtungen()
+        if not self.studienrichtung_dock:
             return
 
-        selected_id = self.fach_dock.selected_id()
+        selected_id = self.studienrichtung_dock.selected_id()
         if not selected_id:
             return
 
-        row = next((i for i, f in enumerate(fachrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
+        row = next((i for i, f in enumerate(studienrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
         if row is None:
             return
 
-        cur = fachrichtungen[row]
-        dlg = FachrichtungDialog(self.parent, cur)
+        cur = studienrichtungen[row]
+        dlg = StudienrichtungDialog(self.parent, cur)
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
         new_item = dlg.result
         new_id = str(new_item.get("id", "")).strip()
-        if new_id != selected_id and any(str(f.get("id", "")).strip() == new_id for f in fachrichtungen):
+        if new_id != selected_id and any(str(f.get("id", "")).strip() == new_id for f in studienrichtungen):
             QMessageBox.warning(self.parent, "Fehler", f"ID '{new_id}' existiert bereits.")
             return
 
-        fachrichtungen[row] = {"id": new_id, "name": str(new_item.get("name", "")).strip()}
+        studienrichtungen[row] = {"id": new_id, "name": str(new_item.get("name", "")).strip()}
         self._record_undo_snapshot()
-        self.ds.save_fachrichtungen(fachrichtungen)
+        self.ds.save_studienrichtungen(studienrichtungen)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, "_refresh_fachrichtungen"):
-            self.parent._refresh_fachrichtungen()
-        self._show_toast("Fachrichtung gespeichert.")
+        if hasattr(self.parent, "_refresh_studienrichtungen"):
+            self.parent._refresh_studienrichtungen()
+        self._show_toast("Studienrichtung gespeichert.")
 
-    def del_fachrichtung(self) -> None:
-        fachrichtungen = self.ds.load_fachrichtungen()
-        if not self.fach_dock:
+    def del_studienrichtung(self) -> None:
+        studienrichtungen = self.ds.load_studienrichtungen()
+        if not self.studienrichtung_dock:
             return
 
-        selected_id = self.fach_dock.selected_id()
+        selected_id = self.studienrichtung_dock.selected_id()
         if not selected_id:
             return
 
-        row = next((i for i, f in enumerate(fachrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
+        row = next((i for i, f in enumerate(studienrichtungen) if str(f.get("id", "")).strip() == selected_id), None)
         if row is None:
             return
 
-        if QMessageBox.question(self.parent, "Löschen", "Fachrichtung wirklich löschen?") != QMessageBox.Yes:
+        if QMessageBox.question(self.parent, "Löschen", "Studienrichtung wirklich löschen?") != QMessageBox.Yes:
             return
 
-        fachrichtungen.pop(row)
+        studienrichtungen.pop(row)
         self._record_undo_snapshot()
-        self.ds.save_fachrichtungen(fachrichtungen)
+        self.ds.save_studienrichtungen(studienrichtungen)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, "_refresh_fachrichtungen"):
-            self.parent._refresh_fachrichtungen()
-        self._show_toast("Fachrichtung gelöscht.")
+        if hasattr(self.parent, "_refresh_studienrichtungen"):
+            self.parent._refresh_studienrichtungen()
+        self._show_toast("Studienrichtung gelöscht.")
 
 
-    def read_geplante_semester_models(self) -> List[GeplantesSemester]:
-        models: List[GeplantesSemester] = []
-        for item in self.ds.load_geplante_semester():
+    def read_studiensemester_models(self) -> List[Studiensemester]:
+        models: List[Studiensemester] = []
+        for item in self.ds.load_studiensemester():
             try:
-                models.append(GeplantesSemester(**item))
+                models.append(Studiensemester(**item))
             except Exception:
                 continue
         return models
 
-    def add_geplante_semester(self):
-        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
-        semester_list = self.ds.load_geplante_semester()
-        dlg = GeplanteSemesterDialog(self.parent, None)
+    def add_studiensemester(self):
+        from ..dialogs.studiensemester_dialog import StudiensemesterDialog
+        semester_list = self.ds.load_studiensemester()
+        dlg = StudiensemesterDialog(self.parent, None)
         result = dlg.get_result()
         if not result:
             return
@@ -137,17 +149,17 @@ class CrudHandlers:
             return
         semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
         self._record_undo_snapshot()
-        self.ds.save_geplante_semester(semester_list)
+        self.ds.save_studiensemester(semester_list)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, '_refresh_geplante_semester'):
-            self.parent._refresh_geplante_semester()
-        self._show_toast("Geplantes Semester gespeichert.")
+        if hasattr(self.parent, '_refresh_studiensemester'):
+            self.parent._refresh_studiensemester()
+        self._show_toast("Studiensemester gespeichert.")
 
-    def edit_geplante_semester(self):
-        from ..dialogs.geplante_semester_dialog import GeplanteSemesterDialog
-        semester_list = self.ds.load_geplante_semester()
-        table = getattr(self.parent.tab_geplante_semester, "table", None)
+    def edit_studiensemester(self):
+        from ..dialogs.studiensemester_dialog import StudiensemesterDialog
+        semester_list = self.ds.load_studiensemester()
+        table = getattr(self.parent.tab_studiensemester, "table", None)
         selected_semester_id = selected_id(table) if table else None
         if not selected_semester_id:
             return
@@ -157,7 +169,7 @@ class CrudHandlers:
             return
 
         cur = semester_list[row]
-        dlg = GeplanteSemesterDialog(self.parent, GeplantesSemester(**cur))
+        dlg = StudiensemesterDialog(self.parent, Studiensemester(**cur))
         result = dlg.get_result()
         if not result:
             return
@@ -166,16 +178,16 @@ class CrudHandlers:
             return
         semester_list[row] = {"id": result.id, "name": result.name, "notiz": result.notiz}
         self._record_undo_snapshot()
-        self.ds.save_geplante_semester(semester_list)
+        self.ds.save_studiensemester(semester_list)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, '_refresh_geplante_semester'):
-            self.parent._refresh_geplante_semester()
-        self._show_toast("Geplantes Semester gespeichert.")
+        if hasattr(self.parent, '_refresh_studiensemester'):
+            self.parent._refresh_studiensemester()
+        self._show_toast("Studiensemester gespeichert.")
 
-    def del_geplante_semester(self):
-        semester_list = self.ds.load_geplante_semester()
-        table = getattr(self.parent.tab_geplante_semester, "table", None)
+    def del_studiensemester(self):
+        semester_list = self.ds.load_studiensemester()
+        table = getattr(self.parent.tab_studiensemester, "table", None)
         selected_semester_id = selected_id(table) if table else None
         if not selected_semester_id:
             return
@@ -188,12 +200,12 @@ class CrudHandlers:
             return
         semester_list.pop(row)
         self._record_undo_snapshot()
-        self.ds.save_geplante_semester(semester_list)
+        self.ds.save_studiensemester(semester_list)
         if self.planner:
             self.planner.refresh()
-        if hasattr(self.parent, '_refresh_geplante_semester'):
-            self.parent._refresh_geplante_semester()
-        self._show_toast("Geplantes Semester gelöscht.")
+        if hasattr(self.parent, '_refresh_studiensemester'):
+            self.parent._refresh_studiensemester()
+        self._show_toast("Studiensemester gelöscht.")
 
     def __init__(
         self,
@@ -203,9 +215,8 @@ class CrudHandlers:
         parent=None,
         planner=None,
         lva_dock=None,
-        fach_dock=None,
+        studienrichtung_dock=None,
         room_dock=None,
-        sem_dock=None,
         termin_dock=None,
         freie_tage_dock=None,
         undo_service: Optional[UndoService] = None,
@@ -215,38 +226,49 @@ class CrudHandlers:
         self.parent = parent or mw
         self.planner = planner or (mw.planner if mw else None)
         self.lva_dock = lva_dock or (getattr(mw, "lva_dock", None) if mw else None)
-        self.fach_dock = fach_dock or (getattr(mw, "fach_dock", None) if mw else None)
+        self.studienrichtung_dock = studienrichtung_dock or (getattr(mw, "studienrichtung_dock", None) if mw else None)
         self.room_dock = room_dock or (getattr(mw, "room_dock", None) if mw else None)
-        self.sem_dock = sem_dock or (getattr(mw, "sem_dock", None) if mw else None)
         self.termin_dock = termin_dock or (getattr(mw, "termine_dock", None) if mw else None)
         self.freie_tage_dock = freie_tage_dock
         self.undo_service = undo_service or (getattr(mw, "undo_service", None) if mw else None)
 
     def edit_termin_by_id(self, tid: str) -> bool:
         termine = self.ds.load_termine()
-        cur = next((t for t in termine if t.id == tid), None)
+        source_id = source_termin_id(tid)
+        cur = next((t for t in termine if t.id == source_id), None)
         if not cur:
             return False
 
-        sems = []
-        if hasattr(self.ds, "load_semester"):
-            try:
-                sems = self.ds.load_semester() or []
-            except Exception:
-                sems = []
-        dlg = TerminDialog(
+        dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
-            semester=sems,
+            semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
+            studiensemester=self.read_studiensemester_models(),
+            studienrichtungen=self.ds.load_studienrichtungen(),
             termin=cur,
             settings=self.ds.load_settings(),
+            new_id=source_id,
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return False
 
-        out = [dlg.result if t.id == tid else t for t in termine]
+        if isinstance(dlg.result, list):
+            existing_ids = {t.id for t in termine if t.id != source_id}
+            duplicate_id = next((t.id for t in dlg.result if t.id in existing_ids), None)
+            if duplicate_id:
+                QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{duplicate_id}' existiert bereits.")
+                return False
+            out = [t for t in termine if t.id != source_id]
+            out.extend(dlg.result)
+        else:
+            out = [t for t in termine if t.id != source_id]
+            out.append(dlg.result)
+        lvas = self._upsert_by_id(self.ds.load_lvas(), getattr(dlg, "result_lva", None), getattr(dlg, "source_lva_id", None))
+        rooms = self._upsert_by_id(self.ds.load_raeume(), getattr(dlg, "result_raum", None), getattr(dlg, "source_raum_id", None))
         self._record_undo_snapshot()
+        self.ds.save_lvas(lvas)
+        self.ds.save_raeume(rooms)
         self.ds.save_termine(out)
         self.planner.refresh()
         if hasattr(self.parent, '_refresh_semester'):
@@ -318,11 +340,13 @@ class CrudHandlers:
         self._show_toast("Freier Tag gelöscht.")
 
     def add_termin(self, default_qdate=None) -> bool:
-        dlg = TerminDialog(
+        dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
             semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
+            studiensemester=self.read_studiensemester_models(),
+            studienrichtungen=self.ds.load_studienrichtungen(),
             termin=None,
             settings=self.ds.load_settings(),
             new_id=self._new_termin_id(),
@@ -341,7 +365,50 @@ class CrudHandlers:
             return False
 
         termine = self.ds.load_termine()
+        lvas = self._upsert_by_id(self.ds.load_lvas(), getattr(dlg, "result_lva", None), getattr(dlg, "source_lva_id", None))
+        rooms = self._upsert_by_id(self.ds.load_raeume(), getattr(dlg, "result_raum", None), getattr(dlg, "source_raum_id", None))
         # Serientermin zum Beispiel
+        if isinstance(dlg.result, list):
+            existing_ids = {t.id for t in termine}
+            for t in dlg.result:
+                if t.id in existing_ids:
+                    QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{t.id}' existiert bereits.")
+                    return False
+            termine.extend(dlg.result)
+        else:
+            if any(t.id == dlg.result.id for t in termine):
+                QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{dlg.result.id}' existiert bereits.")
+                return False
+            termine.append(dlg.result)
+
+        self._record_undo_snapshot()
+        self.ds.save_lvas(lvas)
+        self.ds.save_raeume(rooms)
+        self.ds.save_termine(termine)
+        self.planner.refresh()
+        if isinstance(dlg.result, list):
+            self._show_toast(self._count_message(len(dlg.result), "Termin", "Termine", "gespeichert"))
+        else:
+            self._show_toast("Termin gespeichert.")
+        return True
+
+    def add_termin_from_data_editor(self) -> bool:
+        dlg = LVATerminDialog(
+            self.parent,
+            lvas=self.ds.load_lvas(),
+            semester=self.ds.load_semester(),
+            raeume=self.ds.load_raeume(),
+            termin=None,
+            settings=self.ds.load_settings(),
+            new_id=self._new_termin_id(),
+        )
+        dlg.duration_sb.setValue(60)
+        dlg.date_de.setDate(dlg._unassigned_qdate)
+
+        if dlg.exec() != QDialog.Accepted or not dlg.result:
+            return False
+
+        termine = self.ds.load_termine()
         if isinstance(dlg.result, list):
             existing_ids = {t.id for t in termine}
             for t in dlg.result:
@@ -364,6 +431,48 @@ class CrudHandlers:
             self._show_toast("Termin gespeichert.")
         return True
 
+    def edit_termin_from_data_editor(self) -> None:
+        tid = self._selected_termin_id()
+        if not tid:
+            return
+        self.edit_termin_by_id_from_data_editor(tid)
+
+    def edit_termin_by_id_from_data_editor(self, tid: str) -> bool:
+        termine = self.ds.load_termine()
+        source_id = source_termin_id(tid)
+        cur = next((t for t in termine if t.id == source_id), None)
+        if not cur:
+            return False
+
+        dlg = LVATerminDialog(
+            self.parent,
+            lvas=self.ds.load_lvas(),
+            semester=self.ds.load_semester(),
+            raeume=self.ds.load_raeume(),
+            termin=cur,
+            settings=self.ds.load_settings(),
+            new_id=source_id,
+        )
+        if dlg.exec() != QDialog.Accepted or not dlg.result:
+            return False
+
+        if isinstance(dlg.result, list):
+            existing_ids = {t.id for t in termine if t.id != source_id}
+            duplicate_id = next((t.id for t in dlg.result if t.id in existing_ids), None)
+            if duplicate_id:
+                QMessageBox.warning(self.parent, "Fehler", f"Termin-ID '{duplicate_id}' existiert bereits.")
+                return False
+            out = [t for t in termine if t.id != source_id]
+            out.extend(dlg.result)
+        else:
+            out = [dlg.result if t.id == source_id else t for t in termine]
+
+        self._record_undo_snapshot()
+        self.ds.save_termine(out)
+        self.planner.refresh()
+        self._show_toast("Termin gespeichert.")
+        return True
+
     def edit_termin(self) -> None:
         tid = self._selected_termin_id()
         if not tid:
@@ -375,72 +484,35 @@ class CrudHandlers:
         if not tid:
             return
         termine = self.ds.load_termine()
-        cur = next((t for t in termine if t.id == tid), None)
-        # If part of a series, offer options
-        deleted_count = 1
-        if cur and getattr(cur, "serien_id", ""):
-            msg = QMessageBox(self.parent)
-            msg.setWindowTitle("Löschen")
-            msg.setText(f"Termin '{tid}' ist Teil einer Serie. Was möchten Sie löschen?")
-            btn_single = msg.addButton("Nur diesen Termin", QMessageBox.AcceptRole)
-            btn_series = msg.addButton("Ganze Serie", QMessageBox.DestructiveRole)
-            btn_cancel = msg.addButton(QMessageBox.Cancel)
-            msg.exec()
-            clicked = msg.clickedButton()
-            if clicked == btn_cancel:
-                return
-            if clicked == btn_single:
-                termine = [t for t in termine if t.id != tid]
-            else:
-                serien = getattr(cur, "serien_id", "")
-                original_count = len(termine)
-                termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
-                deleted_count = original_count - len(termine)
-        else:
-            dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
-            if dlg.exec() != QDialog.Accepted:
-                return
-            termine = [t for t in termine if t.id != tid]
+        source_id = source_termin_id(tid)
+        cur = next((t for t in termine if t.id == source_id), None)
+        label = "Serientermin" if cur and cur.is_series() else "Termin"
+        dlg = DeleteDialog(self.parent, f"{label} '{source_id}' wirklich löschen?")
+        if dlg.exec() != QDialog.Accepted:
+            return
+        termine = [t for t in termine if t.id != source_id]
 
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
-        self._show_toast(self._count_message(deleted_count, "Termin", "Termine", "gelöscht"))
+        self._show_toast(f"{label} gelöscht.")
 
     def del_termin_by_id(self, tid: str) -> bool:
         if not tid:
             return False
         termine = self.ds.load_termine()
-        cur = next((t for t in termine if t.id == tid), None)
-        deleted_count = 1
-        if cur and getattr(cur, "serien_id", ""):
-            msg = QMessageBox(self.parent)
-            msg.setWindowTitle("Löschen")
-            msg.setText(f"Termin '{tid}' ist Teil einer Serie. Was möchten Sie löschen?")
-            btn_single = msg.addButton("Nur diesen Termin", QMessageBox.AcceptRole)
-            btn_series = msg.addButton("Ganze Serie", QMessageBox.DestructiveRole)
-            btn_cancel = msg.addButton(QMessageBox.Cancel)
-            msg.exec()
-            clicked = msg.clickedButton()
-            if clicked == btn_cancel:
-                return False
-            if clicked == btn_single:
-                termine = [t for t in termine if t.id != tid]
-            else:
-                serien = getattr(cur, "serien_id", "")
-                original_count = len(termine)
-                termine = [t for t in termine if getattr(t, "serien_id", "") != serien]
-                deleted_count = original_count - len(termine)
-        else:
-            dlg = DeleteDialog(self.parent, f"Termin '{tid}' wirklich löschen?")
-            if dlg.exec() != QDialog.Accepted:
-                return False
-            termine = [t for t in termine if t.id != tid]
+        source_id = source_termin_id(tid)
+        cur = next((t for t in termine if t.id == source_id), None)
+        label = "Serientermin" if cur and cur.is_series() else "Termin"
+        dlg = DeleteDialog(self.parent, f"{label} '{source_id}' wirklich löschen?")
+        if dlg.exec() != QDialog.Accepted:
+            return False
+        termine = [t for t in termine if t.id != source_id]
 
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
-        self._show_toast(self._count_message(deleted_count, "Termin", "Termine", "gelöscht"))
+        self._show_toast(f"{label} gelöscht.")
         return True
 
     def _selected_termin_id(self) -> Optional[str]:
@@ -472,18 +544,29 @@ class CrudHandlers:
         new_room_id: Optional[str] = None,
     ) -> bool:
         termine = self.ds.load_termine()
-        t = next((x for x in termine if x.id == termin_id), None)
+        source_id = source_termin_id(termin_id)
+        occurrence_date = occurrence_date_from_id(termin_id)
+        t = next((x for x in termine if x.id == source_id), None)
         if not t:
             return False
 
         duration_minutes = t.duration if t.duration > 0 else 30
 
         try:
-            updates = {
-                "datum": new_date,
-                "start_zeit": new_start,
-                "duration": duration_minutes,
-            }
+            updates = {"start_zeit": new_start, "duration": duration_minutes}
+            if t.is_series():
+                anchor_date = occurrence_date or t.datum
+                if anchor_date and t.datum:
+                    delta = new_date - anchor_date
+                    updates["datum"] = t.datum + delta
+                    updates["datum_bis"] = t.datum_bis + delta if t.datum_bis else None
+                    updates["ausfall_daten"] = [
+                        ausfall + delta for ausfall in (getattr(t, "ausfall_daten", []) or [])
+                    ]
+                else:
+                    updates["datum"] = new_date
+            else:
+                updates["datum"] = new_date
             if new_room_id is not None:
                 updates["raum_id"] = new_room_id
             new_t = replace(t, **updates)
@@ -495,40 +578,75 @@ class CrudHandlers:
                 t.raum_id = new_room_id
             new_t = t
 
-        termine = [new_t if x.id == termin_id else x for x in termine]
+        termine = [new_t if x.id == source_id else x for x in termine]
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
-        self._show_toast("Termin verschoben.")
+        self._show_toast("Serientermin verschoben." if t.is_series() else "Termin verschoben.")
         return True
 
     def unassign_termin(self, termin_id: str) -> bool:
         termine = self.ds.load_termine()
-        t = next((x for x in termine if x.id == termin_id), None)
+        source_id = source_termin_id(termin_id)
+        t = next((x for x in termine if x.id == source_id), None)
         if not t:
             return False
 
-        new_t = replace(t, datum=None, start_zeit=None)
-        termine = [new_t if x.id == termin_id else x for x in termine]
+        if t.is_series():
+            termin_label = t.name or termin_id
+            details = []
+            if t.datum:
+                details.append(t.datum.strftime("%d.%m.%Y"))
+            if t.start_zeit:
+                details.append(t.start_zeit.strftime("%H:%M"))
+            detail_text = f" ({', '.join(details)})" if details else ""
+
+            msg = QMessageBox(self.parent)
+            msg.setWindowTitle("Serientermin zurück in die Terminliste")
+            msg.setText(
+                f"'{termin_label}'{detail_text} ist Teil einer Serie.\n"
+                "Der ganze Serientermin wird zurück in die Terminliste verschoben."
+            )
+            btn_series = msg.addButton("Serientermin zurückschieben", QMessageBox.AcceptRole)
+            btn_cancel = msg.addButton("Abbrechen", QMessageBox.RejectRole)
+            msg.exec()
+
+            clicked = msg.clickedButton()
+            if clicked != btn_series or clicked == btn_cancel:
+                return False
+
+            new_t = replace(
+                t,
+                datum=None,
+                start_zeit=None,
+                datum_bis=None,
+                periodizitaet=None,
+                ausfall_daten=[],
+            )
+            termine = [new_t if x.id == source_id else x for x in termine]
+        else:
+            new_t = replace(t, datum=None, start_zeit=None)
+            termine = [new_t if x.id == source_id else x for x in termine]
+
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
-        self._show_toast("Termin-Zuweisung entfernt.")
+        self._show_toast("Serientermin zurück in die Terminliste verschoben." if t.is_series() else "Termin-Zuweisung entfernt.")
         return True
 
     def add_lva(self) -> None:
         dlg = LVADialog(
             self.parent,
             None,
-            self.read_geplante_semester_models(),
-            self.ds.load_fachrichtungen(),
+            self.read_studiensemester_models(),
+            self.ds.load_studienrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
         lvas = self.ds.load_lvas()
         if any(l.id == dlg.result.id for l in lvas):
-            QMessageBox.warning(self.parent, "Fehler", "Diese LVA-ID existiert bereits.")
+            QMessageBox.warning(self.parent, "Fehler", "Diese LVA-Nr. existiert bereits.")
             return
 
         lvas.append(dlg.result)
@@ -550,14 +668,14 @@ class CrudHandlers:
         dlg = LVADialog(
             self.parent,
             cur,
-            self.read_geplante_semester_models(),
-            self.ds.load_fachrichtungen(),
+            self.read_studiensemester_models(),
+            self.ds.load_studienrichtungen(),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result:
             return
 
         if dlg.result.id != cid and any(l.id == dlg.result.id for l in lvas):
-            QMessageBox.warning(self.parent, "Fehler", "Neue LVA-ID existiert bereits.")
+            QMessageBox.warning(self.parent, "Fehler", "Neue LVA-Nr. existiert bereits.")
             return
 
         lvas = [dlg.result if l.id == cid else l for l in lvas]
@@ -664,77 +782,6 @@ class CrudHandlers:
         self.ds.save_termine(terms)
         self.planner.refresh()
         message = "Raum gelöscht."
-        if deleted_count > 0:
-            message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
-        self._show_toast(message)
-
-    def add_semester(self) -> None:
-        dlg = SemesterDialog(self.parent, None)
-        if dlg.exec() != QDialog.Accepted or not dlg.result:
-            return
-
-        sems = self.ds.load_semester()
-        if any(s.id == dlg.result.id for s in sems):
-            QMessageBox.warning(self.parent, "Fehler", "Diese Semester-ID existiert bereits.")
-            return
-
-        sems.append(dlg.result)
-        self._record_undo_snapshot()
-        self.ds.save_semester(sems)
-        self.planner.refresh()
-        self._show_toast("Semester gespeichert.")
-
-    def edit_semester(self) -> None:
-        sid = self.sem_dock.selected_id()
-        if not sid:
-            return
-
-        sems = self.ds.load_semester()
-        cur = next((s for s in sems if s.id == sid), None)
-        if not cur:
-            return
-
-        dlg = SemesterDialog(self.parent, cur)
-        if dlg.exec() != QDialog.Accepted or not dlg.result:
-            return
-
-        if dlg.result.id != sid and any(s.id == dlg.result.id for s in sems):
-            QMessageBox.warning(self.parent, "Fehler", "Neue Semester-ID existiert bereits.")
-            return
-
-        sems = [dlg.result if s.id == sid else s for s in sems]
-        self._record_undo_snapshot()
-        self.ds.save_semester(sems)
-
-        if dlg.result.id != sid:
-            terms = self.ds.load_termine()
-            terms = [replace(t, semester_id=dlg.result.id) if t.semester_id == sid else t for t in terms]
-            self.ds.save_termine(terms)
-
-        self.planner.refresh()
-        self._show_toast("Semester gespeichert.")
-
-    def del_semester(self) -> None:
-        sid = self.sem_dock.selected_id()
-        if not sid:
-            return
-
-        if QMessageBox.question(
-            self.parent,
-            "Löschen",
-            f"Semester {sid} wirklich löschen? (Termine werden auch gelöscht)"
-        ) != QMessageBox.Yes:
-            return
-
-        sems = [s for s in self.ds.load_semester() if s.id != sid]
-        all_terms = self.ds.load_termine()
-        terms = [t for t in all_terms if t.semester_id != sid]
-        deleted_count = len(all_terms) - len(terms)
-        self._record_undo_snapshot()
-        self.ds.save_semester(sems)
-        self.ds.save_termine(terms)
-        self.planner.refresh()
-        message = "Semester gelöscht."
         if deleted_count > 0:
             message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
         self._show_toast(message)

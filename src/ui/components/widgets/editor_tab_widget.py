@@ -19,12 +19,22 @@ def selected_id(table: QTableWidget) -> Optional[str]:
     if row < 0:
         return None
 
-    id_col = None
-    for col in range(table.columnCount()):
-        hdr = table.horizontalHeaderItem(col)
-        if hdr and hdr.text().strip().upper() == "ID":
-            id_col = col
-            break
+    id_col = table.property("id_column")
+    if not isinstance(id_col, int) or id_col < 0 or id_col >= table.columnCount():
+        id_col = None
+        for col in range(table.columnCount()):
+            hdr = table.horizontalHeaderItem(col)
+            if hdr and hdr.text().strip().upper() == "ID":
+                id_col = col
+                break
+
+    if id_col is None:
+        lva_nr_headers = {"LVA-NR.", "LVA-NR", "LVA NR"}
+        for col in range(table.columnCount()):
+            hdr = table.horizontalHeaderItem(col)
+            if hdr and hdr.text().strip().upper() in lva_nr_headers:
+                id_col = col
+                break
 
     if id_col is None:
         return None
@@ -41,7 +51,7 @@ class EditorTab(QWidget):
     edit_clicked = Signal()
     delete_clicked = Signal()
 
-    def __init__(self, title: str, columns: List[str], parent: QWidget):
+    def __init__(self, title: str, columns: List[str], parent: QWidget, id_column: Optional[int] = None):
         super().__init__(parent)
 
         root = QVBoxLayout(self)
@@ -62,6 +72,8 @@ class EditorTab(QWidget):
         # Table
         self.table = QTableWidget(0, len(columns), self)
         self.table.setHorizontalHeaderLabels(columns)
+        if id_column is not None:
+            self.table.setProperty("id_column", id_column)
         self.table.setSortingEnabled(True)
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)

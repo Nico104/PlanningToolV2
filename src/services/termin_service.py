@@ -2,6 +2,7 @@ from datetime import date, datetime, time, timedelta
 from typing import List, Optional, Dict, Tuple
 
 from ..core.models import Termin, Zeitfenster
+from .termin_occurrence_service import expand_termine
 
 
 class TerminService:
@@ -49,8 +50,9 @@ class TerminService:
         day_end = datetime.strptime(self.settings.get("day_end", "18:00"), "%H:%M").time()
 
         # relevante Termine
+        expanded_termine = expand_termine(termine)
         rel = [
-            t for t in termine
+            t for t in expanded_termine
             if t.raum_id == raum_id
             and t.datum == datum
             and t.start_zeit is not None

@@ -12,6 +12,9 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from .termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
+from .semester_generation import generate_semesters
+
 
 _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
     "raeume.json": {
@@ -28,8 +31,9 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "vortragende.name",
             "vortragende.email",
             "typ",
-            "geplante_semester",
-            "fachrichtung",
+            "studiensemester",
+            "studienrichtung",
+            "ects",
         ],
     },
     "termine.json": {
@@ -41,6 +45,8 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "lva_id",
             "typ",
             "datum",
+            "datum_bis",
+            "periodizitaet",
             "start_zeit",
             "raum_id",
             "gruppe.name",
@@ -48,18 +54,13 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "anwesenheitspflicht",
             "duration",
             "semester_id",
-            "serien_id",
+            "ausfall_daten",
             "notiz",
         ],
     },
-    "semester.json": {
-        "sheet": "Semester",
-        "list_key": "semester",
-        "columns": ["id", "name", "start", "end"],
-    },
-    "fachrichtungen.json": {
-        "sheet": "Fachrichtungen",
-        "list_key": "fachrichtungen",
+    "studienrichtungen.json": {
+        "sheet": "Studienrichtungen",
+        "list_key": "studienrichtungen",
         "columns": ["id", "name"],
     },
     "freie_tage.json": {
@@ -67,11 +68,18 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
         "list_key": "freie_tage",
         "columns": ["id", "typ", "beschreibung", "datum", "von_datum", "bis_datum"],
     },
-    "geplante_semester.json": {
-        "sheet": "GeplanteSemester",
-        "list_key": "geplante_semester",
+    "studiensemester.json": {
+        "sheet": "Studiensemester",
+        "list_key": "studiensemester",
         "columns": ["id", "name", "notiz"],
     },
+}
+
+_EXCEL_HEADER_LABELS: Dict[str, str] = {
+    "lehrveranstaltungen.json:id": "LVA-Nr.",
+    "lehrveranstaltungen.json:studienrichtung": "Studienrichtung",
+    "lehrveranstaltungen.json:studiensemester": "Studiensemester",
+    "termine.json:lva_id": "LVA-Nr.",
 }
 
 
@@ -97,6 +105,18 @@ def _read_json_list(path: Path, list_key: str) -> List[Dict[str, Any]]:
     payload = _read_json_file(path)
     rows = payload.get(list_key, []) if isinstance(payload, dict) else []
     return rows if isinstance(rows, list) else []
+
+
+def _semester_export_rows(data_dir: Path) -> List[Dict[str, Any]]:
+    extra_ids = {
+        _safe_text(item.get("semester_id"))
+        for item in _read_json_list(data_dir / "termine.json", "termine")
+        if _safe_text(item.get("semester_id"))
+    }
+    return [
+        {"id": s.id, "name": s.name, "start": s.start.isoformat(), "end": s.end.isoformat()}
+        for s in generate_semesters(extra_ids=extra_ids)
+    ]
 
 
 def _get_nested(data: Dict[str, Any], path: str) -> Any:
@@ -225,6 +245,37 @@ def _parse_list(value: Any) -> List[str]:
     return [p.strip() for p in txt.split(";") if p.strip()]
 
 
+def _series_dates_from_entry(termin: Dict[str, Any]) -> List[date]:
+    start = _safe_date(termin.get("datum"))
+    end = _safe_date(termin.get("datum_bis"))
+    period = _safe_text(termin.get("periodizitaet"))
+    if start is None:
+        return []
+    if end is None or end < start or period not in SUPPORTED_PERIODIZITAET:
+        return [start]
+    skipped = {d for d in (_safe_date(item) for item in _parse_list(termin.get("ausfall_daten"))) if d is not None}
+    return [current for current in series_date_sequence(start, end, period) if current not in skipped]
+
+
+def _expand_termin_entries(termine: Iterable[Dict[str, Any]]) -> Iterable[Dict[str, Any]]:
+    for termin in termine:
+        if not isinstance(termin, dict):
+            continue
+        dates = _series_dates_from_entry(termin)
+        if not dates:
+            yield termin
+            continue
+        if len(dates) == 1:
+            item = dict(termin)
+            item["datum"] = dates[0].isoformat()
+            yield item
+            continue
+        for occurrence_date in dates:
+            item = dict(termin)
+            item["datum"] = occurrence_date.isoformat()
+            yield item
+
+
 def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
     if file_name == "raeume.json":
         if "kapazitaet" in entry:
@@ -232,12 +283,14 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
             entry["kapazitaet"] = 0 if val is None else val
     elif file_name == "lehrveranstaltungen.json":
         entry["typ"] = _parse_list(entry.get("typ"))
-        entry["geplante_semester"] = _parse_list(entry.get("geplante_semester"))
+        entry["studiensemester"] = _parse_list(entry.get("studiensemester"))
     elif file_name == "termine.json":
-        entry["serien_id"] = str(entry.get("serien_id", "")).strip()
         entry["notiz"] = str(entry.get("notiz", ""))
         entry["raum_id"] = str(entry.get("raum_id", ""))
         entry["semester_id"] = str(entry.get("semester_id", ""))
+        period = str(entry.get("periodizitaet", "") or "").strip()
+        entry["periodizitaet"] = None if not period or period.lower() == "keine" else period
+        entry["ausfall_daten"] = _parse_list(entry.get("ausfall_daten"))
 
         if "duration" in entry:
             val = _parse_int(entry.get("duration"))
@@ -260,6 +313,9 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
 
         if entry.get("datum") in (None, ""):
             entry["datum"] = None
+        if entry.get("datum_bis") in (None, ""):
+            entry["datum_bis"] = None
+            entry["periodizitaet"] = None
         if entry.get("start_zeit") in (None, ""):
             entry["start_zeit"] = None
     elif file_name == "freie_tage.json":
@@ -288,7 +344,7 @@ def export_project_to_excel(data_dir: Path, output_path: Path) -> None:
         sheet = wb.create_sheet(cfg["sheet"])
         columns: List[str] = cfg["columns"]
         list_key = cfg["list_key"]
-        sheet.append(columns)
+        sheet.append([_EXCEL_HEADER_LABELS.get(f"{file_name}:{col}", col) for col in columns])
 
         payload = _read_json_file(data_dir / file_name)
         rows = payload.get(list_key, []) if isinstance(payload, dict) else []
@@ -321,6 +377,8 @@ def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
         list_key = cfg["list_key"]
 
         if sheet_name not in wb.sheetnames:
+            sheet_name = next((alias for alias in cfg.get("sheet_aliases", []) if alias in wb.sheetnames), sheet_name)
+        if sheet_name not in wb.sheetnames:
             continue
 
         ws = wb[sheet_name]
@@ -334,13 +392,9 @@ def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
             for idx, col in enumerate(columns):
                 raw = values[idx] if idx < len(values) else None
                 if raw is None:
-                    if file_name == "termine.json" and col == "serien_id":
-                        entry["serien_id"] = ""
                     continue
                 txt = str(raw).strip()
                 if txt == "":
-                    if file_name == "termine.json" and col == "serien_id":
-                        entry["serien_id"] = ""
                     continue
                 _set_nested(entry, col, txt)
 
@@ -375,7 +429,7 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
             teacher_lvas[key]
 
     teacher_terms: Dict[tuple[str, str], int] = defaultdict(int)
-    for termin in termine:
+    for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
         key = lva_teacher.get(_safe_text(termin.get("lva_id")))
@@ -403,7 +457,7 @@ def export_terms_for_teachers_to_excel(
         "Datum",
         "Beginn",
         "Ende",
-        "LVA-Nummer",
+        "LVA-Nr.",
         "Lehrveranstaltung",
         "Lehrperson",
         "E-Mail",
@@ -422,7 +476,7 @@ def export_terms_for_teachers_to_excel(
     lvas = _read_json_list(data_dir / "lehrveranstaltungen.json", "lehrveranstaltungen")
     termine = _read_json_list(data_dir / "termine.json", "termine")
     raeume = _read_json_list(data_dir / "raeume.json", "raeume")
-    semester = _read_json_list(data_dir / "semester.json", "semester")
+    semester = _semester_export_rows(data_dir)
 
     lva_map = {_safe_text(item.get("id")): item for item in lvas if _safe_text(item.get("id"))}
     raum_map = {_safe_text(item.get("id")): item for item in raeume if _safe_text(item.get("id"))}
@@ -435,7 +489,7 @@ def export_terms_for_teachers_to_excel(
             if teacher_key[0]:
                 rows_by_teacher[teacher_key]
 
-    for termin in termine:
+    for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
 
@@ -452,7 +506,7 @@ def export_terms_for_teachers_to_excel(
         ende = _safe_end_time(termin.get("start_zeit"), termin.get("duration"))
 
         row = {
-            "LVA-Nummer": _safe_text(lva.get("id")) if isinstance(lva, dict) else _safe_text(termin.get("lva_id")),
+            "LVA-Nr.": _safe_text(lva.get("id")) if isinstance(lva, dict) else _safe_text(termin.get("lva_id")),
             "Lehrveranstaltung": _safe_text(lva.get("name")) if isinstance(lva, dict) else _safe_text(termin.get("name")),
             "Lehrperson": teacher_name,
             "E-Mail": teacher_email,
@@ -472,7 +526,7 @@ def export_terms_for_teachers_to_excel(
     def sort_key(row: Dict[str, Any]) -> tuple:
         datum = _safe_date(row.get("Datum"))
         start = _safe_time(row.get("Beginn"))
-        return (datum is None, datum or date.max, start is None, start or time.max, _safe_text(row.get("LVA-Nummer")))
+        return (datum is None, datum or date.max, start is None, start or time.max, _safe_text(row.get("LVA-Nr.")))
 
     def write_sheet(sheet, data_rows: List[Dict[str, Any]]) -> None:
         sheet.append(headers)

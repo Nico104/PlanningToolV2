@@ -1,11 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, time
 from typing import Optional, List, Dict
 
 
 
 @dataclass(frozen=True)
-class GeplantesSemester:
+class Studiensemester:
     id: str
     name: str
     notiz: Optional[str] = None
@@ -38,8 +38,9 @@ class Lehrveranstaltung:
     name: str
     vortragende: Vortragende
     typ: List[str]  # erlaubte Termin-Typen, z.B. ["VO", "UE"]
-    geplante_semester: List[str]  # IDs von beliebig vielen geplanten Semestern
-    fachrichtung: str = "ETIT"
+    studiensemester: List[str]  # IDs von beliebig vielen Studiensemestern
+    studienrichtung: str = "ETIT"
+    ects: str = ""
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,17 @@ class Termin:
     notiz: str = ""
     duration: int = 0  # duration in minutes
     semester_id: str = ""
-    serien_id: str = ""
+    datum_bis: Optional[date] = None
+    periodizitaet: Optional[str] = None
+    ausfall_daten: List[date] = field(default_factory=list)
+
+    def is_series(self) -> bool:
+        return (
+            self.datum is not None
+            and self.datum_bis is not None
+            and self.datum_bis > self.datum
+            and self.periodizitaet in {"täglich", "wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich"}
+        )
 
     
     def get_end_time(self) -> Optional[time]:

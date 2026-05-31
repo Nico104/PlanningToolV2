@@ -13,7 +13,9 @@
       "notiz": "",
       "duration": 60,
       "semester_id": "testsem",
-      "serien_id": ""
+      "datum_bis": null,
+      "periodizitaet": null,
+      "ausfall_daten": []
     }
   ]
 }

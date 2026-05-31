@@ -5,6 +5,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
+from .termin_occurrence_service import expand_termine, source_termin_id
 
 
 DEFAULT_CONFLICTS_PATH = Path(__file__).resolve().parents[1] / "konflikte.json"
@@ -35,7 +36,11 @@ def has_preview_conflict(
         return False
 
    
-    dragged = next((t for t in termine if t.id == termin_id), None)
+    expanded = expand_termine(termine)
+    dragged = next((t for t in expanded if str(t.id) == str(termin_id)), None)
+    if not dragged:
+        source_id = source_termin_id(termin_id)
+        dragged = next((t for t in termine if str(t.id) == source_id), None)
     if not dragged:
         return False
 
@@ -58,7 +63,16 @@ def has_preview_conflict(
     )
 
   
-    simulated = [moved_dragged if t.id == termin_id else t for t in termine]
+    replaced = False
+    simulated = []
+    for t in expanded:
+        if str(t.id) == str(dragged.id):
+            simulated.append(moved_dragged)
+            replaced = True
+        else:
+            simulated.append(t)
+    if not replaced:
+        simulated.append(moved_dragged)
 
     detector = ConflictDetector(
         lvas=lvas,
@@ -69,7 +83,8 @@ def has_preview_conflict(
     issues = detector.detect_all(simulated)
    
     return any(
-        issue.severity == "conflict" and termin_id in issue.termin_ids
+        issue.severity == "conflict"
+        and any(source_termin_id(tid) == source_termin_id(termin_id) for tid in issue.termin_ids)
         for issue in issues
     )
 
@@ -178,6 +193,7 @@ class ConflictDetector:
     def detect_all(self, termine: List[Termin]) -> List[ConflictIssue]:
         """Detect all conflicts and warnings in the given Termine list, respecting settings from konflikte.json."""
         issues = []
+        termine = expand_termine(termine)
         assigned = [t for t in termine if self.is_assigned(t)]
 
         # Tuple format: (settings_key, detector_fn, assigned_only)

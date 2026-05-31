@@ -15,10 +15,11 @@ from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 from ..components.widgets.tick_checkbox import TickCheckBox
 from ..components.widgets.tight_combobox import TightComboBox
 
-class TerminDialog(QDialog):
-    """Dialog for creating or editing Termine, including optional series creation
 
-    Supports unassigned dates via a sentinel value, validates required fields
+class TerminDialog(QDialog):
+    """Legacy backup dialog for the old Termin workflow.
+
+    Kept only as a reference backup. The application uses LVATerminDialog.
     """
     def __init__(self, parent: QWidget, *,
                  lvas: List[Lehrveranstaltung],
@@ -72,7 +73,7 @@ class TerminDialog(QDialog):
             enabled = self.serientermin_cb.isChecked()
             self.period_cb.setEnabled(enabled)
             self.end_date_de.setEnabled(enabled)
-            
+
             style = "" if enabled else "background: #eee; color: #888;"
             self.period_cb.setStyleSheet(style)
             self.end_date_de.setStyleSheet(style)
@@ -80,11 +81,8 @@ class TerminDialog(QDialog):
         self.serientermin_cb.stateChanged.connect(_toggle_serientermin_fields)
         _toggle_serientermin_fields()
 
-        
-        
         self.setWindowTitle("Termin bearbeiten" if termin else "Termin hinzufügen")
         self._result: Optional[Termin] = None
-
 
         self.lva_cb = TightComboBox()
         for l in lvas:
@@ -95,9 +93,8 @@ class TerminDialog(QDialog):
         for s in semester:
             self.semester_cb.addItem(f"{s.name}", s.id)
 
-
         self.typ_le = QLineEdit(termin.typ if termin else "VO")
-        
+
         self.date_de = QDateEdit()
         self.date_de.setCalendarPopup(True)
 
@@ -177,9 +174,9 @@ class TerminDialog(QDialog):
         def _on_date_changed():
             #When date changes from unassigned, jump to today
             current_date = self.date_de.date()
-            
+
             if current_date != self._unassigned_qdate and current_date == self._unassigned_qdate.addDays(1):
-                
+
                 today = date.today()
                 self.date_de.setDate(date_to_qdate(today))
             _sync_time_enabled()
@@ -187,7 +184,6 @@ class TerminDialog(QDialog):
         self.date_de.dateChanged.connect(_on_date_changed)
 
         _sync_time_enabled()
-
 
         form.addRow("Name:", self.name_le)
         form.addRow("LVA:", self.lva_cb)
@@ -213,7 +209,7 @@ class TerminDialog(QDialog):
             self.period_cb.setVisible(False)
             self.end_date_de.setEnabled(False)
             self.end_date_de.setVisible(False)
-        
+
         self.lva_cb.setObjectName("HeaderCombo")
         self.semester_cb.setObjectName("HeaderCombo")
         self.typ_le.setObjectName("Field")
@@ -224,7 +220,7 @@ class TerminDialog(QDialog):
         self.grp_name.setObjectName("Field")
         self.grp_size.setObjectName("Field")
         self.note_te.setObjectName("Field")
-        
+
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
@@ -238,8 +234,6 @@ class TerminDialog(QDialog):
             cancel_btn.setObjectName("SecondaryButton")
 
         lay.addWidget(bb)
-
-
 
     def _set_cb(self, cb: QComboBox, data_value: str):
         for i in range(cb.count()):
@@ -300,7 +294,7 @@ class TerminDialog(QDialog):
                 while current <= end_date:
                     dates.append(current)
                     current += delta
-                
+
             elif period == "monatlich":
                 def add_month(dt):
                     month = dt.month + 1
@@ -319,19 +313,19 @@ class TerminDialog(QDialog):
                 while current <= end_date:
                     dates.append(current)
                     current = add_month(current)
-                
+
             else:
                 dates = []
                 current = d
                 while current <= end_date:
                     dates.append(current)
                     current += delta
-                
+
             self._result = []
             for idx, date_val in enumerate(dates):
                 #Eindeutige ID: BasisID + Serienkürzel + Laufnummer
                 termin_id = f"{self.new_id}_{serien_id_short}_r{idx+1}" if len(dates) > 1 else f"{self.new_id}_{serien_id_short}"
-                
+
                 self._result.append(Termin(
                     name=name_value,
                     id=termin_id,

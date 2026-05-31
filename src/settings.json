@@ -6,10 +6,11 @@
   "duration_step_minutes": 15,
   "show_termine_search": true,
   "start_semester": "SS26",
-  "start_fachrichtung": "ETIT",
+  "start_studienrichtung": "ETIT",
   "data_path": "data_test",
   "layout_presets": {
     "Standard": "AAAA/wAAAAD9AAAAAgAAAAAAAAAAAAAAAPwCAAAAAfwAAAAA/////wAAAOkBAAAj+gAAAAACAAAAA/sAAAAYAGQAbwBjAGsAXwB0AGUAcgBtAGkAbgBlAQAAAAD/////AAAAWQD////7AAAAHABkAG8AYwBrAF8AYwBvAG4AZgBsAGkAYwB0AHMBAAAAAP////8AAAC9AP////sAAAAgAGQAbwBjAGsAXwBkAGEAdABhAF8AZQBkAGkAdABvAHIBAAAAAP////8AAADFAP///wAAAAIAAAAAAAAAAPwBAAAAAvsAAAAmAGQAbwBjAGsAXwBnAGwAbwBiAGEAbABfAGYAaQBsAHQAZQByAHMBAAAAAP////8AAAOiAP////sAAAAoAGQAbwBjAGsAXwBkAGEAdABlAF8AbgBhAHYAaQBnAGEAdABpAG8AbgEAAAAA/////wAAAewA////AAAAAAAAAAAAAAAEAAAABAAAAAgAAAAI/AAAAAA="
   },
-  "layout_current": "Standard"
+  "layout_current": "Standard",
+  "show_weekend": false
 }

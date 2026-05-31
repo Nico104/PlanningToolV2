@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...services.data_service import DataService
+from ...services.termin_occurrence_service import expand_termine, source_termin_id
 from ..utils.datetime_utils import date_to_qdate
 from .state import PlannerState
 from .day_view import PlannerDayView
@@ -182,7 +183,7 @@ class PlannerWorkspace(QWidget):
         if not self.state.termine:
             return
 
-        dated = [t.datum for t in self.state.termine if t.datum is not None]
+        dated = [t.datum for t in self.state.occurrences if t.datum is not None]
         if not dated:
             self.day_date.setDate(QDate.currentDate())
             self.week_from.setDate(date_to_qdate(self._align_to_monday(date.today())))
@@ -202,16 +203,18 @@ class PlannerWorkspace(QWidget):
                 "lva_id": None,
                 "typ": None,
                 "dozent": None,
+                "studienrichtung": None,
                 "semester_id": None,
-                "geplante_semester": None,
+                "studiensemester": None,
             }
         return {
             "raum_id": gf.raum_id,
             "lva_id": gf.lva_id,
             "typ": gf.typ,
             "dozent": getattr(gf, "dozent", None),
+            "studienrichtung": getattr(gf, "studienrichtung", None),
             "semester_id": getattr(gf, "semester", None),
-            "geplante_semester": getattr(gf, "geplante_semester", None),
+            "studiensemester": getattr(gf, "studiensemester", None),
         }
 
     def refresh(self, emit: bool = True):
@@ -223,9 +226,11 @@ class PlannerWorkspace(QWidget):
             lva_id=filters["lva_id"],
             typ=filters["typ"],
             dozent=filters["dozent"],
+            studienrichtung=filters["studienrichtung"],
             semester_id=filters["semester_id"],
-            geplante_semester=filters["geplante_semester"],
+            studiensemester=filters["studiensemester"],
         )
+        expanded = expand_termine(filtered)
 
         view = str(self.view_cb.currentData())
         if view == "day":
@@ -233,16 +238,16 @@ class PlannerWorkspace(QWidget):
             rooms = self.state.raeume
             if filters["raum_id"]:
                 rooms = [r for r in rooms if r.id == filters["raum_id"]]
-            self.day_view.refresh(filtered, rooms)
+            self.day_view.refresh(expanded, rooms)
         elif view == "week":
             self.stack.setCurrentWidget(self.week_table)
-            self.week_view.refresh(filtered)
+            self.week_view.refresh(expanded)
         elif view == "month":
             self.stack.setCurrentWidget(self.month_container)
-            self.month_view.refresh(filtered)
+            self.month_view.refresh(expanded)
         else:
             self.stack.setCurrentWidget(self.week_table)
-            self.week_view.refresh(filtered)
+            self.week_view.refresh(expanded)
 
         if emit and self._emit_enabled and callable(self.on_data_changed):
             self.on_data_changed()
@@ -284,19 +289,19 @@ class PlannerWorkspace(QWidget):
         self.refresh(emit=False)
 
     def highlight_termine(self, termin_ids: list[str]) -> None:
-        ids = termin_ids
-        # ids = {str(tid) for tid in (termin_ids or []) if tid}
+        ids = {str(tid) for tid in (termin_ids or []) if tid}
         if not ids:
             return
+        source_ids = {source_termin_id(tid) for tid in ids}
 
         self._jump_to_first_termin(ids)
 
         # Clear previous highlights
         self.clear_conflict_highlights()
 
-        self._highlight_week_cards(ids)
-        self._highlight_day_cells(ids)
-        self._highlight_month_cells(ids)
+        self._highlight_week_cards(ids, source_ids)
+        self._highlight_day_cells(ids, source_ids)
+        self._highlight_month_cells(ids, source_ids)
 
     def clear_conflict_highlights(self) -> None:
         TerminCard.clear_global_focus()
@@ -326,14 +331,14 @@ class PlannerWorkspace(QWidget):
         self.refresh(emit=False)
 
     def _jump_to_first_termin(self, ids: set[str]) -> None:
-        t = next((x for x in self.state.termine if str(x.id) in ids), None)
+        t = next((self.state.termin_map.get(str(tid)) for tid in ids if self.state.termin_map.get(str(tid))), None)
         if not t or not t.datum:
             return
 
         self.day_date.setDate(date_to_qdate(t.datum))
         self.week_from.setDate(date_to_qdate(self._align_to_monday(t.datum)))
 
-    def _highlight_week_cards(self, ids: set[str]) -> None:
+    def _highlight_week_cards(self, ids: set[str], source_ids: set[str]) -> None:
         first_focused = False
         rows = self.week_table.rowCount()
         cols = self.week_table.columnCount()
@@ -343,13 +348,13 @@ class PlannerWorkspace(QWidget):
                 if not isinstance(cell_widget, TimeSlotCell):
                     continue
                 for card in cell_widget.findChildren(TerminCard):
-                    if card.termin_id in ids:
+                    if card.termin_id in ids or source_termin_id(card.termin_id) in source_ids:
                         card.set_conflict_highlight(True)
                         if not first_focused:
                             card.setFocus()
                             first_focused = True
 
-    def _highlight_day_cells(self, ids: set[str]) -> None:
+    def _highlight_day_cells(self, ids: set[str], source_ids: set[str]) -> None:
         first_focused = False
         rows = self.day_table.rowCount()
         cols = self.day_table.columnCount()
@@ -358,13 +363,13 @@ class PlannerWorkspace(QWidget):
                 cell_widget = self.day_table.cellWidget(r, c)
                 if isinstance(cell_widget, TimeSlotCell):
                     for card in cell_widget.findChildren(TerminCard):
-                        if card.termin_id in ids:
+                        if card.termin_id in ids or source_termin_id(card.termin_id) in source_ids:
                             card.set_conflict_highlight(True)
                             if not first_focused:
                                 card.setFocus()
                                 first_focused = True
 
-    def _highlight_month_cells(self, ids: set[str]) -> None:
+    def _highlight_month_cells(self, ids: set[str], source_ids: set[str]) -> None:
         rows = self.month_table.rowCount()
         cols = self.month_table.columnCount()
         for r in range(rows):
@@ -373,7 +378,7 @@ class PlannerWorkspace(QWidget):
                 if cell_widget is None:
                     continue
                 day_ids = cell_widget.property("day_ids") or []
-                has_match = any(str(tid) in ids for tid in day_ids)
+                has_match = any(str(tid) in ids or source_termin_id(tid) in source_ids for tid in day_ids)
                 cell_widget.setProperty("monthConflictHighlight", has_match)
                 cell_widget.style().unpolish(cell_widget)
                 cell_widget.style().polish(cell_widget)

@@ -7,9 +7,15 @@ Erweiterungen zur letzten gezeigten Version:
 
 - Wenn im Data Editor ein neuer Termin erstellt wird gibt es die Möglichkeit diesen zu wiederholen (Serientermin)
 
+- Serientermine werden als ein Termin mit Beginn-Datum, Enddatum und Periodizität gespeichert, nicht als viele einzelne Termine
+
 - Freier Tag kann entweder ein Feiertag oder Vorlesungsfrei sein und wird demensprechend im Kalendar angezeigt. Diese beiden Fälle wirden auch mit 2 Konflikten erweitert.
 
-- Geplante Semester als LVA Attribut, kann gefiltert werden
+- Studiensemester als LVA-Attribut, kann gefiltert werden
+
+- Kalendersemester werden automatisch aus Sommersemester/Wintersemester und Jahr erzeugt, es gibt keine semester.json mehr
+
+- Unter Tools -> Semester-Werkzeuge können Termine eines Semesters nach LVA-Auswahl in ein Zielsemester kopiert oder komplett aus einem Semester gelöscht werden
 
 - Termin Drag and Drop Liste wird nach LVA gruppiert und es wird angezeigt wie viele von den Terminen einem Datum und Zeitslot zugewiesen sind
 
@@ -21,7 +27,7 @@ Erweiterungen zur letzten gezeigten Version:
 
 - In der Termin Liste gibt es bei Rechtsklick jetzt eine "Springe zu" Option
 
-- LVA haben jetzt Fachrichtung als Attribut und FAchrichtungen können im Data Editor Tab erstellt und bearbeitet werden
+- LVA haben jetzt Studienrichtung als Attribut und Studienrichtungen können im Data Editor Tab erstellt und bearbeitet werden
 
 - In den Einstellungen ist als Data-Path "data_test" gesetzt, dies sind die Daten mit denen ich diese App entwickelt/getested habe. Wenn Sie diesen String im Settings-Dialog löschen dann wird der normale data Ordner verwendet und die App wird in einem neuen Speicherstand gestartet
 

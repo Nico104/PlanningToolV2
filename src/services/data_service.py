@@ -4,6 +4,7 @@ from datetime import datetime, date, time
 from typing import Dict, List, Any
 
 from ..core.models import Semester, Raum, Vortragende, Lehrveranstaltung, Gruppe, Termin
+from .semester_generation import generate_semesters
 
 
 class DataService:
@@ -12,34 +13,45 @@ class DataService:
     """
 
     def load_semester(self) -> List[Semester]:
-        """Lädt alle Semester aus semester.json (falls vorhanden)."""
-        path = self.data_dir / "semester.json"
-        if not path.exists():
-            return []
-        raw = json.loads(path.read_text(encoding="utf-8-sig")).get("semester", [])
-        out = []
-        for x in raw:
-            out.append(Semester(
-                id=x["id"],
-                name=x["name"],
-                start=datetime.strptime(x["start"], "%Y-%m-%d").date(),
-                end=datetime.strptime(x["end"], "%Y-%m-%d").date(),
-            ))
-        return out
+        """Return generated academic semesters.
+
+        Semester are generated from SS/WS rules and are not persisted as project
+        master data.
+        """
+        extra_ids = set()
+        try:
+            start_semester = str(self.load_settings().get("start_semester", "")).strip()
+            if start_semester:
+                extra_ids.add(start_semester)
+        except Exception:
+            pass
+
+        termin_path = self.data_dir / "termine.json"
+        if termin_path.exists():
+            try:
+                raw_termine = json.loads(termin_path.read_text(encoding="utf-8-sig")).get("termine", [])
+                for item in raw_termine:
+                    semester_id = str(item.get("semester_id", "")).strip()
+                    if semester_id:
+                        extra_ids.add(semester_id)
+            except Exception:
+                pass
+
+        return generate_semesters(extra_ids=extra_ids)
 
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
 
 
-    def _read(self, filename: str, fachrichtung: str = None, semester: str = None) -> Dict[str, Any]:
+    def _read(self, filename: str, studienrichtung: str = None, semester: str = None) -> Dict[str, Any]:
         # Support new structure: Studiengang/ETIT/ss26_termine.json etc.
-        if fachrichtung and semester:
+        if studienrichtung and semester:
             # Compose filename like 'ss26_termine.json' or 'ws26_termine.json'
             if filename == "termine.json":
                 filebase = f"{semester.lower()}_termine.json"
-                path = self.data_dir / "Studiengang" / fachrichtung / filebase
+                path = self.data_dir / "Studiengang" / studienrichtung / filebase
             else:
-                path = self.data_dir / fachrichtung / semester / filename
+                path = self.data_dir / studienrichtung / semester / filename
         else:
             path = self.data_dir / filename
         # Use utf-8-sig to transparently handle files with optional UTF-8 BOM.
@@ -67,7 +79,34 @@ class DataService:
     def _fmt_time(t: time) -> str:
         return t.strftime("%H:%M")
 
-    # ---------- LOAD ----------
+    @staticmethod
+    def _parse_optional_date(value: Any) -> date | None:
+        if not value:
+            return None
+        if isinstance(value, date) and not isinstance(value, datetime):
+            return value
+        return datetime.strptime(str(value), "%Y-%m-%d").date()
+
+    @staticmethod
+    def _parse_date_list(value: Any) -> List[date]:
+        if not isinstance(value, list):
+            return []
+        out: List[date] = []
+        for item in value:
+            try:
+                parsed = DataService._parse_optional_date(item)
+            except Exception:
+                parsed = None
+            if parsed is not None:
+                out.append(parsed)
+        return out
+
+    @staticmethod
+    def _parse_periodizitaet(value: Any) -> str | None:
+        text = str(value or "").strip()
+        if not text or text.lower() == "keine":
+            return None
+        return text
 
     def load_raeume(self) -> List[Raum]:
         raw = self._read("raeume.json")["raeume"]
@@ -75,70 +114,70 @@ class DataService:
 
     def load_lvas(self) -> List[Lehrveranstaltung]:
         settings = self.load_settings()
-        fachrichtung = settings.get("start_fachrichtung", "ETIT")
+        studienrichtung = settings.get("start_studienrichtung", "ETIT")
         path = self.data_dir / "lehrveranstaltungen.json"
         raw = json.loads(path.read_text(encoding="utf-8-sig"))["lehrveranstaltungen"]
         out: List[Lehrveranstaltung] = []
         for x in raw:
             v = x["vortragende"]
-            raw_geplante_semester = x.get("geplante_semester", [])
-            if not isinstance(raw_geplante_semester, list):
-                raw_geplante_semester = []
-            geplante_semester = []
+            raw_studiensemester = x.get("studiensemester", [])
+            if not isinstance(raw_studiensemester, list):
+                raw_studiensemester = []
+            studiensemester = []
             seen = set()
-            for item in raw_geplante_semester:
+            for item in raw_studiensemester:
                 semester_id = str(item).strip()
                 if not semester_id or semester_id in seen:
                     continue
                 seen.add(semester_id)
-                geplante_semester.append(semester_id)
+                studiensemester.append(semester_id)
             out.append(Lehrveranstaltung(
                 id=x["id"],
                 name=x["name"],
                 vortragende=Vortragende(name=v["name"], email=v.get("email", "")),
                 typ=list(x.get("typ", [])),
-                geplante_semester=geplante_semester,
-                fachrichtung=str(x.get("fachrichtung", fachrichtung or "ETIT")).strip() or "ETIT",
+                studiensemester=studiensemester,
+                studienrichtung=str(x.get("studienrichtung", studienrichtung or "ETIT")).strip() or "ETIT",
+                ects=str(x.get("ects", "")).strip(),
             ))
         return out
 
 
     def load_termine(self) -> List[Termin]:
-        # Load all termine from the single termine.json file for the current fachrichtung
-        settings = self.load_settings()
-        fachrichtung = settings.get("start_fachrichtung", "ETIT")
+        # Load all termine from the single termine.json file.
         path = self.data_dir / "termine.json"
         if not path.exists():
             return []
         raw = json.loads(path.read_text(encoding="utf-8-sig")).get("termine", [])
-        out: List[Termin] = []
-        for x in raw:
-            g = x.get("gruppe")
-            d_raw = x.get("datum")
-            datum = self._parse_date(d_raw) if d_raw else None
-            start_zeit_raw = x.get("start_zeit")
-            start_zeit = self._parse_time(start_zeit_raw) if start_zeit_raw else None
-            out.append(Termin(
-                name=x.get("name", ""),
-                id=x["id"],
-                lva_id=x["lva_id"],
-                typ=x["typ"],
-                datum=datum,
-                start_zeit=start_zeit,
-                raum_id=x.get("raum_id", ""),
-                gruppe=(
-                    Gruppe(
-                        name=g.get("name", "-") if g else "-",
-                        groesse=int(g.get("groesse", 0)) if g else 0,
-                    ) if g is not None else None
-                ),
-                anwesenheitspflicht=bool(x.get("anwesenheitspflicht", False)),
-                notiz=x.get("notiz", ""),
-                duration=int(x.get("duration", 0)),
-                semester_id=x.get("semester_id", ""),
-                serien_id=x.get("serien_id", "")
-            ))
-        return out
+        return [self._termin_from_json(x) for x in raw]
+
+    def _termin_from_json(self, x: Dict[str, Any]) -> Termin:
+        g = x.get("gruppe")
+        datum = self._parse_optional_date(x.get("datum"))
+        start_zeit_raw = x.get("start_zeit")
+        start_zeit = self._parse_time(start_zeit_raw) if start_zeit_raw else None
+        return Termin(
+            name=x.get("name", ""),
+            id=x["id"],
+            lva_id=x["lva_id"],
+            typ=x["typ"],
+            datum=datum,
+            start_zeit=start_zeit,
+            raum_id=x.get("raum_id", ""),
+            gruppe=(
+                Gruppe(
+                    name=g.get("name", "-") if g else "-",
+                    groesse=int(g.get("groesse", 0)) if g else 0,
+                ) if g is not None else None
+            ),
+            anwesenheitspflicht=bool(x.get("anwesenheitspflicht", False)),
+            notiz=x.get("notiz", ""),
+            duration=int(x.get("duration", 0)),
+            semester_id=x.get("semester_id", ""),
+            datum_bis=self._parse_optional_date(x.get("datum_bis")),
+            periodizitaet=self._parse_periodizitaet(x.get("periodizitaet")),
+            ausfall_daten=self._parse_date_list(x.get("ausfall_daten")),
+        )
 
 
     def load_settings(self) -> Dict[str, Any]:
@@ -147,15 +186,6 @@ class DataService:
         return json.loads(settings_path.read_text(encoding="utf-8-sig"))
 
     # ---------- SAVE ----------
-    def save_semester(self, semester: List[Semester]) -> None:
-        self._write("semester.json", {
-            "semester": [{
-                "id": s.id, "name": s.name,
-                "start": self._fmt_date(s.start),
-                "end": self._fmt_date(s.end)
-            } for s in semester]
-        })
-
     def save_raeume(self, raeume: List[Raum]) -> None:
         self._write("raeume.json", {
             "raeume": [{"id": r.id, "name": r.name, "kapazitaet": r.kapazitaet} for r in raeume]
@@ -163,7 +193,7 @@ class DataService:
 
     def save_lvas(self, lvas: List[Lehrveranstaltung]) -> None:
         settings = self.load_settings()
-        fachrichtung = settings.get("start_fachrichtung", "ETIT")
+        studienrichtung = settings.get("start_studienrichtung", "ETIT")
         path = self.data_dir / "lehrveranstaltungen.json"
         path.write_text(json.dumps({
             "lehrveranstaltungen": [{
@@ -171,15 +201,16 @@ class DataService:
                 "name": l.name,
                 "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
                 "typ": list(l.typ),
-                "geplante_semester": l.geplante_semester,
-                "fachrichtung": str(getattr(l, "fachrichtung", fachrichtung or "ETIT")).strip() or "ETIT",
+                "studiensemester": l.studiensemester,
+                "studienrichtung": str(getattr(l, "studienrichtung", studienrichtung or "ETIT")).strip() or "ETIT",
+                "ects": str(getattr(l, "ects", "")).strip(),
             } for l in lvas]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     def save_termine(self, termine: List[Termin]) -> None:
         # Save all termine into a single termine.json file (with semester_id per termin)
         settings = self.load_settings()
-        fachrichtung = settings.get("start_fachrichtung", "ETIT")
+        studienrichtung = settings.get("start_studienrichtung", "ETIT")
         path = self.data_dir / "termine.json"
         path.write_text(json.dumps({
             "termine": [{
@@ -202,7 +233,11 @@ class DataService:
                 "notiz": t.notiz,
                 "duration": t.duration,
                 "semester_id": t.semester_id,
-                "serien_id": getattr(t, "serien_id", ""),
+                "datum_bis": self._fmt_date(t.datum_bis) if t.datum_bis is not None else None,
+                "periodizitaet": getattr(t, "periodizitaet", None) if t.datum_bis is not None else None,
+                "ausfall_daten": [
+                    self._fmt_date(d) for d in (getattr(t, "ausfall_daten", []) or [])
+                ],
             } for t in termine]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -213,21 +248,21 @@ class DataService:
 
     
 
-    def load_fachrichtungen(self) -> List[Dict[str, Any]]:
-        path = self.data_dir / "fachrichtungen.json"
+    def load_studienrichtungen(self) -> List[Dict[str, Any]]:
+        path = self.data_dir / "studienrichtungen.json"
         if not path.exists():
             return []
         try:
             obj = json.loads(path.read_text(encoding="utf-8-sig"))
-            items = obj.get("fachrichtungen", [])
+            items = obj.get("studienrichtungen", [])
             return items if isinstance(items, list) else []
         except Exception:
             return []
 
-    def save_fachrichtungen(self, fachrichtungen: List[Dict[str, Any]]) -> None:
-        path = self.data_dir / "fachrichtungen.json"
+    def save_studienrichtungen(self, studienrichtungen: List[Dict[str, Any]]) -> None:
+        path = self.data_dir / "studienrichtungen.json"
         path.write_text(
-            json.dumps({"fachrichtungen": fachrichtungen}, ensure_ascii=False, indent=2) + "\n",
+            json.dumps({"studienrichtungen": studienrichtungen}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
 
@@ -254,20 +289,20 @@ class DataService:
 
     
 
-    def load_geplante_semester(self) -> List[Dict[str, Any]]:
-        path = self.data_dir / "geplante_semester.json"
+    def load_studiensemester(self) -> List[Dict[str, Any]]:
+        path = self.data_dir / "studiensemester.json"
         if not path.exists():
             return []
         try:
             obj = json.loads(path.read_text(encoding="utf-8-sig"))
-            items = obj.get("geplante_semester", [])
+            items = obj.get("studiensemester", [])
             return items if isinstance(items, list) else []
         except Exception:
             return []
 
-    def save_geplante_semester(self, semester_list: List[Dict[str, Any]]) -> None:
-        path = self.data_dir / "geplante_semester.json"
+    def save_studiensemester(self, semester_list: List[Dict[str, Any]]) -> None:
+        path = self.data_dir / "studiensemester.json"
         path.write_text(
-            json.dumps({"geplante_semester": semester_list}, ensure_ascii=False, indent=2) + "\n",
+            json.dumps({"studiensemester": semester_list}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )

@@ -16,10 +16,9 @@ class ImportDialog(QDialog):
         "termine.json":             ("termine",             "id"),
         "raeume.json":              ("raeume",              "id"),
         "lehrveranstaltungen.json": ("lehrveranstaltungen", "id"),
-        "semester.json":            ("semester",            "id"),
-        "fachrichtungen.json":      ("fachrichtungen",      "id"),
+        "studienrichtungen.json":   ("studienrichtungen",   "id"),
         "freie_tage.json":          ("freie_tage",          "id"),
-        "geplante_semester.json":   ("geplante_semester",   "id"),
+        "studiensemester.json":   ("studiensemester",   "id"),
     }
 
     @staticmethod
@@ -63,6 +62,9 @@ class ImportDialog(QDialog):
             "typ": "Typ",
             "duration": "Dauer",
             "datum": "Datum",
+            "datum_bis": "Datum bis",
+            "periodizitaet": "Periodizität",
+            "ausfall_daten": "Ausfalltermine",
             "von_datum": "Von",
             "bis_datum": "Bis",
             "gruppe": "Gruppe",
@@ -70,17 +72,16 @@ class ImportDialog(QDialog):
             "start_zeit": "Startzeit",
             "end_zeit": "Endzeit",
             "raum_id": "Raum",
-            "lva_id": "Lehrveranstaltung",
+            "lva_id": "LVA-Nr.",
             "semester_id": "Semester",
-            "serien_id": "Serie",
             "anwesenheitspflicht": "Anwesenheitspflicht",
             "notiz": "Notiz",
             "beschreibung": "Beschreibung",
             "kapazitaet": "Kapazitaet",
             "vortragende": "Vortragende",
             "email": "E-Mail",
-            "fachrichtung": "Fachrichtung",
-            "geplante_semester": "Geplante Semester",
+            "studienrichtung": "Studienrichtung",
+            "studiensemester": "Studiensemester",
         }
 
         @classmethod
@@ -269,14 +270,7 @@ class ImportDialog(QDialog):
                 eid = ImportDialog._get_entry_id(inc, id_field)
                 ex = existing_map.get(eid) if eid else None
 
-                if fname == "termine.json":
-                    ex_cmp = dict(ex or {})
-                    inc_cmp = dict(inc or {})
-                    ex_cmp["serien_id"] = ex_cmp.get("serien_id") or ""
-                    inc_cmp["serien_id"] = inc_cmp.get("serien_id") or ""
-                    different = ex is None or ex_cmp != inc_cmp
-                else:
-                    different = ex is None or ex != inc
+                different = ex is None or ex != inc
 
                 if not different:
                     continue

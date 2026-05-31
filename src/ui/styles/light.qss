@@ -106,6 +106,62 @@ QDialog#TeacherExportDialog QLabel#TeacherExportSummary {
   font-weight: 600;
 }
 
+QDialog#SemesterToolsDialog {
+  background: #ffffff;
+}
+
+QDialog#SemesterToolsDialog QLabel#SemesterToolsTitle {
+  color: #111111;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+QDialog#SemesterToolsDialog QLabel#SemesterToolsSummary {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+QDialog#SemesterToolsDialog QRadioButton {
+  color: #111111;
+  spacing: 8px;
+  font-size: 12px;
+}
+
+QDialog#SemesterToolsDialog QRadioButton::indicator {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d8d8d8;
+  background: #ffffff;
+}
+
+QDialog#SemesterToolsDialog QRadioButton::indicator {
+  border-radius: 8px;
+}
+
+QDialog#SemesterToolsDialog QRadioButton::indicator:checked {
+  background: #111111;
+  border: 1px solid #111111;
+}
+
+QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable {
+  background: #ffffff;
+  alternate-background-color: #fbfbfb;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  gridline-color: #f2f2f2;
+  outline: 0;
+}
+
+QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable::item {
+  padding: 8px 6px;
+}
+
+QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable::item:selected {
+  background: #eef6ff;
+  color: #111111;
+}
+
 
 QHeaderView::section {
   background: #fafafa;
@@ -342,6 +398,51 @@ QComboBox#HeaderCombo::drop-down {
 QComboBox#HeaderCombo::down-arrow {
   width: 9px;
   height: 9px;
+}
+
+QWidget#SemesterSelector {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 7px;
+}
+
+QWidget#SemesterSelector:hover {
+  border: 1px solid #d9d9d9;
+}
+
+QComboBox#SemesterKindCombo {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 24px 4px 10px;
+  color: #111111;
+}
+
+QComboBox#SemesterKindCombo::drop-down {
+  width: 22px;
+  border: none;
+  background: transparent;
+}
+
+QComboBox#SemesterKindCombo::down-arrow {
+  width: 9px;
+  height: 9px;
+}
+
+QSpinBox#SemesterYearSpin {
+  background: transparent;
+  border: none;
+  border-left: 1px solid #eeeeee;
+  border-radius: 0;
+  padding: 4px 4px 4px 10px;
+  color: #111111;
+}
+
+QSpinBox#SemesterYearSpin::up-button,
+QSpinBox#SemesterYearSpin::down-button {
+  width: 18px;
+  background: transparent;
+  border: none;
 }
 
 

@@ -48,13 +48,13 @@ class PlannerDayView:
             self.day_table.terminDropped.connect(self._on_termin_dropped)
         if hasattr(self.day_table, "set_duration_preview_provider"):
             def _dur_provider(tid: str) -> int:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 return int(t.duration) if t else 0
             slot_min = int(self.state.settings.get("time_slot_minutes", 30))
             self.day_table.set_duration_preview_provider(_dur_provider, slot_min)
         if hasattr(self.day_table, "set_color_provider"):
             def _color_provider(tid: str) -> QColor:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 if t:
                     typ = (t.typ or "").strip().upper()
                     for k, color in TYPE_COLORS:
@@ -64,7 +64,7 @@ class PlannerDayView:
             self.day_table.set_color_provider(_color_provider)
         if hasattr(self.day_table, "set_text_provider"):
             def _text_provider(tid: str) -> str:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 if not t or not t.start_zeit or not t.get_end_time():
                     return ""
                 lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)

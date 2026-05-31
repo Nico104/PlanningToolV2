@@ -14,6 +14,11 @@
       "id": "LAB3",
       "name": "Computerraum LAB3",
       "kapazitaet": 28
+    },
+    {
+      "id": "EI8",
+      "name": "EI8",
+      "kapazitaet": 30
     }
   ]
 }

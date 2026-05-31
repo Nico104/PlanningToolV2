@@ -36,8 +36,13 @@ class PlannerMonthView:
         self.month_label = month_label
         self._free_day_styles = self._free_day_provider.get_styles()
 
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"])
+        show_weekend = self.state.settings.get("show_weekend", True)
+        if show_weekend:
+            self.table.setColumnCount(7)
+            self.table.setHorizontalHeaderLabels(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"])
+        else:
+            self.table.setColumnCount(5)
+            self.table.setHorizontalHeaderLabels(["Mo", "Di", "Mi", "Do", "Fr"])
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -75,16 +80,15 @@ class PlannerMonthView:
 
         year = mf.year
         month = mf.month
-        first_weekday, days_in_month = calendar.monthrange(year, month)
 
-        # calendar.monthrange uses Mon=0..Sun=6, matching our column order exactly,
-        # so first_weekday is directly the number of empty cells before day 1
-        start_offset = first_weekday
+        show_weekend = self.state.settings.get("show_weekend", True)
+        day_headers = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] if show_weekend else ["Mo", "Di", "Mi", "Do", "Fr"]
+        days_in_week = len(day_headers)
+        month_weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(year, month)
 
-        total_cells = start_offset + days_in_month
-        weeks = (total_cells + 6) // 7
-
-        self.table.setRowCount(weeks)
+        self.table.setColumnCount(days_in_week)
+        self.table.setHorizontalHeaderLabels(day_headers)
+        self.table.setRowCount(len(month_weeks))
 
         by_date = {}
         for t in filtered_termine:
@@ -92,25 +96,22 @@ class PlannerMonthView:
                 by_date.setdefault(t.datum, []).append(t)
 
         first_day = date(year, month, 1)
-        last_day = date(year, month, days_in_month)
+        last_day = date(year, month, calendar.monthrange(year, month)[1])
         free_days = self._free_day_provider.get_types_for_range(first_day, last_day)
 
         self._last_filtered = list(filtered_termine or [])
-        day = 1
-        
         vp_height = max(1, self.table.viewport().height())
-        row_height = max(60, int(vp_height / max(1, weeks)))
-        for r in range(weeks):
+        row_height = max(60, int(vp_height / max(1, len(month_weeks))))
+        for r, week_dates in enumerate(month_weeks):
             self.table.setRowHeight(r, row_height)
-            for c in range(7):
-                cell_index = r * 7 + c
-                if cell_index < start_offset or day > days_in_month:
+            visible_dates = week_dates if show_weekend else week_dates[:5]
+            for c, d in enumerate(visible_dates):
+                if d.month != month:
                     # empty cell
                     w = QWidget()
                     w.setProperty("day_ids", [])
                     self.table.setCellWidget(r, c, w)
                 else:
-                    d = date(year, month, day)
                     items = by_date.get(d, [])
                     day_type = free_days.get(d)
 
@@ -120,7 +121,7 @@ class PlannerMonthView:
                     lay.setContentsMargins(6, 4, 6, 4)
                     lay.setSpacing(2)
 
-                    day_lbl = QLabel(f"{day}")
+                    day_lbl = QLabel(f"{d.day}")
                     day_lbl.setObjectName("MonthDayNumber")
                     day_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
@@ -156,14 +157,13 @@ class PlannerMonthView:
                         )
 
                     self.table.setCellWidget(r, c, w)
-                    day += 1
 
         if self.month_label is not None:
             self.month_label.setText(f"{calendar.month_name[month]} {year}")
 
         avail_w = max(1, self.table.viewport().width())
-        col_w = max(48, avail_w // 7)
-        for i in range(7):
+        col_w = max(48, avail_w // max(1, days_in_week))
+        for i in range(days_in_week):
             self.table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
             self.table.setColumnWidth(i, col_w)
         self.table.updateGeometry()
@@ -212,22 +212,12 @@ class PlannerMonthView:
         dlg.exec()
 
     def _on_table_drop(self, termin_id: str, row: int, col: int):
-        try:
-            mf = qdate_to_date(self.month_from.date())
-        except Exception:
-            mf = date.today()
-
-        year = mf.year
-        month = mf.month
-        first_weekday, days_in_month = calendar.monthrange(year, month)
-        start_offset = first_weekday
-
-        cell_index = row * 7 + col
-        day = cell_index - start_offset + 1
-        if day < 1 or day > days_in_month:
+        target_widget = self.table.cellWidget(row, col)
+        if target_widget is None:
             return
-
-        new_date = date(year, month, day)
+        new_date = target_widget.property("day_date")
+        if not isinstance(new_date, date):
+            return
 
         new_start = None
         try:

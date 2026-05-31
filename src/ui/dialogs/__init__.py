@@ -1,21 +1,23 @@
 from .lva_dialog import LVADialog
 from .raum_dialog import RaumDialog
-from .semester_dialog import SemesterDialog
 from .settings_dialog import SettingsDialog
 from .teacher_export_dialog import TeacherExportDialog
-from .termin_dialog import TerminDialog
+from .lva_termin_dialog import LVATerminDialog
 from .freie_tage_dialog import FreieTageDialog
-from .fachrichtung_dialog import FachrichtungDialog
+from .studienrichtung_dialog import StudienrichtungDialog
+from .studiensemester_dialog import StudiensemesterDialog
 from .import_dialog import ImportDialog
+from .semester_tools_dialog import SemesterToolsDialog
 
 __all__ = [
     "LVADialog",
     "RaumDialog",
-    "SemesterDialog",
     "SettingsDialog",
     "TeacherExportDialog",
-    "TerminDialog",
+    "LVATerminDialog",
     "FreieTageDialog",
-    "FachrichtungDialog",
+    "StudienrichtungDialog",
+    "StudiensemesterDialog",
     "ImportDialog",
+    "SemesterToolsDialog",
 ]

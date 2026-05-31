@@ -234,7 +234,10 @@ class TermineDock(QDockWidget):
                 raum = next((r for r in self._raeume if r.id == t.raum_id), None)
                 title = f"{t.lva_id} – {(lva.name if lva else '')}".strip(" –")
                 raum_txt = f"{t.raum_id} – {(raum.name if raum else '')}".strip(" –")
-                date_text = fmt_date(t.datum)
+                if t.is_series() and getattr(t, "datum_bis", None):
+                    date_text = f"{fmt_date(t.datum)} – {fmt_date(t.datum_bis)}"
+                else:
+                    date_text = fmt_date(t.datum)
                 end_time = t.get_end_time()
                 time_text = (
                     f"{fmt_time(t.start_zeit)} – {fmt_time(end_time)} ({t.duration} min)"

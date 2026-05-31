@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
-from ..core.models import Lehrveranstaltung, Raum, Semester, Termin
+from ..core.models import Lehrveranstaltung, Raum, Termin
 from .data_service import DataService
 
 
@@ -14,10 +14,9 @@ class ProjectSnapshot:
     termine: List[Termin]
     lvas: List[Lehrveranstaltung]
     raeume: List[Raum]
-    semester: List[Semester]
-    fachrichtungen: List[Dict[str, Any]]
+    studienrichtungen: List[Dict[str, Any]]
     freie_tage: List[Dict[str, Any]]
-    geplante_semester: List[Dict[str, Any]]
+    studiensemester: List[Dict[str, Any]]
 
 
 class UndoService:
@@ -76,17 +75,15 @@ class UndoService:
             termine=deepcopy(ds.load_termine()),
             lvas=deepcopy(ds.load_lvas()),
             raeume=deepcopy(ds.load_raeume()),
-            semester=deepcopy(ds.load_semester()),
-            fachrichtungen=deepcopy(ds.load_fachrichtungen()),
+            studienrichtungen=deepcopy(ds.load_studienrichtungen()),
             freie_tage=deepcopy(ds.load_freie_tage()),
-            geplante_semester=deepcopy(ds.load_geplante_semester()),
+            studiensemester=deepcopy(ds.load_studiensemester()),
         )
 
     def restore(self, ds: DataService, snapshot: ProjectSnapshot) -> None:
         ds.save_termine(deepcopy(snapshot.termine))
         ds.save_lvas(deepcopy(snapshot.lvas))
         ds.save_raeume(deepcopy(snapshot.raeume))
-        ds.save_semester(deepcopy(snapshot.semester))
-        ds.save_fachrichtungen(deepcopy(snapshot.fachrichtungen))
+        ds.save_studienrichtungen(deepcopy(snapshot.studienrichtungen))
         ds.save_freie_tage(deepcopy(snapshot.freie_tage))
-        ds.save_geplante_semester(deepcopy(snapshot.geplante_semester))
+        ds.save_studiensemester(deepcopy(snapshot.studiensemester))

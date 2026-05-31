@@ -58,6 +58,11 @@ class SettingsDialog(QDialog):
         form.addRow("Datenpfad:", self.data_path_le)
         form.addRow("Termine-Suche anzeigen:", self.show_termine_search_cb)
 
+        # Wochenende anzeigen
+        self.show_weekend_cb = TickCheckBox()
+        self.show_weekend_cb.setObjectName("Field")
+        form.addRow("Wochenende im Kalender anzeigen:", self.show_weekend_cb)
+
         btns = QHBoxLayout()
         lay.addLayout(btns)
         btns.addStretch(1)
@@ -84,6 +89,7 @@ class SettingsDialog(QDialog):
         self.day_end_te.setTime(QTime(de.hour, de.minute))
         self.data_path_le.setText(s.get("data_path", ""))
         self.show_termine_search_cb.setChecked(bool(s.get("show_termine_search", True)))
+        self.show_weekend_cb.setChecked(bool(s.get("show_weekend", False)))
 
     def _on_ok(self) -> None:
         self.result_settings = {
@@ -93,5 +99,6 @@ class SettingsDialog(QDialog):
             "day_end": self.day_end_te.time().toString("HH:mm"),
             "data_path": self.data_path_le.text(),
             "show_termine_search": self.show_termine_search_cb.isChecked(),
+            "show_weekend": self.show_weekend_cb.isChecked(),
         }
         self.accept()

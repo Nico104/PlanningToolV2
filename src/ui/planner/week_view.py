@@ -20,7 +20,7 @@ from .render_helpers import render_grouped_termine_column
 
 class PlannerWeekView:
     """
-    Shows a week grid (Mo-Sa) with time slots as rows
+    Shows a week grid with time slots as rows
     Supports dropping a Termin onto a cell
     """
 
@@ -45,12 +45,12 @@ class PlannerWeekView:
         if hasattr(self.week_table, "set_duration_preview_provider"):
             slot_min = int(self.state.settings.get("time_slot_minutes", 30))
             def _dur_provider(tid: str) -> int:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 return int(t.duration) if t else 0
             self.week_table.set_duration_preview_provider(_dur_provider, slot_min)
         if hasattr(self.week_table, "set_color_provider"):
             def _color_provider(tid: str) -> QColor:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 if t:
                     typ = (t.typ or "").strip().upper()
                     for k, color in TYPE_COLORS:
@@ -60,7 +60,7 @@ class PlannerWeekView:
             self.week_table.set_color_provider(_color_provider)
         if hasattr(self.week_table, "set_text_provider"):
             def _text_provider(tid: str) -> str:
-                t = next((tt for tt in self.state.termine if tt.id == tid), None)
+                t = self.state.termin_map.get(str(tid))
                 if not t or not t.start_zeit or not t.get_end_time():
                     return ""
                 lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
@@ -137,24 +137,25 @@ class PlannerWeekView:
         week_mo = monday_of(qdate_to_date(self.week_from.date()))
         week_su = week_mo + timedelta(days=6)
         self._free_days_by_date = self._free_day_provider.get_types_for_range(week_mo, week_su)
+        show_weekend = self.state.settings.get("show_weekend", True)
+        max_weekday = 6 if show_weekend else 4
 
-        # keep Mo–Sa only
         terms = [
             t for t in filtered_termine
             if t.datum is not None
             and week_mo <= t.datum <= week_su
-            and t.datum.weekday() <= 5
+            and t.datum.weekday() <= max_weekday
         ]
 
         self._build_week_table(week_mo, terms)
 
     def _build_week_table(self, week_mo: date, terms: List[Termin]) -> None:
         """
-        Populate the week table for the 6-day week starting at week_mo (Monday).
+        Populate the week table for the configured visible week starting at week_mo (Monday).
 
         Layout:
         - Column 0: time labels (read-only)
-        - Columns 1..6: Monday through Saturday
+        - Columns 1..N: visible weekdays, optionally including weekend
         - Rows: one row per time slot (configured via day_start/day_end/time_slot_minutes)
 
         Free-day handling: for each day that is a Feiertag or Vorlesungsfrei, the
@@ -162,7 +163,8 @@ class PlannerWeekView:
         background color is applied to both the header item and all row cells in
         that column. This makes free days visually distinct without blocking drops.
         """
-        days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa"]
+        show_weekend = self.state.settings.get("show_weekend", True)
+        days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] if show_weekend else ["Mo", "Di", "Mi", "Do", "Fr"]
         slots = self._time_slots()
         slot_min = self._day_bounds()[2]
 
@@ -242,7 +244,7 @@ class PlannerWeekView:
         for day_items in by_day.values():
             day_items.sort(key=lambda x: x.start_zeit if x.start_zeit is not None else time(0, 0))
 
-        for col in range(6):
+        for col in range(len(days)):
             d0 = week_mo + timedelta(days=col)
             items = by_day.get(d0, [])
 
