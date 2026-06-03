@@ -20,8 +20,16 @@
         "key": "lecturer_conflict",
         "enabled": true,
         "type": "conflict",
-        "description": "Zwei Termine mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten.",
+        "description": "Zwei Termine unterschiedlicher LVAs mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten.",
         "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
+    },
+    {
+        "name": "Studienplan-Warnung",
+        "key": "study_semester_warning",
+        "enabled": true,
+        "type": "warning",
+        "description": "Zwei Termine aus derselben Studienrichtung und derselben Studienplan-Zuordnung überschneiden sich.",
+        "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room}) · {studienrichtung}, {studiensemester}"
     },
     {
         "name": "Feiertags-Konflikt",

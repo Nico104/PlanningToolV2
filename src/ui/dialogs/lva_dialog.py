@@ -51,9 +51,6 @@ class LVADialog(QDialog):
         self.vmail_le = QLineEdit(lva.vortragende.email if lva else "")
         self.vmail_le.setObjectName("Field")
 
-        self.typ_le = QLineEdit(", ".join(lva.typ) if lva else "VO")
-        self.typ_le.setObjectName("Field")
-
         self.studienrichtung_cb = TightComboBox(self)
         self.studienrichtung_cb.setObjectName("HeaderCombo")
         self.studienrichtung_cb.setMinimumWidth(160)
@@ -145,7 +142,6 @@ class LVADialog(QDialog):
         form.addRow("Vortragende Name:", self.vname_le)
         form.addRow("Vortragende E-Mail:", self.vmail_le)
         form.addRow("Studienrichtung:", self.studienrichtung_cb)
-        form.addRow("Erlaubte Typen (Komma):", self.typ_le)
 
         form.addRow("Studiensemester:", self.sem_list)
         form.addRow("Studiensemester hinzufügen/entfernen:", sem_add_layout)
@@ -166,14 +162,13 @@ class LVADialog(QDialog):
         cid = self.id_le.text().strip()
         name = self.name_le.text().strip()
         vname = self.vname_le.text().strip()
-        if not cid or not name or not vname:
-            QMessageBox.warning(self, "Fehler", "LVA-Nr., Name und Vortragende Name sind Pflicht.")
+        if not cid or not name:
+            QMessageBox.warning(self, "Fehler", "LVA-Nr. und Name sind Pflicht.")
             return
         selected_studienrichtung = self.studienrichtung_cb.currentData()
         if selected_studienrichtung is None or not str(selected_studienrichtung).strip():
             QMessageBox.warning(self, "Fehler", "Studienrichtung ist Pflicht.")
             return
-        typ = [t.strip().upper() for t in self.typ_le.text().split(",") if t.strip()]
         studiensemester = []
         # Map chip names back to IDs
         for chip_name in self.sem_list.items:
@@ -188,7 +183,7 @@ class LVADialog(QDialog):
             id=cid,
             name=name,
             vortragende=Vortragende(name=vname, email=self.vmail_le.text().strip()),
-            typ=typ,
+            typ=[],
             studiensemester=studiensemester,
             studienrichtung=str(selected_studienrichtung).strip(),
             ects=self.ects_le.text().strip(),

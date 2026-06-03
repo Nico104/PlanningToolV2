@@ -132,6 +132,9 @@ class ConflictDetector:
             key = entry.get("key")
             if key:
                 self.conflict_settings[key] = entry
+        self._lva_by_id = {str(lva.id): lva for lva in lvas}
+        self._raum_by_id = {str(raum.id): raum for raum in raeume}
+        self._studiensemester_names = self._load_studiensemester_names()
         self._free_days_by_date = self._load_free_days_map(conflict_settings_path)
     
     def is_assigned(self, termin: Termin) -> bool:
@@ -167,7 +170,8 @@ class ConflictDetector:
           (e.g. "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})")
         - 'description': fallback text when no template is present
 
-        Defaults to the raw template (maybe not the best solution), so a misconfigured konflikte.json never crashes conflict detection
+        Falls ein Template nicht gerendert werden kann, wird der Rohtext verwendet,
+        damit eine fehlerhafte Konflikt-Konfiguration die Erkennung nicht stoppt.
         """
         if not settings:
             return ""
@@ -201,6 +205,7 @@ class ConflictDetector:
             ("room_conflict", self.detect_room_conflicts, True),
             ("group_conflict", self.detect_group_conflicts, True),
             ("lecturer_conflict", self.detect_lecturer_conflicts, True),
+            ("study_semester_warning", self.detect_study_semester_warnings, True),
             ("holiday_conflict", self.detect_holiday_conflicts, True),
             ("lecture_free_conflict", self.detect_lecture_free_conflicts, True),
             ("incomplete_warning", self.detect_incomplete_warnings, False),
@@ -331,11 +336,86 @@ class ConflictDetector:
         for terms in by_lecturer_date.values():
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
+                    # Innerhalb derselben LVA übernimmt der Gruppen-Konflikt; VO/fehlende Gruppe bleibt sichtbar.
+                    if str(t1.lva_id) == str(t2.lva_id) and self._both_have_group_names(t1, t2):
+                        continue
                     if self.times_overlap(t1, t2):
                         conflicts.append(self._create_conflict(
                             "lecturer", t1, t2, settings
                         ))
         return conflicts
+
+    def detect_study_semester_warnings(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
+        """Warn when overlapping Termine belong to LVAs with the same study-plan assignment."""
+        warnings: List[ConflictIssue] = []
+        by_date: Dict[date, List[Termin]] = {}
+        for t in termine:
+            if not t.datum:
+                continue
+            by_date.setdefault(t.datum, []).append(t)
+
+        for terms in by_date.values():
+            for i, t1 in enumerate(terms):
+                for t2 in terms[i + 1:]:
+                    if source_termin_id(t1.id) == source_termin_id(t2.id):
+                        continue
+                    if str(t1.lva_id) == str(t2.lva_id):
+                        continue
+                    if not self.times_overlap(t1, t2):
+                        continue
+
+                    lva1 = self._lva_by_id.get(str(t1.lva_id))
+                    lva2 = self._lva_by_id.get(str(t2.lva_id))
+                    if not lva1 or not lva2:
+                        continue
+
+                    studienrichtung1 = str(getattr(lva1, "studienrichtung", "")).strip()
+                    studienrichtung2 = str(getattr(lva2, "studienrichtung", "")).strip()
+                    if not studienrichtung1 or studienrichtung1 != studienrichtung2:
+                        continue
+
+                    shared_semester = self._shared_studiensemester(lva1, lva2)
+                    if not shared_semester:
+                        continue
+
+                    raum1 = self._raum_by_id.get(str(t1.raum_id))
+                    raum2 = self._raum_by_id.get(str(t2.raum_id))
+                    lva1_name = lva1.name if lva1 else t1.lva_id
+                    lva2_name = lva2.name if lva2 else t2.lva_id
+                    raum1_name = raum1.name if raum1 else ""
+                    raum2_name = raum2.name if raum2 else ""
+                    semester_label = " / ".join(
+                        self._studiensemester_names.get(sem_id, sem_id)
+                        for sem_id in shared_semester
+                    )
+
+                    msg = self._render_message(
+                        settings,
+                        {
+                            "left_lva": lva1_name,
+                            "left_room": raum1_name,
+                            "right_lva": lva2_name,
+                            "right_room": raum2_name,
+                            "studienrichtung": studienrichtung1,
+                            "studiensemester": semester_label,
+                        },
+                    )
+
+                    end1 = t1.get_end_time()
+                    end2 = t2.get_end_time()
+                    warnings.append(ConflictIssue(
+                        severity="warning",
+                        category="semester",
+                        termin_ids=[t1.id, t2.id],
+                        message=msg,
+                        datum=t1.datum,
+                        zeit_von=min(t1.start_zeit, t2.start_zeit) if t1.start_zeit and t2.start_zeit else None,
+                        zeit_bis=max(end1, end2) if end1 and end2 else None,
+                        raum=", ".join(part for part in (raum1_name, raum2_name) if part),
+                        lva=f"{lva1_name}, {lva2_name}" if lva1_name != lva2_name else lva1_name,
+                        gruppe="",
+                    ))
+        return warnings
 
     def detect_holiday_conflicts(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         """Detect conflicts for Termine that fall on Feiertag dates"""
@@ -433,30 +513,6 @@ class ConflictDetector:
                 ))
         return warnings
 
-    def detect_weekend_warnings(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
-        """Detect warnings for Termine that fall on a weekend (Saturday or Sunday)"""
-        warnings = []
-        for t in termine:
-            if not t.datum:
-                continue
-            if t.datum.weekday() >= 5:  # 5=Saturday, 6=Sunday
-                lva = next((l for l in self.lvas if l.id == t.lva_id), None)
-                raum = next((r for r in self.raeume if r.id == t.raum_id), None)
-                msg = self._render_message(settings)
-                warnings.append(ConflictIssue(
-                    severity="warning",
-                    category="weekend",
-                    termin_ids=[t.id],
-                    message=msg,
-                    datum=t.datum,
-                    zeit_von=t.start_zeit,
-                    zeit_bis=t.get_end_time(),
-                    raum=raum.name if raum else "",
-                    lva=lva.name if lva else t.lva_id,
-                    gruppe=t.gruppe.name if t.gruppe else ""
-                ))
-        return warnings
-    
     def detect_saturday_warning(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         """Detect warnings for Termine that fall on a Saturday"""
         warnings = []
@@ -545,6 +601,30 @@ class ConflictDetector:
             lva=f"{lva1_name}, {lva2_name}" if lva1_name != lva2_name else lva1_name,
             gruppe=""  # Could be enhanced to show both groups
         )
+
+    def _shared_studiensemester(self, lva1: Lehrveranstaltung, lva2: Lehrveranstaltung) -> List[str]:
+        left = [
+            str(item).strip()
+            for item in (getattr(lva1, "studiensemester", []) or [])
+            if str(item).strip()
+        ]
+        right = {
+            str(item).strip()
+            for item in (getattr(lva2, "studiensemester", []) or [])
+            if str(item).strip()
+        }
+        seen = set()
+        shared: List[str] = []
+        for semester_id in left:
+            if semester_id in right and semester_id not in seen:
+                seen.add(semester_id)
+                shared.append(semester_id)
+        return shared
+
+    def _both_have_group_names(self, t1: Termin, t2: Termin) -> bool:
+        group1 = str(getattr(getattr(t1, "gruppe", None), "name", "") or "").strip()
+        group2 = str(getattr(getattr(t2, "gruppe", None), "name", "") or "").strip()
+        return bool(group1 and group2)
 
 
 
@@ -684,6 +764,29 @@ class ConflictDetector:
                 cur += timedelta(days=1)
 
         return out
+
+    def _load_studiensemester_names(self) -> Dict[str, str]:
+        if not self.data_dir:
+            return {}
+
+        path = self.data_dir / "studiensemester.json"
+        if not path.exists():
+            return {}
+
+        try:
+            obj = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception:
+            return {}
+
+        names: Dict[str, str] = {}
+        for item in obj.get("studiensemester", []):
+            if not isinstance(item, dict):
+                continue
+            semester_id = str(item.get("id", "")).strip()
+            name = str(item.get("name", "")).strip()
+            if semester_id:
+                names[semester_id] = name or semester_id
+        return names
 
     def _parse_iso_date(self, raw: str) -> Optional[date]:
         try:

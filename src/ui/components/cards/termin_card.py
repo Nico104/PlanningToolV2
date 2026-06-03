@@ -1,9 +1,6 @@
-from PySide6.QtCore import Qt, Signal, QPoint, QMimeData
-from PySide6.QtGui import QDrag, QMouseEvent, QPixmap
+from PySide6.QtCore import Qt, Signal, QPoint, QMimeData, QRectF
+from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
-
-from PySide6.QtCore import QRectF
-from PySide6.QtGui import QPainter, QPainterPath
 
 
 class TerminCard(QFrame):
@@ -28,6 +25,7 @@ class TerminCard(QFrame):
         super().__init__(parent)
         self.termin_id = termin_id
         self._press_pos: QPoint | None = None
+        self._read_only = False
 
         self.setObjectName("TerminCard")
         self.setCursor(Qt.PointingHandCursor)
@@ -70,6 +68,15 @@ class TerminCard(QFrame):
         chips.addStretch(1)
         root.addLayout(chips)
 
+    def set_read_only(self, read_only: bool) -> None:
+        self._read_only = bool(read_only)
+        self.setCursor(Qt.ArrowCursor if self._read_only else Qt.PointingHandCursor)
+
+    def _show_read_only_warning(self) -> None:
+        cb = getattr(self.window(), "_show_history_read_only_toast", None)
+        if callable(cb):
+            cb()
+
     def mousePressEvent(self, e: QMouseEvent) -> None:
         if e.button() == Qt.LeftButton:
             self._press_pos = e.pos()
@@ -77,6 +84,15 @@ class TerminCard(QFrame):
 
 
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
+        if self._read_only:
+            if (
+                e.buttons() & Qt.LeftButton
+                and self._press_pos is not None
+                and (e.pos() - self._press_pos).manhattanLength() >= 8
+            ):
+                self._show_read_only_warning()
+                self._press_pos = None
+            return
         if not (e.buttons() & Qt.LeftButton):
             return
         if self._press_pos is None:
@@ -98,7 +114,6 @@ class TerminCard(QFrame):
 
             scale = 0.6
 
-            # keep it centered
             p.translate(pm.width() * (1 - scale) / 2,
                         pm.height() * (1 - scale) / 2)
             p.scale(scale, scale)
@@ -120,6 +135,10 @@ class TerminCard(QFrame):
 
 
     def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
+        if self._read_only:
+            self._show_read_only_warning()
+            e.accept()
+            return
         self.double_clicked.emit(self.termin_id)
         super().mouseDoubleClickEvent(e)
 

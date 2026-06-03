@@ -8,10 +8,11 @@ from ...services.id_service import next_id
 from ...services.termin_occurrence_service import occurrence_date_from_id, source_termin_id
 from ...services.undo_service import UndoService
 from ..dialogs import LVADialog, RaumDialog
-from ...core.models import Studiensemester
+from ...core.models import Studiensemester, Termin
 from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.studienrichtung_dialog import StudienrichtungDialog
+from ..dialogs.studiensemester_dialog import StudiensemesterDialog
 from ..dialogs.lva_termin_dialog import LVATerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
 from ..components.widgets.toast import Toast
@@ -137,7 +138,6 @@ class CrudHandlers:
         return models
 
     def add_studiensemester(self):
-        from ..dialogs.studiensemester_dialog import StudiensemesterDialog
         semester_list = self.ds.load_studiensemester()
         dlg = StudiensemesterDialog(self.parent, None)
         result = dlg.get_result()
@@ -157,7 +157,6 @@ class CrudHandlers:
         self._show_toast("Studiensemester gespeichert.")
 
     def edit_studiensemester(self):
-        from ..dialogs.studiensemester_dialog import StudiensemesterDialog
         semester_list = self.ds.load_studiensemester()
         table = getattr(self.parent.tab_studiensemester, "table", None)
         selected_semester_id = selected_id(table) if table else None
@@ -242,7 +241,6 @@ class CrudHandlers:
         dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
-            semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
             studiensemester=self.read_studiensemester_models(),
             studienrichtungen=self.ds.load_studienrichtungen(),
@@ -271,13 +269,8 @@ class CrudHandlers:
         self.ds.save_raeume(rooms)
         self.ds.save_termine(out)
         self.planner.refresh()
-        if hasattr(self.parent, '_refresh_semester'):
-            self.parent._refresh_semester()
         self._show_toast("Termin gespeichert.")
         return True
-
-    def read_freie_tage(self, year: Optional[int] = None) -> List[Dict[str, Any]]:
-        return self.ds.load_freie_tage()
 
     def add_freie_tage(self, year: Optional[int] = None) -> None:
         freie = self.ds.load_freie_tage()
@@ -291,8 +284,6 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_freie_tage(freie)
         self.planner.refresh()
-        if hasattr(self.parent, '_refresh_semester'):
-            self.parent._refresh_semester()
         self._show_toast("Freier Tag gespeichert.")
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
@@ -316,8 +307,6 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_freie_tage(freie)
         self.planner.refresh()
-        if hasattr(self.parent, '_refresh_semester'):
-            self.parent._refresh_semester()
         self._show_toast("Freier Tag gespeichert.")
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
@@ -339,17 +328,17 @@ class CrudHandlers:
         self.planner.refresh()
         self._show_toast("Freier Tag gelöscht.")
 
-    def add_termin(self, default_qdate=None) -> bool:
+    def add_termin(self, default_qdate=None, default_semester_id: Optional[str] = None) -> bool:
         dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
-            semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
             studiensemester=self.read_studiensemester_models(),
             studienrichtungen=self.ds.load_studienrichtungen(),
             termin=None,
             settings=self.ds.load_settings(),
             new_id=self._new_termin_id(),
+            default_semester_id=default_semester_id,
         )
 
         # Default values for newly created Termine
@@ -367,7 +356,6 @@ class CrudHandlers:
         termine = self.ds.load_termine()
         lvas = self._upsert_by_id(self.ds.load_lvas(), getattr(dlg, "result_lva", None), getattr(dlg, "source_lva_id", None))
         rooms = self._upsert_by_id(self.ds.load_raeume(), getattr(dlg, "result_raum", None), getattr(dlg, "source_raum_id", None))
-        # Serientermin zum Beispiel
         if isinstance(dlg.result, list):
             existing_ids = {t.id for t in termine}
             for t in dlg.result:
@@ -396,7 +384,6 @@ class CrudHandlers:
         dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
-            semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
             termin=None,
             settings=self.ds.load_settings(),
@@ -447,7 +434,6 @@ class CrudHandlers:
         dlg = LVATerminDialog(
             self.parent,
             lvas=self.ds.load_lvas(),
-            semester=self.ds.load_semester(),
             raeume=self.ds.load_raeume(),
             termin=cur,
             settings=self.ds.load_settings(),
@@ -472,12 +458,6 @@ class CrudHandlers:
         self.planner.refresh()
         self._show_toast("Termin gespeichert.")
         return True
-
-    def edit_termin(self) -> None:
-        tid = self._selected_termin_id()
-        if not tid:
-            return
-        self.edit_termin_by_id(tid)
 
     def del_termin(self) -> None:
         tid = self._selected_termin_id()
@@ -540,7 +520,7 @@ class CrudHandlers:
         self,
         termin_id: str,
         new_date: date,
-        new_start: time,
+        new_start: Optional[time],
         new_room_id: Optional[str] = None,
     ) -> bool:
         termine = self.ds.load_termine()
@@ -549,6 +529,20 @@ class CrudHandlers:
         t = next((x for x in termine if x.id == source_id), None)
         if not t:
             return False
+
+        if t.is_series():
+            series_action = self._confirm_move_series(t, occurrence_date)
+            if series_action == "cancel":
+                return False
+            if series_action == "single":
+                return self._move_series_occurrence_as_single(
+                    termine=termine,
+                    termin=t,
+                    occurrence_date=occurrence_date,
+                    new_date=new_date,
+                    new_start=new_start,
+                    new_room_id=new_room_id,
+                )
 
         duration_minutes = t.duration if t.duration > 0 else 30
 
@@ -584,6 +578,78 @@ class CrudHandlers:
         self.planner.refresh()
         self._show_toast("Serientermin verschoben." if t.is_series() else "Termin verschoben.")
         return True
+
+    def _move_series_occurrence_as_single(
+        self,
+        *,
+        termine: List[Termin],
+        termin: Termin,
+        occurrence_date: Optional[date],
+        new_date: date,
+        new_start: Optional[time],
+        new_room_id: Optional[str],
+    ) -> bool:
+        anchor_date = occurrence_date or termin.datum
+        if anchor_date is None:
+            return False
+
+        skipped_dates = list(getattr(termin, "ausfall_daten", []) or [])
+        if anchor_date not in skipped_dates:
+            skipped_dates.append(anchor_date)
+            skipped_dates.sort()
+
+        existing_ids = [str(item.id) for item in termine]
+        new_id = next_id("T", existing_ids, width=3)
+        duration_minutes = termin.duration if termin.duration > 0 else 30
+
+        updated_series = replace(termin, ausfall_daten=skipped_dates)
+        single_termin = replace(
+            termin,
+            id=new_id,
+            datum=new_date,
+            start_zeit=new_start,
+            raum_id=new_room_id if new_room_id is not None else termin.raum_id,
+            duration=duration_minutes,
+            datum_bis=None,
+            periodizitaet=None,
+            ausfall_daten=[],
+        )
+
+        updated = [updated_series if item.id == termin.id else item for item in termine]
+        updated.append(single_termin)
+        self._record_undo_snapshot()
+        self.ds.save_termine(updated)
+        self.planner.refresh()
+        self._show_toast("Termin aus Serie einzeln verschoben.")
+        return True
+
+    def _confirm_move_series(self, termin: Termin, occurrence_date: Optional[date]) -> str:
+        termin_label = termin.name or termin.id
+        moved_date = occurrence_date or termin.datum
+        date_text = moved_date.strftime("%d.%m.%Y") if moved_date else "dieser Termin"
+
+        msg = QMessageBox(self.parent)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("Serientermin verschieben")
+        msg.setText(
+            f"'{termin_label}' am {date_text} ist Teil einer Serie.\n"
+            "Was möchtest du verschieben?"
+        )
+        msg.setInformativeText(
+            "Nur diesen Termin verschieben erstellt einen Einzeltermin am neuen Datum "
+            "und überspringt dieses Vorkommen in der Serie."
+        )
+        btn_series = msg.addButton("Ganze Serie verschieben", QMessageBox.AcceptRole)
+        btn_single = msg.addButton("Nur diesen Termin verschieben", QMessageBox.AcceptRole)
+        btn_cancel = msg.addButton("Abbrechen", QMessageBox.RejectRole)
+        msg.setDefaultButton(btn_cancel)
+        msg.exec()
+        clicked = msg.clickedButton()
+        if clicked == btn_series:
+            return "series"
+        if clicked == btn_single:
+            return "single"
+        return "cancel"
 
     def unassign_termin(self, termin_id: str) -> bool:
         termine = self.ds.load_termine()
@@ -722,7 +788,7 @@ class CrudHandlers:
 
         rooms = self.ds.load_raeume()
         if any(r.id == dlg.result.id for r in rooms):
-            QMessageBox.warning(self.parent, "Fehler", "Diese Raum-ID existiert bereits.")
+            QMessageBox.warning(self.parent, "Fehler", "Diese Raumnummer existiert bereits.")
             return
 
         rooms.append(dlg.result)
@@ -746,7 +812,7 @@ class CrudHandlers:
             return
 
         if dlg.result.id != rid and any(r.id == dlg.result.id for r in rooms):
-            QMessageBox.warning(self.parent, "Fehler", "Neue Raum-ID existiert bereits.")
+            QMessageBox.warning(self.parent, "Fehler", "Neue Raumnummer existiert bereits.")
             return
 
         rooms = [dlg.result if r.id == rid else r for r in rooms]

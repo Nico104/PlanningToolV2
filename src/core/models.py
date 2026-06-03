@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from datetime import date, time
-from typing import Optional, List, Dict
+from datetime import date, datetime, time, timedelta
+from typing import Optional, List
 
 
 
@@ -37,7 +37,7 @@ class Lehrveranstaltung:
     id: str
     name: str
     vortragende: Vortragende
-    typ: List[str]  # erlaubte Termin-Typen, z.B. ["VO", "UE"]
+    typ: List[str]  # Legacy: alte LVA-Typen werden beim Laden toleriert, Planung nutzt Termin.typ.
     studiensemester: List[str]  # IDs von beliebig vielen Studiensemestern
     studienrichtung: str = "ETIT"
     ects: str = ""
@@ -84,8 +84,7 @@ class Termin:
     
     def get_end_time(self) -> Optional[time]:
         if self.start_zeit and self.duration > 0:
-            from datetime import datetime, date as _date, timedelta
-            dummy_date = _date(2000, 1, 1)
+            dummy_date = date(2000, 1, 1)
             dt_von = datetime.combine(dummy_date, self.start_zeit)
             dt_bis = dt_von + timedelta(minutes=self.duration)
             return dt_bis.time()

@@ -7,10 +7,6 @@
         "name": "Dr. Max Mustermann",
         "email": "max.mustermann@uni.at"
       },
-      "typ": [
-        "VO",
-        "SE"
-      ],
       "studiensemester": [
         "sem1"
       ],
@@ -24,12 +20,9 @@
         "name": "Univ.-Prof. Dr. Erika Beispiel",
         "email": "erika.beispiel@tuwien.ac.at"
       },
-      "typ": [
-        "VO",
-        "UE"
-      ],
       "studiensemester": [
-        "sem2",
+        "sem3",
+        "qs1",
         "sem1"
       ],
       "studienrichtung": "ETIT",
@@ -42,10 +35,6 @@
         "name": "DI Lukas Code",
         "email": "lukas.code@uni.at"
       },
-      "typ": [
-        "VO",
-        "LU"
-      ],
       "studiensemester": [
         "sem1",
         "sem2",

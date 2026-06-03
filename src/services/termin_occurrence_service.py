@@ -46,20 +46,6 @@ def add_months(value: date, months: int) -> date:
     return date(year, month, day)
 
 
-def next_series_date(value: date, periodizitaet: str) -> date:
-    if periodizitaet == "täglich":
-        return value + timedelta(days=1)
-    if periodizitaet == "wöchentlich":
-        return value + timedelta(days=7)
-    if periodizitaet == "2-wöchentlich":
-        return value + timedelta(days=14)
-    if periodizitaet == "monatlich":
-        return add_months(value, 1)
-    if periodizitaet == "2-monatlich":
-        return add_months(value, 2)
-    return value
-
-
 def series_date_sequence(start: date, end: date, periodizitaet: str) -> List[date]:
     if periodizitaet not in SUPPORTED_PERIODIZITAET:
         return [start]

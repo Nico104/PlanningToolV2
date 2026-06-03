@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester
-from ...services.semester_generation import generated_semester_for
+from ...services.semester_rules import nearest_semester_for_dates, semester_for_date, semester_from_id
 from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
@@ -21,6 +21,7 @@ from ..components.widgets.chip_list_widget import ChipListWidget
 
 NEW_LVA_SENTINEL = "__new_lva__"
 NEW_RAUM_SENTINEL = "__new_raum__"
+STANDARD_TERMIN_TYPES = ["VO", "UE", "VU", "LU", "SE", "PR"]
 
 
 def _scrollable_tab(form: QFormLayout) -> QScrollArea:
@@ -44,13 +45,14 @@ class LVATerminDialog(QDialog):
     """Dialog for editing LVA master data and Termin planning in one window."""
     def __init__(self, parent: QWidget, *,
                  lvas: List[Lehrveranstaltung],
-                 semester: List[Semester],
+                 semester: Optional[List[Semester]] = None,
                  raeume: List[Raum],
                  studiensemester: List[Studiensemester] = None,
                  studienrichtungen: List[dict] = None,
                  termin: Optional[Termin] = None,
                  settings: Optional[Dict] = None,
                  new_id = None,
+                 default_semester_id: Optional[str] = None,
                  ):
         super().__init__(parent)
         self.new_id = new_id
@@ -58,7 +60,7 @@ class LVATerminDialog(QDialog):
         self.setObjectName("AppDialog")
         self.setModal(True)
         self.settings = settings or {}
-        self._semester = semester
+        self._semester = list(semester or [])
         self._studiensemester = list(studiensemester or [])
         self._studienrichtungen = list(studienrichtungen or [])
         self._result_lva: Optional[Lehrveranstaltung] = None
@@ -107,8 +109,6 @@ class LVATerminDialog(QDialog):
         self.lva_teacher_le.setObjectName("Field")
         self.lva_email_le = QLineEdit()
         self.lva_email_le.setObjectName("Field")
-        self.lva_typ_le = QLineEdit("VO")
-        self.lva_typ_le.setObjectName("Field")
         self.lva_studienrichtung_cb = TightComboBox(self)
         self.lva_studienrichtung_cb.setObjectName("HeaderCombo")
         self.lva_studienrichtung_cb.setMinimumWidth(160)
@@ -131,8 +131,6 @@ class LVATerminDialog(QDialog):
             teacher = getattr(lva, "vortragende", None)
             self.lva_teacher_le.setText(getattr(teacher, "name", "") if teacher else "")
             self.lva_email_le.setText(getattr(teacher, "email", "") if teacher else "")
-            self.lva_typ_le.setText(", ".join(getattr(lva, "typ", []) or []) if lva else "VO")
-            self._refresh_termin_type_options()
             self._set_lva_studienrichtung(getattr(lva, "studienrichtung", "ETIT") if lva else "ETIT")
             self._set_lva_studiensemester_chips(getattr(lva, "studiensemester", []) if lva else [])
 
@@ -142,15 +140,15 @@ class LVATerminDialog(QDialog):
         self._refresh_lva_studiensemester_cb()
 
         self._semester_by_id = {}
-        for s in semester:
+        for s in self._semester:
             self._semester_by_id[str(s.id)] = s
         preferred_semester_id = (
             getattr(termin, "semester_id", None)
             if termin is not None
-            else self.settings.get("start_semester")
+            else default_semester_id
         )
-        if not preferred_semester_id and semester:
-            preferred_semester_id = semester[0].id
+        if not preferred_semester_id:
+            preferred_semester_id = semester_for_date(date.today()).id
         self.semester_selector = SemesterSelector(
             self,
             include_all=False,
@@ -162,7 +160,6 @@ class LVATerminDialog(QDialog):
         self.typ_cb.setObjectName("HeaderCombo")
         self.typ_cb.setMinimumWidth(120)
         self._refresh_termin_type_options(getattr(termin, "typ", "VO") if termin else "VO")
-        self.lva_typ_le.textChanged.connect(lambda *_: self._refresh_termin_type_options())
         
         self.date_de = QDateEdit()
         self.date_de.setCalendarPopup(True)
@@ -439,7 +436,6 @@ class LVATerminDialog(QDialog):
         lva_form.addRow("Vortragende/r:", self.lva_teacher_le)
         lva_form.addRow("E-Mail:", self.lva_email_le)
         lva_form.addRow("Studienrichtung *:", self.lva_studienrichtung_cb)
-        lva_form.addRow("Erlaubte Termin-Typen (Komma) *:", self.lva_typ_le)
         studiensemester_layout = QHBoxLayout()
         studiensemester_layout.addWidget(self.lva_studiensemester_cb)
         studiensemester_layout.addWidget(self.btn_add_lva_studiensemester)
@@ -453,8 +449,8 @@ class LVATerminDialog(QDialog):
         raum_form.setVerticalSpacing(14)
         raum_form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         raum_form.addRow("Auswahl:", self.raum_cb)
-        raum_form.addRow("Raum-ID *:", self.raum_id_le)
-        raum_form.addRow("Name *:", self.raum_name_le)
+        raum_form.addRow("Raumnummer *:", self.raum_id_le)
+        raum_form.addRow("Raum *:", self.raum_name_le)
         raum_form.addRow("Kapazität:", self.raum_capacity_sb)
         tabs.addTab(_scrollable_tab(raum_form), "Raum")
 
@@ -493,24 +489,11 @@ class LVATerminDialog(QDialog):
         if sem:
             return sem
 
-        kind = self.semester_selector.current_kind()
-        if not kind:
+        sem = semester_from_id(str(semester_id))
+        if sem is None:
             return None
-        sem = generated_semester_for(kind, self.semester_selector.current_year())
         self._semester_by_id[sem.id] = sem
-        self._semester.append(sem)
         return sem
-
-    def _parse_lva_type_values(self) -> List[str]:
-        out = []
-        seen = set()
-        for item in self.lva_typ_le.text().split(","):
-            value = item.strip().upper()
-            if not value or value in seen:
-                continue
-            seen.add(value)
-            out.append(value)
-        return out
 
     def _current_termin_type(self) -> str:
         if not hasattr(self, "typ_cb"):
@@ -525,11 +508,9 @@ class LVATerminDialog(QDialog):
             return
 
         selected = str(preferred or self._current_termin_type() or "VO").strip().upper()
-        options = self._parse_lva_type_values()
+        options = list(STANDARD_TERMIN_TYPES)
         if selected and selected not in options:
             options.append(selected)
-        if not options:
-            options = ["VO"]
 
         self.typ_cb.blockSignals(True)
         self.typ_cb.clear()
@@ -601,8 +582,6 @@ class LVATerminDialog(QDialog):
         self.lva_ects_le.clear()
         self.lva_teacher_le.clear()
         self.lva_email_le.clear()
-        self.lva_typ_le.setText(self._current_termin_type() or "VO")
-        self._refresh_termin_type_options()
         self._set_lva_studienrichtung(str(self.settings.get("start_studienrichtung", "ETIT")).strip() or "ETIT")
         self._set_lva_studiensemester_chips([])
         self.lva_id_le.setFocus()
@@ -713,19 +692,6 @@ class LVATerminDialog(QDialog):
             return
         self.duration_sb.setValue(end_minutes - start_minutes)
 
-    def _find_semester_id_for_date(self, value: date) -> Optional[str]:
-        for semester_obj in self._semester:
-            if semester_obj.start <= value <= semester_obj.end:
-                return semester_obj.id
-        return None
-
-    def _sync_semester_from_date(self) -> None:
-        if self.date_de.date() == self._unassigned_qdate:
-            return
-        detected = self._find_semester_id_for_date(qdate_to_date(self.date_de.date()))
-        if detected:
-            self.semester_selector.set_semester_id(detected, emit=True)
-
     def _date_sequence(self, start: date, end: date, repeat: str) -> List[date]:
         if repeat not in SUPPORTED_PERIODIZITAET:
             return [start]
@@ -796,20 +762,12 @@ class LVATerminDialog(QDialog):
         planned = set(self._series_dates_for_table())
         return sorted(value for value in self._ausfall_dates if value in planned)
 
-    def _planned_dates(self) -> List[date]:
+    def _semester_reference_dates(self) -> List[date]:
         if self.date_de.date() == self._unassigned_qdate:
             return []
 
         start = qdate_to_date(self.date_de.date())
-        if not self.series_cb.isChecked() or self.date_to_de.date() == self._unassigned_qdate:
-            return [start]
-
-        end = qdate_to_date(self.date_to_de.date())
-        if end < start:
-            return [start]
-        dates = self._date_sequence(start, end, self.repeat_cb.currentText())
-        skipped = set(self._current_ausfall_dates())
-        return [planned_date for planned_date in dates if planned_date not in skipped]
+        return [start]
 
     def _selected_semester_range(self) -> Optional[tuple[date, date]]:
         sem = self._selected_semester()
@@ -820,33 +778,12 @@ class LVATerminDialog(QDialog):
     def _semester_contains_dates(self, sem: Semester, planned_dates: List[date]) -> bool:
         return bool(planned_dates) and all(sem.start <= planned_date <= sem.end for planned_date in planned_dates)
 
-    def _semester_distance_to_dates(self, sem: Semester, first_date: date, last_date: date) -> int:
-        if last_date < sem.start:
-            return (sem.start - last_date).days
-        if first_date > sem.end:
-            return (first_date - sem.end).days
-        return 0
-
     def _suggest_semester_for_dates(self, planned_dates: List[date]) -> Optional[Semester]:
         if not planned_dates:
             return None
 
-        containing = next((sem for sem in self._semester if self._semester_contains_dates(sem, planned_dates)), None)
-        if containing:
-            return containing
-
-        first_date = min(planned_dates)
-        last_date = max(planned_dates)
         current_id = self.semester_selector.current_semester_id()
-        candidates = sorted(
-            self._semester,
-            key=lambda sem: (
-                self._semester_distance_to_dates(sem, first_date, last_date),
-                abs((sem.start - first_date).days),
-                sem.id,
-            ),
-        )
-        nearest = candidates[0] if candidates else None
+        nearest = nearest_semester_for_dates(planned_dates)
         if nearest and nearest.id != current_id:
             return nearest
         return None
@@ -856,7 +793,7 @@ class LVATerminDialog(QDialog):
             return
 
         self._suggested_semester_id = None
-        planned_dates = self._planned_dates()
+        planned_dates = self._semester_reference_dates()
         selected_range = self._selected_semester_range()
         if not planned_dates or selected_range is None:
             self.semester_warning_lbl.hide()
@@ -931,9 +868,6 @@ class LVATerminDialog(QDialog):
         lva_teacher_value = self.lva_teacher_le.text().strip()
         lva_email_value = self.lva_email_le.text().strip()
         lva_ects_value = self.lva_ects_le.text().strip()
-        lva_typ_values = self._parse_lva_type_values()
-        if typ and typ not in lva_typ_values:
-            lva_typ_values.append(typ)
         lva_studienrichtung_value = self.lva_studienrichtung_cb.currentData()
         raum_name_value = self.raum_name_le.text().strip()
         semester_name_value = selected_semester.name if selected_semester else ""
@@ -944,16 +878,14 @@ class LVATerminDialog(QDialog):
             errors.append("LVA-Nr. fehlt.")
         if not lva_name_value:
             errors.append("LVA-Name fehlt.")
-        if not lva_typ_values:
-            errors.append("Erlaubte LVA-Typen fehlen.")
         if lva_studienrichtung_value is None or not str(lva_studienrichtung_value).strip():
             errors.append("Studienrichtung fehlt.")
         if not typ:
             errors.append("Typ fehlt.")
         if not raum_id:
-            errors.append("Raum-ID fehlt.")
+            errors.append("Raumnummer fehlt.")
         if not raum_name_value:
-            errors.append("Raumname fehlt.")
+            errors.append("Raum fehlt.")
         if not semester_id:
             errors.append("Semester-ID fehlt.")
         if not semester_name_value:
@@ -1013,8 +945,8 @@ class LVATerminDialog(QDialog):
             QMessageBox.warning(
                 self,
                 "Fehler",
-                "Diese Raum-ID existiert bereits. Bitte wählen Sie den bestehenden Raum aus "
-                "oder verwenden Sie eine neue Raum-ID.",
+                "Diese Raumnummer existiert bereits. Bitte wählen Sie den bestehenden Raum aus "
+                "oder verwenden Sie eine neue Raumnummer.",
             )
             return
 
@@ -1025,7 +957,7 @@ class LVATerminDialog(QDialog):
             and raum_id != selected_raum_id
             and existing_raum is not None
         ):
-            QMessageBox.warning(self, "Fehler", "Neue Raum-ID existiert bereits.")
+            QMessageBox.warning(self, "Fehler", "Neue Raumnummer existiert bereits.")
             return
 
         self._source_lva_id = None if self._creating_lva else str(self.lva_cb.currentData()).strip() if self.lva_cb.currentData() is not None else None
@@ -1034,7 +966,7 @@ class LVATerminDialog(QDialog):
             id=lva_id,
             name=lva_name_value,
             vortragende=Vortragende(lva_teacher_value, lva_email_value),
-            typ=lva_typ_values or [typ],
+            typ=[],
             studiensemester=self._current_lva_studiensemester_ids(),
             studienrichtung=str(lva_studienrichtung_value).strip(),
             ects=lva_ects_value,

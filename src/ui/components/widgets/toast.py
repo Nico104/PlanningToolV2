@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout
 class Toast(QWidget):
     """Overlay notification shown briefly above the main window"""
 
-    def __init__(self, parent, text: str, duration_ms: int = 3000):
+    def __init__(self, parent, text: str, duration_ms: int = 3000, kind: str = "info"):
         super().__init__(parent)
         self.setObjectName("Toast")
         self.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -16,6 +16,7 @@ class Toast(QWidget):
         layout.setContentsMargins(12, 8, 12, 8)
         self.label = QLabel(text, self)
         self.label.setObjectName("ToastLabel")
+        self.label.setProperty("kind", kind)
         layout.addWidget(self.label)
 
     def show(self) -> None:

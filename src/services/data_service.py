@@ -3,8 +3,7 @@ from pathlib import Path
 from datetime import datetime, date, time
 from typing import Dict, List, Any
 
-from ..core.models import Semester, Raum, Vortragende, Lehrveranstaltung, Gruppe, Termin
-from .semester_generation import generate_semesters
+from ..core.models import Raum, Vortragende, Lehrveranstaltung, Gruppe, Termin
 
 
 class DataService:
@@ -12,48 +11,12 @@ class DataService:
     Minimal JSON layer: loads and writes the project's JSON data files from the data/ directory
     """
 
-    def load_semester(self) -> List[Semester]:
-        """Return generated academic semesters.
-
-        Semester are generated from SS/WS rules and are not persisted as project
-        master data.
-        """
-        extra_ids = set()
-        try:
-            start_semester = str(self.load_settings().get("start_semester", "")).strip()
-            if start_semester:
-                extra_ids.add(start_semester)
-        except Exception:
-            pass
-
-        termin_path = self.data_dir / "termine.json"
-        if termin_path.exists():
-            try:
-                raw_termine = json.loads(termin_path.read_text(encoding="utf-8-sig")).get("termine", [])
-                for item in raw_termine:
-                    semester_id = str(item.get("semester_id", "")).strip()
-                    if semester_id:
-                        extra_ids.add(semester_id)
-            except Exception:
-                pass
-
-        return generate_semesters(extra_ids=extra_ids)
-
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
 
 
-    def _read(self, filename: str, studienrichtung: str = None, semester: str = None) -> Dict[str, Any]:
-        # Support new structure: Studiengang/ETIT/ss26_termine.json etc.
-        if studienrichtung and semester:
-            # Compose filename like 'ss26_termine.json' or 'ws26_termine.json'
-            if filename == "termine.json":
-                filebase = f"{semester.lower()}_termine.json"
-                path = self.data_dir / "Studiengang" / studienrichtung / filebase
-            else:
-                path = self.data_dir / studienrichtung / semester / filename
-        else:
-            path = self.data_dir / filename
+    def _read(self, filename: str) -> Dict[str, Any]:
+        path = self.data_dir / filename
         # Use utf-8-sig to transparently handle files with optional UTF-8 BOM.
         return json.loads(path.read_text(encoding="utf-8-sig"))
 
@@ -62,10 +25,6 @@ class DataService:
         tmp = path.with_suffix(".tmp")
         tmp.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         tmp.replace(path)
-
-    @staticmethod
-    def _parse_date(s: str) -> date:
-        return datetime.strptime(s, "%Y-%m-%d").date()
 
     @staticmethod
     def _parse_time(s: str) -> time:
@@ -200,7 +159,6 @@ class DataService:
                 "id": l.id,
                 "name": l.name,
                 "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
-                "typ": list(l.typ),
                 "studiensemester": l.studiensemester,
                 "studienrichtung": str(getattr(l, "studienrichtung", studienrichtung or "ETIT")).strip() or "ETIT",
                 "ects": str(getattr(l, "ects", "")).strip(),
@@ -209,8 +167,6 @@ class DataService:
 
     def save_termine(self, termine: List[Termin]) -> None:
         # Save all termine into a single termine.json file (with semester_id per termin)
-        settings = self.load_settings()
-        studienrichtung = settings.get("start_studienrichtung", "ETIT")
         path = self.data_dir / "termine.json"
         path.write_text(json.dumps({
             "termine": [{
@@ -282,8 +238,17 @@ class DataService:
     def save_freie_tage(self, freie_tage: List[Dict[str, Any]]) -> None:
         path = self.data_dir / "freie_tage.json"
         path.parent.mkdir(parents=True, exist_ok=True)
+        cleaned_items: List[Dict[str, Any]] = []
+        for item in freie_tage:
+            cleaned_items.append(
+                {
+                    key: value
+                    for key, value in dict(item).items()
+                    if key not in {"quelle", "quelle_id"}
+                }
+            )
         path.write_text(
-            json.dumps({"freie_tage": freie_tage}, ensure_ascii=False, indent=2) + "\n",
+            json.dumps({"freie_tage": cleaned_items}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
 

@@ -29,7 +29,7 @@ def selected_id(table: QTableWidget) -> Optional[str]:
                 break
 
     if id_col is None:
-        lva_nr_headers = {"LVA-NR.", "LVA-NR", "LVA NR"}
+        lva_nr_headers = {"LVA-NR.", "LVA-NR", "LVA NR", "RAUMNUMMER"}
         for col in range(table.columnCount()):
             hdr = table.horizontalHeaderItem(col)
             if hdr and hdr.text().strip().upper() in lva_nr_headers:
@@ -57,6 +57,7 @@ class EditorTab(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
         root.setSpacing(8)
+        self._actions_enabled = True
 
         # Button row
         btn_row = QHBoxLayout()
@@ -94,7 +95,15 @@ class EditorTab(QWidget):
 
         self.setObjectName(f"EditorTab_{title}")
 
+    def set_actions_enabled(self, enabled: bool) -> None:
+        self._actions_enabled = bool(enabled)
+        self.btn_add.setEnabled(self._actions_enabled)
+        self.btn_edit.setEnabled(self._actions_enabled)
+        self.btn_del.setEnabled(self._actions_enabled)
+
     def _open_context_menu(self, pos: QPoint) -> None:
+        if not self._actions_enabled:
+            return
         idx = self.table.indexAt(pos)
         if not idx.isValid():
             return
@@ -111,5 +120,7 @@ class EditorTab(QWidget):
             self.delete_clicked.emit()
 
     def _emit_edit_if_selected(self) -> None:
+        if not self._actions_enabled:
+            return
         if self.table.currentRow() >= 0:
             self.edit_clicked.emit()

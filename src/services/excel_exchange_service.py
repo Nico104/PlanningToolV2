@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -13,7 +13,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from .termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
-from .semester_generation import generate_semesters
+from .semester_rules import semester_from_id
 
 
 _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
@@ -30,7 +30,6 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "name",
             "vortragende.name",
             "vortragende.email",
-            "typ",
             "studiensemester",
             "studienrichtung",
             "ects",
@@ -76,10 +75,46 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
 }
 
 _EXCEL_HEADER_LABELS: Dict[str, str] = {
+    "raeume.json:id": "Raumnummer",
+    "raeume.json:name": "Raum",
+    "raeume.json:kapazitaet": "Kapazität",
     "lehrveranstaltungen.json:id": "LVA-Nr.",
+    "lehrveranstaltungen.json:name": "Name",
+    "lehrveranstaltungen.json:vortragende.name": "Vortragende",
+    "lehrveranstaltungen.json:vortragende.email": "E-Mail",
     "lehrveranstaltungen.json:studienrichtung": "Studienrichtung",
     "lehrveranstaltungen.json:studiensemester": "Studiensemester",
+    "lehrveranstaltungen.json:ects": "ECTS",
     "termine.json:lva_id": "LVA-Nr.",
+}
+
+_EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
+    "lehrveranstaltungen.json": {
+        "LVA-Nr": "id",
+        "LVA-Nummer": "id",
+        "LVA": "id",
+        "LVA-Name": "name",
+        "Lehrveranstaltung": "name",
+        "Vortragende": "vortragende.name",
+        "Vortragende Name": "vortragende.name",
+        "Lehrperson": "vortragende.name",
+        "E-Mail": "vortragende.email",
+        "Email": "vortragende.email",
+        "Studiensemester": "studiensemester",
+        "Studienrichtung": "studienrichtung",
+        "ECTS": "ects",
+    },
+    "raeume.json": {
+        "Raumnummer": "id",
+        "Raum-Nr": "id",
+        "Raum": "name",
+        "Kapazität": "kapazitaet",
+        "Kapazitaet": "kapazitaet",
+    },
+    "termine.json": {
+        "LVA-Nr": "lva_id",
+        "LVA-Nummer": "lva_id",
+    },
 }
 
 
@@ -89,10 +124,31 @@ class TeacherExportOption:
     email: str
     lva_count: int
     term_count: int
+    semester_term_counts: Dict[str, int] = field(default_factory=dict)
+    semester_lva_ids: Dict[str, tuple[str, ...]] = field(default_factory=dict)
 
     @property
     def key(self) -> tuple[str, str]:
         return (self.name, self.email)
+
+    def counts_for_semesters(self, semester_ids: Optional[Iterable[str]]) -> tuple[int, int]:
+        if semester_ids is None:
+            return self.lva_count, self.term_count
+
+        selected_ids = {_safe_text(item) for item in semester_ids}
+        lva_ids: set[str] = set()
+        term_count = 0
+        for semester_id in selected_ids:
+            term_count += int(self.semester_term_counts.get(semester_id, 0))
+            lva_ids.update(self.semester_lva_ids.get(semester_id, ()))
+        return len(lva_ids), term_count
+
+
+@dataclass(frozen=True)
+class SemesterExportOption:
+    id: str
+    name: str
+    term_count: int
 
 
 def _read_json_file(path: Path) -> Dict[str, Any]:
@@ -113,10 +169,39 @@ def _semester_export_rows(data_dir: Path) -> List[Dict[str, Any]]:
         for item in _read_json_list(data_dir / "termine.json", "termine")
         if _safe_text(item.get("semester_id"))
     }
-    return [
-        {"id": s.id, "name": s.name, "start": s.start.isoformat(), "end": s.end.isoformat()}
-        for s in generate_semesters(extra_ids=extra_ids)
-    ]
+    rows = []
+    for semester_id in extra_ids:
+        semester = semester_from_id(semester_id)
+        if semester is None:
+            rows.append({"id": semester_id, "name": semester_id, "start": "", "end": ""})
+            continue
+        rows.append(
+            {
+                "id": semester.id,
+                "name": semester.name,
+                "start": semester.start.isoformat(),
+                "end": semester.end.isoformat(),
+            }
+        )
+    return sorted(rows, key=lambda item: (item.get("start") or "9999-12-31", item.get("id") or ""))
+
+
+def _semester_display_name(semester_id: str) -> str:
+    semester_id = _safe_text(semester_id)
+    if not semester_id:
+        return "Ohne Semester"
+    semester = semester_from_id(semester_id)
+    return semester.name if semester else semester_id
+
+
+def _semester_sort_key(semester_id: str) -> tuple:
+    semester_id = _safe_text(semester_id)
+    if not semester_id:
+        return (date.max, "zzzz")
+    semester = semester_from_id(semester_id)
+    if semester:
+        return (semester.start, semester.id)
+    return (date.max, semester_id)
 
 
 def _get_nested(data: Dict[str, Any], path: str) -> Any:
@@ -158,6 +243,39 @@ def _safe_text(value: Any) -> str:
     if isinstance(value, str):
         return value.strip()
     return str(value).strip()
+
+
+def _normalize_excel_header(value: Any) -> str:
+    text = _safe_text(value).casefold()
+    for src, repl in {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+    }.items():
+        text = text.replace(src, repl)
+    return re.sub(r"[^a-z0-9]+", "", text)
+
+
+def _column_from_excel_header(file_name: str, header: Any) -> Optional[str]:
+    normalized = _normalize_excel_header(header)
+    if not normalized:
+        return None
+
+    cfg = _FILE_SCHEMAS.get(file_name, {})
+    columns = list(cfg.get("columns", []))
+    lookup: Dict[str, str] = {}
+    for col in columns:
+        lookup[_normalize_excel_header(col)] = col
+        label = _EXCEL_HEADER_LABELS.get(f"{file_name}:{col}")
+        if label:
+            lookup[_normalize_excel_header(label)] = col
+
+    for label, col in _EXCEL_HEADER_ALIASES.get(file_name, {}).items():
+        if col in columns:
+            lookup[_normalize_excel_header(label)] = col
+
+    return lookup.get(normalized)
 
 
 def _safe_date(value: Any) -> Optional[date]:
@@ -282,7 +400,7 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
             val = _parse_int(entry.get("kapazitaet"))
             entry["kapazitaet"] = 0 if val is None else val
     elif file_name == "lehrveranstaltungen.json":
-        entry["typ"] = _parse_list(entry.get("typ"))
+        entry.pop("typ", None)
         entry["studiensemester"] = _parse_list(entry.get("studiensemester"))
     elif file_name == "termine.json":
         entry["notiz"] = str(entry.get("notiz", ""))
@@ -384,12 +502,28 @@ def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
         ws = wb[sheet_name]
         entries: List[Dict[str, Any]] = []
 
-        for values in ws.iter_rows(min_row=2, max_col=len(columns), values_only=True):
+        header_columns: Dict[int, str] = {}
+        for col_idx in range(1, (ws.max_column or 0) + 1):
+            mapped = _column_from_excel_header(file_name, ws.cell(row=1, column=col_idx).value)
+            if mapped and mapped not in header_columns.values():
+                header_columns[col_idx] = mapped
+
+        if header_columns:
+            row_iter = ws.iter_rows(min_row=2, max_col=ws.max_column, values_only=True)
+        else:
+            row_iter = ws.iter_rows(min_row=2, max_col=len(columns), values_only=True)
+
+        for values in row_iter:
             if _is_empty_row(values):
                 continue
 
             entry: Dict[str, Any] = {}
-            for idx, col in enumerate(columns):
+            if header_columns:
+                mapped_columns = ((idx - 1, col) for idx, col in header_columns.items())
+            else:
+                mapped_columns = enumerate(columns)
+
+            for idx, col in mapped_columns:
                 raw = values[idx] if idx < len(values) else None
                 if raw is None:
                     continue
@@ -404,6 +538,103 @@ def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
         result[file_name] = {list_key: entries}
 
     return result
+
+
+_TISS_ROOM_COLUMN_ALIASES: Dict[str, set[str]] = {
+    "id": {"raumnummer", "raumnr", "raumnummercode", "raumcode", "code", "id", "nummer"},
+    "name": {"raum", "raumname", "raumbezeichnung", "bezeichnung", "name"},
+    "kapazitaet": {"kapazitaet", "kapazitat", "plaetze", "platze", "plätze", "kapaz", "capacity"},
+}
+
+
+def _normalize_tiss_header(value: Any) -> str:
+    text = _safe_text(value).casefold()
+    for src, repl in {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+    }.items():
+        text = text.replace(src, repl)
+    return re.sub(r"[^a-z0-9]+", "", text)
+
+
+def _find_tiss_room_columns(ws) -> tuple[int, dict[str, int]] | None:
+    max_scan_row = min(ws.max_row or 0, 30)
+    max_scan_col = min(ws.max_column or 0, 30)
+
+    for row_idx in range(1, max_scan_row + 1):
+        mapping: dict[str, int] = {}
+        for col_idx in range(1, max_scan_col + 1):
+            header = _normalize_tiss_header(ws.cell(row=row_idx, column=col_idx).value)
+            if not header:
+                continue
+            for target, aliases in _TISS_ROOM_COLUMN_ALIASES.items():
+                if target not in mapping and header in aliases:
+                    mapping[target] = col_idx
+                    break
+
+        if "id" in mapping and "name" in mapping and "kapazitaet" in mapping:
+            return row_idx, mapping
+
+    return None
+
+
+def import_tiss_rooms_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
+    wb = load_workbook(excel_path, data_only=True)
+    rooms_by_id: dict[str, dict[str, Any]] = {}
+
+    for ws in wb.worksheets:
+        detected = _find_tiss_room_columns(ws)
+        if detected is None:
+            continue
+
+        header_row, columns = detected
+        id_col = columns["id"]
+        name_col = columns["name"]
+        capacity_col = columns["kapazitaet"]
+
+        for row_idx in range(header_row + 1, (ws.max_row or 0) + 1):
+            room_id = _safe_text(ws.cell(row=row_idx, column=id_col).value)
+            name = _safe_text(ws.cell(row=row_idx, column=name_col).value)
+            if not room_id or not name:
+                continue
+
+            capacity = _parse_int(ws.cell(row=row_idx, column=capacity_col).value)
+            if capacity is None:
+                continue
+
+            rooms_by_id[room_id] = {
+                "id": room_id,
+                "name": name,
+                "kapazitaet": capacity,
+            }
+
+    rooms = list(rooms_by_id.values())
+    if not rooms:
+        raise ValueError(
+            "Keine TISS-Räume erkannt. Erwartet werden die Spalten 'Raumnummer', 'Raum' und 'Kapazität'."
+        )
+
+    return {"raeume.json": {"raeume": rooms}}
+
+
+def get_teacher_export_semester_options(data_dir: Path) -> List[SemesterExportOption]:
+    termine = _read_json_list(data_dir / "termine.json", "termine")
+    term_counts: Dict[str, int] = defaultdict(int)
+    for termin in _expand_termin_entries(termine):
+        if not isinstance(termin, dict):
+            continue
+        term_counts[_safe_text(termin.get("semester_id"))] += 1
+
+    return [
+        SemesterExportOption(
+            id=semester_id,
+            name=_semester_display_name(semester_id),
+            term_count=term_counts[semester_id],
+        )
+        for semester_id in sorted(term_counts.keys(), key=_semester_sort_key)
+    ]
 
 
 def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
@@ -429,12 +660,19 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
             teacher_lvas[key]
 
     teacher_terms: Dict[tuple[str, str], int] = defaultdict(int)
+    teacher_semester_terms: Dict[tuple[str, str], Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    teacher_semester_lvas: Dict[tuple[str, str], Dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
     for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
-        key = lva_teacher.get(_safe_text(termin.get("lva_id")))
+        lva_id = _safe_text(termin.get("lva_id"))
+        key = lva_teacher.get(lva_id)
         if key:
+            semester_id = _safe_text(termin.get("semester_id"))
             teacher_terms[key] += 1
+            teacher_semester_terms[key][semester_id] += 1
+            if lva_id:
+                teacher_semester_lvas[key][semester_id].add(lva_id)
 
     return [
         TeacherExportOption(
@@ -442,6 +680,11 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
             email=email,
             lva_count=len(teacher_lvas[(name, email)]),
             term_count=teacher_terms[(name, email)],
+            semester_term_counts=dict(teacher_semester_terms[(name, email)]),
+            semester_lva_ids={
+                semester_id: tuple(sorted(lva_ids))
+                for semester_id, lva_ids in teacher_semester_lvas[(name, email)].items()
+            },
         )
         for name, email in sorted(teacher_lvas.keys(), key=lambda item: (item[0].lower(), item[1].lower()))
     ]
@@ -451,6 +694,7 @@ def export_terms_for_teachers_to_excel(
     data_dir: Path,
     output_path: Path,
     teacher_filter: Optional[Iterable[tuple[str, str]]] = None,
+    semester_filter: Optional[Iterable[str]] = None,
 ) -> None:
     headers = [
         "Raum",
@@ -473,6 +717,11 @@ def export_terms_for_teachers_to_excel(
         if teacher_filter is not None
         else None
     )
+    semester_filter_set = (
+        {_safe_text(item) for item in semester_filter}
+        if semester_filter is not None
+        else None
+    )
     lvas = _read_json_list(data_dir / "lehrveranstaltungen.json", "lehrveranstaltungen")
     termine = _read_json_list(data_dir / "termine.json", "termine")
     raeume = _read_json_list(data_dir / "raeume.json", "raeume")
@@ -491,6 +740,9 @@ def export_terms_for_teachers_to_excel(
 
     for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
+            continue
+
+        if semester_filter_set is not None and _safe_text(termin.get("semester_id")) not in semester_filter_set:
             continue
 
         lva = lva_map.get(_safe_text(termin.get("lva_id")))
@@ -565,6 +817,8 @@ def export_terms_for_teachers_to_excel(
 
     teacher_counts: Dict[str, int] = defaultdict(int)
     for (teacher_name, teacher_email), data_rows in sorted(rows_by_teacher.items(), key=lambda item: (item[0][0].lower(), item[0][1].lower())):
+        if not data_rows:
+            continue
         base_name = teacher_name or teacher_email or "Ohne Lehrperson"
         teacher_counts[base_name] += 1
         display_name = base_name if teacher_counts[base_name] == 1 else f"{base_name} {teacher_counts[base_name]}"

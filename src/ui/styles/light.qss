@@ -69,6 +69,12 @@ QDialog#TeacherExportDialog QLabel#DialogSubtitle {
   font-size: 12px;
 }
 
+QDialog#TeacherExportDialog QLabel#TeacherExportSectionLabel {
+  color: #111111;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 QDialog#TeacherExportDialog QLineEdit#TeacherSearch {
   background: #ffffff;
   border: 1px solid #e5e5e5;
@@ -159,6 +165,142 @@ QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable::item {
 
 QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable::item:selected {
   background: #eef6ff;
+  color: #111111;
+}
+
+QDialog#FreeDayImportDialog {
+  background: #ffffff;
+}
+
+QDialog#FreeDayImportDialog QLabel#FreeDayImportTitle {
+  color: #111111;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+QDialog#FreeDayImportDialog QLabel#FreeDayImportPanelTitle {
+  color: #111111;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+QDialog#FreeDayImportDialog QLabel#FreeDayImportSummary {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+QDialog#FreeDayImportDialog QLabel {
+  color: #2d2d2d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+QDialog#FreeDayImportDialog QLineEdit#Field,
+QDialog#FreeDayImportDialog QComboBox#Field,
+QDialog#FreeDayImportDialog QDateEdit#Field,
+QDialog#FreeDayImportDialog QDateEdit#DateEdit {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-height: 32px;
+  color: #111111;
+}
+
+QDialog#FreeDayImportDialog QLineEdit#Field:hover,
+QDialog#FreeDayImportDialog QComboBox#Field:hover,
+QDialog#FreeDayImportDialog QDateEdit#Field:hover,
+QDialog#FreeDayImportDialog QDateEdit#DateEdit:hover {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+}
+
+QDialog#FreeDayImportDialog QLineEdit#Field:focus,
+QDialog#FreeDayImportDialog QComboBox#Field:focus,
+QDialog#FreeDayImportDialog QDateEdit#Field:focus,
+QDialog#FreeDayImportDialog QDateEdit#DateEdit:focus {
+  background: #ffffff;
+  border: 1px solid #111111;
+}
+
+QDialog#FreeDayImportDialog QComboBox#Field QAbstractItemView {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  outline: 0;
+  selection-background-color: #e8f4ff;
+  selection-color: #111111;
+}
+
+QDialog#FreeDayImportDialog QCheckBox {
+  color: #111111;
+  spacing: 8px;
+  font-size: 12px;
+}
+
+QDialog#FreeDayImportDialog QCheckBox::indicator {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d8d8d8;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+QDialog#FreeDayImportDialog QCheckBox::indicator:checked {
+  background: #111111;
+  border: 1px solid #111111;
+}
+
+QDialog#FreeDayImportDialog QTableWidget#FreeDayImportTable {
+  background: #ffffff;
+  alternate-background-color: #fbfbfb;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  gridline-color: #f2f2f2;
+  outline: 0;
+}
+
+QDialog#FreeDayImportDialog QTableWidget#FreeDayImportTable::item {
+  padding: 8px 6px;
+}
+
+QDialog#FreeDayImportDialog QTableWidget#FreeDayImportTable::item:selected {
+  background: #eef6ff;
+  color: #111111;
+}
+
+QDialog#TissRoomImportPreviewDialog {
+  background: #ffffff;
+}
+
+QDialog#TissRoomImportPreviewDialog QLabel#TissRoomImportTitle {
+  color: #111111;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+QDialog#TissRoomImportPreviewDialog QLabel#TissRoomImportSummary {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable {
+  background: #ffffff;
+  alternate-background-color: #fbfbfb;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  gridline-color: #f2f2f2;
+  outline: 0;
+}
+
+QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable::item {
+  padding: 5px 6px;
+  color: #111111;
+}
+
+QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable::item:selected {
+  background: transparent;
   color: #111111;
 }
 
@@ -337,6 +479,17 @@ QWidget#HeaderBar {
   border-radius: 0px;
 }
 
+QWidget#DayRoomPager {
+  background: transparent;
+}
+
+QLabel#DayRoomPagerLabel {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0px 4px;
+}
+
 
 QWidget#HeaderBar QComboBox,
 QWidget#HeaderBar QDateEdit,
@@ -414,7 +567,7 @@ QComboBox#SemesterKindCombo {
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 4px 24px 4px 10px;
+  padding: 4px 24px 4px 12px;
   color: #111111;
 }
 
@@ -528,6 +681,13 @@ QPushButton#NavButton {
 QPushButton#NavButton:hover {
   background: #f5f5f5;
   border: 1px solid #d9d9d9;
+}
+
+QPushButton#NavButton:checked {
+  background: #e8f1ff;
+  border: 1px solid #7aa7e8;
+  color: #0f3f85;
+  font-weight: 700;
 }
 
 
@@ -657,6 +817,10 @@ QTableWidget#PlannerTable::item:selected:!active {
 QTableWidget#PlannerTable QAbstractItemView {
   selection-background-color: transparent;
   selection-color: #111111;
+}
+
+QTableWidget#PlannerTable QHeaderView::section {
+  font-weight: 500;
 }
 
 
@@ -1293,5 +1457,11 @@ QLabel#ToastLabel {
   background: rgba(50,50,50,0.95);
   padding: 8px 12px;
   border-radius: 6px;
+}
+
+QLabel#ToastLabel[kind="warning"] {
+  color: #4a3100;
+  background: rgba(255, 222, 120, 0.97);
+  border: 1px solid #c89318;
 }
 

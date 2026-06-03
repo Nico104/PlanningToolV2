@@ -22,6 +22,30 @@ def _parse_semester_id(semester_id: Optional[str]) -> tuple[Optional[str], Optio
     return match.group(1).upper(), year
 
 
+class SemesterYearSpinBox(QSpinBox):
+    """Year spinner that can display winter semesters as start/end academic years."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._semester_kind: Optional[str] = None
+
+    def set_semester_kind(self, kind: Optional[str]) -> None:
+        self._semester_kind = str(kind).upper() if kind else None
+        self.lineEdit().setText(self.textFromValue(self.value()))
+
+    def textFromValue(self, value: int) -> str:
+        if self._semester_kind == "WS":
+            return f"{value}/{(value + 1) % 100:02d}"
+        return str(value)
+
+    def valueFromText(self, text: str) -> int:
+        raw = str(text or "").strip()
+        match = re.search(r"\d{4}", raw)
+        if match:
+            return int(match.group(0))
+        return super().valueFromText(text)
+
+
 class SemesterSelector(QWidget):
     """Compact selector for SS/WS plus year, while exposing the stored semester id."""
 
@@ -59,14 +83,14 @@ class SemesterSelector(QWidget):
         self.kind_cb.addItem("Sommersemester", "SS")
         self.kind_cb.addItem("Wintersemester", "WS")
 
-        self.year_sb = QSpinBox(self)
+        self.year_sb = SemesterYearSpinBox(self)
         self.year_sb.setObjectName("SemesterYearSpin")
         self.year_sb.setToolTip("Jahr auswählen")
         self.year_sb.setRange(min_year, max_year)
         self.year_sb.setValue(date.today().year)
         self.year_sb.setAccelerated(True)
         self.year_sb.setKeyboardTracking(False)
-        self.year_sb.setFixedWidth(78)
+        self.year_sb.setFixedWidth(96)
         self.year_sb.setFixedHeight(36)
         self.year_sb.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
@@ -111,15 +135,20 @@ class SemesterSelector(QWidget):
                     self.year_sb.setValue(year)
         finally:
             self._updating = False
-        self._sync_year_enabled()
+        self._sync_year_visibility()
         if emit:
             self.semesterChanged.emit(self.current_semester_id())
 
-    def _sync_year_enabled(self) -> None:
-        self.year_sb.setEnabled(bool(self.kind_cb.currentData()))
+    def _sync_year_visibility(self) -> None:
+        visible = bool(self.kind_cb.currentData()) or not self._include_all
+        self.year_sb.set_semester_kind(self.current_kind())
+        self.year_sb.setVisible(visible)
+        self.year_sb.setEnabled(visible)
+        self.kind_cb.setFixedWidth(228 if not visible else (178 if self._include_all else 184))
+        self.updateGeometry()
 
     def _on_changed(self, *_args) -> None:
         if self._updating:
             return
-        self._sync_year_enabled()
+        self._sync_year_visibility()
         self.semesterChanged.emit(self.current_semester_id())

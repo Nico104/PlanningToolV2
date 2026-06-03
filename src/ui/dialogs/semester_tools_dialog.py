@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.models import Lehrveranstaltung, Semester, Termin
-from ...services.semester_generation import generated_semester_for
+from ...services.semester_rules import semester_from_id
 from ...services.semester_tools_service import (
     DATE_MODE_PLUS_YEAR,
     DATE_MODE_SEMESTER_WEEK,
@@ -51,7 +51,6 @@ class SemesterToolsDialog(QDialog):
         *,
         termine: Iterable[Termin],
         lvas: Iterable[Lehrveranstaltung],
-        semester: Iterable[Semester],
         default_semester_id: Optional[str] = None,
     ):
         super().__init__(parent)
@@ -63,8 +62,7 @@ class SemesterToolsDialog(QDialog):
 
         self._termine = list(termine)
         self._lvas = list(lvas)
-        self._semester = list(semester)
-        self._semester_by_id = {str(item.id): item for item in self._semester}
+        self._semester_by_id: dict[str, Semester] = {}
         self._result: Optional[SemesterToolRequest] = None
 
         root = QVBoxLayout(self)
@@ -216,12 +214,10 @@ class SemesterToolsDialog(QDialog):
         existing = self._semester_by_id.get(str(semester_id))
         if existing:
             return existing
-        kind = selector.current_kind()
-        if not kind:
-            return None
-        generated = generated_semester_for(kind, selector.current_year())
-        self._semester_by_id[generated.id] = generated
-        return generated
+        semester = semester_from_id(str(semester_id))
+        if semester:
+            self._semester_by_id[semester.id] = semester
+        return semester
 
     def _source_semester(self) -> Optional[Semester]:
         return self._semester_from_selector(self.copy_source_selector)

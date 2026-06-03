@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QSizePolicy
 from PySide6.QtCore import Signal, Qt
+from PySide6.QtWidgets import QHBoxLayout, QWidget, QLabel, QPushButton, QSizePolicy
 
 from .flow_layout import FlowLayout
 
@@ -17,12 +17,11 @@ class ChipListWidget(QWidget):
         self.refresh()
 
     def refresh(self):
-        # Remove old widgets
         for chip in self.chip_widgets:
             self.layout.removeWidget(chip)
             chip.deleteLater()
         self.chip_widgets = []
-        # Add new chips
+
         for idx, text in enumerate(self.items):
             chip = self._make_chip(text, idx)
             self.layout.addWidget(chip)
@@ -30,7 +29,6 @@ class ChipListWidget(QWidget):
 
     def _make_chip(self, text, idx):
         chip = QWidget(self)
-        from PySide6.QtWidgets import QHBoxLayout
         chip_layout = QHBoxLayout(chip)
         chip_layout.setContentsMargins(8, 2, 4, 2)
         chip_layout.setSpacing(4)

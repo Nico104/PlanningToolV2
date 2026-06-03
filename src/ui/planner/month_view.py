@@ -26,15 +26,16 @@ class PlannerMonthView:
     Clicking a day with events opens a dialog listing that day's termins
     """
 
-    def __init__(self, state, month_table: QTableWidget, month_from, free_day_provider: FreeDayProvider, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
+    def __init__(self, state, month_table: QTableWidget, day_date, free_day_provider: FreeDayProvider, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
         self.state = state
         self.table = month_table
-        self.month_from = month_from
+        self.day_date = day_date
         self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
         self.month_label = month_label
         self._free_day_styles = self._free_day_provider.get_styles()
+        self._read_only = False
 
         show_weekend = self.state.settings.get("show_weekend", True)
         if show_weekend:
@@ -72,9 +73,14 @@ class PlannerMonthView:
         if hasattr(self.table, 'terminDropped'):
             self.table.terminDropped.connect(self._on_table_drop)
 
+    def set_read_only(self, read_only: bool) -> None:
+        self._read_only = bool(read_only)
+        if hasattr(self.table, "set_read_only"):
+            self.table.set_read_only(self._read_only)
+
     def refresh(self, filtered_termine: List[Termin]):
         try:
-            mf = qdate_to_date(self.month_from.date())
+            mf = qdate_to_date(self.day_date.date())
         except Exception:
             mf = date.today()
 
@@ -97,7 +103,7 @@ class PlannerMonthView:
 
         first_day = date(year, month, 1)
         last_day = date(year, month, calendar.monthrange(year, month)[1])
-        free_days = self._free_day_provider.get_types_for_range(first_day, last_day)
+        free_days = self._free_day_provider.get_infos_for_range(first_day, last_day)
 
         self._last_filtered = list(filtered_termine or [])
         vp_height = max(1, self.table.viewport().height())
@@ -113,7 +119,8 @@ class PlannerMonthView:
                     self.table.setCellWidget(r, c, w)
                 else:
                     items = by_date.get(d, [])
-                    day_type = free_days.get(d)
+                    day_info = free_days.get(d)
+                    day_type = day_info.day_type if day_info else None
 
                     # Build a small widget with day number and count
                     w = QWidget()
@@ -130,8 +137,8 @@ class PlannerMonthView:
                     count_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
                     lay.addWidget(day_lbl)
-                    if day_type:
-                        type_lbl = QLabel(self._free_day_provider.label_for_type(day_type))
+                    if day_info:
+                        type_lbl = QLabel(self._free_day_provider.label_for_info(day_info))
                         type_lbl.setObjectName("MonthDayType")
                         type_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
                         lay.addWidget(type_lbl)
@@ -195,7 +202,6 @@ class PlannerMonthView:
             if not planner:
                 return
             planner.day_date.setDate(date_to_qdate(target_day))
-            planner.week_from.setDate(date_to_qdate(planner._align_to_monday(target_day)))
             idx = planner.view_cb.findData(view_key)
             if idx >= 0:
                 planner.view_cb.setCurrentIndex(idx)
@@ -212,6 +218,8 @@ class PlannerMonthView:
         dlg.exec()
 
     def _on_table_drop(self, termin_id: str, row: int, col: int):
+        if self._read_only:
+            return
         target_widget = self.table.cellWidget(row, col)
         if target_widget is None:
             return

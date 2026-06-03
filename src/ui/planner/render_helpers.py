@@ -2,8 +2,9 @@ from collections import defaultdict
 from datetime import date, time
 from typing import Callable, Iterable, Sequence
 
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QTableWidget, QSizePolicy
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QPen
+from PySide6.QtWidgets import QHeaderView, QStyle, QStyleOptionHeader, QTableWidget, QSizePolicy
 
 from ...core.models import Termin
 from ..utils.datetime_utils import fmt_time, mins_from_time
@@ -11,6 +12,70 @@ from ..utils.grouping_utils import group_concurrent_appointments
 from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
+
+
+class FreeDayHeaderView(QHeaderView):
+    def __init__(self, orientation: Qt.Orientation, parent=None):
+        super().__init__(orientation, parent)
+        self._badges: dict[int, tuple[str, str, str]] = {}
+
+    def set_free_day_badges(self, badges: dict[int, tuple[str, str, str]]) -> None:
+        self._badges = dict(badges)
+        self.setMinimumHeight(64 if self._badges else 44)
+        self.viewport().update()
+
+    def sizeHint(self) -> QSize:
+        hint = super().sizeHint()
+        if self._badges:
+            hint.setHeight(max(hint.height(), 64))
+        return hint
+
+    def paintSection(self, painter, rect, logical_index: int) -> None:
+        if not rect.isValid():
+            return
+
+        painter.save()
+
+        option = QStyleOptionHeader()
+        self.initStyleOption(option)
+        option.rect = rect
+        option.section = logical_index
+        option.text = ""
+        self.style().drawControl(QStyle.CE_Header, option, painter, self)
+
+        text = self.model().headerData(logical_index, self.orientation(), Qt.DisplayRole)
+        text = "" if text is None else str(text)
+        badge = self._badges.get(logical_index)
+        text_rect = rect.adjusted(4, 4, -4, -24 if badge else -4)
+
+        painter.setPen(QColor("#111111"))
+        painter.drawText(text_rect, Qt.AlignCenter | Qt.TextWordWrap, text)
+
+        if badge:
+            badge_text, day_type, _tooltip = badge
+            self._paint_badge(painter, rect, badge_text, day_type)
+
+        painter.restore()
+
+    def _paint_badge(self, painter, section_rect, text: str, day_type: str) -> None:
+        badge_rect = section_rect.adjusted(4, section_rect.height() - 24, -4, -4)
+
+        if day_type == "feiertag":
+            bg, border, fg = "#fff1c2", "#c58b00", "#5c3c00"
+        else:
+            bg, border, fg = "#dbeafe", "#8bb7f0", "#173a69"
+
+        painter.setBrush(QColor(bg))
+        painter.setPen(QPen(QColor(border), 0.5))
+        painter.drawRoundedRect(badge_rect, 0, 0)
+
+        font = painter.font()
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QColor(fg))
+        metrics = painter.fontMetrics()
+        label = metrics.elidedText(text, Qt.ElideRight, max(1, badge_rect.width() - 10))
+        painter.drawText(badge_rect.adjusted(5, 0, -5, 0), Qt.AlignLeft | Qt.AlignVCenter, label)
 
 
 def format_termin_text(t: Termin, lvas) -> str:
@@ -59,6 +124,7 @@ def render_grouped_termine_column(
     card_parent,
     border_px: int = 2,
     sort_group_ids: bool = False,
+    read_only: bool = False,
 ) -> None:
     """The function groups concurrent Termine, creates a single TimeSlotCell per group,
     applies row spanning for total group duration, and places each TerminCard at the
@@ -109,9 +175,6 @@ def render_grouped_termine_column(
             except Exception:
                 pass
 
-        row_height = table.rowHeight(row)
-        cell_widget.set_grid_info(row_height, max_span)
-
         for app in valid_apps:
             app_start = mins_from_time(app.start_zeit)
             app_end = mins_from_time(app.get_end_time())
@@ -127,6 +190,7 @@ def render_grouped_termine_column(
             typ = (app.typ or "").strip().upper()
             bg = next((color for k, color in TYPE_COLORS if typ == k), DEFAULT_BG)
             card = TerminCard(app.id, app_text, bg, card_parent)
+            card.set_read_only(read_only)
             card.doubleClicked.connect(edit_by_id_cb)
 
             place_termin_card(

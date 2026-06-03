@@ -1,13 +1,11 @@
 from pathlib import Path
 import json
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame
 )
-
-#TODO - Importlogik überarbeitung, alle files zugelassen?
 
 class ImportDialog(QDialog):
     """Steps through every changed entry across all imported files and lets the user merge or ignore each."""
@@ -77,19 +75,31 @@ class ImportDialog(QDialog):
             "anwesenheitspflicht": "Anwesenheitspflicht",
             "notiz": "Notiz",
             "beschreibung": "Beschreibung",
-            "kapazitaet": "Kapazitaet",
+            "kapazitaet": "Kapazität",
             "vortragende": "Vortragende",
             "email": "E-Mail",
             "studienrichtung": "Studienrichtung",
             "studiensemester": "Studiensemester",
         }
 
-        @classmethod
-        def _humanize_key(cls, key: str) -> str:
-            return cls._FIELD_LABELS.get(key) or key.replace("_", " ").strip().capitalize()
+        _FILE_FIELD_LABELS = {
+            "raeume.json": {
+                "id": "Raumnummer",
+                "name": "Raum",
+                "kapazitaet": "Kapazität",
+            },
+        }
 
         @classmethod
-        def _format_value(cls, value, field: str = "") -> str:
+        def _humanize_key(cls, key: str, fname: str = "") -> str:
+            return (
+                cls._FILE_FIELD_LABELS.get(fname, {}).get(key)
+                or cls._FIELD_LABELS.get(key)
+                or key.replace("_", " ").strip().capitalize()
+            )
+
+        @classmethod
+        def _format_value(cls, value, field: str = "", fname: str = "") -> str:
             if value == '<missing>':
                 return "(leer)"
             if value is None:
@@ -99,12 +109,14 @@ class ImportDialog(QDialog):
             if isinstance(value, dict):
                 parts = []
                 for k in sorted(value.keys()):
-                    parts.append(f"{cls._humanize_key(str(k))}: {cls._format_value(value[k], str(k))}")
+                    parts.append(
+                        f"{cls._humanize_key(str(k), fname)}: {cls._format_value(value[k], str(k), fname)}"
+                    )
                 return " | ".join(parts) if parts else "(leer)"
             if isinstance(value, list):
                 if not value:
                     return "(leer)"
-                return ", ".join(cls._format_value(v, field) for v in value)
+                return ", ".join(cls._format_value(v, field, fname) for v in value)
 
             display = str(value)
             if field == "duration" and display and not display.endswith(" min"):
@@ -112,7 +124,7 @@ class ImportDialog(QDialog):
             return display
 
         @classmethod
-        def _build_diff_text(cls, diffs):
+        def _build_diff_text(cls, diffs, fname: str = ""):
             if not diffs:
                 return "Keine Unterschiede"
 
@@ -120,17 +132,17 @@ class ImportDialog(QDialog):
             for field, old_value, new_value in diffs:
                 blocks.append(
                     "\n".join([
-                        f"{cls._humanize_key(str(field))}",
-                        f"Alt: {cls._format_value(old_value, str(field))}",
-                        f"Neu: {cls._format_value(new_value, str(field))}",
+                        f"{cls._humanize_key(str(field), fname)}",
+                        f"Alt: {cls._format_value(old_value, str(field), fname)}",
+                        f"Neu: {cls._format_value(new_value, str(field), fname)}",
                     ])
                 )
             return "\n\n".join(blocks)
 
         @classmethod
-        def _build_compact_entry_text(cls, new: dict) -> str:
+        def _build_compact_entry_text(cls, new: dict, fname: str = "") -> str:
             lines = [
-                f"{cls._humanize_key(str(k))}: {cls._format_value(new.get(k, ''), str(k))}"
+                f"{cls._humanize_key(str(k), fname)}: {cls._format_value(new.get(k, ''), str(k), fname)}"
                 for k in sorted(new.keys())
             ][:40]
             return "\n".join(lines)
@@ -177,7 +189,7 @@ class ImportDialog(QDialog):
             diff_view = QTextEdit(self)
             diff_view.setReadOnly(True)
             diff_view.setLineWrapMode(QTextEdit.NoWrap)
-            diff_view.setPlainText(self._build_diff_text(diffs))
+            diff_view.setPlainText(self._build_diff_text(diffs, fname))
             diff_view.setObjectName("importPreview")
             diff_view.setFont(QFont("Consolas"))
             left_layout.addWidget(diff_view)
@@ -196,7 +208,7 @@ class ImportDialog(QDialog):
             meta.setLineWrapMode(QTextEdit.NoWrap)
             meta.setFont(QFont("Consolas"))
             meta.setObjectName("importPreview")
-            meta.setPlainText(self._build_compact_entry_text(new))
+            meta.setPlainText(self._build_compact_entry_text(new, fname))
             right_layout.addWidget(meta)
 
             content_row.addWidget(left_card, 3)

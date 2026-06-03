@@ -14,9 +14,7 @@ from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 from .free_day_provider import FreeDayProvider
-from .render_helpers import render_grouped_termine_column
-
-
+from .render_helpers import FreeDayHeaderView, render_grouped_termine_column
 
 
 class PlannerDayView:
@@ -40,9 +38,9 @@ class PlannerDayView:
         self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
+        self._read_only = False
         
         self._room_list: List[Raum] = []
-        self._free_day_styles = self._free_day_provider.get_styles()
 
         if hasattr(self.day_table, "terminDropped"):
             self.day_table.terminDropped.connect(self._on_termin_dropped)
@@ -100,16 +98,23 @@ class PlannerDayView:
         self._setup_table()
         self.day_table.cellClicked.connect(self._on_cell_clicked)
 
+    def set_read_only(self, read_only: bool) -> None:
+        self._read_only = bool(read_only)
+        if hasattr(self.day_table, "set_read_only"):
+            self.day_table.set_read_only(self._read_only)
+
     def _setup_table(self) -> None:
         t = self.day_table
         t.setWordWrap(True)
         t.setTextElideMode(Qt.ElideRight)
 
-        t.setShowGrid(True)
+        t.setShowGrid(False)
         t.verticalHeader().setVisible(False)
         t.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         t.setSizeAdjustPolicy(QTableWidget.AdjustToContentsOnFirstShow)
+        if not isinstance(t.horizontalHeader(), FreeDayHeaderView):
+            t.setHorizontalHeader(FreeDayHeaderView(Qt.Horizontal, t))
         self.day_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     # Get day bounds and slot size from settings
@@ -136,22 +141,19 @@ class PlannerDayView:
 
         d = qdate_to_date(self.day_date.date())
         terms_day = [t for t in filtered_termine if t.datum == d]
-        free_day_type = self._free_day_provider.get_type_for_date(d)
-        self._build_day_grid(rooms, terms_day, d, free_day_type)
+        free_day_info = self._free_day_provider.get_info_for_date(d)
+        self._build_day_grid(rooms, terms_day, d, free_day_info)
 
     # Build the day grid: rows=time slots, columns=rooms
-    def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, free_day_type: Optional[str]) -> None:
+    def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, free_day_info) -> None:
         """
         Populate the day table with time-slot rows and room columns for the given date.
 
         Layout:
         - Column 0: time labels (read-only, right-aligned)
         - Columns 1..N: one column per room
-        - Rows: one row per slot (e.g. every 30 min from 08:00 to 18:00)
-
-        Free-day handling: if the date is a Feiertag or Vorlesungsfrei, a colored
-        background is applied to all room columns and their header cells so the
-        user can immediately see why no Termine may be planned here.
+        - Rows: one row per slot
+        - Free days: compact badge inside the header
         """
         assert self.state.ts is not None
 
@@ -164,17 +166,22 @@ class PlannerDayView:
                     self.day_table.removeCellWidget(row, col)
                     widget.deleteLater()
 
-            self.day_table.clearContents()
+        self.day_table.clearSpans()
+        self.day_table.clearContents()
 
         self.day_table.setRowCount(len(slots))
         self.day_table.setColumnCount(1 + len(rooms))
-        headers = ["Zeit"] + [r.name for r in rooms]
-
-        if free_day_type:
-            day_label = self._free_day_provider.label_for_type(free_day_type)
-            headers[0] = f"Zeit • {day_label}"
+        headers = ["Zeit"] + [f"{r.id}\n{r.name}" for r in rooms]
 
         self.day_table.setHorizontalHeaderLabels(headers)
+        self.day_table.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
+        self.day_table.horizontalHeader().setMinimumHeight(44)
+        for idx, room in enumerate(rooms, start=1):
+            hdr_item = self.day_table.horizontalHeaderItem(idx)
+            if hdr_item is not None:
+                hdr_item.setToolTip(
+                    f"{room.id} – {room.name}\nKapazität: {room.kapazitaet}"
+                )
 
         # header sizing: time column fixed, rooms stretch
         h = self.day_table.horizontalHeader()
@@ -189,32 +196,26 @@ class PlannerDayView:
             it.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
             self.day_table.setItem(r, 0, it)
 
-        if free_day_type:
-            if free_day_type == "feiertag":
-                bg = self._free_day_styles.get("holiday_bg")
-            else:
-                bg = self._free_day_styles.get("lecture_bg")
-            day_label = self._free_day_provider.label_for_type(free_day_type)
+        free_day_badges: dict[int, tuple[str, str, str]] = {}
+        if free_day_info:
+            free_day_type = free_day_info.day_type
+            day_label = self._free_day_provider.label_for_info(free_day_info)
+            badge_label = self._free_day_provider.badge_for_info(free_day_info)
 
-            if isinstance(bg, QColor) and bg.isValid():
-                time_hdr = self.day_table.horizontalHeaderItem(0)
-                if time_hdr is not None:
-                    time_hdr.setToolTip(day_label)
-                for c in range(1, 1 + len(rooms)):
-                    hdr_item = self.day_table.horizontalHeaderItem(c)
-                    if hdr_item is not None:
-                        hdr_item.setBackground(bg)
-                        hdr_item.setToolTip(day_label)
-                    for r in range(len(slots)):
-                        it = self.day_table.item(r, c)
-                        if it is None:
-                            it = QTableWidgetItem("")
-                            it.setFlags(it.flags() & ~Qt.ItemIsEditable)
-                            self.day_table.setItem(r, c, it)
-                        it.setBackground(bg)
-                        it.setToolTip(day_label)
+            time_hdr = self.day_table.horizontalHeaderItem(0)
+            if time_hdr is not None:
+                time_hdr.setToolTip(day_label)
+            for c in range(1, 1 + len(rooms)):
+                hdr_item = self.day_table.horizontalHeaderItem(c)
+                if hdr_item is not None:
+                    room_tip = hdr_item.toolTip().strip()
+                    hdr_item.setToolTip(f"{room_tip}\n{day_label}" if room_tip else day_label)
+                if free_day_type in {"feiertag", "vorlesungsfrei"} and badge_label:
+                    free_day_badges[c] = (badge_label, free_day_type, day_label)
 
-        self.day_table.clearSpans()
+        header = self.day_table.horizontalHeader()
+        if isinstance(header, FreeDayHeaderView):
+            header.set_free_day_badges(free_day_badges)
 
         if hasattr(self.day_table, "current_day_qdate"):
             self.day_table.current_day_qdate = date_to_qdate(d)
@@ -248,6 +249,7 @@ class PlannerDayView:
                 card_parent=self.day_table,
                 border_px=2,
                 sort_group_ids=False,
+                read_only=self._read_only,
             )
 
     def _on_cell_clicked(self, row: int, col: int) -> None:
@@ -263,6 +265,8 @@ class PlannerDayView:
             TerminCard.clear_global_focus()
 
     def _on_termin_dropped(self, termin_id: str, row: int, col: int) -> None:
+        if self._read_only:
+            return
         # col 0 is time column
         if col <= 0:
             return

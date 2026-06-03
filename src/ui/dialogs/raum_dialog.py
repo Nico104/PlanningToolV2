@@ -37,8 +37,8 @@ class RaumDialog(QDialog):
         self.cap_sb.setValue(raum.kapazitaet if raum else 30)
         self.cap_sb.setObjectName("Field")
 
-        form.addRow("ID:", self.id_le)
-        form.addRow("Name:", self.name_le)
+        form.addRow("Raumnummer:", self.id_le)
+        form.addRow("Raum:", self.name_le)
         form.addRow("Kapazität:", self.cap_sb)
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -57,7 +57,7 @@ class RaumDialog(QDialog):
         rid = self.id_le.text().strip()
         name = self.name_le.text().strip()
         if not rid or not name:
-            QMessageBox.warning(self, "Fehler", "ID und Name sind Pflicht.")
+            QMessageBox.warning(self, "Fehler", "Raumnummer und Raum sind Pflicht.")
             return
         self._result = Raum(id=rid, name=name, kapazitaet=int(self.cap_sb.value()))
         self.accept()

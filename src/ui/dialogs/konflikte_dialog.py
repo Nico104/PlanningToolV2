@@ -1,9 +1,10 @@
-from src.services.conflict_service import load_conflicts, save_conflicts
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QScrollArea, QWidget, QCheckBox, QLabel, QPushButton, QSpinBox
+    QDialog, QVBoxLayout, QHBoxLayout, QScrollArea, QWidget, QLabel, QPushButton, QSpinBox
 )
 from PySide6.QtCore import Qt, Signal
-from src.ui.components.widgets.tick_checkbox import TickCheckBox
+
+from ...services.conflict_service import load_conflicts, save_conflicts
+from ..components.widgets.tick_checkbox import TickCheckBox
 
 
 class KonflikteDialog(QDialog):
@@ -42,7 +43,6 @@ class KonflikteDialog(QDialog):
         self.conflicts_changed.emit()
 
     def populate_conflicts(self):
-        # Remove old widgets
         while self.conflict_layout.count():
             child = self.conflict_layout.takeAt(0)
             if child.widget():

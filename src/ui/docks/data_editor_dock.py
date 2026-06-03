@@ -4,7 +4,7 @@ from typing import List
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QTabWidget
 
-from ...core.models import Lehrveranstaltung, Raum, Semester, Termin
+from ...core.models import Lehrveranstaltung, Raum, Termin
 from ..utils.crud_handlers import CrudHandlers
 from ..components.widgets.editor_tab_widget import EditorTab, make_item, selected_id
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -14,7 +14,7 @@ from ..utils.datetime_utils import fmt_date, fmt_time
 class DataEditorDock(QDockWidget):
     """
     Dock widget with tabbed CRUD editors for master data:
-    LVAs, Rooms, Semesters, Free Days, Studiensemester, and Studienrichtungen.
+    LVAs, rooms, terms, free days, Studiensemester, and Studienrichtungen.
     """
 
     def __init__(self, parent, ds, on_data_changed=None):
@@ -35,13 +35,12 @@ class DataEditorDock(QDockWidget):
         # Tabs
         self.tab_lva = EditorTab(
             "LVA",
-            ["LVA-Nr.", "Name", "ECTS", "Vortragende", "E-Mail", "Typen", "Studiensemester", "Studienrichtung"],
+            ["LVA-Nr.", "Name", "ECTS", "Vortragende", "E-Mail", "Studiensemester", "Studienrichtung"],
             self.tabs,
             id_column=0,
         )
         self.tab_studienrichtung = EditorTab("Studienrichtungen", ["ID", "Name"], self.tabs, id_column=0)
-        self.tab_rooms = EditorTab("Räume", ["ID", "Name", "Kapazität"], self.tabs, id_column=0)
-        self.tab_sem = EditorTab("Semester", ["ID", "Name", "Start", "Ende"], self.tabs, id_column=0)
+        self.tab_rooms = EditorTab("Räume", ["Raumnummer", "Raum", "Kapazität"], self.tabs, id_column=0)
         self.tab_free = EditorTab(
             "Freie Tage",
             ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"],
@@ -65,7 +64,6 @@ class DataEditorDock(QDockWidget):
 
         self.tabs.addTab(self.tab_lva, "LVAs")
         self.tabs.addTab(self.tab_rooms, "Räume")
-        self.tabs.addTab(self.tab_sem, "Semester")
         self.tabs.addTab(self.tab_free, "Freie Tage")
         self.tabs.addTab(self.tab_studiensemester, "Studiensemester")
         self.tabs.addTab(self.tab_studienrichtung, "Studienrichtungen")
@@ -99,10 +97,6 @@ class DataEditorDock(QDockWidget):
         self.tab_rooms.edit_clicked.connect(self._crud.edit_room)
         self.tab_rooms.delete_clicked.connect(self._crud.del_room)
 
-        for btn in (self.tab_sem.btn_add, self.tab_sem.btn_edit, self.tab_sem.btn_del):
-            btn.setEnabled(False)
-            btn.setToolTip("Semester werden automatisch aus SS/WS-Regeln generiert.")
-
         self.tab_free.add_clicked.connect(self._crud.add_freie_tage)
         self.tab_free.edit_clicked.connect(self._crud.edit_freie_tage)
         self.tab_free.delete_clicked.connect(self._crud.del_freie_tage)
@@ -115,6 +109,9 @@ class DataEditorDock(QDockWidget):
         self.tab_studiensemester.edit_clicked.connect(self._crud.edit_studiensemester)
         self.tab_studiensemester.delete_clicked.connect(self._crud.del_studiensemester)
 
+    def set_termine_read_only(self, read_only: bool) -> None:
+        self.tab_termine.set_actions_enabled(not bool(read_only))
+
     def _on_tab_changed(self, index):
         # when the user opens the Termine tab, make sure it reflects the latest planner state, but don’t trigger a global refresh on every tab switch
         if self.tabs.widget(index) == self.tab_termine:
@@ -126,7 +123,6 @@ class DataEditorDock(QDockWidget):
             "termin": self.tab_termine,
             "lva": self.tab_lva,
             "room": self.tab_rooms,
-            "semester": self.tab_sem,
             "free_day": self.tab_free,
             "studiensemester": self.tab_studiensemester,
             "studienrichtung": self.tab_studienrichtung,
@@ -135,12 +131,12 @@ class DataEditorDock(QDockWidget):
         tab = entity_map.get(entity)
         if tab is None:
             return
+        if entity == "termin" and hasattr(tab, "_actions_enabled") and not tab._actions_enabled:
+            return
 
         self.show()
         self.raise_()
         self.tabs.setCurrentWidget(tab)
-        if entity == "semester":
-            return
         tab.btn_add.click()
 
 
@@ -148,7 +144,6 @@ class DataEditorDock(QDockWidget):
         self._refresh_lvas()
         self._refresh_studienrichtungen()
         self._refresh_rooms()
-        self._refresh_semester()
         self._refresh_freie_tage()
         self._refresh_termine()
         self._refresh_studiensemester()
@@ -157,13 +152,6 @@ class DataEditorDock(QDockWidget):
         semester_data = self.ds.load_studiensemester()
         rows = [[s.get("name", ""), s.get("notiz", ""), s.get("id", "")] for s in semester_data]
         self._fill_table(self.tab_studiensemester.table, rows)
-
-    def _refresh_semester(self) -> None:
-        semester: List[Semester] = self.ds.load_semester()
-        rows = [
-            [s.id, s.name, s.start.strftime("%d.%m.%Y"), s.end.strftime("%d.%m.%Y")] for s in semester
-        ]
-        self._fill_table(self.tab_sem.table, rows)
 
     # Refresh tables
     def _refresh_lvas(self) -> None:
@@ -182,7 +170,6 @@ class DataEditorDock(QDockWidget):
                 getattr(l, "ects", ""),
                 getattr(l.vortragende, "name", ""),
                 getattr(l.vortragende, "email", ""),
-                ", ".join(getattr(l, "typ", []) or []),
                 " / ".join([sem_id_to_name.get(sid, sid) for sid in getattr(l, "studiensemester", [])]),
                 getattr(l, "studienrichtung", ""),
             ]
@@ -240,6 +227,7 @@ class DataEditorDock(QDockWidget):
                 return str(t) if t is not None else ""
 
         termine: List[Termin] = self.ds.load_termine()
+        lva_by_id = {str(l.id): l for l in self.ds.load_lvas()}
         rows = []
         for tm in termine:
             start_zeit = getattr(tm, "start_zeit", None)
@@ -254,7 +242,14 @@ class DataEditorDock(QDockWidget):
                     gruppe_str = f"{name}"
             else:
                 gruppe_str = ""
-            termin_name = getattr(tm, "name", "")
+            termin_name = str(getattr(tm, "name", "") or "").strip()
+            if not termin_name:
+                lva_id = str(getattr(tm, "lva_id", "") or "").strip()
+                lva = lva_by_id.get(lva_id)
+                lva_name = str(getattr(lva, "name", "") or "").strip()
+                typ = str(getattr(tm, "typ", "") or "").strip()
+                parts = [p for p in (typ, lva_name or lva_id) if p]
+                termin_name = " - ".join(parts) if parts else "(ohne Name)"
             rows.append([
                 termin_name,
                 safe_date(getattr(tm, "datum", None)),

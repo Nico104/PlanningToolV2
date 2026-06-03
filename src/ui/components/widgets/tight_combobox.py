@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QFrame, QApplication, QListView
+from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QFrame, QListView
 
 
 class _TightDelegate(QStyledItemDelegate):

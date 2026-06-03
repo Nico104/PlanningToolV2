@@ -1,11 +1,11 @@
 {
   "time_slot_minutes": 30,
   "day_start": "07:30",
-  "day_end": "21:00",
+  "day_end": "20:00",
   "date_format_display": "DD.MM.YYYY",
   "duration_step_minutes": 15,
   "show_termine_search": true,
-  "start_semester": "SS26",
+  "previous_year_shortcut_mode": "hold",
   "start_studienrichtung": "ETIT",
   "data_path": "data_test",
   "layout_presets": {

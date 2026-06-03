@@ -15,15 +15,14 @@ class DateNavigationDock(QDockWidget):
     Dock for global date/view navigation only
     """
 
-    viewChanged = Signal(str)
     navPrev = Signal()
     navNext = Signal()
-    dayDateChanged = Signal(QDate)
-    weekFromChanged = Signal(QDate)
+    previousYearToggled = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__("Navigation", parent)
         self.setAllowedAreas(Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
+        self._syncing_navigation = False
 
         self._widget = QWidget(self)
         self._widget.setObjectName("HeaderBar")
@@ -42,6 +41,15 @@ class DateNavigationDock(QDockWidget):
         self.next_btn.setFixedWidth(36)
         headerBar.addWidget(self.next_btn)
 
+        self.previous_year_btn = QPushButton("↶")
+        self.previous_year_btn.setObjectName("NavButton")
+        self.previous_year_btn.setFixedWidth(36)
+        self.previous_year_btn.setCheckable(True)
+        self.previous_year_btn.setToolTip(
+            "Vorjahr anzeigen (Strg+Alt+V). Modus in den Einstellungen: gedrückt halten oder umschalten."
+        )
+        headerBar.addWidget(self.previous_year_btn)
+
         self.view_cb = TightComboBox()
         self.view_cb.addItem("Wochen", "week")
         self.view_cb.addItem("Tag", "day")
@@ -57,13 +65,6 @@ class DateNavigationDock(QDockWidget):
         self.day_date.setMinimumWidth(120)
         self.day_date.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.day_date)
-
-        self.week_from = QDateEdit()
-        self.week_from.setObjectName("DateEdit")
-        self.week_from.setCalendarPopup(True)
-        self.week_from.setDate(self._monday_of(QDate.currentDate()))
-        self.week_from.setVisible(False)
-        headerBar.addWidget(self.week_from)
 
         # week selectors
         self.week_number_cb = TightComboBox()
@@ -95,12 +96,9 @@ class DateNavigationDock(QDockWidget):
 
         self.prev_btn.clicked.connect(self.navPrev.emit)
         self.next_btn.clicked.connect(self.navNext.emit)
+        self.previous_year_btn.toggled.connect(self.previousYearToggled.emit)
 
-        self.day_date.dateChanged.connect(self.dayDateChanged.emit)
-        self.week_from.dateChanged.connect(self.weekFromChanged.emit)
-
-        self.week_from.dateChanged.connect(lambda *_: self._sync_selectors_with_dates())
-        self.day_date.dateChanged.connect(lambda *_: self._sync_selectors_with_dates())
+        self.day_date.dateChanged.connect(self._on_navigation_date_changed)
 
         self.week_year_cb.currentIndexChanged.connect(self._on_week_year_changed)
         self.week_number_cb.currentIndexChanged.connect(self._on_week_number_changed)
@@ -132,12 +130,30 @@ class DateNavigationDock(QDockWidget):
         start = self._iso_week_start(year, week)
         return f"KW {week:02d} ({start.toString('dd.MM.yyyy')})"
 
+    def _month_start(self, date: QDate) -> QDate:
+        return QDate(date.year(), date.month(), 1)
+
+    def _current_week_anchor(self) -> QDate:
+        return self._monday_of(self.day_date.date())
+
+    def _current_month_anchor(self) -> QDate:
+        return self._month_start(self.day_date.date())
+
+    def _on_navigation_date_changed(self, _date: QDate) -> None:
+        if self._syncing_navigation:
+            return
+
+        self._syncing_navigation = True
+        try:
+            self._sync_selectors_with_dates()
+        finally:
+            self._syncing_navigation = False
+
     def _populate_week_year_selector(self) -> None:
         self.week_year_cb.blockSignals(True)
         self.week_year_cb.clear()
 
-        current = QDate.currentDate().year()
-        for year in range(current - 2, current + 4):
+        for year in range(2000, 2100):
             self.week_year_cb.addItem(str(year), year)
 
         self.week_year_cb.blockSignals(False)
@@ -162,8 +178,7 @@ class DateNavigationDock(QDockWidget):
         self.month_year_cb.blockSignals(True)
         self.month_year_cb.clear()
 
-        current = QDate.currentDate().year()
-        for year in range(current - 2, current + 4):
+        for year in range(2000, 2100):
             self.month_year_cb.addItem(str(year), year)
 
         self.month_year_cb.blockSignals(False)
@@ -183,9 +198,8 @@ class DateNavigationDock(QDockWidget):
         self.month_name_cb.blockSignals(False)
 
     def _sync_selectors_with_dates(self) -> None:
-        d = self.week_from.date()
-
-        iso_week, iso_year = d.weekNumber()
+        week_anchor = self._current_week_anchor()
+        iso_week, iso_year = week_anchor.weekNumber()
 
         self.week_year_cb.blockSignals(True)
         yidx = self.week_year_cb.findData(iso_year)
@@ -195,13 +209,15 @@ class DateNavigationDock(QDockWidget):
 
         self._populate_week_number_selector(iso_year, iso_week)
 
+        month_anchor = self._current_month_anchor()
+
         self.month_year_cb.blockSignals(True)
-        midx = self.month_year_cb.findData(d.year())
+        midx = self.month_year_cb.findData(month_anchor.year())
         if midx >= 0:
             self.month_year_cb.setCurrentIndex(midx)
         self.month_year_cb.blockSignals(False)
 
-        self._populate_month_name_selector(d.month())
+        self._populate_month_name_selector(month_anchor.month())
 
     def _on_week_year_changed(self, idx: int) -> None:
         year = self.week_year_cb.itemData(idx)
@@ -215,8 +231,7 @@ class DateNavigationDock(QDockWidget):
         max_weeks = self._weeks_in_iso_year(year)
         week = min(week, max_weeks)
 
-        monday = self._iso_week_start(year, week)
-        self.week_from.setDate(monday)
+        self.day_date.setDate(self._iso_week_start(year, week))
 
     def _on_week_number_changed(self, idx: int) -> None:
         year = self.week_year_cb.currentData()
@@ -225,8 +240,7 @@ class DateNavigationDock(QDockWidget):
         if not isinstance(year, int) or not isinstance(week, int):
             return
 
-        monday = self._iso_week_start(year, week)
-        self.week_from.setDate(monday)
+        self.day_date.setDate(self._iso_week_start(year, week))
 
     def _on_month_year_changed(self, idx: int) -> None:
         year = self.month_year_cb.itemData(idx)
@@ -237,7 +251,7 @@ class DateNavigationDock(QDockWidget):
         if not isinstance(month, int):
             month = 1
 
-        self.week_from.setDate(QDate(year, month, 1))
+        self.day_date.setDate(QDate(year, month, 1))
 
     def _on_month_name_changed(self, idx: int) -> None:
         month = self.month_name_cb.itemData(idx)
@@ -246,7 +260,7 @@ class DateNavigationDock(QDockWidget):
         if not isinstance(month, int) or not isinstance(year, int):
             return
 
-        self.week_from.setDate(QDate(year, month, 1))
+        self.day_date.setDate(QDate(year, month, 1))
 
     def _on_view_change(self, *_) -> None:
         view = str(self.view_cb.currentData())
@@ -260,4 +274,3 @@ class DateNavigationDock(QDockWidget):
         self.month_year_cb.setVisible(view == "month")
 
         self._sync_selectors_with_dates()
-        self.viewChanged.emit(view)

@@ -1,12 +1,13 @@
 import calendar
+import re
 from datetime import date, timedelta
 from types import SimpleNamespace
 
-from PySide6.QtCore import Qt, QDate
+from PySide6.QtCore import QDate
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel,
-    QStackedWidget, QTableWidget
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QStackedWidget, QTableWidget, QPushButton
 )
 
 from ...services.data_service import DataService
@@ -27,10 +28,13 @@ class PlannerWorkspace(QWidget):
     """Main planner container coordinating day/week/month views and shared state
     """
 
+    DAY_ROOM_PAGE_SIZE = 8
+
     def __init__(self, parent: QWidget, ds: DataService, on_data_changed, global_filter_dock=None):
         super().__init__(parent)
         
         self.on_data_changed = on_data_changed
+        self._previous_year_enabled = False
 
         self.state = PlannerState(ds)
         self.state.reload()
@@ -46,11 +50,36 @@ class PlannerWorkspace(QWidget):
         self.prev_btn = global_filter_dock.prev_btn
         self.next_btn = global_filter_dock.next_btn
         self.day_date = global_filter_dock.day_date
-        self.week_from = global_filter_dock.week_from
 
         # Stacked widget for day/week/month tables
         self.stack = QStackedWidget()
         root.addWidget(self.stack, 1)
+
+        self._day_room_page = 0
+        self.day_container = QWidget()
+        day_layout = QVBoxLayout(self.day_container)
+        day_layout.setContentsMargins(0, 0, 0, 0)
+        day_layout.setSpacing(6)
+        self.day_room_pager = QWidget()
+        self.day_room_pager.setObjectName("DayRoomPager")
+        day_pager_layout = QHBoxLayout(self.day_room_pager)
+        day_pager_layout.setContentsMargins(0, 0, 0, 0)
+        day_pager_layout.setSpacing(6)
+        day_pager_layout.addStretch(1)
+        self.day_room_prev_btn = QPushButton("◀")
+        self.day_room_prev_btn.setObjectName("NavButton")
+        self.day_room_prev_btn.setFixedWidth(32)
+        self.day_room_prev_btn.setToolTip("Vorige Räume")
+        self.day_room_next_btn = QPushButton("▶")
+        self.day_room_next_btn.setObjectName("NavButton")
+        self.day_room_next_btn.setFixedWidth(32)
+        self.day_room_next_btn.setToolTip("Nächste Räume")
+        self.day_room_label = QLabel("")
+        self.day_room_label.setObjectName("DayRoomPagerLabel")
+        day_pager_layout.addWidget(self.day_room_prev_btn)
+        day_pager_layout.addWidget(self.day_room_label)
+        day_pager_layout.addWidget(self.day_room_next_btn)
+        day_layout.addWidget(self.day_room_pager)
 
         self.day_table = TimeGridDropTable()
         self.week_table = TimeGridDropTable()
@@ -75,7 +104,8 @@ class PlannerWorkspace(QWidget):
         self.day_table.setAlternatingRowColors(False)
         self.week_table.setAlternatingRowColors(False)
         self.month_table.setAlternatingRowColors(False)
-        self.stack.addWidget(self.day_table)
+        day_layout.addWidget(self.day_table)
+        self.stack.addWidget(self.day_container)
         self.stack.addWidget(self.week_table)
         self.stack.addWidget(self.month_container)
 
@@ -98,7 +128,7 @@ class PlannerWorkspace(QWidget):
         self.week_view = PlannerWeekView(
             state=self.state,
             week_table=self.week_table,
-            week_from=self.week_from,
+            day_date=self.day_date,
             free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
             on_drop_cb=self._on_week_drop,
@@ -106,24 +136,26 @@ class PlannerWorkspace(QWidget):
         self.month_view = PlannerMonthView(
             state=self.state,
             month_table=self.month_table,
-            month_from=self.week_from,
+            day_date=self.day_date,
             month_label=self.month_header,
             free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
             on_drop_cb=self._on_month_drop,
         )
+        self._apply_history_read_only()
 
         # Table click event connections
         self.week_table.cellClicked.connect(self._on_week_cell_clicked)
         self.day_table.cellClicked.connect(self._on_day_cell_clicked)
         self.month_table.cellClicked.connect(self._on_month_cell_clicked)
+        self.day_room_prev_btn.clicked.connect(lambda: self._shift_day_room_page(-1))
+        self.day_room_next_btn.clicked.connect(lambda: self._shift_day_room_page(1))
 
         # View change event connection
         self.view_cb.currentIndexChanged.connect(self._on_view_changed)
 
         # Date change triggers
         self.day_date.dateChanged.connect(self._on_date_changed)
-        self.week_from.dateChanged.connect(self._on_date_changed)
 
         # Initial state setup
         self._init_default_dates()
@@ -133,7 +165,6 @@ class PlannerWorkspace(QWidget):
 
         # Set object names for styling
         self.day_date.setObjectName("DateEdit")
-        self.week_from.setObjectName("DateEdit")
         self.view_cb.setObjectName("HeaderCombo")
 
 
@@ -149,29 +180,21 @@ class PlannerWorkspace(QWidget):
     def _qdate_to_pydate(self, qd: QDate) -> date:
         return date(qd.year(), qd.month(), qd.day())
 
-    def _align_to_monday(self, d: date) -> date:
-        return d - timedelta(days=d.weekday())
-
     def _shift_period(self, direction: int):
         view = str(self.view_cb.currentData())
+        current = self._qdate_to_pydate(self.day_date.date())
         if view == "day":
-            d = self._qdate_to_pydate(self.day_date.date()) + timedelta(days=direction)
-            self.day_date.setDate(date_to_qdate(d))
+            new_date = current + timedelta(days=direction)
         elif view == "month":
-            wf = self._qdate_to_pydate(self.week_from.date())
-            month_index = (wf.month - 1) + direction
-            year = wf.year + (month_index // 12)
+            month_index = (current.month - 1) + direction
+            year = current.year + (month_index // 12)
             month = (month_index % 12) + 1
-            day = min(wf.day, calendar.monthrange(year, month)[1])
-            newd = wf.replace(year=year, month=month, day=day)
-            self.week_from.setDate(date_to_qdate(newd))
+            day = min(current.day, calendar.monthrange(year, month)[1])
+            new_date = current.replace(year=year, month=month, day=day)
         else:
-            # default: treat as week
-            wf = self._qdate_to_pydate(self.week_from.date())
-            wf = self._align_to_monday(wf) + timedelta(days=7 * direction)
-            self.week_from.setDate(date_to_qdate(wf))
+            new_date = current + timedelta(days=7 * direction)
 
-        self.refresh(emit=False)
+        self.day_date.setDate(date_to_qdate(new_date))
 
     def _init_default_dates(self):
         """Initialize day/week controls to a stable starting point
@@ -186,12 +209,10 @@ class PlannerWorkspace(QWidget):
         dated = [t.datum for t in self.state.occurrences if t.datum is not None]
         if not dated:
             self.day_date.setDate(QDate.currentDate())
-            self.week_from.setDate(date_to_qdate(self._align_to_monday(date.today())))
             return
 
         min_d = min(dated)
         self.day_date.setDate(date_to_qdate(min_d))
-        self.week_from.setDate(date_to_qdate(self._align_to_monday(min_d)))
 
 
     def current_filters(self):
@@ -221,66 +242,129 @@ class PlannerWorkspace(QWidget):
         self.state.reload()
 
         filters = self.current_filters()
+        filters_for_planner = self._filters_for_display(filters)
         filtered = self.state.filtered_termine(
-            raum_id=filters["raum_id"],
-            lva_id=filters["lva_id"],
-            typ=filters["typ"],
-            dozent=filters["dozent"],
-            studienrichtung=filters["studienrichtung"],
-            semester_id=filters["semester_id"],
-            studiensemester=filters["studiensemester"],
+            raum_id=filters_for_planner["raum_id"],
+            lva_id=filters_for_planner["lva_id"],
+            typ=filters_for_planner["typ"],
+            dozent=filters_for_planner["dozent"],
+            studienrichtung=filters_for_planner["studienrichtung"],
+            semester_id=filters_for_planner["semester_id"],
+            studiensemester=filters_for_planner["studiensemester"],
         )
         expanded = expand_termine(filtered)
 
         view = str(self.view_cb.currentData())
         if view == "day":
-            self.stack.setCurrentWidget(self.day_table)
-            rooms = self.state.raeume
-            if filters["raum_id"]:
-                rooms = [r for r in rooms if r.id == filters["raum_id"]]
+            self.stack.setCurrentWidget(self.day_container)
+            rooms = self._day_rooms_for_filters(filters)
+            rooms = self._paged_day_rooms(rooms, bool(filters["raum_id"]))
             self.day_view.refresh(expanded, rooms)
         elif view == "week":
+            self.day_room_pager.setVisible(False)
             self.stack.setCurrentWidget(self.week_table)
             self.week_view.refresh(expanded)
         elif view == "month":
+            self.day_room_pager.setVisible(False)
             self.stack.setCurrentWidget(self.month_container)
             self.month_view.refresh(expanded)
         else:
+            self.day_room_pager.setVisible(False)
             self.stack.setCurrentWidget(self.week_table)
             self.week_view.refresh(expanded)
 
         if emit and self._emit_enabled and callable(self.on_data_changed):
             self.on_data_changed()
 
-    def _on_view_changed(self):
-        view = str(self.view_cb.currentData())
-        if view == "day":
-            current_day = self._qdate_to_pydate(self.day_date.date())
-            week_start = self._qdate_to_pydate(self.week_from.date())
-            week_end = week_start + timedelta(days=6)
-            if not (week_start <= current_day <= week_end):
-                self.day_date.setDate(date_to_qdate(week_start))
-        elif view == "month":
-            # keep week_from within the same month as current day
-            current_day = self._qdate_to_pydate(self.day_date.date())
-            month_start = current_day.replace(day=1)
-            self.week_from.setDate(date_to_qdate(month_start))
-        else:
-            current_day = self._qdate_to_pydate(self.day_date.date())
-            week_start = self._align_to_monday(current_day)
-            self.week_from.setDate(date_to_qdate(week_start))
+    def set_previous_year_enabled(self, enabled: bool, *, refresh: bool = True) -> None:
+        self._previous_year_enabled = bool(enabled)
+        self._apply_history_read_only()
+        if refresh:
+            self.refresh(emit=False)
 
+    def _apply_history_read_only(self) -> None:
+        read_only = bool(self._previous_year_enabled)
+        for view in (self.day_view, self.week_view, self.month_view):
+            if hasattr(view, "set_read_only"):
+                view.set_read_only(read_only)
+
+    def _filters_for_display(self, filters: dict) -> dict:
+        out = dict(filters)
+        if self._previous_year_enabled and out.get("semester_id"):
+            out["semester_id"] = self._previous_semester_id(out["semester_id"])
+        return out
+
+    @staticmethod
+    def _previous_semester_id(semester_id: str) -> str:
+        match = re.match(r"^(SS|WS)[\s_-]?(\d{2}|\d{4})$", str(semester_id or "").strip(), re.IGNORECASE)
+        if not match:
+            return semester_id
+        kind = match.group(1).upper()
+        raw_year = match.group(2)
+        year = int(raw_year) if len(raw_year) == 4 else 2000 + int(raw_year)
+        return f"{kind}{(year - 1) % 100:02d}"
+
+    def _on_view_changed(self):
         # view switching should not refresh external docks/terminliste
         self.refresh(emit=False)
 
+    def _day_rooms_for_filters(self, filters) -> list:
+        rooms = self.state.raeume
+        if filters["raum_id"]:
+            return [r for r in rooms if r.id == filters["raum_id"]]
+        return rooms
+
+    def _paged_day_rooms(self, rooms: list, has_room_filter: bool) -> list:
+        total = len(rooms)
+        page_size = self.DAY_ROOM_PAGE_SIZE
+        show_pager = not has_room_filter and total > page_size
+
+        if not show_pager:
+            self._day_room_page = 0
+            self.day_room_pager.setVisible(False)
+            return rooms
+
+        page_count = max(1, (total + page_size - 1) // page_size)
+        self._day_room_page = max(0, min(self._day_room_page, page_count - 1))
+        start = self._day_room_page * page_size
+        end = min(start + page_size, total)
+
+        self.day_room_pager.setVisible(True)
+        self.day_room_label.setText(f"Räume {start + 1}-{end} von {total}")
+        self.day_room_prev_btn.setEnabled(self._day_room_page > 0)
+        self.day_room_next_btn.setEnabled(end < total)
+        return rooms[start:end]
+
+    def _shift_day_room_page(self, direction: int) -> None:
+        self._day_room_page = max(0, self._day_room_page + direction)
+        self.refresh(emit=False)
+
+    def _show_day_room_page_for_room(self, room_id: str) -> None:
+        if not room_id or self.current_filters().get("raum_id"):
+            return
+        for idx, room in enumerate(self.state.raeume):
+            if room.id == room_id:
+                self._day_room_page = idx // self.DAY_ROOM_PAGE_SIZE
+                return
+
     def _edit_termin_by_id(self, tid: str):
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         if self.crud.edit_termin_by_id(tid):
             self.reload_and_refresh_everything()
 
-    def set_on_data_changed(self, cb):
-        self.on_data_changed = cb
+    def _show_history_read_only_toast(self) -> None:
+        cb = getattr(self.window(), "_show_history_read_only_toast", None)
+        if callable(cb):
+            cb()
 
     def set_global_filter_state(self, fs) -> None:
+        old_room_id = getattr(getattr(self, "_global_filter", None), "raum_id", None)
+        new_room_id = getattr(fs, "raum_id", None) if fs is not None else None
+        if old_room_id != new_room_id:
+            self._day_room_page = 0
+
         if fs is None:
             self._global_filter = None
         else:
@@ -335,8 +419,8 @@ class PlannerWorkspace(QWidget):
         if not t or not t.datum:
             return
 
+        self._show_day_room_page_for_room(getattr(t, "raum_id", ""))
         self.day_date.setDate(date_to_qdate(t.datum))
-        self.week_from.setDate(date_to_qdate(self._align_to_monday(t.datum)))
 
     def _highlight_week_cards(self, ids: set[str], source_ids: set[str]) -> None:
         first_focused = False
@@ -413,5 +497,8 @@ class PlannerWorkspace(QWidget):
         )
 
     def _move_termin_and_refresh(self, termin_id: str, **kwargs) -> None:
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         if self.crud.move_termin(termin_id, **kwargs):
             self.reload_and_refresh_everything()

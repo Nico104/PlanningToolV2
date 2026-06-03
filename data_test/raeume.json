@@ -19,6 +19,86 @@
       "id": "EI8",
       "name": "EI8",
       "kapazitaet": 30
+    },
+    {
+      "id": "CB0115",
+      "name": "Bibliothek E363",
+      "kapazitaet": 20
+    },
+    {
+      "id": "CAEG31",
+      "name": "EI 10 Fritz Paschke HS - UIW",
+      "kapazitaet": 151
+    },
+    {
+      "id": "CD0304",
+      "name": "EI 11 HS - INF",
+      "kapazitaet": 81
+    },
+    {
+      "id": "CDEG13",
+      "name": "EI 7 Hörsaal - ETIT",
+      "kapazitaet": 434
+    },
+    {
+      "id": "CDEG08",
+      "name": "EI 8 Pötzl HS - QUER",
+      "kapazitaet": 139
+    },
+    {
+      "id": "CAEG17",
+      "name": "EI 9 Hlawka HS - ETIT",
+      "kapazitaet": 181
+    },
+    {
+      "id": "CC0117",
+      "name": "Labor CC0117",
+      "kapazitaet": 20
+    },
+    {
+      "id": "CD0312",
+      "name": "Lernraum Gußhaus CD0312",
+      "kapazitaet": 16
+    },
+    {
+      "id": "CA0406",
+      "name": "Messtechnik Labor",
+      "kapazitaet": 18
+    },
+    {
+      "id": "CD0324",
+      "name": "Seminarraum 127",
+      "kapazitaet": 34
+    },
+    {
+      "id": "CA0138",
+      "name": "Seminarraum 363",
+      "kapazitaet": 50
+    },
+    {
+      "id": "CC0321",
+      "name": "Seminarraum 366",
+      "kapazitaet": 36
+    },
+    {
+      "id": "CD0204",
+      "name": "Seminarraum 384",
+      "kapazitaet": 36
+    },
+    {
+      "id": "CBEG02",
+      "name": "Seminarraum 387",
+      "kapazitaet": 30
+    },
+    {
+      "id": "CA0322",
+      "name": "Seminarraum CA 0322 (Ersatz Proj.-Raum 15)",
+      "kapazitaet": 36
+    },
+    {
+      "id": "CD0104",
+      "name": "Werkstoffelabor",
+      "kapazitaet": 12
     }
   ]
 }

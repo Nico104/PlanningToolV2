@@ -1,5 +1,5 @@
-from PySide6.QtCore import Qt, Signal, QPoint, QTimer, QMimeData
-from PySide6.QtGui import QDropEvent, QDragMoveEvent
+from PySide6.QtCore import Qt, Signal, QPoint, QTimer
+from PySide6.QtGui import QColor, QDropEvent, QDragMoveEvent, QPainter
 from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelectionRange
 
 
@@ -16,6 +16,8 @@ class MonthDropTable(QTableWidget):
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDrop)
         self.setDefaultDropAction(Qt.MoveAction)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self._read_only = False
 
         self._hover_row = -1
         self._hover_col = -1
@@ -28,7 +30,21 @@ class MonthDropTable(QTableWidget):
         self._last_drag_pos: QPoint | None = None
         self._auto_scroll_timer.timeout.connect(self._auto_scroll_tick)
 
+    def set_read_only(self, read_only: bool) -> None:
+        self._read_only = bool(read_only)
+        self.setAcceptDrops(not self._read_only)
+        self.setDragEnabled(not self._read_only)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop)
+        if self._read_only:
+            self._auto_scroll_timer.stop()
+            self._set_hover(-1, -1)
+            self._hover_termin_id = None
+        self.viewport().update()
+
     def dragEnterEvent(self, e):
+        if self._read_only:
+            e.ignore()
+            return
         if e.mimeData().hasText():
             e.acceptProposedAction()
             self._auto_scroll_timer.start()
@@ -42,6 +58,9 @@ class MonthDropTable(QTableWidget):
         super().dragLeaveEvent(e)
 
     def dragMoveEvent(self, e: QDragMoveEvent):
+        if self._read_only:
+            e.ignore()
+            return
         if not e.mimeData().hasText():
             e.ignore()
             return
@@ -60,6 +79,9 @@ class MonthDropTable(QTableWidget):
         e.acceptProposedAction()
 
     def dropEvent(self, e: QDropEvent):
+        if self._read_only:
+            e.ignore()
+            return
         md = e.mimeData()
         if not md.hasText():
             e.ignore()
@@ -110,7 +132,6 @@ class MonthDropTable(QTableWidget):
         super().paintEvent(e)
         if self._hover_row < 0 or self._hover_col < 0 or not self._hover_has_conflict:
             return
-        from PySide6.QtGui import QPainter, QColor
         x = self.columnViewportPosition(self._hover_col)
         y = self.rowViewportPosition(self._hover_row)
         w = self.columnWidth(self._hover_col)

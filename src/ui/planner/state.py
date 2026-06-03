@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from ...core.models import Semester, Raum, Lehrveranstaltung, Termin
+from ...core.models import Raum, Lehrveranstaltung, Termin
 from ...services.data_service import DataService
 from ...services.filter_service import filter_termine
 from ...services.termin_occurrence_service import expand_termine

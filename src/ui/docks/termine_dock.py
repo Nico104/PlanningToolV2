@@ -1,3 +1,5 @@
+from collections import defaultdict
+from datetime import date, time
 from functools import partial
 from typing import List
 
@@ -11,8 +13,6 @@ from ..utils.datetime_utils import fmt_date, fmt_time
 from ...core.models import Termin, Lehrveranstaltung, Raum
 from ..components.cards.termin_card import TerminCard
 from ..components.dragdrop.termin_drop_area import TerminDropArea
-from datetime import date as date, time as time
-from collections import defaultdict
 
 
 
@@ -34,6 +34,7 @@ class TermineDock(QDockWidget):
         self._lvas: List[Lehrveranstaltung] = []
         self._raeume: List[Raum] = []
         self._search_query = ""
+        self._read_only = False
 
         header = QWidget(self)
         header.setObjectName("HeaderBar")
@@ -80,6 +81,14 @@ class TermineDock(QDockWidget):
 
         self.setWidget(header)
 
+    def set_read_only(self, read_only: bool) -> None:
+        read_only = bool(read_only)
+        if read_only == self._read_only:
+            return
+        self._read_only = read_only
+        if hasattr(self.container, "set_read_only"):
+            self.container.set_read_only(self._read_only)
+        self._build_cards()
 
     def set_rows(
         self,
@@ -258,6 +267,8 @@ class TermineDock(QDockWidget):
                     parent=self.container,
                 )
 
+                if hasattr(card, "set_read_only"):
+                    card.set_read_only(self._read_only)
                 card.double_clicked.connect(self.termin_double_clicked.emit)
                 card.right_clicked.connect(self._open_menu)
                 card.setVisible(self._group_states[group_key])
@@ -266,7 +277,15 @@ class TermineDock(QDockWidget):
 
 
     def _on_drop_to_list(self, termin_id: str) -> None:
+        if self._read_only:
+            self._show_history_read_only_toast()
+            return
         self.termin_unassign_requested.emit(termin_id)
+
+    def _show_history_read_only_toast(self) -> None:
+        cb = getattr(self.window(), "_show_history_read_only_toast", None)
+        if callable(cb):
+            cb()
 
     def _open_menu(self, termin_id: str) -> None:
         menu = QMenu(self)
@@ -276,6 +295,14 @@ class TermineDock(QDockWidget):
         act_jump = None
         if assigned:
             act_jump = menu.addAction("Springe zu")
+
+        if self._read_only:
+            if act_jump is None:
+                return
+            chosen = menu.exec(self.cursor().pos())
+            if chosen == act_jump:
+                self.termin_jump_requested.emit(termin_id)
+            return
 
         act_edit = menu.addAction("Bearbeiten")
         act_del = menu.addAction("Löschen")

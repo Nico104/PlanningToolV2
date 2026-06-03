@@ -36,6 +36,8 @@ class TimeGridDropTable(QTableWidget):
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDrop)
         self.setDefaultDropAction(Qt.MoveAction)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self._read_only = False
         
         # Track current hover target during drag
         self._hover_row = -1
@@ -51,16 +53,29 @@ class TimeGridDropTable(QTableWidget):
         self._text_provider = None
         self._slot_minutes = 30
 
-        # Drag outisde table broders, autoscroll
+        # Edge auto-scroll while dragging.
         self._auto_scroll_timer = QTimer(self)
         self._auto_scroll_timer.setInterval(25)
         self._auto_scroll_timer.timeout.connect(self._auto_scroll_tick)
         self._last_drag_pos: QPoint | None = None
 
     # Drag and Drop
+
+    def set_read_only(self, read_only: bool) -> None:
+        self._read_only = bool(read_only)
+        self.setAcceptDrops(not self._read_only)
+        self.setDragEnabled(not self._read_only)
+        self.setDragDropMode(QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop)
+        if self._read_only:
+            self._auto_scroll_timer.stop()
+            self._set_hover(-1, -1)
+        self.viewport().update()
     
     # Accept valid Termin drags and start edge auto-scroll
     def dragEnterEvent(self, e):
+        if self._read_only:
+            e.ignore()
+            return
         if e.mimeData().hasText():
             e.acceptProposedAction()
             self._auto_scroll_timer.start()
@@ -76,6 +91,9 @@ class TimeGridDropTable(QTableWidget):
 
     # Update hover preview while dragging over the grid (does the snapping to the grid)
     def dragMoveEvent(self, e: QDragMoveEvent):
+        if self._read_only:
+            e.ignore()
+            return
         if not e.mimeData().hasText():
             e.ignore()
             return
@@ -107,6 +125,9 @@ class TimeGridDropTable(QTableWidget):
 
     # emit termin + target cell, then clear hover/scroll.
     def dropEvent(self, e: QDropEvent):
+        if self._read_only:
+            e.ignore()
+            return
         md = e.mimeData()
         if not md.hasText():
             e.ignore()
@@ -221,6 +242,7 @@ class TimeGridDropTable(QTableWidget):
         - A 2 px black border around the block.
         """
         super().paintEvent(e)
+        self._paint_time_grid_lines()
 
         if self._hover_row < 0 or self._hover_col < 0:
             return
@@ -276,6 +298,57 @@ class TimeGridDropTable(QTableWidget):
         p.drawRect(rect.adjusted(1, 1, -1, -1))
         p.end()
 
+    def _paint_time_grid_lines(self) -> None:
+        painter = QPainter(self.viewport())
+        painter.setRenderHint(QPainter.Antialiasing, False)
+
+        vertical_pen = QPen(QColor("#eeeeee"))
+        vertical_pen.setWidth(1)
+        vertical_pen.setCosmetic(True)
+        painter.setPen(vertical_pen)
+        top = 0
+        bottom = self.viewport().height()
+        for col in range(1, self.columnCount()):
+            x = self.columnViewportPosition(col)
+            if x <= 0:
+                continue
+            painter.drawLine(x, top, x, bottom)
+
+        half_hour_pen = QPen(QColor("#dddddd"))
+        half_hour_pen.setWidth(1)
+        half_hour_pen.setCosmetic(True)
+        half_hour_pen.setDashPattern([8, 5])
+
+        hour_pen = QPen(QColor("#cfcfcf"))
+        hour_pen.setWidth(1)
+        hour_pen.setCosmetic(True)
+        left = 0
+        right = self.viewport().width()
+
+        painter.setPen(half_hour_pen)
+        for row in range(self.rowCount()):
+            item = self.item(row, 0)
+            text = item.text().strip() if item else ""
+            if not text.endswith(":30"):
+                continue
+            y = self.rowViewportPosition(row)
+            if y <= 0:
+                continue
+            painter.drawLine(left, y, right, y)
+
+        painter.setPen(hour_pen)
+        for row in range(self.rowCount()):
+            item = self.item(row, 0)
+            text = item.text().strip() if item else ""
+            if not text.endswith(":00"):
+                continue
+            y = self.rowViewportPosition(row)
+            if y <= 0:
+                continue
+            painter.drawLine(left, y, right, y)
+
+        painter.end()
+
     def startDrag(self, supportedActions):
         """
         Initiate a drag from a cell that contains a TerminCard.
@@ -284,6 +357,9 @@ class TimeGridDropTable(QTableWidget):
         The Termin ID is encoded as UTF-8 bytes and stored under the custom MIME type so the drop
         target can look up the full Termin from the shared application state.
         """
+        if self._read_only:
+            return
+
         current_row = self.currentRow()
         current_col = self.currentColumn()
         

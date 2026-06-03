@@ -1,5 +1,6 @@
 from pathlib import Path
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from time import monotonic
 import json
 import subprocess
 import sys
@@ -7,31 +8,42 @@ from PySide6.QtCore import Qt, QTimer, QDate
 from PySide6.QtGui import QAction, QActionGroup
 from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox, QPushButton
 
-from src.services.data_service import DataService
-from src.services.excel_exchange_service import (
+from ....services.data_service import DataService
+from ....services.excel_exchange_service import (
     export_project_to_excel,
     export_terms_for_teachers_to_excel,
+    get_teacher_export_semester_options,
     get_teacher_export_options,
     import_project_from_excel,
+    import_tiss_rooms_from_excel,
 )
-from src.services.undo_service import UndoService
-from src.services.semester_tools_service import copy_semester_termine, delete_semester_termine
+from ....services.undo_service import UndoService
+from ....services.semester_tools_service import copy_semester_termine, delete_semester_termine
+from ....services.free_day_import_service import append_free_day_candidates
+from ....services.semester_rules import semester_from_id, semester_id_for_date
+from ....core.models import Raum
 
-from src.ui.docks.termine_dock import TermineDock
-from src.ui.docks.data_editor_dock import DataEditorDock
-from src.ui.docks.conflicts_dock import ConflictsDock
-from src.ui.docks.global_filter_dock import GlobalFilterDock
-from src.ui.docks.date_navigation_dock import DateNavigationDock
-from src.ui.utils.datetime_utils import date_to_qdate
-from src.core.states import FilterState
+from ...docks.termine_dock import TermineDock
+from ...docks.data_editor_dock import DataEditorDock
+from ...docks.conflicts_dock import ConflictsDock
+from ...docks.global_filter_dock import GlobalFilterDock
+from ...docks.date_navigation_dock import DateNavigationDock
+from ...utils.datetime_utils import date_to_qdate, qdate_to_date
+from ....core.states import FilterState
 from ...utils.crud_handlers import CrudHandlers
 from .layout_manager import LayoutManager
 from .shortcuts import install_main_window_shortcuts
-from src.ui.planner.workspace import PlannerWorkspace
-from src.ui.planner.termincard import TerminCard as PlannerTerminCard
-from ...dialogs import SettingsDialog, TeacherExportDialog, SemesterToolsDialog
-from src.ui.dialogs.konflikte_dialog import KonflikteDialog
-from src.ui.dialogs.import_dialog import ImportDialog
+from ...planner.workspace import PlannerWorkspace
+from ...planner.termincard import TerminCard as PlannerTerminCard
+from ...dialogs import (
+    SettingsDialog,
+    TeacherExportDialog,
+    SemesterToolsDialog,
+    FreeDayImportDialog,
+    TissRoomImportPreviewDialog,
+)
+from ...dialogs.konflikte_dialog import KonflikteDialog
+from ...dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
 
 
@@ -44,18 +56,12 @@ class MainWindow(QMainWindow):
     def _apply_start_date(self, start_date) -> None:
         """Synchronize planner and navigation controls to the same start day/week"""
 
-        monday = date_to_qdate(self.planner._align_to_monday(start_date))
         day_qdate = date_to_qdate(start_date)
 
+        self.date_navigation_dock.day_date.setDate(day_qdate)
         self.date_navigation_dock.view_cb.setCurrentIndex(
             self.date_navigation_dock.view_cb.findData("week")
         )
-        self.date_navigation_dock.week_from.setDate(monday)
-        self.date_navigation_dock.day_date.setDate(day_qdate)
-
-        self.planner.view_cb.setCurrentIndex(self.planner.view_cb.findData("week"))
-        self.planner.week_from.setDate(monday)
-        self.planner.day_date.setDate(day_qdate)
 
     @staticmethod
     def _read_json(path: Path, default):
@@ -70,7 +76,7 @@ class MainWindow(QMainWindow):
         """given a semester id, what date should the UI jump to
         """
 
-        sem_obj = next((s for s in self.ds.load_semester() if s.id == semester_id), None)
+        sem_obj = semester_from_id(semester_id)
         if sem_obj:
             return sem_obj.start
 
@@ -98,26 +104,20 @@ class MainWindow(QMainWindow):
         return str(tid) if tid else None
 
     def unassign_focused_calendar_termin(self) -> None:
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         tid = self._focused_calendar_termin_id()
         if tid:
             self._on_unassign_termin(tid)
 
     def delete_focused_calendar_termin(self) -> None:
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         tid = self._focused_calendar_termin_id()
         if tid and self.crud.del_termin_by_id(tid):
             self.refresh_everything()
-
-    def set_start_semester_and_reload(self, studienrichtung, semester):
-        s = self.ds.load_settings()
-        s["start_studienrichtung"] = studienrichtung
-        s["start_semester"] = semester
-        self.ds.save_settings(s)
-
-        self.refresh_everything()
-
-        start_date = self._resolve_start_date_for_semester(semester)
-        if start_date:
-            QTimer.singleShot(0, lambda: self._apply_start_date(start_date))
 
     def __init__(self, data_dir: Path):
         super().__init__()
@@ -126,6 +126,9 @@ class MainWindow(QMainWindow):
         self.undo_service.on_history_changed(self.update_undo_redo_actions)
         self.setWindowTitle("Planungstool")
         self.data_dir = data_dir
+        self._previous_year_enabled = False
+        self._previous_year_return_date: date | None = None
+        self._last_history_read_only_toast_at = 0.0
 
         self._build_menus()
 
@@ -210,17 +213,24 @@ class MainWindow(QMainWindow):
         self.act_refresh.triggered.connect(self.refresh_everything)
         file_menu.addAction(self.act_refresh)
 
-        self.act_export = QAction("Exportieren…", self)
-        self.act_export.triggered.connect(self.export_project)
-        file_menu.addAction(self.act_export)
+        import_export_menu = file_menu.addMenu("Import/Export")
 
+        self.act_import = QAction("Projekt importieren…", self)
+        self.act_import.triggered.connect(self.import_project)
+        import_export_menu.addAction(self.act_import)
+
+        self.act_export = QAction("Projekt exportieren…", self)
+        self.act_export.triggered.connect(self.export_project)
+        import_export_menu.addAction(self.act_export)
+
+        self.act_tiss_room_import = QAction("TISS-Raumliste importieren…", self)
+        self.act_tiss_room_import.triggered.connect(self.import_tiss_room_list)
+        import_export_menu.addAction(self.act_tiss_room_import)
+
+        import_export_menu.addSeparator()
         self.act_export_teachers = QAction("Export für Lehrende…", self)
         self.act_export_teachers.triggered.connect(self.export_teacher_terms)
-        file_menu.addAction(self.act_export_teachers)
-
-        self.act_import = QAction("Importieren…", self)
-        self.act_import.triggered.connect(self.import_project)
-        file_menu.addAction(self.act_import)
+        import_export_menu.addAction(self.act_export_teachers)
 
         edit_menu = mb.addMenu("Bearbeiten")
         self.act_undo = QAction("Rückgängig", self)
@@ -247,29 +257,34 @@ class MainWindow(QMainWindow):
         tools_menu.addAction(self.act_konflikte)
 
         tools_menu.addSeparator()
+        self.act_free_day_import = QAction("Freie Tage importieren…", self)
+        self.act_free_day_import.triggered.connect(self.open_free_day_import)
+        tools_menu.addAction(self.act_free_day_import)
+
         self.act_semester_tools = QAction("Semester-Werkzeuge…", self)
         self.act_semester_tools.triggered.connect(self.open_semester_tools)
         tools_menu.addAction(self.act_semester_tools)
 
     def create_data_editor_entity(self, entity: str) -> None:
+        if entity == "termin" and self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         self.data_editor_dock.create_entity(entity)
 
     def create_termin(self) -> None:
-        if self.crud.add_termin():
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
+        current_date = self._current_calendar_date()
+        if self.crud.add_termin(
+            default_qdate=date_to_qdate(current_date),
+            default_semester_id=self._semester_id_for_calendar_date(current_date),
+        ):
             self.refresh_everything()
 
     def jump_to_today(self) -> None:
         today = QDate.currentDate()
-        monday = today.addDays(1 - today.dayOfWeek())
-
         self.date_navigation_dock.day_date.setDate(today)
-
-        view = str(self.date_navigation_dock.view_cb.currentData())
-        if view == "month":
-            self.date_navigation_dock.week_from.setDate(QDate(today.year(), today.month(), 1))
-        else:
-            self.date_navigation_dock.week_from.setDate(monday)
-
         self.planner.refresh(emit=False)
 
     def open_konflikte_dialog(self):
@@ -279,12 +294,12 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def open_semester_tools(self) -> None:
+        current_date = self._current_calendar_date()
         dlg = SemesterToolsDialog(
             self,
             termine=self.ds.load_termine(),
             lvas=self.ds.load_lvas(),
-            semester=self.ds.load_semester(),
-            default_semester_id=self.ds.load_settings().get("start_semester"),
+            default_semester_id=self._semester_id_for_calendar_date(current_date),
         )
         if dlg.exec() != QDialog.Accepted or not dlg.result_request:
             return
@@ -318,6 +333,41 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Semester-Werkzeuge", f"Aktion konnte nicht ausgeführt werden: {e}")
 
+    def open_free_day_import(self) -> None:
+        default_from, default_to = self._default_free_day_import_range()
+        dlg = FreeDayImportDialog(
+            self,
+            existing_items=self.ds.load_freie_tage(),
+            default_from=default_from,
+            default_to=default_to,
+        )
+        if dlg.exec() != QDialog.Accepted or not dlg.selected_candidates:
+            return
+
+        try:
+            freie_tage = self.ds.load_freie_tage()
+            updated, changed_count = append_free_day_candidates(freie_tage, dlg.selected_candidates)
+            if changed_count <= 0:
+                Toast(self, "Keine neuen freien Tage gespeichert.", duration_ms=2500).show()
+                return
+
+            self.undo_service.record_snapshot(self.ds)
+            self.ds.save_freie_tage(updated)
+            self.refresh_everything()
+            Toast(self, f"{changed_count} freie Tage gespeichert.", duration_ms=3000).show()
+        except Exception as e:
+            QMessageBox.warning(self, "Freie Tage importieren", f"Freie Tage konnten nicht gespeichert werden: {e}")
+
+    def _default_free_day_import_range(self) -> tuple[date, date]:
+        year = self._current_calendar_date().year
+        return date(year, 1, 1), date(year, 12, 31)
+
+    def _current_calendar_date(self) -> date:
+        return qdate_to_date(self.date_navigation_dock.day_date.date())
+
+    def _semester_id_for_calendar_date(self, value: date) -> str:
+        return semester_id_for_date(value)
+
     def export_project(self) -> None:
         default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         files = [
@@ -339,7 +389,7 @@ class MainWindow(QMainWindow):
 
         fn, selected_filter = QFileDialog.getSaveFileName(
             self,
-            "Export Datei speichern",
+            "Projekt exportieren",
             str(self.data_dir / default_name),
             "Excel Files (*.xlsx);;JSON Files (*.json)",
             "Excel Files (*.xlsx)",
@@ -364,9 +414,73 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
 
+    def import_tiss_room_list(self) -> None:
+        fn, _ = QFileDialog.getOpenFileName(
+            self,
+            "TISS-Raumliste importieren",
+            str(self.data_dir),
+            "Excel Files (*.xlsx)",
+        )
+        if not fn:
+            return
+
+        try:
+            normalized = import_tiss_rooms_from_excel(Path(fn))
+        except Exception as e:
+            QMessageBox.warning(self, "TISS-Raumliste importieren", f"Raumliste konnte nicht gelesen werden: {e}")
+            return
+
+        rooms = normalized.get("raeume.json", {}).get("raeume", [])
+        dlg = TissRoomImportPreviewDialog(self, rooms)
+        if dlg.exec() != QDialog.Accepted:
+            return
+
+        selected_rooms = dlg.selected_rooms
+        if not selected_rooms:
+            Toast(self, "Keine Räume ausgewählt.", duration_ms=2500).show()
+            return
+
+        existing_rooms = self.ds.load_raeume()
+        existing_by_id = {room.id: room for room in existing_rooms}
+        room_order = [room.id for room in existing_rooms]
+
+        new_count = 0
+        update_count = 0
+        for item in selected_rooms:
+            room = Raum(
+                id=str(item.get("id", "")).strip(),
+                name=str(item.get("name", "")).strip(),
+                kapazitaet=int(item.get("kapazitaet", 0)),
+            )
+            if not room.id or not room.name:
+                continue
+            if room.id in existing_by_id:
+                if existing_by_id[room.id] != room:
+                    update_count += 1
+                existing_by_id[room.id] = room
+            else:
+                new_count += 1
+                existing_by_id[room.id] = room
+                room_order.append(room.id)
+
+        changed_count = new_count + update_count
+        if changed_count <= 0:
+            Toast(self, "Keine neuen oder geänderten Räume importiert.", duration_ms=2500).show()
+            return
+
+        self.undo_service.record_snapshot(self.ds)
+        self.ds.save_raeume([existing_by_id[room_id] for room_id in room_order])
+        Toast(
+            self,
+            f"{changed_count} Räume importiert ({new_count} neu, {update_count} geändert).",
+            duration_ms=3000,
+        ).show()
+        self.refresh_everything()
+
     def export_teacher_terms(self) -> None:
         try:
             teacher_options = get_teacher_export_options(self.data_dir)
+            semester_options = get_teacher_export_semester_options(self.data_dir)
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Lehrende konnten nicht geladen werden: {e}")
             return
@@ -375,10 +489,15 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Keine Lehrende", "Keine Lehrende gefunden.")
             return
 
-        dlg = TeacherExportDialog(teacher_options, self)
+        dlg = TeacherExportDialog(
+            teacher_options,
+            semester_options,
+            self,
+        )
         if dlg.exec() != QDialog.Accepted:
             return
         selected_teachers = dlg.selected_teachers()
+        selected_semesters = dlg.selected_semester_ids()
 
         selected_names = [name for name, _email in selected_teachers if name]
         if len(selected_names) == 1:
@@ -387,6 +506,9 @@ class MainWindow(QMainWindow):
             export_name = "_".join(selected_names)
         else:
             export_name = "Mehrere_Lehrende"
+        if selected_semesters:
+            semester_part = "_".join(selected_semesters) if len(selected_semesters) <= 2 else f"{len(selected_semesters)}_Semester"
+            export_name = f"{export_name}_{semester_part}"
         safe_export_name = "".join(
             char if char.isalnum() or char in (" ", "-", "_") else "_"
             for char in export_name
@@ -407,7 +529,12 @@ class MainWindow(QMainWindow):
             out_path = out_path.with_suffix(".xlsx")
 
         try:
-            export_terms_for_teachers_to_excel(self.data_dir, out_path, teacher_filter=selected_teachers)
+            export_terms_for_teachers_to_excel(
+                self.data_dir,
+                out_path,
+                teacher_filter=selected_teachers,
+                semester_filter=selected_semesters,
+            )
             Toast(self, "Export für Lehrende erstellt.", duration_ms=2500).show()
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export für Lehrende: {e}")
@@ -460,7 +587,7 @@ class MainWindow(QMainWindow):
     def import_project(self) -> None:
         fn, _ = QFileDialog.getOpenFileName(
             self,
-            "Import Datei öffnen",
+            "Projekt importieren",
             str(self.data_dir),
             "Excel/JSON Files (*.xlsx *.json);;Excel Files (*.xlsx);;JSON Files (*.json)",
         )
@@ -527,8 +654,8 @@ class MainWindow(QMainWindow):
         self.termine_dock.raise_()
 
     def _wire_signals(self) -> None:
-        self.termine_dock.termin_double_clicked.connect(self.crud.edit_termin_by_id)
-        self.termine_dock.termin_delete_clicked.connect(self.crud.del_termin_by_id)
+        self.termine_dock.termin_double_clicked.connect(self._edit_termin_by_id)
+        self.termine_dock.termin_delete_clicked.connect(self._delete_termin_by_id)
         self.termine_dock.termin_unassign_requested.connect(self._on_unassign_termin)
         self.termine_dock.termin_jump_requested.connect(self._on_jump_to_termin)
 
@@ -538,9 +665,7 @@ class MainWindow(QMainWindow):
 
         self.date_navigation_dock.navPrev.connect(self._on_nav_prev)
         self.date_navigation_dock.navNext.connect(self._on_nav_next)
-        self.date_navigation_dock.viewChanged.connect(self._on_view_changed)
-        self.date_navigation_dock.dayDateChanged.connect(self._on_day_date_changed)
-        self.date_navigation_dock.weekFromChanged.connect(self._on_week_from_changed)
+        self.date_navigation_dock.previousYearToggled.connect(self.set_previous_year_enabled)
 
     def _on_global_filters_changed(self, fs: FilterState) -> None:
         """Apply global filter changes and optionally jump to semester start"""
@@ -554,11 +679,42 @@ class MainWindow(QMainWindow):
         if fs.semester:
             start_date = self._resolve_start_date_for_semester(fs.semester)
             if start_date:
+                if self._previous_year_enabled:
+                    start_date = self._previous_year_date_for(start_date)
                 self._apply_start_date(start_date)
 
     def _on_unassign_termin(self, tid: str):
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
         if self.planner.crud.unassign_termin(tid):
             self.refresh_everything()
+
+    def _edit_termin_by_id(self, tid: str) -> None:
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
+        if self.crud.edit_termin_by_id(tid):
+            self.refresh_everything()
+
+    def _delete_termin_by_id(self, tid: str) -> None:
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
+        if self.crud.del_termin_by_id(tid):
+            self.refresh_everything()
+
+    def _show_history_read_only_toast(self) -> None:
+        now = monotonic()
+        if now - self._last_history_read_only_toast_at < 1.2:
+            return
+        self._last_history_read_only_toast_at = now
+        Toast(
+            self,
+            "Historie-Modus ist schreibgeschützt. Zum Bearbeiten Vorjahr ausschalten.",
+            duration_ms=2500,
+            kind="warning",
+        ).show()
 
     def _on_jump_to_termin(self, tid: str) -> None:
         self.planner.highlight_termine([tid])
@@ -569,14 +725,79 @@ class MainWindow(QMainWindow):
     def _on_nav_next(self) -> None:
         self.planner._shift_period(+1)
 
-    def _on_view_changed(self, _view: str) -> None:
-        self.planner._on_view_changed()
+    def previous_year_shortcut_mode(self) -> str:
+        mode = str(self.ds.load_settings().get("previous_year_shortcut_mode", "hold")).strip().lower()
+        return mode if mode in {"hold", "toggle"} else "hold"
 
-    def _on_day_date_changed(self, _date) -> None:
+    def toggle_previous_year(self) -> None:
+        self.set_previous_year_enabled(not self._previous_year_enabled)
+
+    def set_previous_year_enabled(self, enabled: bool) -> None:
+        enabled = bool(enabled)
+        if enabled == self._previous_year_enabled:
+            self._sync_previous_year_button()
+            return
+
+        current_date = self._current_calendar_date()
+        self._previous_year_enabled = enabled
+        self.planner.set_previous_year_enabled(enabled, refresh=False)
+        self._apply_previous_year_read_only()
+        if enabled:
+            self._previous_year_return_date = current_date
+            target_date = self._previous_year_date_for(current_date)
+        else:
+            target_date = self._previous_year_return_date or self._shift_year(current_date, 1)
+            self._previous_year_return_date = None
+        self.date_navigation_dock.day_date.setDate(date_to_qdate(target_date))
+        self._sync_previous_year_button()
         self.planner.refresh(emit=False)
 
-    def _on_week_from_changed(self, _date) -> None:
-        self.planner.refresh(emit=False)
+    def _apply_previous_year_read_only(self) -> None:
+        read_only = bool(self._previous_year_enabled)
+        self.act_new_termin.setEnabled(not read_only)
+        if hasattr(self.termine_dock, "set_read_only"):
+            self.termine_dock.set_read_only(read_only)
+        if hasattr(self.data_editor_dock, "set_termine_read_only"):
+            self.data_editor_dock.set_termine_read_only(read_only)
+
+    def _previous_year_date_for(self, value: date) -> date:
+        view = str(self.date_navigation_dock.view_cb.currentData())
+        if view == "week":
+            iso_year, iso_week, iso_weekday = value.isocalendar()
+            target_year = iso_year - 1
+            target_week = min(iso_week, self._weeks_in_iso_year(target_year))
+            return self._iso_week_start(target_year, target_week) + timedelta(days=iso_weekday - 1)
+        return self._shift_year(value, -1)
+
+    @staticmethod
+    def _weeks_in_iso_year(year: int) -> int:
+        return date(year, 12, 28).isocalendar().week
+
+    @staticmethod
+    def _iso_week_start(year: int, week: int) -> date:
+        jan4 = date(year, 1, 4)
+        first_monday = jan4 - timedelta(days=jan4.weekday())
+        return first_monday + timedelta(days=(week - 1) * 7)
+
+    @staticmethod
+    def _shift_year(value: date, years: int) -> date:
+        try:
+            return value.replace(year=value.year + years)
+        except ValueError:
+            return value.replace(year=value.year + years, day=28)
+
+    def _sync_previous_year_button(self) -> None:
+        btn = self.date_navigation_dock.previous_year_btn
+        btn.blockSignals(True)
+        try:
+            btn.setChecked(self._previous_year_enabled)
+        finally:
+            btn.blockSignals(False)
+        btn.setToolTip(
+            "Vorjahr ausblenden (Strg+Alt+V)"
+            if self._previous_year_enabled
+            else "Vorjahr anzeigen (Strg+Alt+V). Modus in den Einstellungen: gedrückt halten oder umschalten."
+        )
 
     def refresh_everything(self) -> None:
         # self.planner.refresh(emit=True) einen callback mehr

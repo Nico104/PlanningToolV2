@@ -27,6 +27,7 @@ def semester_lva_summaries(
 ) -> List[LvaTermSummary]:
     lva_by_id = {str(lva.id): lva for lva in lvas}
     counts: dict[str, int] = {}
+    types_by_lva: dict[str, set[str]] = {}
     for termin in termine:
         if str(getattr(termin, "semester_id", "")) != str(semester_id):
             continue
@@ -34,11 +35,14 @@ def semester_lva_summaries(
         if not lva_id:
             continue
         counts[lva_id] = counts.get(lva_id, 0) + 1
+        termin_type = str(getattr(termin, "typ", "") or "").strip()
+        if termin_type:
+            types_by_lva.setdefault(lva_id, set()).add(termin_type)
 
     summaries: List[LvaTermSummary] = []
     for lva_id, count in counts.items():
         lva = lva_by_id.get(lva_id)
-        typ_values = list(getattr(lva, "typ", []) or []) if lva else []
+        typ_values = sorted(types_by_lva.get(lva_id, set()))
         summaries.append(
             LvaTermSummary(
                 lva_id=lva_id,
