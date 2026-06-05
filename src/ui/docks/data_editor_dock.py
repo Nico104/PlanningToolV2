@@ -49,9 +49,12 @@ class DataEditorDock(QDockWidget):
         )
         self.tab_termine = EditorTab(
             "Termine",
-            ["Name", "Datum", "Datum bis", "Periodizität", "Von", "Bis", "Typ", "LVA-Nr.", "Raum", "Semester", "Gruppe", "ID"],
+            [
+                "Name", "Datum", "Datum bis", "Periodizität", "Von", "Bis", "Typ",
+                "LVA-Nr.", "Raum", "Semester", "Gruppe", "Zu besprechen", "Hinweis", "ID",
+            ],
             self.tabs,
-            id_column=11,
+            id_column=13,
         )
         self.tab_studiensemester = EditorTab(
             "Studiensemester",
@@ -262,6 +265,8 @@ class DataEditorDock(QDockWidget):
                 getattr(tm, "raum_id", ""),
                 getattr(tm, "semester_id", ""),
                 gruppe_str,
+                "Ja" if bool(getattr(tm, "zu_besprechen", False)) else "Nein",
+                getattr(tm, "besprechungshinweis", ""),
                 getattr(tm, "id", ""),
             ])
         self._fill_table(self.tab_termine.table, rows)

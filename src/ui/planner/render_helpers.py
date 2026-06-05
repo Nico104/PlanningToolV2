@@ -102,14 +102,25 @@ def place_termin_card(
     app_span_rows: int,
     border_px: int = 2,
 ) -> None:
-    row_height = table.rowHeight(row)
-    card_pixel_height = app_span_rows * row_height
-    inner_height = max(1, card_pixel_height - (2 * border_px))
+    def rows_height(start_row: int, count: int) -> int:
+        return sum(
+            max(0, table.rowHeight(start_row + i))
+            for i in range(max(0, count))
+            if 0 <= start_row + i < table.rowCount()
+        )
+
+    inset_px = 1
+    top_offset_px = rows_height(row, offset_rows)
+    card_pixel_height = rows_height(row + offset_rows, app_span_rows)
+    inner_height = max(1, card_pixel_height - (2 * inset_px))
     card.setFixedHeight(inner_height)
     card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-    top_offset_px = offset_rows * row_height
-    cell_widget.add_termin_card(card, top_offset_px=top_offset_px)
+    cell_widget.add_termin_card(
+        card,
+        top_offset_px=top_offset_px + inset_px,
+        bottom_margin_px=inset_px,
+    )
 
 
 def render_grouped_termine_column(
@@ -189,7 +200,14 @@ def render_grouped_termine_column(
             app_text = format_termin_text(app, lvas)
             typ = (app.typ or "").strip().upper()
             bg = next((color for k, color in TYPE_COLORS if typ == k), DEFAULT_BG)
-            card = TerminCard(app.id, app_text, bg, card_parent)
+            card = TerminCard(
+                app.id,
+                app_text,
+                bg,
+                card_parent,
+                zu_besprechen=bool(getattr(app, "zu_besprechen", False)),
+                besprechungshinweis=str(getattr(app, "besprechungshinweis", "") or ""),
+            )
             card.set_read_only(read_only)
             card.doubleClicked.connect(edit_by_id_cb)
 

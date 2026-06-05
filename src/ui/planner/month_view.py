@@ -119,6 +119,7 @@ class PlannerMonthView:
                     self.table.setCellWidget(r, c, w)
                 else:
                     items = by_date.get(d, [])
+                    discuss_count = sum(1 for item in items if bool(getattr(item, "zu_besprechen", False)))
                     day_info = free_days.get(d)
                     day_type = day_info.day_type if day_info else None
 
@@ -143,8 +144,15 @@ class PlannerMonthView:
                         type_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
                         lay.addWidget(type_lbl)
                     lay.addWidget(count_lbl)
+                    if discuss_count:
+                        discuss_lbl = QLabel(f"! {discuss_count}")
+                        discuss_lbl.setObjectName("MonthDiscussCount")
+                        discuss_lbl.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+                        discuss_lbl.setToolTip(f"{discuss_count} Termin(e) zu besprechen")
+                        lay.addWidget(discuss_lbl)
                     w.setProperty("day_ids", [str(t.id) for t in items])
                     w.setProperty("day_date", d)
+                    w.setProperty("zuBesprechen", bool(discuss_count))
                     w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
                     if day_type == "feiertag":

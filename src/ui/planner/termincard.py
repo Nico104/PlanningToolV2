@@ -15,10 +15,21 @@ class TerminCard(QLabel):
     _focused_card_ref: weakref.ref | None = None
     _highlighted_refs: list[weakref.ref] = []
 
-    def __init__(self, termin_id: str, text: str, bg_color: QColor, parent=None):
-        super().__init__(text, parent)
+    def __init__(
+        self,
+        termin_id: str,
+        text: str,
+        bg_color: QColor,
+        parent=None,
+        zu_besprechen: bool = False,
+        besprechungshinweis: str = "",
+    ):
+        display_text = f"! {text}" if zu_besprechen else text
+        super().__init__(display_text, parent)
         self.termin_id = termin_id
         self.bg_color = bg_color
+        self._zu_besprechen = bool(zu_besprechen)
+        self._besprechungshinweis = str(besprechungshinweis or "").strip()
         self._focused = False 
         self._highlighted = False
         self._read_only = False
@@ -36,6 +47,11 @@ class TerminCard(QLabel):
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFocusPolicy(Qt.StrongFocus)
+        if self._zu_besprechen:
+            tooltip = "Zu besprechen"
+            if self._besprechungshinweis:
+                tooltip = f"{tooltip}\n{self._besprechungshinweis}"
+            self.setToolTip(tooltip)
 
     def set_read_only(self, read_only: bool) -> None:
         self._read_only = bool(read_only)
@@ -47,7 +63,12 @@ class TerminCard(QLabel):
             cb()
 
     def _apply_style(self) -> None:
-        border = "border: 2px solid #111111;" if (self._focused or self._highlighted) else "border: none;"
+        if self._focused or self._highlighted:
+            border = "border: 2px solid #111111;"
+        elif self._zu_besprechen:
+            border = "border: 2px solid #d98200;"
+        else:
+            border = "border: none;"
         self.setStyleSheet(self._base_style + border)
 
     @classmethod

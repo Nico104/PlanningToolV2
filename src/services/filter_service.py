@@ -14,6 +14,7 @@ def filter_termine(
     typ: Optional[str] = None,
     dozent: Optional[str] = None,
     studienrichtung: Optional[str] = None,
+    zu_besprechen: bool = False,
     datum: Optional[str] = None,
     lva_dict: Optional[dict] = None,
 ) -> List[Termin]:
@@ -75,6 +76,8 @@ def filter_termine(
         if lva_dict is None:
             raise ValueError("Für den Dozent-Filter muss lva_dict (lva_id → LVA-Objekt) übergeben werden.")
         out = [t for t in out if t.lva_id in lva_dict and getattr(lva_dict[t.lva_id].vortragende, 'name', None) == dozent]
+    if zu_besprechen:
+        out = [t for t in out if bool(getattr(t, "zu_besprechen", False))]
     if datum:
         out = [t for t in out if t.datum is not None and t.datum.isoformat() == datum]
 

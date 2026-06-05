@@ -17,6 +17,12 @@ QTableWidget#PlannerTable QLabel#MonthDayCount {
   font-size: 11px;
 }
 
+QTableWidget#PlannerTable QLabel#MonthDiscussCount {
+  color: #8a4d00;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 QTableWidget#PlannerTable QWidget[monthConflictHighlight="true"] {
   border: 2px solid #111111;
   border-radius: 6px;
@@ -370,9 +376,19 @@ QFrame#TerminCard {
   border-radius: 10px;
 }
 
+QFrame#TerminCard[zuBesprechen="true"] {
+  background: #fffaf0;
+  border: 1px solid #d98200;
+}
+
 QFrame#TerminCard:hover {
   border: 1px solid #8fb0e9;
   background: #f3f8ff;
+}
+
+QFrame#TerminCard[zuBesprechen="true"]:hover {
+  border: 1px solid #c16f00;
+  background: #fff5df;
 }
 
 QLabel#CardTitle {
@@ -417,6 +433,16 @@ QLabel#ChipAP {
   border-radius: 4px;
   padding: 1px 7px;
   color: #34425a;
+  font-weight: 600;
+  font-size: 9px;
+}
+
+QLabel#ChipDiscuss {
+  background: #fff3d8;
+  border: 1px solid #e0a33a;
+  border-radius: 4px;
+  padding: 1px 7px;
+  color: #6b4300;
   font-weight: 600;
   font-size: 9px;
 }
@@ -494,9 +520,28 @@ QLabel#DayRoomPagerLabel {
 QWidget#HeaderBar QComboBox,
 QWidget#HeaderBar QDateEdit,
 QWidget#HeaderBar QLineEdit,
-QWidget#HeaderBar QPushButton {
+QWidget#HeaderBar QPushButton,
+QWidget#HeaderBar QCheckBox {
   min-height: 32px;
   font-size: 12px;
+}
+
+QWidget#HeaderBar QCheckBox {
+  color: #111111;
+  spacing: 7px;
+}
+
+QWidget#HeaderBar QCheckBox::indicator {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1px solid #d8d8d8;
+  background: #ffffff;
+}
+
+QWidget#HeaderBar QCheckBox::indicator:checked {
+  background: #111111;
+  border: 1px solid #111111;
 }
 
 
@@ -853,9 +898,19 @@ QFrame#DayEventCard {
   border-radius: 8px;
 }
 
+QFrame#DayEventCard[zuBesprechen="true"] {
+  background: #fffaf0;
+  border: 1px solid #d98200;
+}
+
 QFrame#DayEventCard:hover {
   background: #fafafa;
   border: 1px solid #d9d9d9;
+}
+
+QFrame#DayEventCard[zuBesprechen="true"]:hover {
+  background: #fff5df;
+  border: 1px solid #c16f00;
 }
 
 QFrame#DayEventCard:focus {
@@ -1069,6 +1124,7 @@ QDialog#AppDialog QDateEdit#Field,
 QDialog#AppDialog QDateEdit#DateEdit,
 QDialog#AppDialog QTimeEdit#Field,
 QDialog#AppDialog QSpinBox#Field,
+QDialog#AppDialog QTextEdit#DiscussionField,
 QDialog#AppDialog QTextEdit#Field {
   background: #ffffff;
   border: 1px solid #e5e5e5;
@@ -1089,6 +1145,7 @@ QDialog#AppDialog QDateEdit#Field:hover,
 QDialog#AppDialog QDateEdit#DateEdit:hover,
 QDialog#AppDialog QTimeEdit#Field:hover,
 QDialog#AppDialog QSpinBox#Field:hover,
+QDialog#AppDialog QTextEdit#DiscussionField:hover,
 QDialog#AppDialog QTextEdit#Field:hover {
   background: #ffffff;
   border: 1px solid #d9d9d9;
@@ -1100,6 +1157,7 @@ QDialog#AppDialog QDateEdit#Field:focus,
 QDialog#AppDialog QDateEdit#DateEdit:focus,
 QDialog#AppDialog QTimeEdit#Field:focus,
 QDialog#AppDialog QSpinBox#Field:focus,
+QDialog#AppDialog QTextEdit#DiscussionField:focus,
 QDialog#AppDialog QTextEdit#Field:focus {
   background: #ffffff;
   border: 1px solid #111111;
@@ -1111,6 +1169,7 @@ QDialog#AppDialog QDateEdit#Field:disabled,
 QDialog#AppDialog QDateEdit#DateEdit:disabled,
 QDialog#AppDialog QTimeEdit#Field:disabled,
 QDialog#AppDialog QSpinBox#Field:disabled,
+QDialog#AppDialog QTextEdit#DiscussionField:disabled,
 QDialog#AppDialog QTextEdit#Field:disabled {
   background: #f5f5f5;
   border: 1px solid #e1e1e1;
@@ -1258,7 +1317,35 @@ QDockWidget::float-button:hover {
   border-radius: 4px;
 }
 
+QDockWidget#dock_date_navigation {
+  border: none;
+}
 
+QDockWidget#dock_date_navigation::title {
+  background: transparent;
+  border: none;
+  padding: 0px;
+}
+
+QWidget#NavigationDockPanel {
+  background: #ffffff;
+  border: 0.75px solid #5c6e6e6e;
+  /* border-radius: 4px; */
+}
+
+QLabel#NavigationDockTitle {
+  background: #fafafa;
+  color: #111111;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #dbe3ef;
+}
+
+QDockWidget#dock_date_navigation QWidget#HeaderBar {
+  background: #ffffff;
+  border: none;
+}
 
 QSpinBox,
 QDoubleSpinBox,

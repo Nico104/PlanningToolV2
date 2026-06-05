@@ -3,6 +3,8 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QWidget,
     QHBoxLayout,
+    QVBoxLayout,
+    QLabel,
     QPushButton,
     QDateEdit,
     QSizePolicy,
@@ -24,8 +26,23 @@ class DateNavigationDock(QDockWidget):
         self.setAllowedAreas(Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
         self._syncing_navigation = False
 
-        self._widget = QWidget(self)
+        title_bar = QWidget(self)
+        title_bar.setFixedHeight(0)
+        self.setTitleBarWidget(title_bar)
+
+        self._panel = QWidget(self)
+        self._panel.setObjectName("NavigationDockPanel")
+        panel_lay = QVBoxLayout(self._panel)
+        panel_lay.setContentsMargins(1, 1, 1, 1)
+        panel_lay.setSpacing(0)
+
+        self._title_label = QLabel("Navigation", self._panel)
+        self._title_label.setObjectName("NavigationDockTitle")
+        panel_lay.addWidget(self._title_label)
+
+        self._widget = QWidget(self._panel)
         self._widget.setObjectName("HeaderBar")
+        panel_lay.addWidget(self._widget)
 
         headerBar = QHBoxLayout(self._widget)
         headerBar.setContentsMargins(6, 6, 6, 6)
@@ -106,7 +123,7 @@ class DateNavigationDock(QDockWidget):
         self.month_year_cb.currentIndexChanged.connect(self._on_month_year_changed)
         self.month_name_cb.currentIndexChanged.connect(self._on_month_name_changed)
 
-        self.setWidget(self._widget)
+        self.setWidget(self._panel)
 
         self._populate_week_year_selector()
         self._populate_month_year_selector()

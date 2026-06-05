@@ -626,6 +626,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.TopDockWidgetArea, self.date_navigation_dock)
 
         self.splitDockWidget(self.global_filter_dock, self.date_navigation_dock, Qt.Horizontal)
+        # QTimer.singleShot(0, self._resize_top_docks_to_content)
 
         self.planner = PlannerWorkspace(
             self,
@@ -666,6 +667,15 @@ class MainWindow(QMainWindow):
         self.date_navigation_dock.navPrev.connect(self._on_nav_prev)
         self.date_navigation_dock.navNext.connect(self._on_nav_next)
         self.date_navigation_dock.previousYearToggled.connect(self.set_previous_year_enabled)
+
+    # def _resize_top_docks_to_content(self) -> None:
+    #     filter_width = self.global_filter_dock.widget().sizeHint().width() + 8
+    #     navigation_width = self.date_navigation_dock.widget().sizeHint().width() + 10
+    #     self.resizeDocks(
+    #         [self.global_filter_dock, self.date_navigation_dock],
+    #         [max(filter_width, self.width() - navigation_width), navigation_width],
+    #         Qt.Horizontal,
+    #     )
 
     def _on_global_filters_changed(self, fs: FilterState) -> None:
         """Apply global filter changes and optionally jump to semester start"""
@@ -860,6 +870,7 @@ class MainWindow(QMainWindow):
             typ=self.global_filter_dock.typ_cb.currentData() or None,
             dozent=self.global_filter_dock.dozent_cb.currentData() or None,
             studiensemester=self.global_filter_dock.studiensemester_cb.currentData() or None,
+            zu_besprechen=bool(self.global_filter_dock.zu_besprechen_cb.isChecked()),
         )
 
         terms = self._compute_filtered_termine(self.filter_state)
@@ -881,6 +892,7 @@ class MainWindow(QMainWindow):
             studienrichtung = fs.studienrichtung
             semester_id = fs.semester
             studiensemester = getattr(fs, "studiensemester", None)
+            zu_besprechen = bool(getattr(fs, "zu_besprechen", False))
         else:
             filters = self.planner.current_filters()
             room = filters["raum_id"]
@@ -890,6 +902,7 @@ class MainWindow(QMainWindow):
             studienrichtung = filters["studienrichtung"]
             semester_id = filters["semester_id"]
             studiensemester = filters["studiensemester"]
+            zu_besprechen = bool(filters.get("zu_besprechen", False))
 
         terms = self.planner.state.filtered_termine(
             raum_id=room,
@@ -899,5 +912,6 @@ class MainWindow(QMainWindow):
             studienrichtung=studienrichtung,
             semester_id=semester_id,
             studiensemester=studiensemester,
+            zu_besprechen=zu_besprechen,
         )
         return terms

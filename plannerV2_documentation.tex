@@ -184,7 +184,7 @@ Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software
 \hline
 Terminverwaltung & Termine sollen erstellt, bearbeitet und gelöscht werden können. \\
 \hline
-Datenverwaltung & Lehrveranstaltungen, Räume, Semester, Fachrichtungen und weitere Daten sollen verwaltet werden können. \\
+Datenverwaltung & Lehrveranstaltungen, Räume, Semester, Studienrichtungen und weitere Daten sollen verwaltet werden können. \\
 \hline
 Terminzuordnung & Termine sollen mit Lehrveranstaltungen, Räumen, Semestern oder Gruppen verbunden werden können. \\
 \hline
@@ -276,7 +276,7 @@ Die grundlegende Aufteilung der Benutzeroberfläche ist in Abbildung \ref{fig:ha
 
 Dadurch wird sichtbar, dass die Kalenderansicht den zentralen Arbeitsbereich bildet, während andere Bereiche wie Terminliste, Filter und Konfliktanzeige als Docks am Rand angeordnet sind.
 
-Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Semester, Fachrichtungen oder freie Tage zu erstellen, zu bearbeiten oder zu löschen.
+Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Semester, Studienrichtungen oder freie Tage zu erstellen, zu bearbeiten oder zu löschen.
 
 Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrveranstaltung, Raum, Dozent oder Semester. Die Konfliktanzeige zeigt eine interaktive Liste aller aktuellen Planungskonflikte. Mit dem Navigationsbereich kann der Benutzer beliebig zwischen den Ansichten wechseln und innerhalb der jeweiligen Zeitintervalle navigieren.
 
@@ -284,7 +284,7 @@ Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrvera
 
 Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen die Termine, da sie die eigentlichen Planungseinträge darstellen. Ein Termin besteht aber nicht nur aus einem Datum und einer Uhrzeit, sondern ist mit weiteren Informationen verbunden. Dazu gehören zum Beispiel die zugehörige LVA, ein Raum, ein Semester, ein Veranstaltungstyp oder eine Gruppe.
 
-Neben den Terminen gibt es noch andere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Semester, geplante Semester, Fachrichtungen und freie Tage. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
+Neben den Terminen gibt es noch andere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Semester, geplante Semester, Studienrichtungen und freie Tage. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
 
 Die Verbindung zwischen den Daten erfolgt über IDs. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
 
@@ -445,7 +445,7 @@ Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von
 
 \subsection{Termin- und Stammdatenverwaltung}
 
-Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören nicht nur einzelne Termine, sondern auch Lehrveranstaltungen, Semester, Räume, Fachrichtungen, freie Tage und geplante Semester.
+Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören nicht nur einzelne Termine, sondern auch Lehrveranstaltungen, Semester, Räume, Studienrichtungen, freie Tage und geplante Semester.
 
 Der Dateneditor ist in Abbildung \ref{fig:dateneditor} dargestellt.
 

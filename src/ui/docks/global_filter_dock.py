@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 
 from ..components.widgets.tight_combobox import TightComboBox
 from ..components.widgets.semester_selector import SemesterSelector
+from ..components.widgets.tick_checkbox import TickCheckBox
 from ...core.states import FilterState
 
 
@@ -77,6 +78,12 @@ class GlobalFilterDock(QDockWidget):
         self.studiensemester_cb.setObjectName("HeaderCombo")
         headerBar.addWidget(self.studiensemester_cb)
 
+        self.zu_besprechen_cb = TickCheckBox("Zu besprechen")
+        self.zu_besprechen_cb.setToolTip("Nur Termine anzeigen, die als zu besprechen markiert sind")
+        self.zu_besprechen_cb.setObjectName("HeaderCheck")
+        self.zu_besprechen_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        headerBar.addWidget(self.zu_besprechen_cb)
+
         self.studienrichtung_cb.currentIndexChanged.connect(self._on_change)
         self.semester_selector.semesterChanged.connect(self._on_change)
         self.lva_cb.currentIndexChanged.connect(self._on_change)
@@ -84,6 +91,7 @@ class GlobalFilterDock(QDockWidget):
         self.typ_cb.currentIndexChanged.connect(self._on_change)
         self.room_cb.currentIndexChanged.connect(self._on_change)
         self.studiensemester_cb.currentIndexChanged.connect(self._on_change)
+        self.zu_besprechen_cb.toggled.connect(self._on_change)
 
         self.setWidget(self._widget)
 
@@ -96,6 +104,7 @@ class GlobalFilterDock(QDockWidget):
             typ=self.typ_cb.currentData() or None,
             dozent=self.dozent_cb.currentData() or None,
             studiensemester=self.studiensemester_cb.currentData() or None,
+            zu_besprechen=bool(self.zu_besprechen_cb.isChecked()),
         )
         self.filtersChanged.emit(fs)
 
@@ -117,6 +126,11 @@ class GlobalFilterDock(QDockWidget):
         cur_typ = current.typ if current else None
         cur_dozent = current.dozent if current else None
         cur_studiensemester = current.studiensemester if current else None
+        cur_zu_besprechen = bool(getattr(current, "zu_besprechen", False)) if current else False
+
+        self.zu_besprechen_cb.blockSignals(True)
+        self.zu_besprechen_cb.setChecked(cur_zu_besprechen)
+        self.zu_besprechen_cb.blockSignals(False)
 
         sem_id_to_display = {}
         for item in studiensemester_list or []:

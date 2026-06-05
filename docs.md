@@ -118,9 +118,9 @@ Global shortcuts (registered in `shortcuts.py`):
 - Ctrl+Alt+F: new free day
 - Ctrl+Alt+G: new Studiensemester
 - Ctrl+Alt+H: new Studienrichtung
-- Ctrl+Comma: settings
-- Ctrl+O: import
-- Ctrl+Shift+E: export
+- Ctrl+Shift+S: settings
+- Ctrl+I: import
+- Ctrl+E: export
 - Ctrl+Shift+R: reset layouts
 - Ctrl+Shift+K: open conflict settings
 

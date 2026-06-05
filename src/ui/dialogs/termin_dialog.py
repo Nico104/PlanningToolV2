@@ -195,7 +195,7 @@ class TerminDialog(QDialog):
         form.addRow("Raum:", self.raum_cb)
         form.addRow("Gruppe Name:", self.grp_name)
         form.addRow("Gruppe Größe:", self.grp_size)
-        form.addRow("", self.ap_cb)
+        # form.addRow("", self.ap_cb)
         form.addRow("Notiz:", self.note_te)
         # Serientermin-Optionen nur beim Neuanlegen anzeigen
         if self.termin is None:

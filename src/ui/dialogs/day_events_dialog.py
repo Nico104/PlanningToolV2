@@ -72,6 +72,8 @@ class DayEventsDialog(QDialog):
                 typ=t.typ,
                 raum_id=t.raum_id,
                 name=t.name,
+                zu_besprechen=bool(getattr(t, "zu_besprechen", False)),
+                besprechungshinweis=str(getattr(t, "besprechungshinweis", "") or ""),
             )
             hint = row_widget.sizeHint()
             hint.setHeight(hint.height() + 16)
@@ -95,10 +97,26 @@ class DayEventsDialog(QDialog):
 
         self.resize(480, 360)
 
-    def _build_row_widget(self, *, start: str, end: str, typ: str, raum_id: str, name: str) -> QWidget:
+    def _build_row_widget(
+        self,
+        *,
+        start: str,
+        end: str,
+        typ: str,
+        raum_id: str,
+        name: str,
+        zu_besprechen: bool = False,
+        besprechungshinweis: str = "",
+    ) -> QWidget:
         # use a frame so we can style it like a card
         row = QFrame(self.listw)
         row.setObjectName("DayEventCard")
+        row.setProperty("zuBesprechen", bool(zu_besprechen))
+        if zu_besprechen:
+            tooltip = "Zu besprechen"
+            if besprechungshinweis:
+                tooltip = f"{tooltip}\n{besprechungshinweis}"
+            row.setToolTip(tooltip)
         layout = QVBoxLayout(row)
         layout.setContentsMargins(12, 8, 12, 8)
         layout.setSpacing(4)
@@ -126,6 +144,8 @@ class DayEventsDialog(QDialog):
             meta_parts.append(typ)
         if raum_id:
             meta_parts.append(raum_id)
+        if zu_besprechen:
+            meta_parts.append("! Zu besprechen")
         meta_lbl = QLabel(" • ".join(meta_parts) if meta_parts else "", row)
         meta_lbl.setObjectName("DayEventMeta")
         layout.addWidget(meta_lbl)

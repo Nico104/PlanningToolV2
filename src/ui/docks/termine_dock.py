@@ -122,6 +122,8 @@ class TermineDock(QDockWidget):
             lva.name if lva else "",
             raum.name if raum else "",
             dozent,
+            getattr(termin, "besprechungshinweis", ""),
+            "zu besprechen" if bool(getattr(termin, "zu_besprechen", False)) else "",
         ]
         return self._normalize(" ".join(parts))
 
@@ -265,6 +267,8 @@ class TermineDock(QDockWidget):
                     duration=t.duration,
                     name=getattr(t, "name", None),
                     parent=self.container,
+                    zu_besprechen=bool(getattr(t, "zu_besprechen", False)),
+                    besprechungshinweis=str(getattr(t, "besprechungshinweis", "") or ""),
                 )
 
                 if hasattr(card, "set_read_only"):

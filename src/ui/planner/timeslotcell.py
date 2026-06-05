@@ -21,11 +21,16 @@ class TimeSlotCell(QWidget):
 
         self.setStyleSheet("background-color: transparent;")
 
-    def add_termin_card(self, card: TerminCard, top_offset_px: int = 0) -> None:
+    def add_termin_card(
+        self,
+        card: TerminCard,
+        top_offset_px: int = 0,
+        bottom_margin_px: int = 0,
+    ) -> None:
         wrapper = QWidget(self)
         wrapper.setContentsMargins(0, 0, 0, 0)
         vbox = QVBoxLayout(wrapper)
-        vbox.setContentsMargins(0, max(0, top_offset_px), 0, 0)
+        vbox.setContentsMargins(0, max(0, top_offset_px), 0, max(0, bottom_margin_px))
         vbox.setSpacing(0)
         vbox.addWidget(card)
         self.layout.addWidget(wrapper, 1, Qt.AlignTop)

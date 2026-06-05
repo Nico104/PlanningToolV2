@@ -36,7 +36,7 @@ class PlannerState:
         self.settings = self.ds.load_settings()
         self.ts = TerminService(self.settings)
 
-    def filtered_termine(self, raum_id: Optional[str], typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, studiensemester: Optional[str] = None, lva_id: Optional[str] = None, studienrichtung: Optional[str] = None) -> List[Termin]:
+    def filtered_termine(self, raum_id: Optional[str], typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, studiensemester: Optional[str] = None, lva_id: Optional[str] = None, studienrichtung: Optional[str] = None, zu_besprechen: bool = False) -> List[Termin]:
         lva_dict = {lva.id: lva for lva in self.lvas}
         out = filter_termine(
             self.termine,
@@ -47,6 +47,7 @@ class PlannerState:
             typ=typ,
             dozent=dozent,
             studienrichtung=studienrichtung,
+            zu_besprechen=zu_besprechen,
             lva_dict=lva_dict,
         )
         return out

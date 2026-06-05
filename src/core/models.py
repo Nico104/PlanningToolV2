@@ -67,6 +67,8 @@ class Termin:
     gruppe: Optional[Gruppe]
     anwesenheitspflicht: bool
     notiz: str = ""
+    zu_besprechen: bool = False
+    besprechungshinweis: str = ""
     duration: int = 0  # duration in minutes
     semester_id: str = ""
     datum_bis: Optional[date] = None

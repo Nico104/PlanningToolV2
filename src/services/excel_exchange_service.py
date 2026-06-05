@@ -55,6 +55,8 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "semester_id",
             "ausfall_daten",
             "notiz",
+            "zu_besprechen",
+            "besprechungshinweis",
         ],
     },
     "studienrichtungen.json": {
@@ -86,6 +88,8 @@ _EXCEL_HEADER_LABELS: Dict[str, str] = {
     "lehrveranstaltungen.json:studiensemester": "Studiensemester",
     "lehrveranstaltungen.json:ects": "ECTS",
     "termine.json:lva_id": "LVA-Nr.",
+    "termine.json:zu_besprechen": "Zu besprechen",
+    "termine.json:besprechungshinweis": "Hinweis",
 }
 
 _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
@@ -114,6 +118,11 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
     "termine.json": {
         "LVA-Nr": "lva_id",
         "LVA-Nummer": "lva_id",
+        "Zu besprechen": "zu_besprechen",
+        "ZuBesprechen": "zu_besprechen",
+        "Besprechen": "zu_besprechen",
+        "Hinweis": "besprechungshinweis",
+        "Besprechungshinweis": "besprechungshinweis",
     },
 }
 
@@ -233,7 +242,7 @@ def _serialize_cell(value: Any) -> Any:
     if isinstance(value, list):
         return ";".join(str(v) for v in value)
     if isinstance(value, bool):
-        return "true" if value else "false"
+        return "Ja" if value else "Nein"
     return value
 
 
@@ -404,6 +413,8 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
         entry["studiensemester"] = _parse_list(entry.get("studiensemester"))
     elif file_name == "termine.json":
         entry["notiz"] = str(entry.get("notiz", ""))
+        entry["zu_besprechen"] = _parse_bool(entry.get("zu_besprechen"))
+        entry["besprechungshinweis"] = str(entry.get("besprechungshinweis", ""))
         entry["raum_id"] = str(entry.get("raum_id", ""))
         entry["semester_id"] = str(entry.get("semester_id", ""))
         period = str(entry.get("periodizitaet", "") or "").strip()
@@ -710,6 +721,8 @@ def export_terms_for_teachers_to_excel(
         "Gruppe",
         "Gruppengröße",
         "Anwesenheitspflicht",
+        "Zu besprechen",
+        "Hinweis",
     ]
 
     teacher_filter_set = (
@@ -771,6 +784,8 @@ def export_terms_for_teachers_to_excel(
             "Beginn": start.strftime("%H:%M") if start else "",
             "Ende": ende.strftime("%H:%M") if ende else "",
             "Anwesenheitspflicht": "Ja" if bool(termin.get("anwesenheitspflicht", False)) else "Nein",
+            "Zu besprechen": "Ja" if _parse_bool(termin.get("zu_besprechen")) else "Nein",
+            "Hinweis": _safe_text(termin.get("besprechungshinweis")),
         }
 
         (rows_by_teacher[(teacher_name, teacher_email)] if teacher_name else rows_without_teacher).append(row)

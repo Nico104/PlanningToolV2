@@ -67,6 +67,13 @@ class DataService:
             return None
         return text
 
+    @staticmethod
+    def _parse_bool(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        text = str(value or "").strip().lower()
+        return text in {"1", "true", "wahr", "yes", "ja"}
+
     def load_raeume(self) -> List[Raum]:
         raw = self._read("raeume.json")["raeume"]
         return [Raum(id=x["id"], name=x["name"], kapazitaet=int(x["kapazitaet"])) for x in raw]
@@ -129,8 +136,10 @@ class DataService:
                     groesse=int(g.get("groesse", 0)) if g else 0,
                 ) if g is not None else None
             ),
-            anwesenheitspflicht=bool(x.get("anwesenheitspflicht", False)),
+            anwesenheitspflicht=self._parse_bool(x.get("anwesenheitspflicht", False)),
             notiz=x.get("notiz", ""),
+            zu_besprechen=self._parse_bool(x.get("zu_besprechen", False)),
+            besprechungshinweis=str(x.get("besprechungshinweis", "") or ""),
             duration=int(x.get("duration", 0)),
             semester_id=x.get("semester_id", ""),
             datum_bis=self._parse_optional_date(x.get("datum_bis")),
@@ -187,6 +196,8 @@ class DataService:
                 ),
                 "anwesenheitspflicht": t.anwesenheitspflicht,
                 "notiz": t.notiz,
+                "zu_besprechen": bool(getattr(t, "zu_besprechen", False)),
+                "besprechungshinweis": str(getattr(t, "besprechungshinweis", "") or ""),
                 "duration": t.duration,
                 "semester_id": t.semester_id,
                 "datum_bis": self._fmt_date(t.datum_bis) if t.datum_bis is not None else None,

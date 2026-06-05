@@ -13,3 +13,4 @@ class FilterState:
     typ: Optional[str] = None
     dozent: Optional[str] = None
     studiensemester: Optional[str] = None
+    zu_besprechen: bool = False

@@ -227,6 +227,7 @@ class PlannerWorkspace(QWidget):
                 "studienrichtung": None,
                 "semester_id": None,
                 "studiensemester": None,
+                "zu_besprechen": False,
             }
         return {
             "raum_id": gf.raum_id,
@@ -236,6 +237,7 @@ class PlannerWorkspace(QWidget):
             "studienrichtung": getattr(gf, "studienrichtung", None),
             "semester_id": getattr(gf, "semester", None),
             "studiensemester": getattr(gf, "studiensemester", None),
+            "zu_besprechen": bool(getattr(gf, "zu_besprechen", False)),
         }
 
     def refresh(self, emit: bool = True):
@@ -251,6 +253,7 @@ class PlannerWorkspace(QWidget):
             studienrichtung=filters_for_planner["studienrichtung"],
             semester_id=filters_for_planner["semester_id"],
             studiensemester=filters_for_planner["studiensemester"],
+            zu_besprechen=filters_for_planner["zu_besprechen"],
         )
         expanded = expand_termine(filtered)
 

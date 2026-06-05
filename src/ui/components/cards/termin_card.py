@@ -21,15 +21,25 @@ class TerminCard(QFrame):
         duration: int = 0,
         name: str = None,
         parent=None,
+        zu_besprechen: bool = False,
+        besprechungshinweis: str = "",
     ):
         super().__init__(parent)
         self.termin_id = termin_id
         self._press_pos: QPoint | None = None
         self._read_only = False
+        self._zu_besprechen = bool(zu_besprechen)
+        self._besprechungshinweis = str(besprechungshinweis or "").strip()
 
         self.setObjectName("TerminCard")
+        self.setProperty("zuBesprechen", self._zu_besprechen)
         self.setCursor(Qt.PointingHandCursor)
         self.setAttribute(Qt.WA_StyledBackground, True)
+        if self._zu_besprechen:
+            tooltip = "Zu besprechen"
+            if self._besprechungshinweis:
+                tooltip = f"{tooltip}\n{self._besprechungshinweis}"
+            self.setToolTip(tooltip)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
@@ -64,6 +74,11 @@ class TerminCard(QFrame):
             chips.addWidget(chip("AP", "ChipAP"))
         if duration > 0:
             chips.addWidget(chip(f"{duration} min", "ChipDuration"))
+        if self._zu_besprechen:
+            discuss_chip = chip("Zu besprechen", "ChipDiscuss")
+            if self._besprechungshinweis:
+                discuss_chip.setToolTip(self._besprechungshinweis)
+            chips.addWidget(discuss_chip)
 
         chips.addStretch(1)
         root.addLayout(chips)
