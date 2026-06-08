@@ -2,6 +2,7 @@ from datetime import date, time, timedelta
 from typing import List, Optional, Dict
 
 from PySide6.QtCore import QTime, QDate, Qt, QEvent, QTimer
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
     QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit, QTabWidget, QScrollArea, QLabel, QPushButton,
@@ -9,7 +10,7 @@ from PySide6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView
 )
 
-from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester
+from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
 from ...services.semester_rules import nearest_semester_for_dates, semester_for_date, semester_from_id
 from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
@@ -18,6 +19,7 @@ from ..components.widgets.tick_checkbox import TickCheckBox
 from ..components.widgets.tight_combobox import TightComboBox
 from ..components.widgets.semester_selector import SemesterSelector
 from ..components.widgets.chip_list_widget import ChipListWidget
+from .series_occurrence_dialog import SeriesOccurrenceDialog
 
 NEW_LVA_SENTINEL = "__new_lva__"
 NEW_RAUM_SENTINEL = "__new_raum__"
@@ -239,23 +241,25 @@ class LVATerminDialog(QDialog):
         self.series_cb = TickCheckBox("")
         self.series_cb.setChecked(bool(termin and getattr(termin, "datum_bis", None)))
         self._ausfall_dates: set[date] = set()
-        self.occurrence_table = QTableWidget(0, 2)
+        self._serien_ausnahmen: List[SerienAusnahme] = list(getattr(termin, "serien_ausnahmen", []) or []) if termin else []
+        self._occurrence_row_dates: List[date] = []
+        self.occurrence_table = QTableWidget(0, 3)
         self.occurrence_table.setObjectName("Field")
-        self.occurrence_table.setHorizontalHeaderLabels(["", "Datum"])
+        self.occurrence_table.setHorizontalHeaderLabels(["Original", "Termin", ""])
         self.occurrence_table.verticalHeader().hide()
         self.occurrence_table.setSelectionMode(QTableWidget.NoSelection)
         self.occurrence_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.occurrence_table.setFocusPolicy(Qt.NoFocus)
         self.occurrence_table.setShowGrid(False)
         self.occurrence_table.setMinimumHeight(260)
-        self.occurrence_table.horizontalHeader().hide()
+        self.occurrence_table.cellDoubleClicked.connect(self._on_occurrence_row_double_clicked)
         self.occurrence_table.setStyleSheet(
             "QTableWidget#Field { border: none; background: #ffffff; }"
             "QTableWidget#Field::item { border: none; padding: 2px 0; }"
         )
-        self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
+        self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.occurrence_table.setColumnWidth(0, 34)
+        self.occurrence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
 
         self.ap_cb = TickCheckBox("")
         self.ap_cb.setChecked(bool(termin.anwesenheitspflicht) if termin else False)
@@ -371,6 +375,7 @@ class LVATerminDialog(QDialog):
             else:
                 self._set_series_end_date(None, auto=True)
                 self._ausfall_dates.clear()
+                self._serien_ausnahmen.clear()
             self._update_semester_warning()
             _sync_time_enabled()
             self._render_occurrence_table()
@@ -765,6 +770,9 @@ class LVATerminDialog(QDialog):
             self._ausfall_dates.discard(value)
         else:
             self._ausfall_dates.add(value)
+            self._serien_ausnahmen = [
+                item for item in self._serien_ausnahmen if item.original_datum != value
+            ]
         self._render_occurrence_table()
         self._update_semester_warning()
 
@@ -783,29 +791,181 @@ class LVATerminDialog(QDialog):
         dates = self._series_dates_for_table()
         valid_dates = set(dates)
         self._ausfall_dates = {value for value in self._ausfall_dates if value in valid_dates}
+        self._serien_ausnahmen = [
+            item
+            for item in self._serien_ausnahmen
+            if item.original_datum in valid_dates and item.datum is not None
+        ]
+        exceptions_by_date = {
+            item.original_datum: item for item in self._serien_ausnahmen
+        }
 
+        self._clear_occurrence_table_widgets()
+        self.occurrence_table.clearSpans()
+        self.occurrence_table.clearContents()
+        self.occurrence_table.setRowCount(0)
+        self._occurrence_row_dates = list(dates)
         self.occurrence_table.setRowCount(len(dates))
         for row, value in enumerate(dates):
             hidden = value in self._ausfall_dates
+            exception = exceptions_by_date.get(value)
 
-            cb = TickCheckBox()
-            cb.setChecked(not hidden)
-            cb.setToolTip("Termin findet statt" if not hidden else "Termin ist ausgeblendet")
-            cb.toggled.connect(lambda checked, occurrence_date=value: self._set_occurrence_active(occurrence_date, checked))
-            self.occurrence_table.setCellWidget(row, 0, cb)
-
-            date_item = QTableWidgetItem(value.strftime("%d.%m.%Y"))
+            original_item = QTableWidgetItem(value.strftime("%d.%m.%Y"))
+            detail_item = QTableWidgetItem(self._occurrence_detail_text(value, exception))
             if hidden:
-                date_item.setForeground(Qt.gray)
+                original_item.setForeground(Qt.gray)
+                detail_item.setForeground(Qt.gray)
+                strike = QFont()
+                strike.setStrikeOut(True)
+                original_item.setFont(strike)
+                detail_item.setFont(strike)
+                detail_item.setText(f"{detail_item.text()} · Fällt aus")
 
-            self.occurrence_table.setItem(row, 1, date_item)
+            self.occurrence_table.setItem(row, 0, original_item)
+            self.occurrence_table.setItem(row, 1, detail_item)
+
+            if exception and not hidden:
+                reset_btn = QPushButton("Zurücksetzen")
+                reset_btn.setObjectName("SecondaryButton")
+                reset_btn.setToolTip("Verschiebung entfernen und wieder den normalen Serientermin verwenden")
+                reset_btn.clicked.connect(lambda _checked=False, occurrence_date=value: self._reset_series_exception(occurrence_date))
+                self.occurrence_table.setCellWidget(row, 2, reset_btn)
         self.occurrence_table.resizeRowsToContents()
+        self.occurrence_table.viewport().update()
+
+    def _clear_occurrence_table_widgets(self) -> None:
+        for row in range(self.occurrence_table.rowCount()):
+            for col in range(self.occurrence_table.columnCount()):
+                widget = self.occurrence_table.cellWidget(row, col)
+                if widget:
+                    self.occurrence_table.removeCellWidget(row, col)
+                    widget.hide()
+                    widget.setParent(None)
+                    widget.deleteLater()
+
+        for button in self.occurrence_table.findChildren(QPushButton):
+            if button.text() == "Zurücksetzen":
+                button.hide()
+                button.setParent(None)
+                button.deleteLater()
 
     def _current_ausfall_dates(self) -> List[date]:
         if not self._has_series_range():
             return []
         planned = set(self._series_dates_for_table())
         return sorted(value for value in self._ausfall_dates if value in planned)
+
+    def _current_series_exceptions(self) -> List[SerienAusnahme]:
+        if not self._has_series_range():
+            return []
+        planned = set(self._series_dates_for_table())
+        return sorted(
+            [
+                item
+                for item in self._serien_ausnahmen
+                if item.original_datum in planned and item.original_datum not in self._ausfall_dates
+            ],
+            key=lambda item: item.original_datum,
+        )
+
+    def _occurrence_detail_text(self, original_date: date, exception: Optional[SerienAusnahme]) -> str:
+        target_date = exception.datum if exception else original_date
+        start = exception.start_zeit if exception and exception.start_zeit is not None else self._current_start_time()
+        room_id = exception.raum_id if exception and exception.raum_id is not None else self.raum_id_le.text().strip()
+
+        parts = [target_date.strftime("%d.%m.%Y")]
+        if start is not None:
+            parts.append(start.strftime("%H:%M"))
+        if room_id:
+            parts.append(room_id)
+        if exception and exception.datum != original_date:
+            return f"{original_date.strftime('%d.%m.%Y')} -> {' · '.join(parts)}"
+        return " · ".join(parts)
+
+    def _on_occurrence_row_double_clicked(self, row: int, _col: int) -> None:
+        if row < 0 or row >= len(self._occurrence_row_dates):
+            return
+        self._open_occurrence_dialog(self._occurrence_row_dates[row])
+
+    def _open_occurrence_dialog(self, value: date) -> None:
+        current = next(
+            (item for item in self._serien_ausnahmen if item.original_datum == value),
+            None,
+        )
+
+        base_start = self._current_start_time() or time(8, 0)
+        dlg = SeriesOccurrenceDialog(
+            self,
+            original_date=value,
+            current_exception=current,
+            base_start=base_start,
+            base_room_id=self.raum_id_le.text().strip(),
+            rooms=list(self._raum_by_id.values()),
+            initially_cancelled=value in self._ausfall_dates,
+        )
+        if dlg.exec() != QDialog.Accepted:
+            return
+        result = dlg.result
+        if result is None:
+            return
+
+        if result.cancelled:
+            self._set_occurrence_active(value, False)
+            return
+
+        self._ausfall_dates.discard(value)
+        self._set_series_exception(
+            original_date=result.original_date,
+            target_date=result.target_date,
+            start_zeit=result.start_zeit,
+            room_id=result.room_id,
+        )
+
+    def _set_series_exception(
+        self,
+        *,
+        original_date: date,
+        target_date: date,
+        start_zeit: time,
+        room_id: str,
+    ) -> None:
+        base_start = self._current_start_time()
+        base_room = self.raum_id_le.text().strip()
+        is_base_value = (
+            target_date == original_date
+            and start_zeit == base_start
+            and str(room_id or "").strip() == base_room
+        )
+
+        self._serien_ausnahmen = [
+            item for item in self._serien_ausnahmen if item.original_datum != original_date
+        ]
+        if not is_base_value:
+            self._serien_ausnahmen.append(
+                SerienAusnahme(
+                    original_datum=original_date,
+                    datum=target_date,
+                    start_zeit=start_zeit,
+                    raum_id=str(room_id or "").strip() or None,
+                    duration=int(self.duration_sb.value()),
+                )
+            )
+            self._serien_ausnahmen.sort(key=lambda item: item.original_datum)
+            self._ausfall_dates.discard(original_date)
+        self._render_occurrence_table()
+        self._update_semester_warning()
+
+    def _reset_series_exception(self, value: date) -> None:
+        self._serien_ausnahmen = [
+            item for item in self._serien_ausnahmen if item.original_datum != value
+        ]
+        self._render_occurrence_table()
+
+    def _current_start_time(self) -> Optional[time]:
+        if self.date_de.date() == self._unassigned_qdate:
+            return None
+        tf = self.time_from.time()
+        return time(tf.hour(), tf.minute())
 
     def _semester_reference_dates(self) -> List[date]:
         if self.date_de.date() == self._unassigned_qdate:
@@ -1026,6 +1186,7 @@ class LVATerminDialog(QDialog):
 
         termin_id = self.termin.id if self.termin is not None and hasattr(self.termin, "id") else self.new_id
         ausfall_dates = self._current_ausfall_dates() if date_to is not None else []
+        serien_ausnahmen = self._current_series_exceptions() if date_to is not None else []
 
         self._result = Termin(
             name=name_value,
@@ -1045,6 +1206,7 @@ class LVATerminDialog(QDialog):
             datum_bis=date_to,
             periodizitaet=repeat,
             ausfall_daten=ausfall_dates,
+            serien_ausnahmen=serien_ausnahmen,
         )
         self.accept()
 

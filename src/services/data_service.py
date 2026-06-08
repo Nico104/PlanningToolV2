@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime, date, time
 from typing import Dict, List, Any
 
-from ..core.models import Raum, Vortragende, Lehrveranstaltung, Gruppe, Termin
+from ..core.models import Raum, Vortragende, Lehrveranstaltung, Gruppe, SerienAusnahme, Termin
 
 
 class DataService:
@@ -58,6 +58,36 @@ class DataService:
                 parsed = None
             if parsed is not None:
                 out.append(parsed)
+        return out
+
+    @staticmethod
+    def _parse_series_exceptions(value: Any) -> List[SerienAusnahme]:
+        if not isinstance(value, list):
+            return []
+        out: List[SerienAusnahme] = []
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            original_datum = DataService._parse_optional_date(item.get("original_datum"))
+            datum = DataService._parse_optional_date(item.get("datum"))
+            if original_datum is None or datum is None:
+                continue
+            start_raw = item.get("start_zeit")
+            start_zeit = DataService._parse_time(start_raw) if start_raw else None
+            duration_raw = item.get("duration")
+            try:
+                duration = int(duration_raw) if duration_raw not in (None, "") else None
+            except Exception:
+                duration = None
+            out.append(
+                SerienAusnahme(
+                    original_datum=original_datum,
+                    datum=datum,
+                    start_zeit=start_zeit,
+                    raum_id=str(item.get("raum_id", "")).strip() or None,
+                    duration=duration,
+                )
+            )
         return out
 
     @staticmethod
@@ -145,6 +175,7 @@ class DataService:
             datum_bis=self._parse_optional_date(x.get("datum_bis")),
             periodizitaet=self._parse_periodizitaet(x.get("periodizitaet")),
             ausfall_daten=self._parse_date_list(x.get("ausfall_daten")),
+            serien_ausnahmen=self._parse_series_exceptions(x.get("serien_ausnahmen")),
         )
 
 
@@ -204,6 +235,16 @@ class DataService:
                 "periodizitaet": getattr(t, "periodizitaet", None) if t.datum_bis is not None else None,
                 "ausfall_daten": [
                     self._fmt_date(d) for d in (getattr(t, "ausfall_daten", []) or [])
+                ],
+                "serien_ausnahmen": [
+                    {
+                        "original_datum": self._fmt_date(a.original_datum),
+                        "datum": self._fmt_date(a.datum),
+                        "start_zeit": self._fmt_time(a.start_zeit) if a.start_zeit else None,
+                        "raum_id": a.raum_id,
+                        "duration": a.duration,
+                    }
+                    for a in (getattr(t, "serien_ausnahmen", []) or [])
                 ],
             } for t in termine]
         }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

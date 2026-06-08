@@ -93,13 +93,40 @@ def series_dates(termin: Termin) -> List[date]:
     ]
 
 
+def series_exceptions_by_original_date(termin: Termin):
+    out = {}
+    for item in getattr(termin, "serien_ausnahmen", []) or []:
+        original = getattr(item, "original_datum", None)
+        target = getattr(item, "datum", None)
+        if original is None or target is None:
+            continue
+        out[original] = item
+    return out
+
+
 def expand_termin(termin: Termin) -> List[Termin]:
     if not is_series_termin(termin):
         return [termin]
-    return [
-        replace(termin, id=occurrence_id(termin.id, occurrence_date), datum=occurrence_date)
-        for occurrence_date in series_dates(termin)
-    ]
+    exceptions = series_exceptions_by_original_date(termin)
+    occurrences: List[Termin] = []
+    for occurrence_date in series_dates(termin):
+        exception = exceptions.get(occurrence_date)
+        if exception:
+            occurrences.append(
+                replace(
+                    termin,
+                    id=occurrence_id(termin.id, occurrence_date),
+                    datum=exception.datum,
+                    start_zeit=exception.start_zeit if exception.start_zeit is not None else termin.start_zeit,
+                    raum_id=exception.raum_id if exception.raum_id is not None else termin.raum_id,
+                    duration=exception.duration if exception.duration is not None else termin.duration,
+                )
+            )
+        else:
+            occurrences.append(
+                replace(termin, id=occurrence_id(termin.id, occurrence_date), datum=occurrence_date)
+            )
+    return occurrences
 
 
 def expand_termine(termine: Iterable[Termin]) -> List[Termin]:

@@ -8,7 +8,7 @@ from ...services.id_service import next_id
 from ...services.termin_occurrence_service import occurrence_date_from_id, source_termin_id
 from ...services.undo_service import UndoService
 from ..dialogs import LVADialog, RaumDialog
-from ...core.models import Studiensemester, Termin
+from ...core.models import SerienAusnahme, Studiensemester, Termin
 from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.studienrichtung_dialog import StudienrichtungDialog
@@ -535,6 +535,15 @@ class CrudHandlers:
             if series_action == "cancel":
                 return False
             if series_action == "single":
+                return self._move_series_occurrence_as_exception(
+                    termine=termine,
+                    termin=t,
+                    occurrence_date=occurrence_date,
+                    new_date=new_date,
+                    new_start=new_start,
+                    new_room_id=new_room_id,
+                )
+            if series_action == "detach":
                 return self._move_series_occurrence_as_single(
                     termine=termine,
                     termin=t,
@@ -551,11 +560,24 @@ class CrudHandlers:
             if t.is_series():
                 anchor_date = occurrence_date or t.datum
                 if anchor_date and t.datum:
-                    delta = new_date - anchor_date
+                    visible_anchor_date = anchor_date
+                    for ausnahme in (getattr(t, "serien_ausnahmen", []) or []):
+                        if getattr(ausnahme, "original_datum", None) == anchor_date:
+                            visible_anchor_date = ausnahme.datum
+                            break
+                    delta = new_date - visible_anchor_date
                     updates["datum"] = t.datum + delta
                     updates["datum_bis"] = t.datum_bis + delta if t.datum_bis else None
                     updates["ausfall_daten"] = [
                         ausfall + delta for ausfall in (getattr(t, "ausfall_daten", []) or [])
+                    ]
+                    updates["serien_ausnahmen"] = [
+                        replace(
+                            ausnahme,
+                            original_datum=ausnahme.original_datum + delta,
+                            datum=ausnahme.datum + delta,
+                        )
+                        for ausnahme in (getattr(t, "serien_ausnahmen", []) or [])
                     ]
                 else:
                     updates["datum"] = new_date
@@ -577,6 +599,54 @@ class CrudHandlers:
         self.ds.save_termine(termine)
         self.planner.refresh()
         self._show_toast("Serientermin verschoben." if t.is_series() else "Termin verschoben.")
+        return True
+
+    def _move_series_occurrence_as_exception(
+        self,
+        *,
+        termine: List[Termin],
+        termin: Termin,
+        occurrence_date: Optional[date],
+        new_date: date,
+        new_start: Optional[time],
+        new_room_id: Optional[str],
+    ) -> bool:
+        anchor_date = occurrence_date or termin.datum
+        if anchor_date is None:
+            return False
+
+        duration_minutes = termin.duration if termin.duration > 0 else 30
+        exceptions = [
+            item
+            for item in (getattr(termin, "serien_ausnahmen", []) or [])
+            if getattr(item, "original_datum", None) != anchor_date
+        ]
+        exceptions.append(
+            SerienAusnahme(
+                original_datum=anchor_date,
+                datum=new_date,
+                start_zeit=new_start,
+                raum_id=new_room_id if new_room_id is not None else termin.raum_id,
+                duration=duration_minutes,
+            )
+        )
+        exceptions.sort(key=lambda item: item.original_datum)
+
+        skipped_dates = [
+            value
+            for value in (getattr(termin, "ausfall_daten", []) or [])
+            if value != anchor_date
+        ]
+        updated_series = replace(
+            termin,
+            ausfall_daten=skipped_dates,
+            serien_ausnahmen=exceptions,
+        )
+        updated = [updated_series if item.id == termin.id else item for item in termine]
+        self._record_undo_snapshot()
+        self.ds.save_termine(updated)
+        self.planner.refresh()
+        self._show_toast("Termin innerhalb der Serie verschoben.")
         return True
 
     def _move_series_occurrence_as_single(
@@ -613,6 +683,7 @@ class CrudHandlers:
             datum_bis=None,
             periodizitaet=None,
             ausfall_daten=[],
+            serien_ausnahmen=[],
         )
 
         updated = [updated_series if item.id == termin.id else item for item in termine]
@@ -636,11 +707,12 @@ class CrudHandlers:
             "Was möchtest du verschieben?"
         )
         msg.setInformativeText(
-            "Nur diesen Termin verschieben erstellt einen Einzeltermin am neuen Datum "
-            "und überspringt dieses Vorkommen in der Serie."
+            "In Serie behalten speichert eine Ausnahme für dieses Vorkommen. "
+            "Als Einzeltermin lösen erstellt einen normalen Termin und überspringt dieses Vorkommen in der Serie."
         )
         btn_series = msg.addButton("Ganze Serie verschieben", QMessageBox.AcceptRole)
-        btn_single = msg.addButton("Nur diesen Termin verschieben", QMessageBox.AcceptRole)
+        btn_single = msg.addButton("Nur diesen Termin in Serie verschieben", QMessageBox.AcceptRole)
+        btn_detach = msg.addButton("Als Einzeltermin lösen", QMessageBox.AcceptRole)
         btn_cancel = msg.addButton("Abbrechen", QMessageBox.RejectRole)
         msg.setDefaultButton(btn_cancel)
         msg.exec()
@@ -649,6 +721,8 @@ class CrudHandlers:
             return "series"
         if clicked == btn_single:
             return "single"
+        if clicked == btn_detach:
+            return "detach"
         return "cancel"
 
     def unassign_termin(self, termin_id: str) -> bool:
@@ -688,6 +762,7 @@ class CrudHandlers:
                 datum_bis=None,
                 periodizitaet=None,
                 ausfall_daten=[],
+                serien_ausnahmen=[],
             )
             termine = [new_t if x.id == source_id else x for x in termine]
         else:

@@ -56,6 +56,15 @@ class Gruppe:
 
 
 @dataclass(frozen=True)
+class SerienAusnahme:
+    original_datum: date
+    datum: date
+    start_zeit: Optional[time] = None
+    raum_id: Optional[str] = None
+    duration: Optional[int] = None
+
+
+@dataclass(frozen=True)
 class Termin:
     name: str
     id: str
@@ -74,6 +83,7 @@ class Termin:
     datum_bis: Optional[date] = None
     periodizitaet: Optional[str] = None
     ausfall_daten: List[date] = field(default_factory=list)
+    serien_ausnahmen: List[SerienAusnahme] = field(default_factory=list)
 
     def is_series(self) -> bool:
         return (

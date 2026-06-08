@@ -12,8 +12,9 @@ from ....services.data_service import DataService
 from ....services.excel_exchange_service import (
     export_project_to_excel,
     export_terms_for_teachers_to_excel,
+    export_week_calendar_to_excel,
+    get_lva_export_options,
     get_teacher_export_semester_options,
-    get_teacher_export_options,
     import_project_from_excel,
     import_tiss_rooms_from_excel,
 )
@@ -479,41 +480,53 @@ class MainWindow(QMainWindow):
 
     def export_teacher_terms(self) -> None:
         try:
-            teacher_options = get_teacher_export_options(self.data_dir)
+            lva_options = get_lva_export_options(self.data_dir)
             semester_options = get_teacher_export_semester_options(self.data_dir)
         except Exception as e:
-            QMessageBox.warning(self, "Export Fehler", f"Lehrende konnten nicht geladen werden: {e}")
+            QMessageBox.warning(self, "Export Fehler", f"LVAs konnten nicht geladen werden: {e}")
             return
 
-        if not teacher_options:
-            QMessageBox.warning(self, "Keine Lehrende", "Keine Lehrende gefunden.")
+        if not lva_options:
+            QMessageBox.warning(self, "Keine LVAs", "Keine LVAs gefunden.")
             return
 
+        current_date = self._current_calendar_date()
+        current_semester = semester_from_id(self._semester_id_for_calendar_date(current_date))
+        default_from = current_semester.start if current_semester else current_date - timedelta(days=current_date.weekday())
+        default_to = current_semester.end if current_semester else default_from + timedelta(days=6)
         dlg = TeacherExportDialog(
-            teacher_options,
+            lva_options,
             semester_options,
-            self,
+            default_from=default_from,
+            default_to=default_to,
+            parent=self,
         )
         if dlg.exec() != QDialog.Accepted:
             return
+        selected_lva_ids = dlg.selected_lva_ids()
         selected_teachers = dlg.selected_teachers()
         selected_semesters = dlg.selected_semester_ids()
+        export_format = dlg.selected_export_format()
+        date_from, date_to = dlg.selected_date_range()
+        include_weekend = dlg.selected_include_weekend()
+        calendar_slot_minutes = dlg.selected_calendar_slot_minutes()
 
-        selected_names = [name for name, _email in selected_teachers if name]
-        if len(selected_names) == 1:
-            export_name = selected_names[0]
-        elif len(selected_names) <= 3:
-            export_name = "_".join(selected_names)
+        if len(selected_lva_ids) == 1:
+            export_name = selected_lva_ids[0]
+        elif len(selected_lva_ids) <= 3:
+            export_name = "_".join(selected_lva_ids)
         else:
-            export_name = "Mehrere_Lehrende"
+            export_name = f"{len(selected_lva_ids)}_LVAs"
         if selected_semesters:
             semester_part = "_".join(selected_semesters) if len(selected_semesters) <= 2 else f"{len(selected_semesters)}_Semester"
             export_name = f"{export_name}_{semester_part}"
+        export_name = f"{export_name}_{date_from:%Y-%m-%d}_bis_{date_to:%Y-%m-%d}"
         safe_export_name = "".join(
             char if char.isalnum() or char in (" ", "-", "_") else "_"
             for char in export_name
         ).strip().replace(" ", "_")
-        default_name = f"Termine_{safe_export_name}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+        export_prefix = "Wochenkalender" if export_format == "calendar" else "Termine"
+        default_name = f"{export_prefix}_{safe_export_name}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         fn, _ = QFileDialog.getSaveFileName(
             self,
             "Export für Lehrende speichern",
@@ -529,12 +542,28 @@ class MainWindow(QMainWindow):
             out_path = out_path.with_suffix(".xlsx")
 
         try:
-            export_terms_for_teachers_to_excel(
-                self.data_dir,
-                out_path,
-                teacher_filter=selected_teachers,
-                semester_filter=selected_semesters,
-            )
+            if export_format == "calendar":
+                export_week_calendar_to_excel(
+                    self.data_dir,
+                    out_path,
+                    date_from,
+                    date_to,
+                    teacher_filter=None,
+                    semester_filter=selected_semesters,
+                    lva_filter=selected_lva_ids,
+                    include_weekend=include_weekend,
+                    slot_minutes=calendar_slot_minutes,
+                )
+            else:
+                export_terms_for_teachers_to_excel(
+                    self.data_dir,
+                    out_path,
+                    teacher_filter=None,
+                    semester_filter=selected_semesters,
+                    lva_filter=selected_lva_ids,
+                    date_from=date_from,
+                    date_to=date_to,
+                )
             Toast(self, "Export für Lehrende erstellt.", duration_ms=2500).show()
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export für Lehrende: {e}")

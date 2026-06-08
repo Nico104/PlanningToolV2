@@ -129,6 +129,14 @@ def copy_semester_termine(
                     map_date_to_target_semester(value, source, target, date_mode)
                     for value in (getattr(termin, "ausfall_daten", []) or [])
                 ] if copy_ausfall_daten else [],
+                serien_ausnahmen=[
+                    replace(
+                        value,
+                        original_datum=map_date_to_target_semester(value.original_datum, source, target, date_mode),
+                        datum=map_date_to_target_semester(value.datum, source, target, date_mode),
+                    )
+                    for value in (getattr(termin, "serien_ausnahmen", []) or [])
+                ] if copy_ausfall_daten else [],
             )
         )
 

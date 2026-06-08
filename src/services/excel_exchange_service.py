@@ -9,6 +9,8 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.cell.rich_text import CellRichText, TextBlock
+from openpyxl.cell.text import InlineFont
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
@@ -54,6 +56,7 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
             "duration",
             "semester_id",
             "ausfall_daten",
+            "serien_ausnahmen",
             "notiz",
             "zu_besprechen",
             "besprechungshinweis",
@@ -160,6 +163,24 @@ class SemesterExportOption:
     term_count: int
 
 
+@dataclass(frozen=True)
+class LvaExportOption:
+    id: str
+    name: str
+    teacher_name: str
+    teacher_email: str
+    term_count: int
+    semester_term_counts: Dict[str, int] = field(default_factory=dict)
+
+    def counts_for_semesters(self, semester_ids: Optional[Iterable[str]]) -> tuple[int, int]:
+        if semester_ids is None:
+            return 1, self.term_count
+
+        selected_ids = {_safe_text(item) for item in semester_ids}
+        term_count = sum(int(self.semester_term_counts.get(semester_id, 0)) for semester_id in selected_ids)
+        return (1 if term_count > 0 else 0), term_count
+
+
 def _read_json_file(path: Path) -> Dict[str, Any]:
     if not path.exists():
         return {}
@@ -240,6 +261,8 @@ def _serialize_cell(value: Any) -> Any:
     if value is None:
         return ""
     if isinstance(value, list):
+        if any(isinstance(item, dict) for item in value):
+            return json.dumps(value, ensure_ascii=False)
         return ";".join(str(v) for v in value)
     if isinstance(value, bool):
         return "Ja" if value else "Nein"
@@ -372,6 +395,39 @@ def _parse_list(value: Any) -> List[str]:
     return [p.strip() for p in txt.split(";") if p.strip()]
 
 
+def _parse_series_exceptions(value: Any) -> List[Dict[str, Any]]:
+    if value is None or value == "":
+        return []
+    raw = value
+    if isinstance(value, str):
+        try:
+            raw = json.loads(value)
+        except Exception:
+            return []
+    if not isinstance(raw, list):
+        return []
+
+    out: List[Dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        original = _safe_date(item.get("original_datum"))
+        target = _safe_date(item.get("datum"))
+        if original is None or target is None:
+            continue
+        start = _safe_time(item.get("start_zeit"))
+        duration = _parse_int(item.get("duration"))
+        normalized: Dict[str, Any] = {
+            "original_datum": original.isoformat(),
+            "datum": target.isoformat(),
+            "start_zeit": start.strftime("%H:%M") if start else None,
+            "raum_id": _safe_text(item.get("raum_id")) or None,
+            "duration": duration,
+        }
+        out.append(normalized)
+    return out
+
+
 def _series_dates_from_entry(termin: Dict[str, Any]) -> List[date]:
     start = _safe_date(termin.get("datum"))
     end = _safe_date(termin.get("datum_bis"))
@@ -380,8 +436,16 @@ def _series_dates_from_entry(termin: Dict[str, Any]) -> List[date]:
         return []
     if end is None or end < start or period not in SUPPORTED_PERIODIZITAET:
         return [start]
-    skipped = {d for d in (_safe_date(item) for item in _parse_list(termin.get("ausfall_daten"))) if d is not None}
-    return [current for current in series_date_sequence(start, end, period) if current not in skipped]
+    return series_date_sequence(start, end, period)
+
+
+def _series_exceptions_by_original_date(termin: Dict[str, Any]) -> Dict[date, Dict[str, Any]]:
+    out: Dict[date, Dict[str, Any]] = {}
+    for item in _parse_series_exceptions(termin.get("serien_ausnahmen")):
+        original = _safe_date(item.get("original_datum"))
+        if original is not None:
+            out[original] = item
+    return out
 
 
 def _expand_termin_entries(termine: Iterable[Dict[str, Any]]) -> Iterable[Dict[str, Any]]:
@@ -392,14 +456,37 @@ def _expand_termin_entries(termine: Iterable[Dict[str, Any]]) -> Iterable[Dict[s
         if not dates:
             yield termin
             continue
+        skipped = {d for d in (_safe_date(item) for item in _parse_list(termin.get("ausfall_daten"))) if d is not None}
+        exceptions = _series_exceptions_by_original_date(termin)
         if len(dates) == 1:
             item = dict(termin)
-            item["datum"] = dates[0].isoformat()
+            original = dates[0]
+            if original in skipped:
+                continue
+            exception = exceptions.get(original)
+            item["datum"] = (exception.get("datum") if exception else original.isoformat())
+            if exception:
+                if exception.get("start_zeit"):
+                    item["start_zeit"] = exception.get("start_zeit")
+                if exception.get("raum_id"):
+                    item["raum_id"] = exception.get("raum_id")
+                if exception.get("duration") is not None:
+                    item["duration"] = exception.get("duration")
             yield item
             continue
-        for occurrence_date in dates:
+        for original_date in dates:
+            if original_date in skipped:
+                continue
             item = dict(termin)
-            item["datum"] = occurrence_date.isoformat()
+            exception = exceptions.get(original_date)
+            item["datum"] = exception.get("datum") if exception else original_date.isoformat()
+            if exception:
+                if exception.get("start_zeit"):
+                    item["start_zeit"] = exception.get("start_zeit")
+                if exception.get("raum_id"):
+                    item["raum_id"] = exception.get("raum_id")
+                if exception.get("duration") is not None:
+                    item["duration"] = exception.get("duration")
             yield item
 
 
@@ -420,6 +507,7 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
         period = str(entry.get("periodizitaet", "") or "").strip()
         entry["periodizitaet"] = None if not period or period.lower() == "keine" else period
         entry["ausfall_daten"] = _parse_list(entry.get("ausfall_daten"))
+        entry["serien_ausnahmen"] = _parse_series_exceptions(entry.get("serien_ausnahmen"))
 
         if "duration" in entry:
             val = _parse_int(entry.get("duration"))
@@ -487,6 +575,329 @@ def export_project_to_excel(data_dir: Path, output_path: Path) -> None:
             sheet.append(row)
 
     wb.save(output_path)
+
+
+def export_week_calendar_to_excel(
+    data_dir: Path,
+    output_path: Path,
+    date_from: date,
+    date_to: Optional[date] = None,
+    teacher_filter: Optional[Iterable[tuple[str, str]]] = None,
+    semester_filter: Optional[Iterable[str]] = None,
+    lva_filter: Optional[Iterable[str]] = None,
+    include_weekend: bool = False,
+    slot_minutes: int = 30,
+) -> None:
+    if date_to is None:
+        date_to = date_from + timedelta(days=6 - date_from.weekday())
+    if date_to < date_from:
+        date_from, date_to = date_to, date_from
+
+    teacher_filter_set = (
+        {(_safe_text(item[0]), _safe_text(item[1] if len(item) > 1 else "")) for item in teacher_filter}
+        if teacher_filter is not None
+        else None
+    )
+    semester_filter_set = (
+        {_safe_text(item) for item in semester_filter}
+        if semester_filter is not None
+        else None
+    )
+    lva_filter_set = (
+        {_safe_text(item) for item in lva_filter if _safe_text(item)}
+        if lva_filter is not None
+        else None
+    )
+    lvas = _read_json_list(data_dir / "lehrveranstaltungen.json", "lehrveranstaltungen")
+    termine = _read_json_list(data_dir / "termine.json", "termine")
+    raeume = _read_json_list(data_dir / "raeume.json", "raeume")
+
+    lva_map = {_safe_text(item.get("id")): item for item in lvas if _safe_text(item.get("id"))}
+    raum_map = {_safe_text(item.get("id")): item for item in raeume if _safe_text(item.get("id"))}
+    lva_teacher: Dict[str, tuple[str, str]] = {}
+    for lva in lvas:
+        if not isinstance(lva, dict):
+            continue
+        lva_id = _safe_text(lva.get("id"))
+        if lva_id:
+            lva_teacher[lva_id] = (
+                _safe_text(lva.get("vortragende", {}).get("name")),
+                _safe_text(lva.get("vortragende", {}).get("email")),
+            )
+
+    rows_by_week: Dict[date, List[Dict[str, Any]]] = defaultdict(list)
+    for termin in _expand_termin_entries(termine):
+        if not isinstance(termin, dict):
+            continue
+        if semester_filter_set is not None and _safe_text(termin.get("semester_id")) not in semester_filter_set:
+            continue
+        lva_id = _safe_text(termin.get("lva_id"))
+        if lva_filter_set is not None and lva_id not in lva_filter_set:
+            continue
+
+        datum = _safe_date(termin.get("datum"))
+        start = _safe_time(termin.get("start_zeit"))
+        duration = _parse_int(termin.get("duration")) or 45
+        if datum is None or start is None or datum < date_from or datum > date_to:
+            continue
+        if not include_weekend and datum.weekday() >= 5:
+            continue
+
+        teacher_name, teacher_email = lva_teacher.get(lva_id, ("", ""))
+        if teacher_filter_set is not None and (teacher_name, teacher_email) not in teacher_filter_set:
+            continue
+
+        lva = lva_map.get(lva_id, {})
+        room_id = _safe_text(termin.get("raum_id"))
+        room = raum_map.get(room_id, {})
+        gruppe = termin.get("gruppe") if isinstance(termin.get("gruppe"), dict) else {}
+        start_minutes = start.hour * 60 + start.minute
+        week_start = datum - timedelta(days=datum.weekday())
+        rows_by_week[week_start].append(
+            {
+                "date": datum,
+                "start": start,
+                "start_minutes": start_minutes,
+                "end_minutes": max(start_minutes + duration, start_minutes + 15),
+                "duration": duration,
+                "lva_id": lva_id,
+                "lva_name": _safe_text(lva.get("name")) if isinstance(lva, dict) else _safe_text(termin.get("name")),
+                "room": _safe_text(room.get("name")) if isinstance(room, dict) else room_id,
+                "gruppe": _safe_text(gruppe.get("name")) if isinstance(gruppe, dict) else "",
+                "typ": _safe_text(termin.get("typ")),
+                "teacher": teacher_name,
+                "zu_besprechen": _parse_bool(termin.get("zu_besprechen")),
+                "besprechungshinweis": _safe_text(termin.get("besprechungshinweis")),
+            }
+        )
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    used_names: set[str] = set()
+    sheet = wb.create_sheet(_excel_compatible_sheet_name("Wochenkalender", used_names))
+
+    if not rows_by_week:
+        week_start = date_from - timedelta(days=date_from.weekday())
+        _write_week_calendar_sheet(
+            sheet,
+            [],
+            week_start,
+            "Wochenkalender",
+            include_weekend=include_weekend,
+            slot_minutes=slot_minutes,
+        )
+    else:
+        start_row = 1
+        for week_start, rows in sorted(rows_by_week.items(), key=lambda item: item[0]):
+            start_row = _write_week_calendar_sheet(
+                sheet,
+                rows,
+                week_start,
+                "Wochenkalender",
+                include_weekend=include_weekend,
+                slot_minutes=slot_minutes,
+                start_row=start_row,
+            )
+
+    wb.save(output_path)
+
+
+def _write_week_calendar_sheet(
+    sheet,
+    rows: List[Dict[str, Any]],
+    week_start: date,
+    owner_name: str,
+    *,
+    include_weekend: bool,
+    slot_minutes: int,
+    start_row: int = 1,
+) -> int:
+    slot_minutes = 60 if int(slot_minutes) == 60 else 30
+    day_count = 7 if include_weekend else 5
+    week_end = week_start + timedelta(days=day_count - 1)
+    weekday_names = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][:day_count]
+    type_colors = {
+        "VO": "E3F2FD",
+        "UE": "E8F5E9",
+        "LU": "FFF3E0",
+        "SE": "F3E5F5",
+    }
+    fallback_colors = ["F7F7F7", "DDEBF7", "E2F0D9", "FFF2CC", "E4DFEC"]
+
+    min_minutes = 8 * 60
+    max_minutes = 20 * 60
+    rows_by_day: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        datum = _safe_date(row.get("date"))
+        if datum is None:
+            continue
+        if datum.weekday() >= day_count:
+            continue
+        min_minutes = min(min_minutes, (int(row["start_minutes"]) // slot_minutes) * slot_minutes)
+        max_minutes = max(
+            max_minutes,
+            ((int(row["end_minutes"]) + slot_minutes - 1) // slot_minutes) * slot_minutes,
+        )
+        rows_by_day[datum.weekday()].append(row)
+
+    day_lane_counts: Dict[int, int] = {}
+    for day_index, day_rows in rows_by_day.items():
+        lane_end_minutes: List[int] = []
+        for item in sorted(day_rows, key=lambda row: (int(row["start_minutes"]), int(row["end_minutes"]), row["lva_id"])):
+            start_minutes = int(item["start_minutes"])
+            end_minutes = int(item["end_minutes"])
+            lane_index = next(
+                (index for index, lane_end in enumerate(lane_end_minutes) if lane_end <= start_minutes),
+                None,
+            )
+            if lane_index is None:
+                lane_index = len(lane_end_minutes)
+                lane_end_minutes.append(end_minutes)
+            else:
+                lane_end_minutes[lane_index] = end_minutes
+            item["_lane"] = lane_index
+        day_lane_counts[day_index] = max(1, len(lane_end_minutes))
+
+    day_column_starts: Dict[int, int] = {}
+    next_column = 2
+    for day_index in range(day_count):
+        day_column_starts[day_index] = next_column
+        next_column += day_lane_counts.get(day_index, 1)
+
+    min_minutes = max(0, min_minutes)
+    max_minutes = min(24 * 60, max(max_minutes, min_minutes + 60))
+    slot_count = ((max_minutes - min_minutes) + slot_minutes - 1) // slot_minutes
+    row_height = 24 if slot_minutes == 30 else 30
+
+    title = f"KW {week_start.isocalendar().week} ({week_start:%d.%m.%Y} - {week_end:%d.%m.%Y})"
+    last_column = next_column - 1
+    title_row = start_row
+    header_row = start_row + 1
+    first_slot_row = start_row + 2
+    sheet.merge_cells(start_row=title_row, start_column=1, end_row=title_row, end_column=last_column)
+    sheet.cell(row=title_row, column=1).value = title
+    sheet.cell(row=title_row, column=1).font = Font(bold=True, size=12, color="1F2933")
+    sheet.cell(row=title_row, column=1).alignment = Alignment(horizontal="center", vertical="center")
+    sheet.row_dimensions[title_row].height = 22
+
+    header_fill = PatternFill("solid", fgColor="1F4E78")
+    header_font = Font(color="FFFFFF", bold=True)
+    thin_gray = Side(style="thin", color="D9E2EC")
+    time_fill = PatternFill("solid", fgColor="F7F9FB")
+    block_border = Border(
+        left=Side(style="thin", color="FFFFFF"),
+        right=Side(style="thin", color="FFFFFF"),
+        top=Side(style="thin", color="FFFFFF"),
+        bottom=Side(style="thin", color="FFFFFF"),
+    )
+    discuss_border = Border(
+        left=Side(style="medium", color="D98200"),
+        right=Side(style="medium", color="D98200"),
+        top=Side(style="medium", color="D98200"),
+        bottom=Side(style="medium", color="D98200"),
+    )
+
+    sheet.cell(row=header_row, column=1).value = "Zeit"
+    for col in range(1, last_column + 1):
+        cell = sheet.cell(row=header_row, column=col)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = Border(bottom=Side(style="thin", color="9EADBA"))
+
+    for day_index, day_name in enumerate(weekday_names):
+        current = week_start + timedelta(days=day_index)
+        start_column = day_column_starts[day_index]
+        end_column = start_column + day_lane_counts.get(day_index, 1) - 1
+        if end_column > start_column:
+            sheet.merge_cells(start_row=header_row, start_column=start_column, end_row=header_row, end_column=end_column)
+        sheet.cell(row=header_row, column=start_column).value = f"{day_name}\n{current:%d.%m.%Y}"
+
+    for slot_index in range(slot_count + 1):
+        minutes = min_minutes + slot_index * slot_minutes
+        row = first_slot_row + slot_index
+        sheet.cell(row=row, column=1).value = f"{minutes // 60:02d}:{minutes % 60:02d}"
+        sheet.cell(row=row, column=1).fill = time_fill
+        sheet.cell(row=row, column=1).alignment = Alignment(horizontal="center", vertical="top")
+        sheet.cell(row=row, column=1).font = Font(size=9, color="52616B")
+        sheet.row_dimensions[row].height = row_height
+        for col in range(1, last_column + 1):
+            sheet.cell(row=row, column=col).border = Border(
+                left=thin_gray,
+                right=thin_gray,
+                top=thin_gray,
+                bottom=thin_gray,
+            )
+
+    if not rows:
+        note = sheet.cell(row=first_slot_row, column=2)
+        note.value = "Keine Termine im gewählten Zeitraum."
+        note.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+        note.font = Font(size=10, italic=True, color="52616B")
+
+    fallback_key_colors: Dict[str, str] = {}
+    for day_index, day_rows in rows_by_day.items():
+        day_start_column = day_column_starts[day_index]
+        for item in sorted(day_rows, key=lambda row: (row["start_minutes"], row.get("_lane", 0), row["lva_id"])):
+            col = day_start_column + int(item.get("_lane", 0))
+            typ_key = _safe_text(item.get("typ")).upper()
+            if typ_key in type_colors:
+                fill_color = type_colors[typ_key]
+            else:
+                fallback_key = typ_key or item["lva_id"] or item["lva_name"]
+                if fallback_key not in fallback_key_colors:
+                    fallback_key_colors[fallback_key] = fallback_colors[len(fallback_key_colors) % len(fallback_colors)]
+                fill_color = fallback_key_colors[fallback_key]
+            fill = PatternFill("solid", fgColor=fill_color)
+
+            start_slot = (item["start_minutes"] - min_minutes) // slot_minutes
+            end_slot = max(start_slot + 1, (item["end_minutes"] - min_minutes + slot_minutes - 1) // slot_minutes)
+            block_start_row = first_slot_row + max(0, start_slot)
+            block_end_row = first_slot_row + min(slot_count, end_slot) - 1
+
+            for row in range(block_start_row, block_end_row + 1):
+                cell = sheet.cell(row=row, column=col)
+                cell.fill = fill
+                cell.border = discuss_border if item.get("zu_besprechen") else block_border
+
+            text_parts = [
+                f"{item['start'].strftime('%H:%M')} - {((datetime.combine(date(2000, 1, 1), item['start']) + timedelta(minutes=item['duration'])).time()).strftime('%H:%M')}",
+                item.get("teacher"),
+                item["room"],
+                item["lva_id"],
+                item["lva_name"],
+                item["gruppe"],
+            ]
+            text = " | ".join(part for part in text_parts if part)
+            hint = _safe_text(item.get("besprechungshinweis"))
+            if block_end_row > block_start_row:
+                sheet.merge_cells(start_row=block_start_row, start_column=col, end_row=block_end_row, end_column=col)
+            top_cell = sheet.cell(row=block_start_row, column=col)
+            if item.get("zu_besprechen") and hint:
+                top_cell.value = CellRichText(
+                    text,
+                    "\n",
+                    TextBlock(InlineFont(b=True, sz=9, color="8A4D00"), f"Hinweis: {hint}"),
+                )
+            elif item.get("zu_besprechen"):
+                top_cell.value = CellRichText(
+                    text,
+                    "\n",
+                    TextBlock(InlineFont(b=True, sz=9, color="8A4D00"), "Zu besprechen"),
+                )
+            else:
+                top_cell.value = f"{top_cell.value}\n{text}" if top_cell.value else text
+            top_cell.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+            top_cell.font = Font(size=9, color="1F2933")
+
+    sheet.column_dimensions["A"].width = 9
+    for col in range(2, last_column + 1):
+        sheet.column_dimensions[get_column_letter(col)].width = 24
+    sheet.page_setup.orientation = "landscape"
+    sheet.page_setup.fitToWidth = 1
+    sheet.page_setup.fitToHeight = 0
+    sheet.sheet_properties.pageSetUpPr.fitToPage = True
+    return first_slot_row + slot_count + 2
 
 
 def _is_empty_row(values: Tuple[Any, ...]) -> bool:
@@ -701,11 +1112,66 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
     ]
 
 
+def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
+    lvas = _read_json_list(data_dir / "lehrveranstaltungen.json", "lehrveranstaltungen")
+    termine = _read_json_list(data_dir / "termine.json", "termine")
+
+    lva_terms: Dict[str, int] = defaultdict(int)
+    lva_semester_terms: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for termin in _expand_termin_entries(termine):
+        if not isinstance(termin, dict):
+            continue
+        lva_id = _safe_text(termin.get("lva_id"))
+        if not lva_id:
+            continue
+        semester_id = _safe_text(termin.get("semester_id"))
+        lva_terms[lva_id] += 1
+        lva_semester_terms[lva_id][semester_id] += 1
+
+    options: List[LvaExportOption] = []
+    seen_lva_ids: set[str] = set()
+    for lva in lvas:
+        if not isinstance(lva, dict):
+            continue
+        lva_id = _safe_text(lva.get("id"))
+        if not lva_id:
+            continue
+        seen_lva_ids.add(lva_id)
+        teacher = lva.get("vortragende", {}) if isinstance(lva.get("vortragende"), dict) else {}
+        options.append(
+            LvaExportOption(
+                id=lva_id,
+                name=_safe_text(lva.get("name")),
+                teacher_name=_safe_text(teacher.get("name")),
+                teacher_email=_safe_text(teacher.get("email")),
+                term_count=lva_terms[lva_id],
+                semester_term_counts=dict(lva_semester_terms[lva_id]),
+            )
+        )
+
+    for lva_id in sorted(set(lva_terms) - seen_lva_ids):
+        options.append(
+            LvaExportOption(
+                id=lva_id,
+                name="",
+                teacher_name="",
+                teacher_email="",
+                term_count=lva_terms[lva_id],
+                semester_term_counts=dict(lva_semester_terms[lva_id]),
+            )
+        )
+
+    return sorted(options, key=lambda item: (item.teacher_name.lower(), item.id.lower(), item.name.lower()))
+
+
 def export_terms_for_teachers_to_excel(
     data_dir: Path,
     output_path: Path,
     teacher_filter: Optional[Iterable[tuple[str, str]]] = None,
     semester_filter: Optional[Iterable[str]] = None,
+    lva_filter: Optional[Iterable[str]] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
 ) -> None:
     headers = [
         "Raum",
@@ -735,6 +1201,13 @@ def export_terms_for_teachers_to_excel(
         if semester_filter is not None
         else None
     )
+    lva_filter_set = (
+        {_safe_text(item) for item in lva_filter if _safe_text(item)}
+        if lva_filter is not None
+        else None
+    )
+    if date_from is not None and date_to is not None and date_to < date_from:
+        date_from, date_to = date_to, date_from
     lvas = _read_json_list(data_dir / "lehrveranstaltungen.json", "lehrveranstaltungen")
     termine = _read_json_list(data_dir / "termine.json", "termine")
     raeume = _read_json_list(data_dir / "raeume.json", "raeume")
@@ -758,7 +1231,11 @@ def export_terms_for_teachers_to_excel(
         if semester_filter_set is not None and _safe_text(termin.get("semester_id")) not in semester_filter_set:
             continue
 
-        lva = lva_map.get(_safe_text(termin.get("lva_id")))
+        lva_id = _safe_text(termin.get("lva_id"))
+        if lva_filter_set is not None and lva_id not in lva_filter_set:
+            continue
+
+        lva = lva_map.get(lva_id)
         teacher_name = _safe_text(lva.get("vortragende", {}).get("name")) if isinstance(lva, dict) else ""
         teacher_email = _safe_text(lva.get("vortragende", {}).get("email")) if isinstance(lva, dict) else ""
         if teacher_filter_set is not None and (teacher_name, teacher_email) not in teacher_filter_set:
@@ -769,6 +1246,10 @@ def export_terms_for_teachers_to_excel(
         datum = _safe_date(termin.get("datum"))
         start = _safe_time(termin.get("start_zeit"))
         ende = _safe_end_time(termin.get("start_zeit"), termin.get("duration"))
+        if date_from is not None and (datum is None or datum < date_from):
+            continue
+        if date_to is not None and (datum is None or datum > date_to):
+            continue
 
         row = {
             "LVA-Nr.": _safe_text(lva.get("id")) if isinstance(lva, dict) else _safe_text(termin.get("lva_id")),

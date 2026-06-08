@@ -1,6 +1,6 @@
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QFontMetrics
-from PySide6.QtWidgets import QComboBox, QStyledItemDelegate, QFrame, QListView
+from PySide6.QtWidgets import QApplication, QComboBox, QStyledItemDelegate, QFrame, QListView
 
 
 class _TightDelegate(QStyledItemDelegate):
@@ -74,7 +74,7 @@ class TightComboBox(QComboBox):
         v.setViewportMargins(0, 0, 0, 0)
 
         v.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        v.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        v.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 
 
@@ -87,14 +87,45 @@ class TightComboBox(QComboBox):
         self._sync_popup_styling()
         self._fit_popup_width()
         self._fit_popup_height()  
-        # ensure the popup window tightly wraps the view to avoid large transparent areas
-        v = self.view()
-        w = v.window()
+        super().showPopup()
+
+        # Ensure the popup window tightly wraps the view and stays anchored to the combo box.
+        # Qt's automatic placement can drift when this custom popup is used inside nested dialogs.
         try:
+            v = self.view()
+            w = v.window()
             w.setFixedSize(v.width(), v.height())
+            self._position_popup_window()
         except Exception:
             pass
-        super().showPopup()
+
+    def _position_popup_window(self):
+        v = self.view()
+        w = v.window()
+        popup_w = max(v.width(), self.width())
+        popup_h = max(1, v.height())
+
+        screen = QApplication.screenAt(self.mapToGlobal(QPoint(0, 0)))
+        if screen is None:
+            screen = QApplication.primaryScreen()
+        if screen is None:
+            return
+
+        geo = screen.availableGeometry()
+        below = self.mapToGlobal(QPoint(0, self.height()))
+        above = self.mapToGlobal(QPoint(0, -popup_h))
+
+        x = below.x()
+        x = max(geo.left(), min(x, geo.right() - popup_w + 1))
+
+        if below.y() + popup_h <= geo.bottom():
+            y = below.y()
+        elif above.y() >= geo.top():
+            y = above.y()
+        else:
+            y = max(geo.top(), min(below.y(), geo.bottom() - popup_h + 1))
+
+        w.move(x, y)
 
 
     def _fit_popup_width(self):
@@ -161,19 +192,6 @@ class TightComboBox(QComboBox):
                 background: #4f86ff;
                 color: white;
             }
-
-            QScrollBar:vertical {
-                width: 10px;
-                background: transparent;
-                margin: 6px 2px 6px 2px;
-            }
-            QScrollBar::handle:vertical {
-                background: rgba(255,255,255,35%);
-                border-radius: 4px;
-                min-height: 20px;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
         """)
 
 

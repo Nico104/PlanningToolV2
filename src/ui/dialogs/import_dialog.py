@@ -63,6 +63,7 @@ class ImportDialog(QDialog):
             "datum_bis": "Datum bis",
             "periodizitaet": "Periodizität",
             "ausfall_daten": "Ausfalltermine",
+            "serien_ausnahmen": "Serien-Ausnahmen",
             "von_datum": "Von",
             "bis_datum": "Bis",
             "gruppe": "Gruppe",
