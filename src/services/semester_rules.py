@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from typing import Iterable, Optional
+from typing import Optional
 
 from ..core.models import Semester
 
@@ -62,46 +62,3 @@ def semester_for_date(value: date) -> Semester:
 
 def semester_id_for_date(value: date) -> str:
     return semester_for_date(value).id
-
-
-def _semester_distance_to_dates(semester: Semester, first_date: date, last_date: date) -> int:
-    if last_date < semester.start:
-        return (semester.start - last_date).days
-    if first_date > semester.end:
-        return (first_date - semester.end).days
-    return 0
-
-
-def nearest_semester_for_dates(dates: Iterable[date]) -> Optional[Semester]:
-    planned_dates = [value for value in dates if value is not None]
-    if not planned_dates:
-        return None
-
-    first_date = min(planned_dates)
-    last_date = max(planned_dates)
-    years = range(first_date.year - 1, last_date.year + 2)
-    candidates = [
-        semester_for_kind_year(kind, year)
-        for year in years
-        for kind in ("SS", "WS")
-    ]
-
-    containing = next(
-        (
-            semester
-            for semester in candidates
-            if all(semester.start <= planned_date <= semester.end for planned_date in planned_dates)
-        ),
-        None,
-    )
-    if containing:
-        return containing
-
-    return min(
-        candidates,
-        key=lambda semester: (
-            _semester_distance_to_dates(semester, first_date, last_date),
-            abs((semester.start - first_date).days),
-            semester.id,
-        ),
-    )

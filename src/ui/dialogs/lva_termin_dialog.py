@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
-from ...services.semester_rules import nearest_semester_for_dates, semester_for_date, semester_from_id
+from ...services.semester_rules import semester_for_date, semester_from_id
 from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
@@ -967,12 +967,11 @@ class LVATerminDialog(QDialog):
         tf = self.time_from.time()
         return time(tf.hour(), tf.minute())
 
-    def _semester_reference_dates(self) -> List[date]:
+    def _semester_reference_date(self) -> Optional[date]:
         if self.date_de.date() == self._unassigned_qdate:
-            return []
+            return None
 
-        start = qdate_to_date(self.date_de.date())
-        return [start]
+        return qdate_to_date(self.date_de.date())
 
     def _selected_semester_range(self) -> Optional[tuple[date, date]]:
         sem = self._selected_semester()
@@ -980,17 +979,17 @@ class LVATerminDialog(QDialog):
             return None
         return sem.start, sem.end
 
-    def _semester_contains_dates(self, sem: Semester, planned_dates: List[date]) -> bool:
-        return bool(planned_dates) and all(sem.start <= planned_date <= sem.end for planned_date in planned_dates)
+    def _semester_contains_date(self, sem: Semester, planned_date: date) -> bool:
+        return sem.start <= planned_date <= sem.end
 
-    def _suggest_semester_for_dates(self, planned_dates: List[date]) -> Optional[Semester]:
-        if not planned_dates:
+    def _suggest_semester_for_date(self, planned_date: Optional[date]) -> Optional[Semester]:
+        if planned_date is None:
             return None
 
         current_id = self.semester_selector.current_semester_id()
-        nearest = nearest_semester_for_dates(planned_dates)
-        if nearest and nearest.id != current_id:
-            return nearest
+        suggestion = semester_for_date(planned_date)
+        if suggestion.id != current_id:
+            return suggestion
         return None
 
     def _update_semester_warning(self) -> None:
@@ -998,43 +997,38 @@ class LVATerminDialog(QDialog):
             return
 
         self._suggested_semester_id = None
-        planned_dates = self._semester_reference_dates()
+        planned_date = self._semester_reference_date()
         selected_range = self._selected_semester_range()
-        if not planned_dates or selected_range is None:
+        if planned_date is None or selected_range is None:
             self.semester_warning_lbl.hide()
             self.semester_change_btn.hide()
             return
 
         start, end = selected_range
-        if all(start <= planned_date <= end for planned_date in planned_dates):
+        if start <= planned_date <= end:
             self.semester_warning_lbl.hide()
             self.semester_change_btn.hide()
             return
 
-        first_date = min(planned_dates)
-        last_date = max(planned_dates)
-        if first_date == last_date:
-            date_text = first_date.strftime("%d.%m.%Y")
-        else:
-            date_text = f"{first_date.strftime('%d.%m.%Y')} - {last_date.strftime('%d.%m.%Y')}"
+        date_text = planned_date.strftime("%d.%m.%Y")
 
-        suggestion = self._suggest_semester_for_dates(planned_dates)
+        suggestion = self._suggest_semester_for_date(planned_date)
         if suggestion:
             self._suggested_semester_id = suggestion.id
-            if self._semester_contains_dates(suggestion, planned_dates):
+            if self._semester_contains_date(suggestion, planned_date):
                 self.semester_warning_lbl.setText(
-                    f"Hinweis: Die Termindaten ({date_text}) liegen außerhalb des ausgewählten Semesters."
+                    f"Hinweis: Das Beginn-Datum ({date_text}) liegt außerhalb des ausgewählten Semesters."
                 )
             else:
                 self.semester_warning_lbl.setText(
-                    f"Hinweis: Die Termindaten ({date_text}) liegen außerhalb des üblichen Semesterzeitraums. "
+                    f"Hinweis: Das Beginn-Datum ({date_text}) liegt außerhalb des üblichen Semesterzeitraums. "
                     "Das naheliegendste Semester kann trotzdem ausgewählt werden."
                 )
             self.semester_change_btn.setText(f"Zu {suggestion.name} wechseln")
             self.semester_change_btn.show()
         else:
             self.semester_warning_lbl.setText(
-                f"Hinweis: Die Termindaten ({date_text}) liegen außerhalb des üblichen Semesterzeitraums. "
+                f"Hinweis: Das Beginn-Datum ({date_text}) liegt außerhalb des üblichen Semesterzeitraums. "
                 "Der Termin kann trotzdem gespeichert werden."
             )
             self.semester_change_btn.hide()
