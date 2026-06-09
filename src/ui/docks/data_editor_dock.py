@@ -14,7 +14,7 @@ from ..utils.datetime_utils import fmt_date, fmt_time
 class DataEditorDock(QDockWidget):
     """
     Dock widget with tabbed CRUD editors for master data:
-    LVAs, rooms, terms, free days, Studiensemester, and Studienrichtungen.
+    LVAs, rooms, terms, free days, and Studienrichtungen.
     """
 
     def __init__(self, parent, ds, on_data_changed=None):
@@ -56,19 +56,11 @@ class DataEditorDock(QDockWidget):
             self.tabs,
             id_column=13,
         )
-        self.tab_studiensemester = EditorTab(
-            "Studiensemester",
-            ["Name", "Notiz", "ID"],
-            self.tabs,
-            id_column=2,
-        )
-        
         self.tabs.addTab(self.tab_termine, "Termine")
 
         self.tabs.addTab(self.tab_lva, "LVAs")
         self.tabs.addTab(self.tab_rooms, "Räume")
         self.tabs.addTab(self.tab_free, "Freie Tage")
-        self.tabs.addTab(self.tab_studiensemester, "Studiensemester")
         self.tabs.addTab(self.tab_studienrichtung, "Studienrichtungen")
 
         self.setWidget(wrap)
@@ -108,10 +100,6 @@ class DataEditorDock(QDockWidget):
         self.tab_termine.edit_clicked.connect(self._crud.edit_termin_from_data_editor)
         self.tab_termine.delete_clicked.connect(self._crud.del_termin)
 
-        self.tab_studiensemester.add_clicked.connect(self._crud.add_studiensemester)
-        self.tab_studiensemester.edit_clicked.connect(self._crud.edit_studiensemester)
-        self.tab_studiensemester.delete_clicked.connect(self._crud.del_studiensemester)
-
     def set_termine_read_only(self, read_only: bool) -> None:
         self.tab_termine.set_actions_enabled(not bool(read_only))
 
@@ -127,7 +115,6 @@ class DataEditorDock(QDockWidget):
             "lva": self.tab_lva,
             "room": self.tab_rooms,
             "free_day": self.tab_free,
-            "studiensemester": self.tab_studiensemester,
             "studienrichtung": self.tab_studienrichtung,
         }
 
@@ -149,12 +136,6 @@ class DataEditorDock(QDockWidget):
         self._refresh_rooms()
         self._refresh_freie_tage()
         self._refresh_termine()
-        self._refresh_studiensemester()
-        
-    def _refresh_studiensemester(self) -> None:
-        semester_data = self.ds.load_studiensemester()
-        rows = [[s.get("name", ""), s.get("notiz", ""), s.get("id", "")] for s in semester_data]
-        self._fill_table(self.tab_studiensemester.table, rows)
 
     # Refresh tables
     def _refresh_lvas(self) -> None:

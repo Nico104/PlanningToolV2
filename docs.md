@@ -60,10 +60,10 @@ Create/edit/delete for:
 - LVAs
 - Räume
 - Freie Tage
-- Studiensemester
 - Studienrichtungen
 
 Semester are generated automatically and shown read-only.
+Studiensemester options are global fixed app data and are assigned on LVAs, not edited per project.
 Semester tools can copy or clear Termine for generated semesters without treating semesters as persisted master data.
 
 ### 2.5 Conflicts
@@ -116,7 +116,6 @@ Global shortcuts (registered in `shortcuts.py`):
 - Ctrl+Alt+L: new LVA
 - Ctrl+Alt+R: new room
 - Ctrl+Alt+F: new free day
-- Ctrl+Alt+G: new Studiensemester
 - Ctrl+Alt+H: new Studienrichtung
 - Ctrl+Shift+S: settings
 - Ctrl+I: import
@@ -205,7 +204,7 @@ Alternatively right click termin card in the termin list dock
 3. MainWindow asks `UndoService` for the next snapshot via `undo(self.ds)` / `redo(self.ds)`
 4. If no snapshot exists, method returns and nothing changes
 5. If a snapshot exists, MainWindow calls `UndoService.restore(self.ds, snapshot)`
-6. `restore(...)` rewrites the tracked files from the snapshot (project data plus global Studiensemester options)
+6. `restore(...)` rewrites the tracked project files from the snapshot
 7. MainWindow calls `refresh_everything()` so planner, docks, and conflicts are synchronized with restored data
 8. MainWindow calls `update_undo_redo_actions()` to enable/disable menu entries according to stack state
 9. Toast feedback is shown (`Rückgängig` / `Wiederholen`)

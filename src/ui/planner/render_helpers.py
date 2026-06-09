@@ -3,13 +3,14 @@ from datetime import date, time
 from typing import Callable, Iterable, Sequence
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QPen
+from PySide6.QtGui import QPen
 from PySide6.QtWidgets import QHeaderView, QStyle, QStyleOptionHeader, QTableWidget, QSizePolicy
 
 from ...core.models import Termin
 from ..utils.datetime_utils import fmt_time, mins_from_time
 from ..utils.grouping_utils import group_concurrent_appointments
-from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
+from ..utils.color_constants import planner_text_color, type_color_for
+from ..utils.qss_tokens import qss_color
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 
@@ -48,7 +49,7 @@ class FreeDayHeaderView(QHeaderView):
         badge = self._badges.get(logical_index)
         text_rect = rect.adjusted(4, 4, -4, -24 if badge else -4)
 
-        painter.setPen(QColor("#111111"))
+        painter.setPen(planner_text_color())
         painter.drawText(text_rect, Qt.AlignCenter | Qt.TextWordWrap, text)
 
         if badge:
@@ -61,18 +62,22 @@ class FreeDayHeaderView(QHeaderView):
         badge_rect = section_rect.adjusted(4, section_rect.height() - 24, -4, -4)
 
         if day_type == "feiertag":
-            bg, border, fg = "#fff1c2", "#c58b00", "#5c3c00"
+            bg = qss_color("free-day-holiday-badge-bg", "#fff1c2")
+            border = qss_color("free-day-holiday-badge-border", "#c58b00")
+            fg = qss_color("free-day-holiday-badge-text", "#5c3c00")
         else:
-            bg, border, fg = "#dbeafe", "#8bb7f0", "#173a69"
+            bg = qss_color("free-day-lecture-badge-bg", "#dbeafe")
+            border = qss_color("free-day-lecture-badge-border", "#8bb7f0")
+            fg = qss_color("free-day-lecture-badge-text", "#173a69")
 
-        painter.setBrush(QColor(bg))
-        painter.setPen(QPen(QColor(border), 0.5))
+        painter.setBrush(bg)
+        painter.setPen(QPen(border, 0.5))
         painter.drawRoundedRect(badge_rect, 0, 0)
 
         font = painter.font()
         font.setBold(True)
         painter.setFont(font)
-        painter.setPen(QColor(fg))
+        painter.setPen(fg)
         metrics = painter.fontMetrics()
         label = metrics.elidedText(text, Qt.ElideRight, max(1, badge_rect.width() - 10))
         painter.drawText(badge_rect.adjusted(5, 0, -5, 0), Qt.AlignLeft | Qt.AlignVCenter, label)
@@ -199,7 +204,7 @@ def render_grouped_termine_column(
 
             app_text = format_termin_text(app, lvas)
             typ = (app.typ or "").strip().upper()
-            bg = next((color for k, color in TYPE_COLORS if typ == k), DEFAULT_BG)
+            bg = type_color_for(typ)
             card = TerminCard(
                 app.id,
                 app_text,

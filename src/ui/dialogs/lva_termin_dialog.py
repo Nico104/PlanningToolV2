@@ -29,7 +29,6 @@ STANDARD_TERMIN_TYPES = ["VO", "UE", "VU", "LU", "SE", "PR"]
 def _scrollable_tab(form: QFormLayout) -> QScrollArea:
     content = QWidget()
     content.setObjectName("DialogTabContent")
-    content.setStyleSheet("QWidget#DialogTabContent { background: #ffffff; }")
     content.setLayout(form)
 
     scroll = QScrollArea()
@@ -38,10 +37,6 @@ def _scrollable_tab(form: QFormLayout) -> QScrollArea:
     scroll.setFrameShape(QScrollArea.NoFrame)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     scroll.setWidget(content)
-    scroll.setStyleSheet(
-        "QScrollArea#DialogTabScroll { background: #ffffff; border: none; }"
-        "QScrollArea#DialogTabScroll > QWidget > QWidget { background: #ffffff; }"
-    )
     return scroll
 
 
@@ -253,10 +248,6 @@ class LVATerminDialog(QDialog):
         self.occurrence_table.setShowGrid(False)
         self.occurrence_table.setMinimumHeight(260)
         self.occurrence_table.cellDoubleClicked.connect(self._on_occurrence_row_double_clicked)
-        self.occurrence_table.setStyleSheet(
-            "QTableWidget#Field { border: none; background: #ffffff; }"
-            "QTableWidget#Field::item { border: none; padding: 2px 0; }"
-        )
         self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
@@ -410,11 +401,8 @@ class LVATerminDialog(QDialog):
         lay.addWidget(self.tabs, 1)
 
         self.semester_warning_lbl = QLabel()
+        self.semester_warning_lbl.setObjectName("SemesterWarning")
         self.semester_warning_lbl.setWordWrap(True)
-        self.semester_warning_lbl.setStyleSheet(
-            "color: #8a5a00; background: #fff8e6; border: 1px solid #f0d99a; "
-            "border-radius: 6px; padding: 8px;"
-        )
         self.semester_warning_lbl.hide()
         self.semester_change_btn = QPushButton()
         self.semester_change_btn.setObjectName("SecondaryButton")

@@ -2,6 +2,8 @@ from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QFontMetrics
 from PySide6.QtWidgets import QApplication, QComboBox, QStyledItemDelegate, QFrame, QListView
 
+from ...utils.qss_tokens import qss_token
+
 
 class _TightDelegate(QStyledItemDelegate):
     """Item delegate that reduces row height in the combo popup."""
@@ -151,12 +153,18 @@ class TightComboBox(QComboBox):
     def _sync_popup_styling(self):
         v = self.view()
         w = v.window()
+        popup_bg = qss_token("popup-bg", "#f8f8f8")
+        popup_border = qss_token("popup-border", "#4a4a4a")
+        selection_bg = qss_token("popup-selection-bg", "#4f86ff")
+        popup_text = qss_token("popup-text", "black")
+        selection_text = qss_token("popup-selection-text", "white")
+        hover_bg = qss_token("popup-hover-bg", "rgba(255,255,255,14%)")
 
         w.setAttribute(Qt.WA_StyledBackground, True)
-        w.setStyleSheet("""
+        w.setStyleSheet(f"""
             /* This is the container behind the list */
-            background: #f8f8f8;
-            border: 1px solid #4a4a4a;
+            background: {popup_bg};
+            border: 1px solid {popup_border};
             border-radius: 1px;
         """)
 
@@ -165,33 +173,33 @@ class TightComboBox(QComboBox):
             lay.setContentsMargins(0, 0, 0, 0)
             lay.setSpacing(0)
             
-        v.setStyleSheet("""
-            QAbstractItemView {
+        v.setStyleSheet(f"""
+            QAbstractItemView {{
                 background: transparent;
                 border: none;
                 outline: 0;
                     padding: 0px; /* remove inner padding so items align with popup edges */
-                selection-background-color: #4f86ff;
-                selection-color: white;
-            }
+                selection-background-color: {selection_bg};
+                selection-color: {selection_text};
+            }}
 
-            QAbstractItemView::item {
+            QAbstractItemView::item {{
                 /* match header combo padding vertically (6px) so selected row aligns */
                     padding: 6px 12px;
                     margin: 0px; /* remove item margin so selection fills width */
                 border-radius: 4px;
-                color: black;
-            }
+                color: {popup_text};
+            }}
 
-            QAbstractItemView::item:hover {
-                background: rgba(255,255,255,14%);
-            }
+            QAbstractItemView::item:hover {{
+                background: {hover_bg};
+            }}
 
             QAbstractItemView::item:selected,
-            QAbstractItemView::item:!active:selected {
-                background: #4f86ff;
-                color: white;
-            }
+            QAbstractItemView::item:!active:selected {{
+                background: {selection_bg};
+                color: {selection_text};
+            }}
         """)
 
 

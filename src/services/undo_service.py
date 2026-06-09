@@ -16,7 +16,6 @@ class ProjectSnapshot:
     raeume: List[Raum]
     studienrichtungen: List[Dict[str, Any]]
     freie_tage: List[Dict[str, Any]]
-    studiensemester: List[Dict[str, Any]]
 
 
 class UndoService:
@@ -77,7 +76,6 @@ class UndoService:
             raeume=deepcopy(ds.load_raeume()),
             studienrichtungen=deepcopy(ds.load_studienrichtungen()),
             freie_tage=deepcopy(ds.load_freie_tage()),
-            studiensemester=deepcopy(ds.load_studiensemester()),
         )
 
     def restore(self, ds: DataService, snapshot: ProjectSnapshot) -> None:
@@ -86,4 +84,3 @@ class UndoService:
         ds.save_raeume(deepcopy(snapshot.raeume))
         ds.save_studienrichtungen(deepcopy(snapshot.studienrichtungen))
         ds.save_freie_tage(deepcopy(snapshot.freie_tage))
-        ds.save_studiensemester(deepcopy(snapshot.studiensemester))

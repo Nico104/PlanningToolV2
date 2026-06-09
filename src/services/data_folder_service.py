@@ -21,10 +21,12 @@ def load_settings(settings_path: Path) -> dict:
 
 
 def save_settings(settings_path: Path, settings: dict) -> None:
-    settings_path.write_text(
+    tmp = settings_path.with_suffix(".tmp")
+    tmp.write_text(
         json.dumps(settings, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    tmp.replace(settings_path)
 
 
 def resolve_data_dir(project_root: Path, settings: dict) -> Path:

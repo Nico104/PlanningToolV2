@@ -183,6 +183,7 @@ class MainWindow(QMainWindow):
     def open_settings(self) -> None:
         cur = self.ds.load_settings()
         old_data_path = cur.get("data_path", "")
+        old_theme = str(cur.get("theme", "light")).strip().lower()
         dlg = SettingsDialog(self, cur)
         if dlg.exec() != QDialog.Accepted or not dlg.result_settings:
             return
@@ -192,11 +193,12 @@ class MainWindow(QMainWindow):
         self.ds.save_settings(s)
 
         new_data_path = s.get("data_path", "")
-        if new_data_path != old_data_path:
+        new_theme = str(s.get("theme", "light")).strip().lower()
+        if new_data_path != old_data_path or new_theme != old_theme:
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Information)
             msg.setWindowTitle("Gespeichert")
-            msg.setText("Gespeichert. Für manche Einstellungen muss das Programm neu gestartet werden.")
+            msg.setText("Gespeichert. Für diese Änderung muss das Programm neu gestartet werden.")
             restart_btn = QPushButton("Neustart")
             ok_btn = msg.addButton(QMessageBox.Ok)
             msg.addButton(restart_btn, QMessageBox.AcceptRole)
@@ -504,6 +506,25 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
 
     def import_tiss_room_list(self) -> None:
+        info = QMessageBox(self)
+        info.setIcon(QMessageBox.Information)
+        info.setWindowTitle("TISS-Raumliste importieren")
+        info.setText("Bitte eine Excel-Datei mit Raumdaten auswählen.")
+        info.setInformativeText(
+            "Die Tabelle muss Spalten für Raumnummer, Raumname und Kapazität enthalten.\n\n"
+            "Erkannte Überschriften:\n"
+            "- Raumnummer / Raumcode / ID\n"
+            "- Raum / Raumname / Bezeichnung\n"
+            "- Kapazität / Plätze / Capacity"
+        )
+        open_btn = QPushButton("Datei wählen")
+        info.addButton(QMessageBox.Cancel)
+        info.addButton(open_btn, QMessageBox.AcceptRole)
+        info.setDefaultButton(open_btn)
+        info.exec()
+        if info.clickedButton() != open_btn:
+            return
+
         fn, _ = QFileDialog.getOpenFileName(
             self,
             "TISS-Raumliste importieren",
@@ -700,6 +721,17 @@ class MainWindow(QMainWindow):
 
         return normalized
 
+    def _import_has_changes(self, normalized: dict) -> bool:
+        for fname, incoming in (normalized or {}).items():
+            target = self.data_dir / fname
+            existing = self._read_json(target, None)
+            try:
+                if json.dumps(existing, sort_keys=True) != json.dumps(incoming, sort_keys=True):
+                    return True
+            except Exception:
+                return True
+        return False
+
     def import_project(self) -> None:
         fn, _ = QFileDialog.getOpenFileName(
             self,
@@ -725,6 +757,9 @@ class MainWindow(QMainWindow):
         if not normalized:
             QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
             return
+
+        if self._import_has_changes(normalized):
+            self.undo_service.record_snapshot(self.ds)
 
         dlg = ImportDialog(self, self.data_dir, normalized)
         if dlg.exec() != QDialog.Accepted:

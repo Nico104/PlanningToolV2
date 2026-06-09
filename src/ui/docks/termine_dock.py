@@ -217,19 +217,6 @@ class TermineDock(QDockWidget):
             header_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
             header_btn.setMinimumHeight(28)
             header_btn.setMinimumWidth(120)
-            header_btn.setStyleSheet(
-                "QToolButton#LvaHeaderButton {"
-                " color: #222;"
-                " background: transparent;"
-                " font-weight: bold;"
-                " text-align: left;"
-                " padding-left: 4px;"
-                " border: none;"
-                "}"
-                "QToolButton#LvaHeaderButton:checked {"
-                " background: #f5f5f5;"
-                "}"
-            )
 
             group_cards = []
             def toggle_group(checked, cards, btn, key):

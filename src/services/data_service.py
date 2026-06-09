@@ -195,8 +195,7 @@ class DataService:
     def save_lvas(self, lvas: List[Lehrveranstaltung]) -> None:
         settings = self.load_settings()
         studienrichtung = settings.get("start_studienrichtung", "ETIT")
-        path = self.data_dir / "lehrveranstaltungen.json"
-        path.write_text(json.dumps({
+        self._write("lehrveranstaltungen.json", {
             "lehrveranstaltungen": [{
                 "id": l.id,
                 "name": l.name,
@@ -205,12 +204,11 @@ class DataService:
                 "studienrichtung": str(getattr(l, "studienrichtung", studienrichtung or "ETIT")).strip() or "ETIT",
                 "ects": str(getattr(l, "ects", "")).strip(),
             } for l in lvas]
-        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        })
 
     def save_termine(self, termine: List[Termin]) -> None:
         # Save all termine into a single termine.json file (with semester_id per termin)
-        path = self.data_dir / "termine.json"
-        path.write_text(json.dumps({
+        self._write("termine.json", {
             "termine": [{
                 "name": t.name,
                 "id": t.id,
@@ -249,12 +247,14 @@ class DataService:
                     for a in (getattr(t, "serien_ausnahmen", []) or [])
                 ],
             } for t in termine]
-        }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        })
 
     def save_settings(self, settings: Dict[str, Any]) -> None:
         # Save to src/settings.json
         settings_path = self._src_json_path("settings.json")
-        settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp = settings_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(settings_path)
 
     
 
@@ -270,11 +270,7 @@ class DataService:
             return []
 
     def save_studienrichtungen(self, studienrichtungen: List[Dict[str, Any]]) -> None:
-        path = self.data_dir / "studienrichtungen.json"
-        path.write_text(
-            json.dumps({"studienrichtungen": studienrichtungen}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        self._write("studienrichtungen.json", {"studienrichtungen": studienrichtungen})
 
    
 
@@ -290,8 +286,6 @@ class DataService:
             return []
 
     def save_freie_tage(self, freie_tage: List[Dict[str, Any]]) -> None:
-        path = self.data_dir / "freie_tage.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
         cleaned_items: List[Dict[str, Any]] = []
         for item in freie_tage:
             cleaned_items.append(
@@ -301,10 +295,7 @@ class DataService:
                     if key not in {"quelle", "quelle_id"}
                 }
             )
-        path.write_text(
-            json.dumps({"freie_tage": cleaned_items}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        self._write("freie_tage.json", {"freie_tage": cleaned_items})
 
     
 
@@ -318,10 +309,3 @@ class DataService:
             return items if isinstance(items, list) else []
         except Exception:
             return []
-
-    def save_studiensemester(self, semester_list: List[Dict[str, Any]]) -> None:
-        path = self._src_json_path("studiensemester.json")
-        path.write_text(
-            json.dumps({"studiensemester": semester_list}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )

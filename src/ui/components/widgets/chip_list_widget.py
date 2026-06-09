@@ -29,20 +29,20 @@ class ChipListWidget(QWidget):
 
     def _make_chip(self, text, idx):
         chip = QWidget(self)
+        chip.setObjectName("ChipItem")
         chip_layout = QHBoxLayout(chip)
         chip_layout.setContentsMargins(8, 2, 4, 2)
         chip_layout.setSpacing(4)
         label = QLabel(text, chip)
-        label.setStyleSheet('QLabel { padding: 0 2px; border: none; background: transparent; }')
+        label.setObjectName("ChipLabel")
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         btn = QPushButton('✕', chip)
+        btn.setObjectName("ChipDeleteButton")
         btn.setFixedSize(18, 18)
         btn.setCursor(Qt.PointingHandCursor)
-        btn.setStyleSheet('QPushButton { border: none; background: transparent; color: #888; font-weight: bold; padding: 0 2px; } QPushButton:hover { color: #444; background: #eee; }')
         btn.clicked.connect(lambda _, i=idx: self.chipDeleted.emit(i))
         chip_layout.addWidget(label)
         chip_layout.addWidget(btn)
-        chip.setStyleSheet('QWidget { border-radius: 6px; background: #fff; border: 1px solid #222; padding-left: 0px; padding-right: 0px; }')
         chip.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         return chip
 

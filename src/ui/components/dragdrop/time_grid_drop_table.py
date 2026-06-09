@@ -1,8 +1,10 @@
 from PySide6.QtCore import Qt, Signal, QPoint, QTimer, QRect, QMimeData
-from PySide6.QtGui import QDropEvent, QDragMoveEvent, QPainter, QPen, QColor, QDrag
+from PySide6.QtGui import QDropEvent, QDragMoveEvent, QPainter, QPen, QDrag
 from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelectionRange
 
 import math
+
+from ...utils.qss_tokens import qss_color
 
 
 class TimeGridDropTable(QTableWidget):
@@ -266,9 +268,9 @@ class TimeGridDropTable(QTableWidget):
         p.setRenderHint(QPainter.Antialiasing, False)
 
         if self._hover_has_conflict:
-            fill_color = QColor("#CC3333")
+            fill_color = qss_color("planner-drop-conflict-bg", "#CC3333")
         else:
-            fill_color = QColor("#111111")
+            fill_color = qss_color("planner-focus-border", "#111111")
             if self._color_provider and self._hover_termin_id:
                 try:
                     fill_color = self._color_provider(self._hover_termin_id)
@@ -284,7 +286,7 @@ class TimeGridDropTable(QTableWidget):
             try:
                 text = self._text_provider(self._hover_termin_id)
                 if text:
-                    text_color = QColor("#FFFFFF") if self._hover_has_conflict else QColor("#111111")
+                    text_color = qss_color("planner-drop-conflict-text", "#FFFFFF") if self._hover_has_conflict else qss_color("planner-text", "#111111")
                     p.setPen(text_color)
                     p.drawText(rect.adjusted(5, 3, -5, -3), Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, text)
             except Exception:
@@ -302,7 +304,7 @@ class TimeGridDropTable(QTableWidget):
         painter = QPainter(self.viewport())
         painter.setRenderHint(QPainter.Antialiasing, False)
 
-        vertical_pen = QPen(QColor("#eeeeee"))
+        vertical_pen = QPen(qss_color("planner-grid-vertical", "#eeeeee"))
         vertical_pen.setWidth(1)
         vertical_pen.setCosmetic(True)
         painter.setPen(vertical_pen)
@@ -314,12 +316,12 @@ class TimeGridDropTable(QTableWidget):
                 continue
             painter.drawLine(x, top, x, bottom)
 
-        half_hour_pen = QPen(QColor("#dddddd"))
+        half_hour_pen = QPen(qss_color("planner-grid-half-hour", "#dddddd"))
         half_hour_pen.setWidth(1)
         half_hour_pen.setCosmetic(True)
         half_hour_pen.setDashPattern([8, 5])
 
-        hour_pen = QPen(QColor("#cfcfcf"))
+        hour_pen = QPen(qss_color("planner-grid-hour", "#cfcfcf"))
         hour_pen.setWidth(1)
         hour_pen.setCosmetic(True)
         left = 0

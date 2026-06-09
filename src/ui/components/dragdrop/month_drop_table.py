@@ -1,6 +1,8 @@
 from PySide6.QtCore import Qt, Signal, QPoint, QTimer
-from PySide6.QtGui import QColor, QDropEvent, QDragMoveEvent, QPainter
+from PySide6.QtGui import QDropEvent, QDragMoveEvent, QPainter
 from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelectionRange
+
+from ...utils.qss_tokens import qss_color
 
 
 class MonthDropTable(QTableWidget):
@@ -137,7 +139,9 @@ class MonthDropTable(QTableWidget):
         w = self.columnWidth(self._hover_col)
         h = self.rowHeight(self._hover_row)
         p = QPainter(self.viewport())
-        p.fillRect(x + 1, y + 1, w - 2, h - 2, QColor(204, 51, 51, 120))
+        color = qss_color("planner-drop-conflict-bg", "#CC3333")
+        color.setAlpha(120)
+        p.fillRect(x + 1, y + 1, w - 2, h - 2, color)
         p.end()
 
     def _auto_scroll_tick(self):

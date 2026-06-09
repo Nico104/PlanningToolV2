@@ -1,16 +1,39 @@
-from PySide6.QtWidgets import QCheckBox
+from pathlib import Path
+from PySide6.QtWidgets import QCheckBox, QApplication
+from PySide6.QtGui import QPalette
+
 
 class TickCheckBox(QCheckBox):
-    """Styled checkbox with a custom tick icon for use inside dialogs"""
+    """Styled checkbox with a custom tick icon for use inside dialogs
+
+    The widget picks a white or dark checkmark SVG depending on the current
+    application palette (dark mode → white icon).
+    """
 
     def __init__(self, label=None, parent=None):
         super().__init__(label or "", parent)
-        check_icon_path = "src/ui/assets/icons/check-marksvg.svg"
+
+        # detect dark theme by sampling the window background lightness
+        app = QApplication.instance()
+        dark = False
+        if app is not None:
+            try:
+                bg = app.palette().color(QPalette.Window)
+                dark = bg.lightness() < 128
+            except Exception:
+                dark = False
+
+        icon_name = "check-marksvg_white.svg" if dark else "check-marksvg.svg"
+        # Keep the same relative path pattern used elsewhere
+        check_icon_path = f"src/ui/assets/icons/{icon_name}"
+
+        border_color = "#47515c" if dark else "#bbb"
+
         self.setStyleSheet(f'''
             QCheckBox::indicator {{
                 width: 18px;
                 height: 18px;
-                border: 1px solid #bbb;
+                border: 1px solid {border_color};
                 border-radius: 4px;
                 background: transparent;
             }}

@@ -75,7 +75,7 @@ def install_main_window_shortcuts(mw) -> None:
     # F5 refresh; Alt+Left/Alt+Right previous/next period; Ctrl+1 week; Ctrl+2 day;
     # Ctrl+3 month; Ctrl+N new Termin; Ctrl+Shift+S settings; Ctrl+I import;
     # Ctrl+Shift+K conflicts; Ctrl+E export; Ctrl+Shift+R reset layouts; Ctrl+T today;
-    # Ctrl+Alt+T/L/R/F/G/H new Termin/LVA/Raum/Freier Tag/Studiensemester/Studienrichtung.
+    # Ctrl+Alt+T/L/R/F/H new Termin/LVA/Raum/Freier Tag/Studienrichtung.
     # Ctrl+Alt+V: previous-year view, either hold or toggle depending on settings.
     # Focused calendar TerminCard: Delete/Backspace unassign; Ctrl+Delete/Ctrl+Backspace delete.
     mw.act_refresh.setShortcut(QKeySequence("F5"))
@@ -113,7 +113,6 @@ def install_main_window_shortcuts(mw) -> None:
     bind("Ctrl+Alt+L", lambda: mw.create_data_editor_entity("lva"))
     bind("Ctrl+Alt+R", lambda: mw.create_data_editor_entity("room"))
     bind("Ctrl+Alt+F", lambda: mw.create_data_editor_entity("free_day"))
-    bind("Ctrl+Alt+G", lambda: mw.create_data_editor_entity("studiensemester"))
     bind("Ctrl+Alt+H", lambda: mw.create_data_editor_entity("studienrichtung"))
 
     bind_planner("Delete", mw.unassign_focused_calendar_termin)

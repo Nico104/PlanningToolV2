@@ -101,8 +101,10 @@ def load_conflicts(path=None):
 def save_conflicts(conflicts, path=None):
     path = path or str(DEFAULT_CONFLICTS_PATH)
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(conflicts, f, ensure_ascii=False, indent=4)
+        target = Path(path)
+        tmp = target.with_suffix(".tmp")
+        tmp.write_text(json.dumps(conflicts, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
+        tmp.replace(target)
     except Exception:
         pass
 

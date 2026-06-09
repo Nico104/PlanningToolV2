@@ -6,6 +6,8 @@ import json
 
 from PySide6.QtGui import QColor
 
+from ..utils.qss_tokens import qss_color
+
 
 @dataclass(frozen=True)
 class FreeDayInfo:
@@ -92,32 +94,11 @@ class FreeDayProvider:
         return self.label_for_type(info.day_type)
 
     def _load_free_day_styles(self) -> dict[str, object]:
-        try:
-            qss = (Path(__file__).resolve().parent.parent / "styles" / "light.qss").read_text(encoding="utf-8")
-        except OSError:
-            return {}
-
-        qss_values = self._qss_values(qss)
         styles: dict[str, object] = {}
-
-        for token, key in {
-            "free-day-holiday-bg": "holiday_bg",
-            "free-day-lecture-bg": "lecture_bg",
-        }.items():
-            color = QColor(qss_values.get(token, ""))
-            if color.isValid():
-                styles[key] = color
-
+        styles["holiday_bg"] = qss_color("free-day-holiday-bg", "#f9e7c0")
+        styles["lecture_bg"] = qss_color("free-day-lecture-bg", "#dbeafe")
+        styles["cell_border"] = qss_color("free-day-cell-border", "#dfe6ee")
         return styles
-
-    @staticmethod
-    def _qss_values(qss: str) -> dict[str, str]:
-        return {
-            token.strip(): value.strip().rstrip(";")
-            for line in qss.splitlines()
-            if ":" in line
-            for token, value in [line.split(":", 1)]
-        }
 
     def _parse_iso_date(self, raw: str) -> Optional[date]:
         try:

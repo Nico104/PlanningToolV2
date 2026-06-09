@@ -57,6 +57,10 @@ class SettingsDialog(QDialog):
         self.previous_year_shortcut_mode_cb.setObjectName("Field")
         self.previous_year_shortcut_mode_cb.addItem("Gedrückt halten", "hold")
         self.previous_year_shortcut_mode_cb.addItem("Umschalten", "toggle")
+        self.theme_cb = TightComboBox()
+        self.theme_cb.setObjectName("Field")
+        self.theme_cb.addItem("Hell", "light")
+        self.theme_cb.addItem("Dunkel", "dark")
         form.addRow("Zeit-Raster:", self.slot_cb)
         form.addRow("Tag Start:", self.day_start_te)
         form.addRow("Tag Ende:", self.day_end_te)
@@ -64,6 +68,7 @@ class SettingsDialog(QDialog):
         form.addRow("Datenpfad:", self.data_path_le)
         form.addRow("Termine-Suche anzeigen:", self.show_termine_search_cb)
         form.addRow("Vorjahr-Shortcut:", self.previous_year_shortcut_mode_cb)
+        form.addRow("Design:", self.theme_cb)
 
         # Wochenende anzeigen
         self.show_weekend_cb = TickCheckBox()
@@ -105,6 +110,9 @@ class SettingsDialog(QDialog):
         mode = str(s.get("previous_year_shortcut_mode", "hold")).strip().lower()
         mode_idx = self.previous_year_shortcut_mode_cb.findData(mode)
         self.previous_year_shortcut_mode_cb.setCurrentIndex(mode_idx if mode_idx >= 0 else 0)
+        theme = str(s.get("theme", "light")).strip().lower()
+        theme_idx = self.theme_cb.findData(theme)
+        self.theme_cb.setCurrentIndex(theme_idx if theme_idx >= 0 else 0)
         self.show_weekend_cb.setChecked(bool(s.get("show_weekend", False)))
 
     def _on_ok(self) -> None:
@@ -116,6 +124,7 @@ class SettingsDialog(QDialog):
             "data_path": self.data_path_le.text(),
             "show_termine_search": self.show_termine_search_cb.isChecked(),
             "previous_year_shortcut_mode": self.previous_year_shortcut_mode_cb.currentData() or "hold",
+            "theme": self.theme_cb.currentData() or "light",
             "show_weekend": self.show_weekend_cb.isChecked(),
         }
         self.accept()

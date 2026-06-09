@@ -319,7 +319,9 @@ class ImportDialog(QDialog):
 
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+                tmp = target.with_suffix(".tmp")
+                tmp.write_text(json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+                tmp.replace(target)
             except Exception:
                 pass
 

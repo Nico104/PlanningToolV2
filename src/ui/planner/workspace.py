@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from ...services.data_service import DataService
 from ...services.termin_occurrence_service import expand_termine, source_termin_id
 from ..utils.datetime_utils import date_to_qdate
+from ..utils.qss_tokens import qss_color
 from .state import PlannerState
 from .day_view import PlannerDayView
 from .week_view import PlannerWeekView
@@ -174,7 +175,7 @@ class PlannerWorkspace(QWidget):
     def _apply_planner_table_palette(self, table: QTableWidget) -> None:
         pal = QPalette(table.palette())
         pal.setColor(QPalette.Highlight, QColor(0, 0, 0, 0))
-        pal.setColor(QPalette.HighlightedText, QColor("#111111"))
+        pal.setColor(QPalette.HighlightedText, qss_color("planner-text", "#111111"))
         table.setPalette(pal)
 
     def _qdate_to_pydate(self, qd: QDate) -> date:

@@ -12,7 +12,6 @@ from ...core.models import SerienAusnahme, Studiensemester, Termin
 from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.studienrichtung_dialog import StudienrichtungDialog
-from ..dialogs.studiensemester_dialog import StudiensemesterDialog
 from ..dialogs.lva_termin_dialog import LVATerminDialog
 from ..components.widgets.delete_dialog import DeleteDialog
 from ..components.widgets.toast import Toast
@@ -136,75 +135,6 @@ class CrudHandlers:
             except Exception:
                 continue
         return models
-
-    def add_studiensemester(self):
-        semester_list = self.ds.load_studiensemester()
-        dlg = StudiensemesterDialog(self.parent, None)
-        result = dlg.get_result()
-        if not result:
-            return
-
-        if any(s["id"] == result.id for s in semester_list):
-            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
-            return
-        semester_list.append({"id": result.id, "name": result.name, "notiz": result.notiz})
-        self._record_undo_snapshot()
-        self.ds.save_studiensemester(semester_list)
-        if self.planner:
-            self.planner.refresh()
-        if hasattr(self.parent, '_refresh_studiensemester'):
-            self.parent._refresh_studiensemester()
-        self._show_toast("Studiensemester gespeichert.")
-
-    def edit_studiensemester(self):
-        semester_list = self.ds.load_studiensemester()
-        table = getattr(self.parent.tab_studiensemester, "table", None)
-        selected_semester_id = selected_id(table) if table else None
-        if not selected_semester_id:
-            return
-
-        row = next((i for i, s in enumerate(semester_list) if str(s.get("id", "")).strip() == selected_semester_id), None)
-        if row is None:
-            return
-
-        cur = semester_list[row]
-        dlg = StudiensemesterDialog(self.parent, Studiensemester(**cur))
-        result = dlg.get_result()
-        if not result:
-            return
-        if result.id != cur["id"] and any(s["id"] == result.id for s in semester_list):
-            QMessageBox.warning(self.parent, "Fehler", f"ID '{result.id}' existiert bereits.")
-            return
-        semester_list[row] = {"id": result.id, "name": result.name, "notiz": result.notiz}
-        self._record_undo_snapshot()
-        self.ds.save_studiensemester(semester_list)
-        if self.planner:
-            self.planner.refresh()
-        if hasattr(self.parent, '_refresh_studiensemester'):
-            self.parent._refresh_studiensemester()
-        self._show_toast("Studiensemester gespeichert.")
-
-    def del_studiensemester(self):
-        semester_list = self.ds.load_studiensemester()
-        table = getattr(self.parent.tab_studiensemester, "table", None)
-        selected_semester_id = selected_id(table) if table else None
-        if not selected_semester_id:
-            return
-
-        row = next((i for i, s in enumerate(semester_list) if str(s.get("id", "")).strip() == selected_semester_id), None)
-        if row is None:
-            return
-
-        if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
-            return
-        semester_list.pop(row)
-        self._record_undo_snapshot()
-        self.ds.save_studiensemester(semester_list)
-        if self.planner:
-            self.planner.refresh()
-        if hasattr(self.parent, '_refresh_studiensemester'):
-            self.parent._refresh_studiensemester()
-        self._show_toast("Studiensemester gelöscht.")
 
     def __init__(
         self,

@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeader
 from ...core.models import Termin
 from ...services.conflict_service import has_preview_conflict
 from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time
-from ..utils.color_constants import TYPE_COLORS, DEFAULT_BG
+from ..utils.color_constants import type_color_for
 from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
@@ -52,11 +52,8 @@ class PlannerWeekView:
             def _color_provider(tid: str) -> QColor:
                 t = self.state.termin_map.get(str(tid))
                 if t:
-                    typ = (t.typ or "").strip().upper()
-                    for k, color in TYPE_COLORS:
-                        if typ == k:
-                            return color
-                return DEFAULT_BG
+                    return type_color_for(t.typ)
+                return type_color_for("")
             self.week_table.set_color_provider(_color_provider)
         if hasattr(self.week_table, "set_text_provider"):
             def _text_provider(tid: str) -> str:

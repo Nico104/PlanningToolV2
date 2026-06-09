@@ -5,6 +5,7 @@ from PySide6.QtGui import QColor, QDrag, QPixmap
 from PySide6.QtWidgets import QLabel
 from shiboken6 import isValid
 
+from ..utils.qss_tokens import qss_color
 
 
 class TerminCard(QLabel):
@@ -37,7 +38,7 @@ class TerminCard(QLabel):
         self.setWordWrap(True)
         self._base_style = (
             f"background-color: {bg_color.name()};"
-            "color: #111111;"
+            f"color: {qss_color('planner-text', '#111111').name()};"
             "padding: 0px;"
             "border: none;"
             "font-size: 10px;"
@@ -64,9 +65,9 @@ class TerminCard(QLabel):
 
     def _apply_style(self) -> None:
         if self._focused or self._highlighted:
-            border = "border: 2px solid #111111;"
+            border = f"border: 2px solid {qss_color('planner-focus-border', '#111111').name()};"
         elif self._zu_besprechen:
-            border = "border: 2px solid #d98200;"
+            border = f"border: 2px solid {qss_color('planner-discuss-border', '#d98200').name()};"
         else:
             border = "border: none;"
         self.setStyleSheet(self._base_style + border)

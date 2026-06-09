@@ -5,7 +5,6 @@ from .teacher_export_dialog import TeacherExportDialog
 from .lva_termin_dialog import LVATerminDialog
 from .freie_tage_dialog import FreieTageDialog
 from .studienrichtung_dialog import StudienrichtungDialog
-from .studiensemester_dialog import StudiensemesterDialog
 from .import_dialog import ImportDialog
 from .semester_tools_dialog import SemesterToolsDialog
 from .free_day_import_dialog import FreeDayImportDialog
@@ -19,7 +18,6 @@ __all__ = [
     "LVATerminDialog",
     "FreieTageDialog",
     "StudienrichtungDialog",
-    "StudiensemesterDialog",
     "ImportDialog",
     "SemesterToolsDialog",
     "FreeDayImportDialog",

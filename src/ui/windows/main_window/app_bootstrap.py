@@ -9,6 +9,7 @@ from ....services.data_folder_service import (
     save_settings,
     validate_or_initialize_data_dir,
 )
+from ...utils.qss_tokens import set_qss_tokens
 from .main_window import MainWindow
 
 
@@ -28,33 +29,42 @@ def _choose_data_path(settings_path: Path, settings: dict, project_root: Path, c
     return settings, resolve_data_dir(project_root, settings)
 
 
-def load_global_style(app: QApplication) -> None:
+def load_global_style(app: QApplication, theme: str = "light") -> None:
     app.setStyle("Fusion")
 
     pal = QPalette()
+    theme = "dark" if str(theme).strip().lower() == "dark" else "light"
 
-    # Light UI base
-    pal.setColor(QPalette.Window, QColor("#f8f8f8"))
-    pal.setColor(QPalette.Base, QColor("#ffffff"))
-    pal.setColor(QPalette.Text, QColor("#111111"))
-    pal.setColor(QPalette.WindowText, QColor("#111111"))
-    pal.setColor(QPalette.Highlight, QColor("#01659b"))
-    pal.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+    if theme == "dark":
+        pal.setColor(QPalette.Window, QColor("#1f2328"))
+        pal.setColor(QPalette.Base, QColor("#15181c"))
+        pal.setColor(QPalette.Text, QColor("#f1f5f9"))
+        pal.setColor(QPalette.WindowText, QColor("#f1f5f9"))
+        pal.setColor(QPalette.Highlight, QColor("#3b82f6"))
+        pal.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+    else:
+        pal.setColor(QPalette.Window, QColor("#f8f8f8"))
+        pal.setColor(QPalette.Base, QColor("#ffffff"))
+        pal.setColor(QPalette.Text, QColor("#111111"))
+        pal.setColor(QPalette.WindowText, QColor("#111111"))
+        pal.setColor(QPalette.Highlight, QColor("#01659b"))
+        pal.setColor(QPalette.HighlightedText, QColor("#ffffff"))
     app.setPalette(pal)
 
-    qss_path = Path(__file__).resolve().parents[2] / "styles" / "light.qss"
+    qss_path = Path(__file__).resolve().parents[2] / "styles" / f"{theme}.qss"
 
     if qss_path.exists():
-        app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
+        qss = qss_path.read_text(encoding="utf-8")
+        set_qss_tokens(qss)
+        app.setStyleSheet(qss)
 
 
 def run_gui() -> None:
     app = QApplication([])
-    load_global_style(app)
-
     project_root = Path(__file__).resolve().parents[4]
     settings_path = project_root / "src" / "settings.json"
     settings = load_settings(settings_path)
+    load_global_style(app, settings.get("theme", "light"))
     data_dir = resolve_data_dir(project_root, settings)
 
     while True:
