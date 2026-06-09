@@ -14,6 +14,8 @@ class DataService:
     def __init__(self, data_dir: Path):
         self.data_dir = data_dir
 
+    def _src_json_path(self, filename: str) -> Path:
+        return Path(__file__).resolve().parents[1] / filename
 
     def _read(self, filename: str) -> Dict[str, Any]:
         path = self.data_dir / filename
@@ -181,7 +183,7 @@ class DataService:
 
     def load_settings(self) -> Dict[str, Any]:
         # settings.json is now in src/
-        settings_path = Path(__file__).parent / "../settings.json"
+        settings_path = self._src_json_path("settings.json")
         return json.loads(settings_path.read_text(encoding="utf-8-sig"))
 
     # ---------- SAVE ----------
@@ -251,7 +253,7 @@ class DataService:
 
     def save_settings(self, settings: Dict[str, Any]) -> None:
         # Save to src/settings.json
-        settings_path = Path(__file__).parent / "../settings.json"
+        settings_path = self._src_json_path("settings.json")
         settings_path.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     
@@ -307,7 +309,7 @@ class DataService:
     
 
     def load_studiensemester(self) -> List[Dict[str, Any]]:
-        path = self.data_dir / "studiensemester.json"
+        path = self._src_json_path("studiensemester.json")
         if not path.exists():
             return []
         try:
@@ -318,7 +320,7 @@ class DataService:
             return []
 
     def save_studiensemester(self, semester_list: List[Dict[str, Any]]) -> None:
-        path = self.data_dir / "studiensemester.json"
+        path = self._src_json_path("studiensemester.json")
         path.write_text(
             json.dumps({"studiensemester": semester_list}, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",

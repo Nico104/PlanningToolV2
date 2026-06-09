@@ -72,11 +72,6 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
         "list_key": "freie_tage",
         "columns": ["id", "typ", "beschreibung", "datum", "von_datum", "bis_datum"],
     },
-    "studiensemester.json": {
-        "sheet": "Studiensemester",
-        "list_key": "studiensemester",
-        "columns": ["id", "name", "notiz"],
-    },
 }
 
 _EXCEL_HEADER_LABELS: Dict[str, str] = {

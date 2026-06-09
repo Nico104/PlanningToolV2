@@ -16,7 +16,6 @@ class ImportDialog(QDialog):
         "lehrveranstaltungen.json": ("lehrveranstaltungen", "id"),
         "studienrichtungen.json":   ("studienrichtungen",   "id"),
         "freie_tage.json":          ("freie_tage",          "id"),
-        "studiensemester.json":   ("studiensemester",   "id"),
     }
 
     @staticmethod

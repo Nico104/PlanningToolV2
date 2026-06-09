@@ -22,6 +22,12 @@ from ....services.undo_service import UndoService
 from ....services.semester_tools_service import copy_semester_termine, delete_semester_termine
 from ....services.free_day_import_service import append_free_day_candidates
 from ....services.semester_rules import semester_from_id, semester_id_for_date
+from ....services.data_folder_service import (
+    data_path_for_settings,
+    load_settings,
+    save_settings,
+    validate_or_initialize_data_dir,
+)
 from ....core.models import Raum
 
 from ...docks.termine_dock import TermineDock
@@ -72,6 +78,10 @@ class MainWindow(QMainWindow):
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception:
             return default
+
+    @staticmethod
+    def _project_root() -> Path:
+        return Path(__file__).resolve().parents[4]
 
     def _resolve_start_date_for_semester(self, semester_id: str):
         """given a semester id, what date should the UI jump to
@@ -201,10 +211,89 @@ class MainWindow(QMainWindow):
         self.termine_dock.set_search_enabled(bool(s.get("show_termine_search", True)))
         self.refresh_everything()
 
+    def create_new_project(self) -> None:
+        project_root = self._project_root()
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Neues Projekt anlegen",
+            str(self.data_dir.parent if self.data_dir else project_root),
+        )
+        if not folder:
+            return
+
+        target_dir = Path(folder).resolve()
+        try:
+            if target_dir.samefile(self.data_dir):
+                QMessageBox.information(self, "Neues Projekt", "Dieser Ordner ist bereits geöffnet.")
+                return
+        except Exception:
+            pass
+
+        try:
+            has_content = target_dir.exists() and any(target_dir.iterdir())
+        except Exception as exc:
+            QMessageBox.warning(self, "Neues Projekt", f"Ordner konnte nicht geprüft werden: {exc}")
+            return
+
+        if has_content:
+            answer = QMessageBox.question(
+                self,
+                "Ordner ist nicht leer",
+                "Der gewählte Ordner ist nicht leer. Vorhandene Projektdateien werden verwendet, "
+                "fehlende Projektdateien werden angelegt. Fortfahren?",
+            )
+            if answer != QMessageBox.Yes:
+                return
+
+        try:
+            target_dir.mkdir(parents=True, exist_ok=True)
+            created_files, invalid_files = validate_or_initialize_data_dir(target_dir)
+        except Exception as exc:
+            QMessageBox.warning(self, "Neues Projekt", f"Projekt konnte nicht angelegt werden: {exc}")
+            return
+
+        if invalid_files:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Projektdateien ungültig")
+            msg.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
+            msg.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
+            msg.setDetailedText("\n".join(invalid_files))
+            msg.exec()
+            return
+
+        settings_path = project_root / "src" / "settings.json"
+        settings = load_settings(settings_path)
+        settings["data_path"] = data_path_for_settings(project_root, target_dir)
+        save_settings(settings_path, settings)
+
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowTitle("Neues Projekt")
+        if created_files:
+            msg.setText("Neues Projekt wurde angelegt. Für den Wechsel muss das Programm neu gestartet werden.")
+        else:
+            msg.setText("Projekt wurde ausgewählt. Für den Wechsel muss das Programm neu gestartet werden.")
+        msg.setInformativeText(str(target_dir))
+        restart_btn = QPushButton("Neustart")
+        msg.addButton(QMessageBox.Ok)
+        msg.addButton(restart_btn, QMessageBox.AcceptRole)
+        msg.setDefaultButton(restart_btn)
+        msg.exec()
+        if msg.clickedButton() == restart_btn:
+            python = sys.executable
+            subprocess.Popen([python] + sys.argv)
+            sys.exit(0)
+
     def _build_menus(self) -> None:
         mb = self.menuBar()
 
         file_menu = mb.addMenu("Datei")
+        self.act_new_project = QAction("Neues Projekt…", self)
+        self.act_new_project.triggered.connect(self.create_new_project)
+        file_menu.addAction(self.act_new_project)
+        file_menu.addSeparator()
+
         self.act_new_termin = QAction("Neuer Termin…", self)
         self.act_new_termin.triggered.connect(self.create_termin)
         file_menu.addAction(self.act_new_termin)
@@ -377,7 +466,6 @@ class MainWindow(QMainWindow):
             "termine.json",
             "studienrichtungen.json",
             "freie_tage.json",
-            "studiensemester.json",
         ]
         export_obj = {}
         for f in files:
@@ -576,7 +664,6 @@ class MainWindow(QMainWindow):
             "lehrveranstaltungen": "lehrveranstaltungen.json",
             "studienrichtungen": "studienrichtungen.json",
             "freie_tage": "freie_tage.json",
-            "studiensemester": "studiensemester.json",
         }
 
         if isinstance(data, dict):

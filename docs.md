@@ -143,7 +143,9 @@ Main data files are under `data/` (and `data_test/` for test data).
 - raeume.json
 - studienrichtungen.json
 - freie_tage.json
-- studiensemester.json
+
+Global app-level data:
+- `src/studiensemester.json` stores the fixed Studiensemester options. It is shared by all data folders, similar to settings/conflict configuration.
 
 Regular SS/WS semesters are generated automatically and are not stored as JSON master data.
 In the UI they are selected as Sommersemester/Wintersemester plus year; internally they are stored as IDs such as SS26 or WS26.
@@ -203,7 +205,7 @@ Alternatively right click termin card in the termin list dock
 3. MainWindow asks `UndoService` for the next snapshot via `undo(self.ds)` / `redo(self.ds)`
 4. If no snapshot exists, method returns and nothing changes
 5. If a snapshot exists, MainWindow calls `UndoService.restore(self.ds, snapshot)`
-6. `restore(...)` rewrites all tracked project files from the snapshot (termine, lvas, raeume, studienrichtungen, freie_tage, studiensemester)
+6. `restore(...)` rewrites the tracked files from the snapshot (project data plus global Studiensemester options)
 7. MainWindow calls `refresh_everything()` so planner, docks, and conflicts are synchronized with restored data
 8. MainWindow calls `update_undo_redo_actions()` to enable/disable menu entries according to stack state
 9. Toast feedback is shown (`Rückgängig` / `Wiederholen`)
@@ -278,12 +280,28 @@ Only Termine with the selected `semester_id` are removed. Master data is left un
 - If `Data Path` is empty, the app falls back to the default `data` folder.
 - Switching `Data Path` means switching to a different dataset/profile.
 - The same JSON filenames are used in whichever folder is active (`termine.json`, `lehrveranstaltungen.json`, etc.).
-- If the folder does not exist, startup asks for reset/new path; if folder exists but required JSON files are missing, loading can fail.
+- If the folder does not exist, startup asks for reset or a different path.
+- If required project JSON files are missing, they are created automatically.
+
+### 6.13 New Project
+
+`Datei -> Neues Projekt...` creates or opens a project folder and switches the active `Data Path` to it.
+
+The app creates missing project files automatically:
+- termine.json
+- lehrveranstaltungen.json
+- raeume.json
+- studienrichtungen.json
+- freie_tage.json
+
+Existing project files are not overwritten. Invalid JSON files stop the switch and are shown in an error dialog.
+
+Studiensemester options are not created in the project folder because they are shared globally via `src/studiensemester.json`.
 
 
 ---
 
-### 6.13 Termine Search Bar
+### 6.14 Termine Search Bar
 
 The Termine dock includes a live search input for:
 - Termin name/ID

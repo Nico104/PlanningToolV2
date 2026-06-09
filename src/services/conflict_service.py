@@ -766,10 +766,7 @@ class ConflictDetector:
         return out
 
     def _load_studiensemester_names(self) -> Dict[str, str]:
-        if not self.data_dir:
-            return {}
-
-        path = self.data_dir / "studiensemester.json"
+        path = Path(__file__).resolve().parents[1] / "studiensemester.json"
         if not path.exists():
             return {}
 
