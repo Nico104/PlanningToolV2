@@ -183,7 +183,6 @@ class LVADialog(QDialog):
             id=cid,
             name=name,
             vortragende=Vortragende(name=vname, email=self.vmail_le.text().strip()),
-            typ=[],
             studiensemester=studiensemester,
             studienrichtung=str(selected_studienrichtung).strip(),
             ects=self.ects_le.text().strip(),

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from PySide6.QtWidgets import QCheckBox, QApplication
 from PySide6.QtGui import QPalette
 
@@ -24,8 +25,9 @@ class TickCheckBox(QCheckBox):
                 dark = False
 
         icon_name = "check-marksvg_white.svg" if dark else "check-marksvg.svg"
-        # Keep the same relative path pattern used elsewhere
-        check_icon_path = f"src/ui/assets/icons/{icon_name}"
+        check_icon_path = (
+            Path(__file__).resolve().parents[2] / "assets" / "icons" / icon_name
+        ).as_posix()
 
         border_color = "#47515c" if dark else "#bbb"
 

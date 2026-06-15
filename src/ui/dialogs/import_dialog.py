@@ -4,7 +4,8 @@ import json
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame,
+    QMessageBox,
 )
 
 class ImportDialog(QDialog):
@@ -254,8 +255,10 @@ class ImportDialog(QDialog):
             if target.exists():
                 try:
                     existing_raw = json.loads(target.read_text(encoding='utf-8'))
-                except Exception:
-                    pass
+                except Exception as exc:
+                    QMessageBox.warning(self, "Import Fehler", f"{fname} konnte nicht gelesen werden: {exc}")
+                    self.reject()
+                    return
 
             # skip if file content is identical
             try:
@@ -322,7 +325,9 @@ class ImportDialog(QDialog):
                 tmp = target.with_suffix(".tmp")
                 tmp.write_text(json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
                 tmp.replace(target)
-            except Exception:
-                pass
+            except Exception as exc:
+                QMessageBox.warning(self, "Import Fehler", f"{fname} konnte nicht gespeichert werden: {exc}")
+                self.reject()
+                return
 
         self.accept()

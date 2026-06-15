@@ -1203,6 +1203,25 @@ QDialog#AppDialog QPushButton#SecondaryButton:pressed {
   background: #e8e8e8;
 }
 
+QDialog#AppDialog QWidget#ConflictSettingsRow {
+  background: #ffffff;
+  border: none;
+}
+
+QDialog#AppDialog QLabel#ConflictSettingsName {
+  font-size: 15px;
+}
+
+QDialog#AppDialog QSpinBox#ConflictPercentSpin,
+QDialog#AppDialog QSpinBox#ConflictDurationMinSpin,
+QDialog#AppDialog QSpinBox#ConflictDurationMaxSpin {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  padding: 0 8px 0 8px;
+  font-size: 14px;
+}
+
 QDialog#AppDialog QWidget#DialogTabContent {
   background: #ffffff;
 }
@@ -1497,6 +1516,19 @@ QCalendarWidget QToolButton {
 QCalendarWidget QToolButton:hover {
   background: #e8f4ff;
   color: #111111;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth,
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+  icon-size: 24px;
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth {
+  qproperty-icon: url("src/ui/assets/icons/caret-left-lined.svg");
+}
+
+QCalendarWidget QToolButton#qt_calendar_nextmonth {
+  qproperty-icon: url("src/ui/assets/icons/caret-right-lined.svg");
 }
 
 QCalendarWidget QMenu {

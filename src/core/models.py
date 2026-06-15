@@ -37,7 +37,6 @@ class Lehrveranstaltung:
     id: str
     name: str
     vortragende: Vortragende
-    typ: List[str]  # Legacy: alte LVA-Typen werden beim Laden toleriert, Planung nutzt Termin.typ.
     studiensemester: List[str]  # IDs von beliebig vielen Studiensemestern
     studienrichtung: str = "ETIT"
     ects: str = ""

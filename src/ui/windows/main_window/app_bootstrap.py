@@ -1,6 +1,7 @@
 from pathlib import Path
+import sys
 
-from PySide6.QtGui import QPalette, QColor
+from PySide6.QtGui import QPalette, QColor, QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox, QInputDialog
 
 from ....services.data_folder_service import (
@@ -11,6 +12,37 @@ from ....services.data_folder_service import (
 )
 from ...utils.qss_tokens import set_qss_tokens
 from .main_window import MainWindow
+
+
+def _set_windows_app_id() -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "plannerV2.planungstool"
+        )
+    except Exception:
+        pass
+
+
+def _app_icon_path() -> Path:
+    icon_dir = Path(__file__).resolve().parents[2] / "assets" / "icons"
+    if sys.platform == "win32":
+        preferred = icon_dir / "app_icon.ico"
+    elif sys.platform == "darwin":
+        preferred = icon_dir / "app_icon.icns"
+    else:
+        preferred = icon_dir / "app_icon.png"
+    return preferred if preferred.exists() else icon_dir / "app_icon.png"
+
+
+def _resolve_asset_urls(qss: str) -> str:
+    icon_dir = (Path(__file__).resolve().parents[2] / "assets" / "icons").as_posix()
+    qss = qss.replace('url("src/ui/assets/icons/', f'url("{icon_dir}/')
+    qss = qss.replace("url('src/ui/assets/icons/", f"url('{icon_dir}/")
+    return qss
 
 
 def _choose_data_path(settings_path: Path, settings: dict, project_root: Path, current_data_dir: Path):
@@ -55,12 +87,18 @@ def load_global_style(app: QApplication, theme: str = "light") -> None:
 
     if qss_path.exists():
         qss = qss_path.read_text(encoding="utf-8")
+        qss = _resolve_asset_urls(qss)
         set_qss_tokens(qss)
         app.setStyleSheet(qss)
 
 
 def run_gui() -> None:
+    _set_windows_app_id()
     app = QApplication([])
+    icon_path = _app_icon_path()
+    app_icon = QIcon(str(icon_path)) if icon_path.exists() else QIcon()
+    if icon_path.exists():
+        app.setWindowIcon(app_icon)
     project_root = Path(__file__).resolve().parents[4]
     settings_path = project_root / "src" / "settings.json"
     settings = load_settings(settings_path)
@@ -127,6 +165,8 @@ def run_gui() -> None:
             return
 
     w = MainWindow(data_dir)
+    if not app_icon.isNull():
+        w.setWindowIcon(app_icon)
     w.show()
 
     app.exec()

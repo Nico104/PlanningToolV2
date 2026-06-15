@@ -54,10 +54,12 @@ class TerminDialog(QDialog):
 
         self.serientermin_cb = TickCheckBox("Serientermin")
         self.period_cb = QComboBox()
+        self.period_cb.setObjectName("HeaderCombo")
         self.period_cb.addItems(["wöchentlich", "2-wöchentlich", "monatlich"])
         self.period_cb.setEnabled(False)
         self.end_date_de = QDateEdit()
         self.end_date_de.setCalendarPopup(True)
+        self.end_date_de.setObjectName("DateEdit")
         self.end_date_de.setEnabled(False)
         today = date.today()
         next_month = today.month + 1
@@ -73,10 +75,6 @@ class TerminDialog(QDialog):
             enabled = self.serientermin_cb.isChecked()
             self.period_cb.setEnabled(enabled)
             self.end_date_de.setEnabled(enabled)
-
-            style = "" if enabled else "background: #eee; color: #888;"
-            self.period_cb.setStyleSheet(style)
-            self.end_date_de.setStyleSheet(style)
 
         self.serientermin_cb.stateChanged.connect(_toggle_serientermin_fields)
         _toggle_serientermin_fields()

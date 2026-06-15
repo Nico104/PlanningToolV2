@@ -1155,7 +1155,6 @@ class LVATerminDialog(QDialog):
             id=lva_id,
             name=lva_name_value,
             vortragende=Vortragende(lva_teacher_value, lva_email_value),
-            typ=[],
             studiensemester=self._current_lva_studiensemester_ids(),
             studienrichtung=str(lva_studienrichtung_value).strip(),
             ects=lva_ects_value,

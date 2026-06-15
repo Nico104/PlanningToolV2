@@ -133,7 +133,6 @@ class DataService:
                 id=x["id"],
                 name=x["name"],
                 vortragende=Vortragende(name=v["name"], email=v.get("email", "")),
-                typ=list(x.get("typ", [])),
                 studiensemester=studiensemester,
                 studienrichtung=str(x.get("studienrichtung", studienrichtung or "ETIT")).strip() or "ETIT",
                 ects=str(x.get("ects", "")).strip(),

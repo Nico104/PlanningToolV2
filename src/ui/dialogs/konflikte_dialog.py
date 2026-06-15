@@ -49,14 +49,14 @@ class KonflikteDialog(QDialog):
                 child.widget().deleteLater()
         for idx, conflict in enumerate(self.conflicts):
             row = QWidget()
+            row.setObjectName("ConflictSettingsRow")
             row_layout = QHBoxLayout(row)
             row_layout.setContentsMargins(12, 6, 12, 6)
             row_layout.setSpacing(18)
-            row.setStyleSheet("background: #fff; border: none;")
             checkbox = TickCheckBox()
             checkbox.setChecked(conflict.get('enabled', True))
             label = QLabel(conflict['name'])
-            label.setStyleSheet("font-size: 15px;")
+            label.setObjectName("ConflictSettingsName")
             row_layout.addWidget(checkbox, alignment=Qt.AlignVCenter)
             row_layout.addWidget(label, alignment=Qt.AlignVCenter)
 
@@ -70,15 +70,6 @@ class KonflikteDialog(QDialog):
                 percent_box.setMinimumWidth(60)
                 percent_box.setMaximumWidth(90)
                 percent_box.setFixedHeight(28)
-                percent_box.setStyleSheet(
-                    "QSpinBox {"
-                    "  background: #fff;"
-                    "  border: 1px solid #d0d0d0;"
-                    "  border-radius: 4px;"
-                    "  padding: 0 8px 0 8px;"
-                    "  font-size: 14px;"
-                    "}"
-                )
                 percent_box.setToolTip("Mindest-Auslastung in Prozent, bevor eine Warnung angezeigt wird.")
                 percent_label = QLabel("Min. Kapazität:")
                 percent_label.setObjectName("ConflictPercentLabel")
@@ -112,15 +103,6 @@ class KonflikteDialog(QDialog):
                 min_box.setMinimumWidth(60)
                 min_box.setMaximumWidth(90)
                 min_box.setFixedHeight(28)
-                min_box.setStyleSheet(
-                    "QSpinBox {"
-                    "  background: #fff;"
-                    "  border: 1px solid #d0d0d0;"
-                    "  border-radius: 4px;"
-                    "  padding: 0 8px 0 8px;"
-                    "  font-size: 14px;"
-                    "}"
-                )
                 min_box.setToolTip('Minimale erlaubte Dauer in Minuten')
                 min_sign = QLabel("min")
                 min_sign.setObjectName("ConflictDurationMinSign")
@@ -143,15 +125,6 @@ class KonflikteDialog(QDialog):
                 max_box.setMinimumWidth(60)
                 max_box.setMaximumWidth(90)
                 max_box.setFixedHeight(28)
-                max_box.setStyleSheet(
-                    "QSpinBox {"
-                    "  background: #fff;"
-                    "  border: 1px solid #d0d0d0;"
-                    "  border-radius: 4px;"
-                    "  padding: 0 8px 0 8px;"
-                    "  font-size: 14px;"
-                    "}"
-                )
                 max_box.setToolTip('Maximale erlaubte Dauer in Minuten')
                 max_sign = QLabel("min")
                 max_sign.setObjectName("ConflictDurationMaxSign")
@@ -182,7 +155,7 @@ class KonflikteDialog(QDialog):
 
             if 'details' in conflict:
                 edit_btn = QPushButton("Details ändern")
-                edit_btn.setStyleSheet("padding: 2px 10px;")
+                edit_btn.setObjectName("SecondaryButton")
                 row_layout.addWidget(edit_btn, alignment=Qt.AlignVCenter)
                 def on_edit_details(idx=idx):
                     pass
