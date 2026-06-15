@@ -15,7 +15,7 @@ class SettingsDialog(QDialog):
     def __init__(self, parent=None, settings: Optional[Dict] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")
-        self.setWindowTitle("Settings")
+        self.setWindowTitle("Einstellungen")
         self.setModal(True)
         self.result_settings: Optional[Dict] = None
         self._syncing_times = False

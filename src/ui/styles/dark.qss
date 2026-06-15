@@ -608,7 +608,7 @@ QComboBox#HeaderCombo::drop-down {
 QComboBox#HeaderCombo::down-arrow {
   width: 9px;
   height: 9px;
-  image: url("src/ui/assets/icons/chevron-down_white.svg");
+  image: url(":/assets/icons/chevron-down_white.svg");
 }
 
 QWidget#SemesterSelector {
@@ -638,7 +638,7 @@ QComboBox#SemesterKindCombo::drop-down {
 QComboBox#SemesterKindCombo::down-arrow {
   width: 9px;
   height: 9px;
-  image: url("src/ui/assets/icons/chevron-down_white.svg");
+  image: url(":/assets/icons/chevron-down_white.svg");
 }
 
 QSpinBox#SemesterYearSpin {
@@ -694,7 +694,7 @@ QDateEdit#DateEdit::down-button {
 }
 
 QDateEdit#DateEdit::down-arrow {
-  image: url("src/ui/assets/icons/chevron-down_white.svg");
+  image: url(":/assets/icons/chevron-down_white.svg");
   width: 12px;
   height: 12px;
 }
@@ -1484,7 +1484,7 @@ QComboBox::drop-down {
 QComboBox::down-arrow {
   width: 10px;
   height: 10px;
-  image: url("src/ui/assets/icons/chevron-down_white.svg");
+  image: url(":/assets/icons/chevron-down_white.svg");
 }
 
 QComboBox QAbstractItemView {
@@ -1555,11 +1555,11 @@ QCalendarWidget QToolButton#qt_calendar_nextmonth {
 }
 
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
-  qproperty-icon: url("src/ui/assets/icons/caret-left-lined_white.svg");
+  qproperty-icon: url(":/assets/icons/caret-left-lined_white.svg");
 }
 
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
-  qproperty-icon: url("src/ui/assets/icons/caret-right-lined_white.svg");
+  qproperty-icon: url(":/assets/icons/caret-right-lined_white.svg");
 }
 
 QCalendarWidget QMenu {

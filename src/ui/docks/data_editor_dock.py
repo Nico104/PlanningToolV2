@@ -18,7 +18,7 @@ class DataEditorDock(QDockWidget):
     """
 
     def __init__(self, parent, ds, on_data_changed=None):
-        super().__init__("Data Editor", parent)
+        super().__init__("Dateneditor", parent)
         self.setAllowedAreas(Qt.AllDockWidgetAreas)
 
         self.ds = ds

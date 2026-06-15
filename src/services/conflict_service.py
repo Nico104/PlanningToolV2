@@ -1,14 +1,19 @@
 from datetime import date, time, datetime, timedelta
 from typing import List, Dict, Optional, Tuple
-import os
 import json
 from dataclasses import replace
 from pathlib import Path
 from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
 from .termin_occurrence_service import expand_termine, source_termin_id
+from .app_config_service import (
+    ensure_user_config_file,
+    load_default_config,
+    save_user_config,
+    user_config_path,
+)
 
 
-DEFAULT_CONFLICTS_PATH = Path(__file__).resolve().parents[1] / "konflikte.json"
+DEFAULT_CONFLICTS_PATH = user_config_path("konflikte.json")
 
 def has_preview_conflict(
     termine: List[Termin],
@@ -90,21 +95,60 @@ def has_preview_conflict(
 
 
 def load_conflicts(path=None):
-    path = path or str(DEFAULT_CONFLICTS_PATH)
-    abs_path = os.path.abspath(path)
+    target = Path(path) if path else ensure_user_config_file("konflikte.json")
     try:
-        with open(abs_path, "r", encoding="utf-8-sig") as f:
-            return json.load(f)
+        conflicts = json.loads(target.read_text(encoding="utf-8-sig"))
     except Exception:
-        return []
+        conflicts = []
+    if path:
+        return conflicts if isinstance(conflicts, list) else []
+    return _merge_default_conflicts(conflicts)
+
+
+def _merge_default_conflicts(conflicts) -> list:
+    if not isinstance(conflicts, list):
+        conflicts = []
+
+    defaults = load_default_config("konflikte.json", [])
+    if not isinstance(defaults, list):
+        defaults = []
+
+    user_by_key = {
+        str(item.get("key")): item
+        for item in conflicts
+        if isinstance(item, dict) and item.get("key")
+    }
+    merged = []
+    seen_keys = set()
+    for default_item in defaults:
+        if not isinstance(default_item, dict):
+            continue
+        key = str(default_item.get("key", ""))
+        if not key:
+            continue
+        item = dict(default_item)
+        item.update(user_by_key.get(key, {}))
+        merged.append(item)
+        seen_keys.add(key)
+
+    for item in conflicts:
+        if not isinstance(item, dict):
+            continue
+        key = str(item.get("key", ""))
+        if key and key not in seen_keys:
+            merged.append(item)
+    return merged
 
 def save_conflicts(conflicts, path=None):
-    path = path or str(DEFAULT_CONFLICTS_PATH)
     try:
-        target = Path(path)
-        tmp = target.with_suffix(".tmp")
-        tmp.write_text(json.dumps(conflicts, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
-        tmp.replace(target)
+        if path:
+            target = Path(path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(".tmp")
+            tmp.write_text(json.dumps(conflicts, ensure_ascii=False, indent=4) + "\n", encoding="utf-8")
+            tmp.replace(target)
+        else:
+            save_user_config("konflikte.json", conflicts, indent=4)
     except Exception:
         pass
 

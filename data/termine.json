@@ -7,7 +7,7 @@
       "typ": "VO",
       "datum": null,
       "start_zeit": null,
-      "raum_id": "None",
+      "raum_id": "",
       "gruppe": null,
       "anwesenheitspflicht": false,
       "notiz": "",

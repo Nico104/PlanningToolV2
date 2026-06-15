@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/">
+    <file>assets/icons/caret-down-lined.svg</file>
+    <file>assets/icons/caret-left-lined.svg</file>
+    <file>assets/icons/caret-left-lined_white.svg</file>
+    <file>assets/icons/caret-right-lined.svg</file>
+    <file>assets/icons/caret-right-lined_white.svg</file>
+    <file>assets/icons/caret-up-lined.svg</file>
+    <file>assets/icons/chevron-down.svg</file>
+    <file>assets/icons/chevron-down_white.svg</file>
+  </qresource>
+</RCC>

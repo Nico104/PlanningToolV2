@@ -24,9 +24,10 @@ from ....services.free_day_import_service import append_free_day_candidates
 from ....services.semester_rules import semester_from_id, semester_id_for_date
 from ....services.data_folder_service import (
     data_path_for_settings,
+    initialize_missing_project_files,
+    inspect_project_folder,
     load_settings,
     save_settings,
-    validate_or_initialize_data_dir,
 )
 from ....core.models import Raum
 
@@ -190,6 +191,15 @@ class MainWindow(QMainWindow):
 
         s = cur
         s.update(dlg.result_settings)
+        data_path_text = str(s.get("data_path", "")).strip()
+        if data_path_text:
+            data_path = Path(data_path_text).expanduser()
+            if not data_path.is_absolute():
+                QMessageBox.warning(self, "Einstellungen", "Der Datenpfad muss ein absoluter Pfad sein.")
+                return
+            s["data_path"] = data_path_for_settings(data_path)
+        else:
+            s["data_path"] = ""
         self.ds.save_settings(s)
 
         new_data_path = s.get("data_path", "")
@@ -213,6 +223,129 @@ class MainWindow(QMainWindow):
         self.termine_dock.set_search_enabled(bool(s.get("show_termine_search", True)))
         self.refresh_everything()
 
+    def _project_folder_details(self, target_dir: Path, inspection) -> str:
+        parts = [str(target_dir)]
+        if inspection.valid_files:
+            parts.append("Gefunden:\n" + "\n".join(inspection.valid_files))
+        if inspection.missing_files:
+            parts.append("Wird angelegt:\n" + "\n".join(inspection.missing_files))
+        return "\n\n".join(parts)
+
+    def _confirm_project_folder_change(self, *, title: str, text: str, target_dir: Path, inspection) -> bool:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle(title)
+        msg.setText(text)
+        msg.setInformativeText(self._project_folder_details(target_dir, inspection))
+        ok_btn = msg.addButton("Fortfahren", QMessageBox.AcceptRole)
+        msg.addButton("Abbrechen", QMessageBox.RejectRole)
+        msg.setDefaultButton(ok_btn)
+        msg.exec()
+        return msg.clickedButton() == ok_btn
+
+    def _activate_project_folder(
+        self,
+        target_dir: Path,
+        *,
+        title: str,
+        error_text: str,
+        require_existing_project: bool = False,
+        creating_new: bool = False,
+    ) -> None:
+        try:
+            if target_dir.samefile(self.data_dir):
+                QMessageBox.information(self, title, "Dieser Ordner ist bereits geöffnet.")
+                return
+        except Exception:
+            pass
+
+        try:
+            inspection = inspect_project_folder(target_dir)
+        except Exception as exc:
+            QMessageBox.warning(self, title, f"{error_text}: {exc}")
+            return
+
+        if require_existing_project and not inspection.has_project_files:
+            QMessageBox.warning(
+                self,
+                title,
+                "Dieser Ordner enthält kein Planungsprojekt.",
+            )
+            return
+
+        if inspection.invalid_files:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Projektdateien ungültig")
+            msg.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
+            msg.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
+            msg.setDetailedText("\n".join(inspection.invalid_files))
+            msg.exec()
+            return
+
+        if creating_new and inspection.has_project_files:
+            ok = self._confirm_project_folder_change(
+                title=title,
+                text="Der Ordner enthält bereits Projektdateien. Dieses Projekt verwenden?",
+                target_dir=target_dir,
+                inspection=inspection,
+            )
+            if not ok:
+                return
+        elif inspection.missing_files:
+            text = (
+                "Der Projektordner ist unvollständig. Fehlende Dateien werden angelegt."
+                if require_existing_project
+                else "In diesem Ordner werden Projektdateien angelegt."
+            )
+            if not self._confirm_project_folder_change(
+                title=title,
+                text=text,
+                target_dir=target_dir,
+                inspection=inspection,
+            ):
+                return
+
+        created_files = initialize_missing_project_files(target_dir, inspection.missing_files)
+
+        settings = load_settings()
+        settings["data_path"] = data_path_for_settings(target_dir)
+        save_settings(settings)
+
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowTitle(title)
+        msg.setText("Projekt wurde ausgewählt. Für den Wechsel muss das Programm neu gestartet werden.")
+        info_text = str(target_dir)
+        if created_files:
+            info_text += "\n\nFehlende Projektdateien wurden angelegt:\n" + "\n".join(created_files)
+        msg.setInformativeText(info_text)
+        restart_btn = QPushButton("Neustart")
+        msg.addButton(QMessageBox.Ok)
+        msg.addButton(restart_btn, QMessageBox.AcceptRole)
+        msg.setDefaultButton(restart_btn)
+        msg.exec()
+        if msg.clickedButton() == restart_btn:
+            python = sys.executable
+            subprocess.Popen([python] + sys.argv)
+            sys.exit(0)
+
+    def open_project(self) -> None:
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Projekt öffnen",
+            str(self.data_dir.parent if self.data_dir else self._project_root()),
+        )
+        if not folder:
+            return
+
+        self._activate_project_folder(
+            Path(folder).resolve(),
+            title="Projekt öffnen",
+            error_text="Projekt konnte nicht geöffnet werden",
+            require_existing_project=True,
+        )
+
     def create_new_project(self) -> None:
         project_root = self._project_root()
         folder = QFileDialog.getExistingDirectory(
@@ -225,67 +358,17 @@ class MainWindow(QMainWindow):
 
         target_dir = Path(folder).resolve()
         try:
-            if target_dir.samefile(self.data_dir):
-                QMessageBox.information(self, "Neues Projekt", "Dieser Ordner ist bereits geöffnet.")
-                return
-        except Exception:
-            pass
-
-        try:
-            has_content = target_dir.exists() and any(target_dir.iterdir())
-        except Exception as exc:
-            QMessageBox.warning(self, "Neues Projekt", f"Ordner konnte nicht geprüft werden: {exc}")
-            return
-
-        if has_content:
-            answer = QMessageBox.question(
-                self,
-                "Ordner ist nicht leer",
-                "Der gewählte Ordner ist nicht leer. Vorhandene Projektdateien werden verwendet, "
-                "fehlende Projektdateien werden angelegt. Fortfahren?",
-            )
-            if answer != QMessageBox.Yes:
-                return
-
-        try:
             target_dir.mkdir(parents=True, exist_ok=True)
-            created_files, invalid_files = validate_or_initialize_data_dir(target_dir)
         except Exception as exc:
             QMessageBox.warning(self, "Neues Projekt", f"Projekt konnte nicht angelegt werden: {exc}")
             return
 
-        if invalid_files:
-            msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Projektdateien ungültig")
-            msg.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
-            msg.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
-            msg.setDetailedText("\n".join(invalid_files))
-            msg.exec()
-            return
-
-        settings_path = project_root / "src" / "settings.json"
-        settings = load_settings(settings_path)
-        settings["data_path"] = data_path_for_settings(project_root, target_dir)
-        save_settings(settings_path, settings)
-
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowTitle("Neues Projekt")
-        if created_files:
-            msg.setText("Neues Projekt wurde angelegt. Für den Wechsel muss das Programm neu gestartet werden.")
-        else:
-            msg.setText("Projekt wurde ausgewählt. Für den Wechsel muss das Programm neu gestartet werden.")
-        msg.setInformativeText(str(target_dir))
-        restart_btn = QPushButton("Neustart")
-        msg.addButton(QMessageBox.Ok)
-        msg.addButton(restart_btn, QMessageBox.AcceptRole)
-        msg.setDefaultButton(restart_btn)
-        msg.exec()
-        if msg.clickedButton() == restart_btn:
-            python = sys.executable
-            subprocess.Popen([python] + sys.argv)
-            sys.exit(0)
+        self._activate_project_folder(
+            target_dir,
+            title="Neues Projekt",
+            error_text="Projekt konnte nicht angelegt werden",
+            creating_new=True,
+        )
 
     def _build_menus(self) -> None:
         mb = self.menuBar()
@@ -294,6 +377,9 @@ class MainWindow(QMainWindow):
         self.act_new_project = QAction("Neues Projekt…", self)
         self.act_new_project.triggered.connect(self.create_new_project)
         file_menu.addAction(self.act_new_project)
+        self.act_open_project = QAction("Projekt öffnen…", self)
+        self.act_open_project.triggered.connect(self.open_project)
+        file_menu.addAction(self.act_open_project)
         file_menu.addSeparator()
 
         self.act_new_termin = QAction("Neuer Termin…", self)
@@ -339,8 +425,8 @@ class MainWindow(QMainWindow):
         self.act_save_layout = QAction("Aktuelles Layout speichern…", self)
         self.act_reset_layouts = QAction("Layouts zurücksetzen", self)
 
-        tools_menu = mb.addMenu("Tools")
-        self.act_settings = QAction("Settings…", self)
+        tools_menu = mb.addMenu("Werkzeuge")
+        self.act_settings = QAction("Einstellungen…", self)
         self.act_settings.triggered.connect(self.open_settings)
         tools_menu.addAction(self.act_settings)
 
@@ -380,8 +466,7 @@ class MainWindow(QMainWindow):
         self.planner.refresh(emit=False)
 
     def open_konflikte_dialog(self):
-        conflicts_path = str(Path(__file__).resolve().parents[3] / "konflikte.json")
-        dlg = KonflikteDialog(self, conflicts_path=conflicts_path)
+        dlg = KonflikteDialog(self)
         dlg.conflicts_changed.connect(self.refresh_conflicts)
         dlg.exec()
 

@@ -240,10 +240,10 @@ class TerminDialog(QDialog):
                 return
 
     def _accept(self):
-        lva_id = str(self.lva_cb.currentData())
-        raum_id = str(self.raum_cb.currentData())
+        lva_id = "" if self.lva_cb.currentData() is None else str(self.lva_cb.currentData()).strip()
+        raum_id = "" if self.raum_cb.currentData() is None else str(self.raum_cb.currentData()).strip()
         typ = self.typ_le.text().strip().upper()
-        semester_id = str(self.semester_cb.currentData())
+        semester_id = "" if self.semester_cb.currentData() is None else str(self.semester_cb.currentData()).strip()
 
         qd = self.date_de.date()
         d = None if qd == self._unassigned_qdate else qdate_to_date(qd)

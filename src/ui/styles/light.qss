@@ -1524,11 +1524,11 @@ QCalendarWidget QToolButton#qt_calendar_nextmonth {
 }
 
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
-  qproperty-icon: url("src/ui/assets/icons/caret-left-lined.svg");
+  qproperty-icon: url(":/assets/icons/caret-left-lined.svg");
 }
 
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
-  qproperty-icon: url("src/ui/assets/icons/caret-right-lined.svg");
+  qproperty-icon: url(":/assets/icons/caret-right-lined.svg");
 }
 
 QCalendarWidget QMenu {
