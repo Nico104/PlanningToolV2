@@ -52,7 +52,7 @@
         "key": "incomplete_warning",
         "enabled": false,
         "type": "warning",
-        "description": "Termin hat fehlende Pflichtfelder.",
+        "description": "Termin enthält fehlende Angaben für Datum, Zeit, Dauer oder Raum.",
         "message_template": "Fehlende Angaben: {missing}",
         "missing_labels": {
             "date": "kein Datum",
@@ -62,31 +62,31 @@
         }
     },
     {
-        "name": "Kapazitätswarnung Übung",
+        "name": "Kapazitätswarnung Übung/Labor/Projekt",
         "key": "capacity_warning_uebung",
         "enabled": true,
         "type": "warning",
-        "description": "Bei Übungsterminen müssen alle Gruppenmitglieder Platz haben.",
+        "description": "Gilt für Typen UE, LU, PR und SE. Vergleicht Raumkapazität mit Gruppengröße × Prozentwert.",
         "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
         "min_capacity_percent": 99,
-        "event_type": "UE"
+        "event_types": ["UE", "LU", "PR", "SE"]
     },
     {
-        "name": "Kapazitätswarnung Vorlesung",
+        "name": "Kapazitätswarnung Vorlesung/VU",
         "key": "capacity_warning_vorlesung",
         "enabled": true,
         "type": "warning",
-        "description": "Bei Vorlesungen müssen nur ein Teil der Gruppe Platz haben.",
+        "description": "Gilt für Typen VO und VU. Vergleicht Raumkapazität mit Gruppengröße × Prozentwert.",
         "message_template": "Gruppe ({group_size} Personen) benötigt {percent}% Platz: {required}, Raumkapazität: {room_capacity}",
         "min_capacity_percent": 75,
-        "event_type": "VO"
+        "event_types": ["VO", "VU"]
     },
     {
         "name": "Dauerwarnung",
         "key": "duration_warning",
         "enabled": false,
         "type": "warning",
-        "description": "Termin ist ungewöhnlich kurz (<30min) oder lang (>4h).",
+        "description": "Warnung, wenn die Termindauer außerhalb des eingestellten Minutenbereichs liegt.",
         "message_template": "Dauer: {duration} Minuten.",
         "min_minutes": 30,
         "max_minutes": 200

@@ -41,12 +41,15 @@ def parse_qss_tokens(qss: str) -> dict[str, str]:
     return values
 
 
-def qss_token(name: str, fallback: str = "") -> str:
-    return _TOKENS.get(name, fallback)
+def qss_token(name: str) -> str:
+    value = _TOKENS.get(name, "").strip()
+    if not value:
+        raise KeyError(f"QSS token fehlt: {name}")
+    return value
 
 
-def qss_color(name: str, fallback: str) -> QColor:
-    color = QColor(qss_token(name, fallback))
+def qss_color(name: str) -> QColor:
+    color = QColor(qss_token(name))
     if color.isValid():
         return color
-    return QColor(fallback)
+    raise ValueError(f"QSS Farbtoken ist ungültig: {name}")

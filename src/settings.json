@@ -4,6 +4,7 @@
   "day_end": "20:00",
   "date_format_display": "DD.MM.YYYY",
   "duration_step_minutes": 15,
+  "day_room_page_size": 8,
   "show_termine_search": true,
   "previous_year_shortcut_mode": "hold",
   "start_studienrichtung": "ETIT",

@@ -165,7 +165,9 @@ class PlannerMonthView:
                     if isinstance(bg_color, QColor) and bg_color.isValid():
                         bg = bg_color.name()
                         border_color = self._free_day_styles.get("cell_border")
-                        border = border_color.name() if isinstance(border_color, QColor) and border_color.isValid() else "#dfe6ee"
+                        if not isinstance(border_color, QColor) or not border_color.isValid():
+                            continue
+                        border = border_color.name()
                         w.setObjectName("MonthFreeDayCell")
                         w.setStyleSheet(
                             f"QWidget#MonthFreeDayCell {{ background: {bg}; border: 1px solid {border}; border-radius: 6px; }}"

@@ -674,18 +674,28 @@ class ConflictDetector:
 
 
 
+    def _capacity_event_types(self, settings, fallback: str) -> set[str]:
+        settings = settings or {}
+        raw = settings.get("event_types")
+        if isinstance(raw, list):
+            values = raw
+        else:
+            values = [settings.get("event_type", fallback)]
+        return {str(value).strip().upper() for value in values if str(value).strip()}
+
+
 # Separate capacity warning for Übung
     def detect_capacity_warning_uebung(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         warnings = []
         percent = settings.get('min_capacity_percent', 100) if settings else 100
-        event_type = settings.get('event_type', 'UE') if settings else 'UE'
+        event_types = self._capacity_event_types(settings, 'UE')
         for t in termine:
             if not self.is_assigned(t):
                 continue
             raum = getattr(t, 'raum', None) or next((r for r in self.raeume if r.id == t.raum_id), None)
             gruppe = getattr(t, 'gruppe', None)
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
-            if raum and gruppe and (t.typ == event_type):
+            if raum and gruppe and (str(t.typ or "").strip().upper() in event_types):
                 required = int(gruppe.groesse * percent / 100)
                 if raum.kapazitaet < required:
                     msg = self._render_message(
@@ -715,14 +725,14 @@ class ConflictDetector:
     def detect_capacity_warning_vorlesung(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
         warnings = []
         percent = settings.get('min_capacity_percent', 60) if settings else 60
-        event_type = settings.get('event_type', 'VO') if settings else 'VO'
+        event_types = self._capacity_event_types(settings, 'VO')
         for t in termine:
             if not self.is_assigned(t):
                 continue
             raum = getattr(t, 'raum', None) or next((r for r in self.raeume if r.id == t.raum_id), None)
             gruppe = getattr(t, 'gruppe', None)
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
-            if raum and gruppe and (t.typ == event_type):
+            if raum and gruppe and (str(t.typ or "").strip().upper() in event_types):
                 required = int(gruppe.groesse * percent / 100)
                 if raum.kapazitaet < required:
                     msg = self._render_message(

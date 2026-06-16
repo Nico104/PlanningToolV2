@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
     QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit, QTabWidget, QScrollArea, QLabel, QPushButton,
     QHBoxLayout,
-    QTableWidget, QTableWidgetItem, QHeaderView
+    QTableWidget, QTableWidgetItem, QHeaderView, QFrame
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
@@ -30,6 +30,48 @@ def _scrollable_tab(form: QFormLayout) -> QScrollArea:
     content = QWidget()
     content.setObjectName("DialogTabContent")
     content.setLayout(form)
+
+    scroll = QScrollArea()
+    scroll.setObjectName("DialogTabScroll")
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QScrollArea.NoFrame)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+    scroll.setWidget(content)
+    return scroll
+
+
+def _dialog_form() -> QFormLayout:
+    form = QFormLayout()
+    form.setContentsMargins(0, 0, 0, 0)
+    form.setHorizontalSpacing(16)
+    form.setVerticalSpacing(12)
+    form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+    return form
+
+
+def _section(title: str, form: QFormLayout) -> QFrame:
+    section = QFrame()
+    section.setObjectName("SettingsSection")
+    layout = QVBoxLayout(section)
+    layout.setContentsMargins(14, 12, 14, 14)
+    layout.setSpacing(10)
+    label = QLabel(title)
+    label.setObjectName("SettingsSectionTitle")
+    layout.addWidget(label)
+    layout.addLayout(form)
+    return section
+
+
+def _scrollable_sections(*sections: QWidget) -> QScrollArea:
+    content = QWidget()
+    content.setObjectName("DialogTabContent")
+    layout = QVBoxLayout(content)
+    layout.setContentsMargins(12, 12, 12, 12)
+    layout.setSpacing(12)
+    for section in sections:
+        layout.addWidget(section)
+    layout.addStretch(1)
 
     scroll = QScrollArea()
     scroll.setObjectName("DialogTabScroll")
@@ -85,6 +127,13 @@ class LVATerminDialog(QDialog):
         self.resize(820, 720)
 
         self.setWindowTitle("LVA-Termin bearbeiten" if termin else "LVA-Termin hinzufügen")
+        title = QLabel("LVA-Termin bearbeiten" if termin else "LVA-Termin hinzufügen")
+        title.setObjectName("SettingsTitle")
+        subtitle = QLabel("Termin, Lehrveranstaltung, Raum und Gruppe für die Planung erfassen.")
+        subtitle.setObjectName("SettingsSubtitle")
+        subtitle.setWordWrap(True)
+        lay.addWidget(title)
+        lay.addWidget(subtitle)
         self._result: Optional[Termin] = None
 
 
@@ -202,6 +251,8 @@ class LVATerminDialog(QDialog):
         self.raum_capacity_sb = QSpinBox()
         self.raum_capacity_sb.setRange(1, 2000)
         self.raum_capacity_sb.setObjectName("Field")
+        self.raum_building_le = QLineEdit()
+        self.raum_building_le.setObjectName("Field")
 
         def _sync_raum_fields():
             if self.raum_cb.currentData() == NEW_RAUM_SENTINEL:
@@ -212,6 +263,7 @@ class LVATerminDialog(QDialog):
             self.raum_id_le.setText(getattr(raum, "id", "") if raum else "")
             self.raum_name_le.setText(getattr(raum, "name", "") if raum else "")
             self.raum_capacity_sb.setValue(int(getattr(raum, "kapazitaet", 30)) if raum else 30)
+            self.raum_building_le.setText(getattr(raum, "gebaeude", "") if raum else "")
 
         self.raum_cb.currentIndexChanged.connect(_sync_raum_fields)
 
@@ -398,6 +450,7 @@ class LVATerminDialog(QDialog):
         self._sync_duration_from_times()
 
         self.tabs = QTabWidget(self)
+        self.tabs.setObjectName("SettingsTabs")
         lay.addWidget(self.tabs, 1)
 
         self.semester_warning_lbl = QLabel()
@@ -409,76 +462,85 @@ class LVATerminDialog(QDialog):
         self.semester_change_btn.clicked.connect(self._change_to_suggested_semester)
         self.semester_change_btn.hide()
 
-        termin_form = QFormLayout()
-        termin_form.setContentsMargins(20, 18, 20, 18)
-        termin_form.setHorizontalSpacing(18)
-        termin_form.setVerticalSpacing(14)
-        termin_form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        termin_form.addRow("Termin-Typ *:", self.typ_cb)
-        termin_form.addRow("Semester:", self.semester_selector)
-        termin_form.addRow("", self.semester_warning_lbl)
-        termin_form.addRow("", self.semester_change_btn)
-        termin_form.addRow("Beginn-Datum:", self.date_de)
-        termin_form.addRow("Serientermin:", self.series_cb)
-        termin_form.addRow("Ende-Datum:", self.date_to_de)
-        termin_form.addRow("Periodizität:", self.repeat_cb)
-        termin_form.addRow("Von:", self.time_from)
-        termin_form.addRow("Bis:", self.time_to)
-        termin_form.addRow("Dauer *:", self.duration_sb)
-        # termin_form.addRow("Anwesenheitspflicht:", self.ap_cb)
-        termin_form.addRow("Zusatzbezeichnung:", self.name_le)
-        termin_form.addRow("Notiz:", self.note_te)
-        termin_form.addRow("Zu besprechen:", self.besprechungshinweis_wrap)
-        self.tabs.addTab(_scrollable_tab(termin_form), "Termindetails")
+        termin_base_form = _dialog_form()
+        termin_base_form.addRow("Termin-Typ *:", self.typ_cb)
+        termin_base_form.addRow("Semester:", self.semester_selector)
+        termin_base_form.addRow("", self.semester_warning_lbl)
+        termin_base_form.addRow("", self.semester_change_btn)
+        termin_series_form = _dialog_form()
+        termin_series_form.addRow("Serientermin:", self.series_cb)
+        termin_series_form.addRow("Ende-Datum:", self.date_to_de)
+        termin_series_form.addRow("Periodizität:", self.repeat_cb)
 
-        series_occurrences_form = QFormLayout()
-        series_occurrences_form.setContentsMargins(20, 18, 20, 18)
-        series_occurrences_form.setHorizontalSpacing(18)
-        series_occurrences_form.setVerticalSpacing(14)
-        series_occurrences_form.setLabelAlignment(Qt.AlignRight | Qt.AlignTop)
-        series_occurrences_form.setFormAlignment(Qt.AlignTop)
-        series_occurrences_form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        termin_base_form.addRow("Beginn-Datum:", self.date_de)
+
+        termin_time_form = _dialog_form()
+        termin_time_form.addRow("Von:", self.time_from)
+        termin_time_form.addRow("Bis:", self.time_to)
+        termin_time_form.addRow("Dauer *:", self.duration_sb)
+
+        termin_notes_form = _dialog_form()
+        termin_notes_form.addRow("Zusatzbezeichnung:", self.name_le)
+        termin_notes_form.addRow("Notiz:", self.note_te)
+        termin_notes_form.addRow("Zu besprechen:", self.besprechungshinweis_wrap)
+        self.tabs.addTab(
+            _scrollable_sections(
+                _section("Termindaten", termin_base_form),
+                _section("Wiederholung", termin_series_form),
+                _section("Zeit", termin_time_form),
+                _section("Beschreibung", termin_notes_form),
+            ),
+            "Termin",
+        )
+
+        series_occurrences_form = _dialog_form()
+        series_occurrences_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignTop)
         series_occurrences_form.addRow("Termine:", self.occurrence_table)
-        self.series_occurrences_tab = _scrollable_tab(series_occurrences_form)
+        self.series_occurrences_tab = _scrollable_sections(_section("Serientermine", series_occurrences_form))
 
-        gruppe_form = QFormLayout()
-        gruppe_form.setContentsMargins(20, 18, 20, 18)
-        gruppe_form.setHorizontalSpacing(18)
-        gruppe_form.setVerticalSpacing(14)
-        gruppe_form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        gruppe_form = _dialog_form()
         gruppe_form.addRow("Name:", self.grp_name)
         gruppe_form.addRow("Größe:", self.grp_size)
-        self.tabs.addTab(_scrollable_tab(gruppe_form), "Gruppe")
+        self.tabs.addTab(_scrollable_sections(_section("Gruppe", gruppe_form)), "Gruppe")
 
-        lva_form = QFormLayout()
-        lva_form.setContentsMargins(20, 18, 20, 18)
-        lva_form.setHorizontalSpacing(18)
-        lva_form.setVerticalSpacing(14)
-        lva_form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        lva_form.addRow("Auswahl:", self.lva_cb)
-        lva_form.addRow("LVA-Nr. *:", self.lva_id_le)
-        lva_form.addRow("LVA-Name *:", self.lva_name_le)
-        lva_form.addRow("ECTS:", self.lva_ects_le)
-        lva_form.addRow("Vortragende/r:", self.lva_teacher_le)
-        lva_form.addRow("E-Mail:", self.lva_email_le)
-        lva_form.addRow("Studienrichtung *:", self.lva_studienrichtung_cb)
+        lva_select_form = _dialog_form()
+        lva_select_form.addRow("Auswahl:", self.lva_cb)
+
+        lva_data_form = _dialog_form()
+        lva_data_form.addRow("LVA-Nr. *:", self.lva_id_le)
+        lva_data_form.addRow("LVA-Name *:", self.lva_name_le)
+        lva_data_form.addRow("ECTS:", self.lva_ects_le)
+        lva_data_form.addRow("Vortragende/r:", self.lva_teacher_le)
+        lva_data_form.addRow("E-Mail:", self.lva_email_le)
+        lva_data_form.addRow("Studienrichtung *:", self.lva_studienrichtung_cb)
         studiensemester_layout = QHBoxLayout()
         studiensemester_layout.addWidget(self.lva_studiensemester_cb)
         studiensemester_layout.addWidget(self.btn_add_lva_studiensemester)
-        lva_form.addRow("Studiensemester:", self.lva_studiensemester_chips)
-        lva_form.addRow("Studiensemester hinzufügen/entfernen:", studiensemester_layout)
-        self.tabs.addTab(_scrollable_tab(lva_form), "Lehrveranstaltung")
+        lva_data_form.addRow("Studiensemester:", self.lva_studiensemester_chips)
+        lva_data_form.addRow("Studiensemester hinzufügen/entfernen:", studiensemester_layout)
+        self.tabs.addTab(
+            _scrollable_sections(
+                _section("Lehrveranstaltung auswählen", lva_select_form),
+                _section("LVA-Daten", lva_data_form),
+            ),
+            "LVA",
+        )
 
-        raum_form = QFormLayout()
-        raum_form.setContentsMargins(20, 18, 20, 18)
-        raum_form.setHorizontalSpacing(18)
-        raum_form.setVerticalSpacing(14)
-        raum_form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        raum_form.addRow("Auswahl:", self.raum_cb)
-        raum_form.addRow("Raumnummer *:", self.raum_id_le)
-        raum_form.addRow("Raum *:", self.raum_name_le)
-        raum_form.addRow("Kapazität:", self.raum_capacity_sb)
-        self.tabs.addTab(_scrollable_tab(raum_form), "Raum")
+        raum_select_form = _dialog_form()
+        raum_select_form.addRow("Auswahl:", self.raum_cb)
+
+        raum_data_form = _dialog_form()
+        raum_data_form.addRow("Raumnummer *:", self.raum_id_le)
+        raum_data_form.addRow("Raum *:", self.raum_name_le)
+        raum_data_form.addRow("Kapazität:", self.raum_capacity_sb)
+        raum_data_form.addRow("Gebäude:", self.raum_building_le)
+        self.tabs.addTab(
+            _scrollable_sections(
+                _section("Raum auswählen", raum_select_form),
+                _section("Raumdaten", raum_data_form),
+            ),
+            "Raum",
+        )
 
         self.semester_selector.semesterChanged.connect(lambda *_: (self._maybe_update_series_end_date(), self._update_semester_warning()))
         self._update_semester_warning()
@@ -494,8 +556,10 @@ class LVATerminDialog(QDialog):
         cancel_btn = bb.button(QDialogButtonBox.Cancel)
         if ok_btn:
             ok_btn.setObjectName("PrimaryButton")
+            ok_btn.setText("Speichern")
         if cancel_btn:
             cancel_btn.setObjectName("SecondaryButton")
+            cancel_btn.setText("Abbrechen")
 
         lay.addWidget(bb)
 
@@ -705,6 +769,7 @@ class LVATerminDialog(QDialog):
         self.raum_id_le.clear()
         self.raum_name_le.clear()
         self.raum_capacity_sb.setValue(30)
+        self.raum_building_le.clear()
         self.raum_id_le.setFocus()
 
     def _current_lva_id(self) -> str:
@@ -743,7 +808,7 @@ class LVATerminDialog(QDialog):
         index = self.tabs.indexOf(self.series_occurrences_tab)
         should_show = self.series_cb.isChecked()
         if should_show and index < 0:
-            self.tabs.insertTab(1, self.series_occurrences_tab, "Serientermine")
+            self.tabs.insertTab(1, self.series_occurrences_tab, "Serie")
         elif not should_show and index >= 0:
             self.tabs.removeTab(index)
 
@@ -1163,6 +1228,7 @@ class LVATerminDialog(QDialog):
             id=raum_id,
             name=raum_name_value,
             kapazitaet=int(self.raum_capacity_sb.value()),
+            gebaeude=self.raum_building_le.text().strip(),
         )
 
         termin_id = self.termin.id if self.termin is not None and hasattr(self.termin, "id") else self.new_id

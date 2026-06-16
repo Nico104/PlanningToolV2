@@ -18,25 +18,24 @@ from ....services.excel_exchange_service import (
     import_project_from_excel,
     import_tiss_rooms_from_excel,
 )
+from ....services.default_catalog_service import DEFAULT_CATALOG_LABEL, load_default_catalog_payload
+from ....services.import_merge_service import normalize_import_payload, payload_has_changes
 from ....services.undo_service import UndoService
 from ....services.semester_tools_service import copy_semester_termine, delete_semester_termine
 from ....services.free_day_import_service import append_free_day_candidates
 from ....services.semester_rules import semester_from_id, semester_id_for_date
 from ....services.data_folder_service import (
     data_path_for_settings,
-    initialize_missing_project_files,
-    inspect_project_folder,
     load_settings,
     save_settings,
 )
-from ....core.models import Raum
-
 from ...docks.termine_dock import TermineDock
 from ...docks.data_editor_dock import DataEditorDock
 from ...docks.conflicts_dock import ConflictsDock
 from ...docks.global_filter_dock import GlobalFilterDock
 from ...docks.date_navigation_dock import DateNavigationDock
 from ...utils.datetime_utils import date_to_qdate, qdate_to_date
+from ...utils.project_folder_flow import prepare_project_folder, project_part_labels
 from ....core.states import FilterState
 from ...utils.crud_handlers import CrudHandlers
 from .layout_manager import LayoutManager
@@ -48,9 +47,8 @@ from ...dialogs import (
     TeacherExportDialog,
     SemesterToolsDialog,
     FreeDayImportDialog,
-    TissRoomImportPreviewDialog,
+    CatalogImportDialog,
 )
-from ...dialogs.konflikte_dialog import KonflikteDialog
 from ...dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
 
@@ -70,6 +68,11 @@ class MainWindow(QMainWindow):
         self.date_navigation_dock.view_cb.setCurrentIndex(
             self.date_navigation_dock.view_cb.findData("week")
         )
+
+    def _calendar_start_date_for_semester_filter(self, start_date: date) -> date:
+        if start_date.weekday() >= 5:
+            return start_date + timedelta(days=7 - start_date.weekday())
+        return start_date
 
     @staticmethod
     def _read_json(path: Path, default):
@@ -181,11 +184,11 @@ class MainWindow(QMainWindow):
     def _refresh_planner_only(self) -> None:
         self.planner.refresh(emit=False)
 
-    def open_settings(self) -> None:
+    def open_settings(self, initial_tab: str = "general") -> None:
         cur = self.ds.load_settings()
         old_data_path = cur.get("data_path", "")
         old_theme = str(cur.get("theme", "light")).strip().lower()
-        dlg = SettingsDialog(self, cur)
+        dlg = SettingsDialog(self, cur, initial_tab=initial_tab)
         if dlg.exec() != QDialog.Accepted or not dlg.result_settings:
             return
 
@@ -222,33 +225,13 @@ class MainWindow(QMainWindow):
             Toast(self, "Einstellungen gespeichert.", duration_ms=2500).show()
         self.termine_dock.set_search_enabled(bool(s.get("show_termine_search", True)))
         self.refresh_everything()
-
-    def _project_folder_details(self, target_dir: Path, inspection) -> str:
-        parts = [str(target_dir)]
-        if inspection.valid_files:
-            parts.append("Gefunden:\n" + "\n".join(inspection.valid_files))
-        if inspection.missing_files:
-            parts.append("Wird angelegt:\n" + "\n".join(inspection.missing_files))
-        return "\n\n".join(parts)
-
-    def _confirm_project_folder_change(self, *, title: str, text: str, target_dir: Path, inspection) -> bool:
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowTitle(title)
-        msg.setText(text)
-        msg.setInformativeText(self._project_folder_details(target_dir, inspection))
-        ok_btn = msg.addButton("Fortfahren", QMessageBox.AcceptRole)
-        msg.addButton("Abbrechen", QMessageBox.RejectRole)
-        msg.setDefaultButton(ok_btn)
-        msg.exec()
-        return msg.clickedButton() == ok_btn
+        self.refresh_conflicts()
 
     def _activate_project_folder(
         self,
         target_dir: Path,
         *,
         title: str,
-        error_text: str,
         require_existing_project: bool = False,
         creating_new: bool = False,
     ) -> None:
@@ -259,54 +242,19 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
 
-        try:
-            inspection = inspect_project_folder(target_dir)
-        except Exception as exc:
-            QMessageBox.warning(self, title, f"{error_text}: {exc}")
+        created_files = prepare_project_folder(
+            self,
+            target_dir,
+            title=title,
+            require_existing_project=require_existing_project,
+            creating_new=creating_new,
+        )
+        if created_files is None:
             return
 
-        if require_existing_project and not inspection.has_project_files:
-            QMessageBox.warning(
-                self,
-                title,
-                "Dieser Ordner enthält kein Planungsprojekt.",
-            )
-            return
-
-        if inspection.invalid_files:
-            msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Projektdateien ungültig")
-            msg.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
-            msg.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
-            msg.setDetailedText("\n".join(inspection.invalid_files))
-            msg.exec()
-            return
-
-        if creating_new and inspection.has_project_files:
-            ok = self._confirm_project_folder_change(
-                title=title,
-                text="Der Ordner enthält bereits Projektdateien. Dieses Projekt verwenden?",
-                target_dir=target_dir,
-                inspection=inspection,
-            )
-            if not ok:
-                return
-        elif inspection.missing_files:
-            text = (
-                "Der Projektordner ist unvollständig. Fehlende Dateien werden angelegt."
-                if require_existing_project
-                else "In diesem Ordner werden Projektdateien angelegt."
-            )
-            if not self._confirm_project_folder_change(
-                title=title,
-                text=text,
-                target_dir=target_dir,
-                inspection=inspection,
-            ):
-                return
-
-        created_files = initialize_missing_project_files(target_dir, inspection.missing_files)
+        standard_data_imported = False
+        if creating_new:
+            standard_data_imported = self._offer_default_catalog_for_new_project(target_dir)
 
         settings = load_settings()
         settings["data_path"] = data_path_for_settings(target_dir)
@@ -315,10 +263,24 @@ class MainWindow(QMainWindow):
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Information)
         msg.setWindowTitle(title)
-        msg.setText("Projekt wurde ausgewählt. Für den Wechsel muss das Programm neu gestartet werden.")
-        info_text = str(target_dir)
-        if created_files:
-            info_text += "\n\nFehlende Projektdateien wurden angelegt:\n" + "\n".join(created_files)
+        if creating_new:
+            msg.setText("Das neue Projekt ist vorbereitet.")
+            info_text = (
+                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n"
+                f"{target_dir}"
+            )
+            if standard_data_imported:
+                info_text += "\n\nAusgewählte Standarddaten wurden importiert."
+            if created_files:
+                info_text += "\n\nVorbereitete Bereiche:\n- " + "\n- ".join(project_part_labels(created_files))
+        else:
+            msg.setText("Der Projektordner wurde gespeichert.")
+            info_text = (
+                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n"
+                f"{target_dir}"
+            )
+            if created_files:
+                info_text += "\n\nErgänzte Bereiche:\n- " + "\n- ".join(project_part_labels(created_files))
         msg.setInformativeText(info_text)
         restart_btn = QPushButton("Neustart")
         msg.addButton(QMessageBox.Ok)
@@ -329,6 +291,39 @@ class MainWindow(QMainWindow):
             python = sys.executable
             subprocess.Popen([python] + sys.argv)
             sys.exit(0)
+
+    def _offer_default_catalog_for_new_project(self, target_dir: Path) -> bool:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle("Standarddaten importieren")
+        msg.setText("Standarddaten für das neue Projekt auswählen?")
+        msg.setInformativeText(f"{DEFAULT_CATALOG_LABEL}: Räume und LVAs für Elektrotechnik Bachelor.")
+        import_btn = QPushButton("Auswählen")
+        msg.addButton("Überspringen", QMessageBox.RejectRole)
+        msg.addButton(import_btn, QMessageBox.AcceptRole)
+        msg.setDefaultButton(import_btn)
+        msg.exec()
+        if msg.clickedButton() != import_btn:
+            return False
+
+        try:
+            normalized = load_default_catalog_payload()
+        except Exception as e:
+            QMessageBox.warning(self, "Standarddaten importieren", f"Standarddaten konnten nicht gelesen werden: {e}")
+            return False
+
+        return self._select_catalog_import(
+            normalized,
+            title="Standarddaten importieren",
+            subtitle=(
+                f"{DEFAULT_CATALOG_LABEL}. Enthält Standardwerte für Räume und LVAs des "
+                "Elektrotechnik-Bachelor-Katalogs. Importieren Sie Räume und LVAs getrennt; "
+                "schließen Sie den Dialog, wenn Sie fertig sind."
+            ),
+            success_text="Standarddaten in neues Projekt importiert.",
+            data_dir=target_dir,
+            refresh_after=False,
+        )
 
     def open_project(self) -> None:
         folder = QFileDialog.getExistingDirectory(
@@ -342,7 +337,6 @@ class MainWindow(QMainWindow):
         self._activate_project_folder(
             Path(folder).resolve(),
             title="Projekt öffnen",
-            error_text="Projekt konnte nicht geöffnet werden",
             require_existing_project=True,
         )
 
@@ -357,16 +351,9 @@ class MainWindow(QMainWindow):
             return
 
         target_dir = Path(folder).resolve()
-        try:
-            target_dir.mkdir(parents=True, exist_ok=True)
-        except Exception as exc:
-            QMessageBox.warning(self, "Neues Projekt", f"Projekt konnte nicht angelegt werden: {exc}")
-            return
-
         self._activate_project_folder(
             target_dir,
             title="Neues Projekt",
-            error_text="Projekt konnte nicht angelegt werden",
             creating_new=True,
         )
 
@@ -405,6 +392,10 @@ class MainWindow(QMainWindow):
         self.act_tiss_room_import.triggered.connect(self.import_tiss_room_list)
         import_export_menu.addAction(self.act_tiss_room_import)
 
+        self.act_default_catalog_import = QAction("Standarddaten importieren…", self)
+        self.act_default_catalog_import.triggered.connect(self.import_default_catalog)
+        import_export_menu.addAction(self.act_default_catalog_import)
+
         import_export_menu.addSeparator()
         self.act_export_teachers = QAction("Export für Lehrende…", self)
         self.act_export_teachers.triggered.connect(self.export_teacher_terms)
@@ -427,10 +418,10 @@ class MainWindow(QMainWindow):
 
         tools_menu = mb.addMenu("Werkzeuge")
         self.act_settings = QAction("Einstellungen…", self)
-        self.act_settings.triggered.connect(self.open_settings)
+        self.act_settings.triggered.connect(lambda *_: self.open_settings())
         tools_menu.addAction(self.act_settings)
 
-        self.act_konflikte = QAction("Konflikte…", self)
+        self.act_konflikte = QAction("Konflikt-Einstellungen…", self)
         self.act_konflikte.triggered.connect(self.open_konflikte_dialog)
         tools_menu.addAction(self.act_konflikte)
 
@@ -466,9 +457,7 @@ class MainWindow(QMainWindow):
         self.planner.refresh(emit=False)
 
     def open_konflikte_dialog(self):
-        dlg = KonflikteDialog(self)
-        dlg.conflicts_changed.connect(self.refresh_conflicts)
-        dlg.exec()
+        self.open_settings(initial_tab="conflicts")
 
     def open_semester_tools(self) -> None:
         current_date = self._current_calendar_date()
@@ -596,11 +585,15 @@ class MainWindow(QMainWindow):
         info.setWindowTitle("TISS-Raumliste importieren")
         info.setText("Bitte eine Excel-Datei mit Raumdaten auswählen.")
         info.setInformativeText(
-            "Die Tabelle muss Spalten für Raumnummer, Raumname und Kapazität enthalten.\n\n"
-            "Erkannte Überschriften:\n"
+            "Pflichtspalten:\n"
             "- Raumnummer / Raumcode / ID\n"
             "- Raum / Raumname / Bezeichnung\n"
-            "- Kapazität / Plätze / Capacity"
+            "- Kapazität / Plätze / Capacity\n\n"
+            "Optional:\n"
+            "- Gebäude / Gebäudekürzel / Building\n"
+            "- Adresse / Anschrift / Address\n\n"
+            "Gebäude wird beim Raum gespeichert und kann später gefiltert werden. "
+            "Adresse wird nur im Importdialog zur Auswahl angezeigt."
         )
         open_btn = QPushButton("Datei wählen")
         info.addButton(QMessageBox.Cancel)
@@ -625,52 +618,75 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "TISS-Raumliste importieren", f"Raumliste konnte nicht gelesen werden: {e}")
             return
 
-        rooms = normalized.get("raeume.json", {}).get("raeume", [])
-        dlg = TissRoomImportPreviewDialog(self, rooms)
-        if dlg.exec() != QDialog.Accepted:
+        self._select_catalog_import(
+            normalized,
+            title="TISS-Raumliste importieren",
+            subtitle="Aus der gewählten TISS-Excel-Datei erkannte Räume. Gefilterte Auswahl wird anschließend über den normalen Import geprüft.",
+            success_text="TISS-Raumliste importiert.",
+        )
+
+    def import_default_catalog(self) -> None:
+        try:
+            normalized = load_default_catalog_payload()
+        except Exception as e:
+            QMessageBox.warning(self, "Standarddaten importieren", f"Standarddaten konnten nicht gelesen werden: {e}")
             return
 
-        selected_rooms = dlg.selected_rooms
-        if not selected_rooms:
-            Toast(self, "Keine Räume ausgewählt.", duration_ms=2500).show()
-            return
+        self._select_catalog_import(
+            normalized,
+            title="Standarddaten importieren",
+            subtitle=(
+                f"{DEFAULT_CATALOG_LABEL}. Enthält Standardwerte für Räume und LVAs des "
+                "Elektrotechnik-Bachelor-Katalogs. Wählen Sie einen Tab und importieren Sie Räume oder LVAs getrennt."
+            ),
+            success_text="Standarddaten importiert.",
+        )
 
-        existing_rooms = self.ds.load_raeume()
-        existing_by_id = {room.id: room for room in existing_rooms}
-        room_order = [room.id for room in existing_rooms]
+    def _select_catalog_import(
+        self,
+        normalized: dict,
+        *,
+        title: str,
+        subtitle: str,
+        success_text: str,
+        data_dir: Path | None = None,
+        refresh_after: bool = True,
+    ) -> bool:
+        if not normalized:
+            QMessageBox.warning(self, title, "Keine importierbaren Daten gefunden.")
+            return False
 
-        new_count = 0
-        update_count = 0
-        for item in selected_rooms:
-            room = Raum(
-                id=str(item.get("id", "")).strip(),
-                name=str(item.get("name", "")).strip(),
-                kapazitaet=int(item.get("kapazitaet", 0)),
-            )
-            if not room.id or not room.name:
-                continue
-            if room.id in existing_by_id:
-                if existing_by_id[room.id] != room:
-                    update_count += 1
-                existing_by_id[room.id] = room
-            else:
-                new_count += 1
-                existing_by_id[room.id] = room
-                room_order.append(room.id)
+        target_dir = Path(data_dir or self.data_dir)
+        dlg = CatalogImportDialog(self, target_dir, normalized, title=title, subtitle=subtitle)
+        imported_any = False
 
-        changed_count = new_count + update_count
-        if changed_count <= 0:
-            Toast(self, "Keine neuen oder geänderten Räume importiert.", duration_ms=2500).show()
-            return
+        def handle_import(selected: dict) -> None:
+            nonlocal imported_any
+            if not selected:
+                Toast(self, "Keine Einträge ausgewählt.", duration_ms=2500).show()
+                return
+            busy_text = "Räume werden importiert..." if "raeume.json" in selected else "LVAs werden importiert..."
+            dlg.set_busy(True, busy_text)
+            try:
+                imported = self._run_import_payload(
+                    selected,
+                    success_text=success_text,
+                    auto_import_new=True,
+                    data_dir=target_dir,
+                    refresh_after=False,
+                    show_success_toast=False,
+                )
+                if imported:
+                    imported_any = True
+                    dlg.refresh_statuses()
+            finally:
+                dlg.set_busy(False)
 
-        self.undo_service.record_snapshot(self.ds)
-        self.ds.save_raeume([existing_by_id[room_id] for room_id in room_order])
-        Toast(
-            self,
-            f"{changed_count} Räume importiert ({new_count} neu, {update_count} geändert).",
-            duration_ms=3000,
-        ).show()
-        self.refresh_everything()
+        dlg.import_requested.connect(handle_import)
+        dlg.exec()
+        if imported_any and refresh_after:
+            self.refresh_everything()
+        return imported_any
 
     def export_teacher_terms(self) -> None:
         try:
@@ -762,60 +778,37 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export für Lehrende: {e}")
 
-    def _normalize_import_payload(self, data):
-        normalized = {}
-        known_keys = {
-            "termine": "termine.json",
-            "raeume": "raeume.json",
-            "lehrveranstaltungen": "lehrveranstaltungen.json",
-            "studienrichtungen": "studienrichtungen.json",
-            "freie_tage": "freie_tage.json",
-        }
+    def _run_import_payload(
+        self,
+        normalized: dict,
+        *,
+        success_text: str = "Import abgeschlossen.",
+        auto_import_new: bool = False,
+        data_dir: Path | None = None,
+        refresh_after: bool = True,
+        show_success_toast: bool = True,
+    ) -> bool:
+        if not normalized:
+            QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
+            return False
 
-        if isinstance(data, dict):
-            if all(isinstance(k, str) and k.lower().endswith(".json") for k in data.keys()):
-                normalized = data
-            else:
-                for k, target in known_keys.items():
-                    if k in data:
-                        normalized[target] = data[k] if isinstance(data[k], (dict, list)) else {k: data[k]}
+        target_dir = Path(data_dir or self.data_dir)
+        try:
+            is_current_project = target_dir.resolve() == self.data_dir.resolve()
+        except Exception:
+            is_current_project = target_dir == self.data_dir
 
-                if not normalized:
-                    for raw_key, val in data.items():
-                        low = raw_key.lower()
-                        for k, target in known_keys.items():
-                            if k in low or (low.endswith(".json") and low.replace(".json", "") == k):
-                                normalized[target] = val if isinstance(val, (dict, list)) else {k: val}
+        if payload_has_changes(target_dir, normalized) and is_current_project:
+            self.undo_service.record_snapshot(self.ds)
 
-                if not normalized:
-
-                    def search_and_map(obj):
-                        if isinstance(obj, dict):
-                            for kk, vv in obj.items():
-                                if kk in known_keys:
-                                    normalized[known_keys[kk]] = vv if isinstance(vv, (dict, list)) else {kk: vv}
-                                else:
-                                    search_and_map(vv)
-                        elif isinstance(obj, list):
-                            for it in obj:
-                                search_and_map(it)
-
-                    search_and_map(data)
-        elif isinstance(data, list):
-            normalized["termine.json"] = {"termine": data}
-
-        return normalized
-
-    def _import_has_changes(self, normalized: dict) -> bool:
-        for fname, incoming in (normalized or {}).items():
-            target = self.data_dir / fname
-            existing = self._read_json(target, None)
-            try:
-                if json.dumps(existing, sort_keys=True) != json.dumps(incoming, sort_keys=True):
-                    return True
-            except Exception:
-                return True
-        return False
+        dlg = ImportDialog(self, target_dir, normalized, auto_import_new=auto_import_new)
+        if dlg.exec() != QDialog.Accepted:
+            return False
+        if show_success_toast:
+            Toast(self, success_text, duration_ms=3000).show()
+        if refresh_after:
+            self.refresh_everything()
+        return True
 
     def import_project(self) -> None:
         fn, _ = QFileDialog.getOpenFileName(
@@ -834,7 +827,7 @@ class MainWindow(QMainWindow):
             else:
                 with open(fn, encoding="utf-8") as f:
                     data = json.load(f)
-                normalized = self._normalize_import_payload(data)
+                normalized = normalize_import_payload(data)
         except Exception as e:
             QMessageBox.warning(self, "Import Fehler", f"Fehler beim Lesen der Import-Datei: {e}")
             return
@@ -843,14 +836,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
             return
 
-        if self._import_has_changes(normalized):
-            self.undo_service.record_snapshot(self.ds)
-
-        dlg = ImportDialog(self, self.data_dir, normalized)
-        if dlg.exec() != QDialog.Accepted:
-            return
-        Toast(self, "Import abgeschlossen.", duration_ms=3000).show()
-        self.refresh_everything()
+        self._run_import_payload(normalized)
 
     def _setup_docks(self) -> None:
         self.global_filter_dock = GlobalFilterDock(self)
@@ -922,9 +908,11 @@ class MainWindow(QMainWindow):
         terms = self._compute_filtered_termine(fs)
         self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
 
-        if fs.semester:
+        settings = self.ds.load_settings()
+        if fs.semester and bool(settings.get("jump_to_semester_start_on_filter", True)):
             start_date = self._resolve_start_date_for_semester(fs.semester)
             if start_date:
+                start_date = self._calendar_start_date_for_semester_filter(start_date)
                 if self._previous_year_enabled:
                     start_date = self._previous_year_date_for(start_date)
                 self._apply_start_date(start_date)
@@ -1102,6 +1090,7 @@ class MainWindow(QMainWindow):
             studienrichtung=self.global_filter_dock.studienrichtung_cb.currentData() or None,
             semester=self.global_filter_dock.semester_selector.current_semester_id(),
             lva_id=self.global_filter_dock.lva_cb.currentData() or None,
+            gebaeude=self.global_filter_dock.building_cb.currentData() or None,
             raum_id=self.global_filter_dock.room_cb.currentData() or None,
             typ=self.global_filter_dock.typ_cb.currentData() or None,
             dozent=self.global_filter_dock.dozent_cb.currentData() or None,
@@ -1122,6 +1111,7 @@ class MainWindow(QMainWindow):
 
         if fs:
             room = fs.raum_id
+            building = getattr(fs, "gebaeude", None)
             lva_id = fs.lva_id
             typ = fs.typ
             dozent = fs.dozent
@@ -1132,6 +1122,7 @@ class MainWindow(QMainWindow):
         else:
             filters = self.planner.current_filters()
             room = filters["raum_id"]
+            building = filters.get("gebaeude")
             lva_id = filters["lva_id"]
             typ = filters["typ"]
             dozent = filters["dozent"]
@@ -1150,4 +1141,10 @@ class MainWindow(QMainWindow):
             studiensemester=studiensemester,
             zu_besprechen=zu_besprechen,
         )
+        if building and not room:
+            room_by_id = {str(r.id): r for r in self.planner.state.raeume}
+            terms = [
+                t for t in terms
+                if str(getattr(room_by_id.get(str(t.raum_id)), "gebaeude", "") or "").strip() == building
+            ]
         return terms

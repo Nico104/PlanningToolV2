@@ -40,7 +40,7 @@ class DataEditorDock(QDockWidget):
             id_column=0,
         )
         self.tab_studienrichtung = EditorTab("Studienrichtungen", ["ID", "Name"], self.tabs, id_column=0)
-        self.tab_rooms = EditorTab("Räume", ["Raumnummer", "Raum", "Kapazität"], self.tabs, id_column=0)
+        self.tab_rooms = EditorTab("Räume", ["Raumnummer", "Raum", "Kapazität", "Gebäude"], self.tabs, id_column=0)
         self.tab_free = EditorTab(
             "Freie Tage",
             ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"],
@@ -163,7 +163,7 @@ class DataEditorDock(QDockWidget):
 
     def _refresh_rooms(self) -> None:
         rooms: List[Raum] = self.ds.load_raeume()
-        rows = [[r.id, r.name, str(r.kapazitaet)] for r in rooms]
+        rows = [[r.id, r.name, str(r.kapazitaet), getattr(r, "gebaeude", "")] for r in rooms]
         self._fill_table(self.tab_rooms.table, rows)
 
     def _refresh_studienrichtungen(self) -> None:

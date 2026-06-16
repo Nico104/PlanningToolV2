@@ -9,6 +9,7 @@ class FilterState:
     studienrichtung: Optional[str] = None
     semester: Optional[str] = None
     lva_id: Optional[str] = None
+    gebaeude: Optional[str] = None
     raum_id: Optional[str] = None
     typ: Optional[str] = None
     dozent: Optional[str] = None

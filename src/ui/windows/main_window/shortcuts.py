@@ -74,7 +74,7 @@ class _PreviousYearShortcutFilter(QObject):
 def install_main_window_shortcuts(mw) -> None:
     # F5 refresh; Alt+Left/Alt+Right previous/next period; Ctrl+1 week; Ctrl+2 day;
     # Ctrl+3 month; Ctrl+N new Termin; Ctrl+Shift+S settings; Ctrl+I import;
-    # Ctrl+Shift+K conflicts; Ctrl+E export; Ctrl+Shift+R reset layouts; Ctrl+T today;
+    # Ctrl+Shift+K conflict settings tab; Ctrl+E export; Ctrl+Shift+R reset layouts; Ctrl+T today;
     # Ctrl+Alt+T/L/R/F/H new Termin/LVA/Raum/Freier Tag/Studienrichtung.
     # Ctrl+Alt+V: previous-year view, either hold or toggle depending on settings.
     # Focused calendar TerminCard: Delete/Backspace unassign; Ctrl+Delete/Ctrl+Backspace delete.

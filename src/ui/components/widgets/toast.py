@@ -17,12 +17,13 @@ class Toast(QWidget):
         self.label = QLabel(text, self)
         self.label.setObjectName("ToastLabel")
         self.label.setProperty("kind", kind)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setMinimumWidth(160)
         layout.addWidget(self.label)
 
     def show(self) -> None:
         parent = self.parent() if self.parent() is not None else None
         if parent:
-            
             pg = parent.geometry()
             w = self.sizeHint().width()
             h = self.sizeHint().height()

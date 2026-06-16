@@ -38,7 +38,7 @@ class TerminCard(QLabel):
         self.setWordWrap(True)
         self._base_style = (
             f"background-color: {bg_color.name()};"
-            f"color: {qss_color('planner-text', '#111111').name()};"
+            f"color: {qss_color('planner-text').name()};"
             "padding: 0px;"
             "border: none;"
             "font-size: 10px;"
@@ -65,9 +65,9 @@ class TerminCard(QLabel):
 
     def _apply_style(self) -> None:
         if self._focused or self._highlighted:
-            border = f"border: 2px solid {qss_color('planner-focus-border', '#111111').name()};"
+            border = f"border: 2px solid {qss_color('planner-focus-border').name()};"
         elif self._zu_besprechen:
-            border = f"border: 2px solid {qss_color('planner-discuss-border', '#d98200').name()};"
+            border = f"border: 2px solid {qss_color('planner-discuss-border').name()};"
         else:
             border = "border: none;"
         self.setStyleSheet(self._base_style + border)

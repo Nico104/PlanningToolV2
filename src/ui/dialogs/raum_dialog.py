@@ -36,10 +36,13 @@ class RaumDialog(QDialog):
         self.cap_sb.setRange(1, 2000)
         self.cap_sb.setValue(raum.kapazitaet if raum else 30)
         self.cap_sb.setObjectName("Field")
+        self.building_le = QLineEdit(getattr(raum, "gebaeude", "") if raum else "")
+        self.building_le.setObjectName("Field")
 
         form.addRow("Raumnummer:", self.id_le)
         form.addRow("Raum:", self.name_le)
         form.addRow("Kapazität:", self.cap_sb)
+        form.addRow("Gebäude:", self.building_le)
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.setObjectName("DialogButtons")
@@ -59,7 +62,12 @@ class RaumDialog(QDialog):
         if not rid or not name:
             QMessageBox.warning(self, "Fehler", "Raumnummer und Raum sind Pflicht.")
             return
-        self._result = Raum(id=rid, name=name, kapazitaet=int(self.cap_sb.value()))
+        self._result = Raum(
+            id=rid,
+            name=name,
+            kapazitaet=int(self.cap_sb.value()),
+            gebaeude=self.building_le.text().strip(),
+        )
         self.accept()
 
     @property

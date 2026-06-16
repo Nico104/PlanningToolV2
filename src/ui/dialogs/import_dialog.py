@@ -5,34 +5,21 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame,
-    QMessageBox,
+    QMessageBox, QApplication,
 )
+
+from ...services.import_merge_service import IMPORT_FILE_SCHEMAS, get_entry_id, payload_list
 
 class ImportDialog(QDialog):
     """Steps through every changed entry across all imported files and lets the user merge or ignore each."""
 
-    _FILE_SCHEMAS = {
-        "termine.json":             ("termine",             "id"),
-        "raeume.json":              ("raeume",              "id"),
-        "lehrveranstaltungen.json": ("lehrveranstaltungen", "id"),
-        "studienrichtungen.json":   ("studienrichtungen",   "id"),
-        "freie_tage.json":          ("freie_tage",          "id"),
-    }
-
-    @staticmethod
-    def _get_entry_id(entry: dict, id_field):
-        """Return the stable identifier for an imported entry."""
-        v = entry.get(id_field)
-        if v is not None:
-            return str(v)
-        return None
-
-    def __init__(self, parent: QWidget, data_dir: Path, imported_data: dict):
+    def __init__(self, parent: QWidget, data_dir: Path, imported_data: dict, *, auto_import_new: bool = False):
         super().__init__(parent)
         self.setWindowTitle("Import prüfen")
         self.setObjectName("importDialog")
         self.data_dir = Path(data_dir)
         self.imported_data = imported_data or {}
+        self.auto_import_new = auto_import_new
 
         layout = QVBoxLayout(self)
         hdr = QLabel("Import: Sie werden nacheinander durch alle Änderungen geführt.")
@@ -77,6 +64,7 @@ class ImportDialog(QDialog):
             "notiz": "Notiz",
             "beschreibung": "Beschreibung",
             "kapazitaet": "Kapazität",
+            "gebaeude": "Gebäude",
             "vortragende": "Vortragende",
             "email": "E-Mail",
             "studienrichtung": "Studienrichtung",
@@ -88,6 +76,7 @@ class ImportDialog(QDialog):
                 "id": "Raumnummer",
                 "name": "Raum",
                 "kapazitaet": "Kapazität",
+                "gebaeude": "Gebäude",
             },
         }
 
@@ -245,10 +234,10 @@ class ImportDialog(QDialog):
     def _interactive_import(self):
         """Step through each changed entry in every imported file, prompt user, then write and close"""
         for fname, content in self.imported_data.items():
-            if fname not in ImportDialog._FILE_SCHEMAS:
+            schema = IMPORT_FILE_SCHEMAS.get(fname)
+            if schema is None:
                 continue
 
-            list_key, id_field = ImportDialog._FILE_SCHEMAS[fname]
             target = self.data_dir / fname
 
             existing_raw = None
@@ -268,21 +257,24 @@ class ImportDialog(QDialog):
                 pass
 
 
-            incoming_list = content.get(list_key, []) if isinstance(content, dict) else []
-            existing_list = existing_raw.get(list_key, []) if isinstance(existing_raw, dict) else []
+            incoming_list = payload_list(content, schema)
+            existing_list = existing_raw.get(schema.list_key, []) if isinstance(existing_raw, dict) else []
 
 
             existing_map = {
-                ImportDialog._get_entry_id(e, id_field): e
+                get_entry_id(e, schema.id_field): e
                 for e in existing_list
-                if ImportDialog._get_entry_id(e, id_field) is not None
+                if get_entry_id(e, schema.id_field) is not None
             }
 
             import_all = False
             ignore_all = False
 
-            for inc in incoming_list:
-                eid = ImportDialog._get_entry_id(inc, id_field)
+            for index, inc in enumerate(incoming_list):
+                if index % 25 == 0:
+                    QApplication.processEvents()
+
+                eid = get_entry_id(inc, schema.id_field)
                 ex = existing_map.get(eid) if eid else None
 
                 different = ex is None or ex != inc
@@ -294,6 +286,8 @@ class ImportDialog(QDialog):
                     ch = 'import'
                 elif ignore_all:
                     ch = 'ignore'
+                elif ex is None and self.auto_import_new:
+                    ch = 'import'
                 else:
                     prompt = ImportDialog._EntryMergePrompt(self, fname, inc, ex)
                     prompt.exec()
@@ -318,7 +312,7 @@ class ImportDialog(QDialog):
             # write back
             if not isinstance(existing_raw, dict):
                 existing_raw = {}
-            existing_raw[list_key] = existing_list
+            existing_raw[schema.list_key] = existing_list
 
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)

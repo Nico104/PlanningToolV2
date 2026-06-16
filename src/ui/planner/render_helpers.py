@@ -62,13 +62,13 @@ class FreeDayHeaderView(QHeaderView):
         badge_rect = section_rect.adjusted(4, section_rect.height() - 24, -4, -4)
 
         if day_type == "feiertag":
-            bg = qss_color("free-day-holiday-badge-bg", "#fff1c2")
-            border = qss_color("free-day-holiday-badge-border", "#c58b00")
-            fg = qss_color("free-day-holiday-badge-text", "#5c3c00")
+            bg = qss_color("free-day-holiday-badge-bg")
+            border = qss_color("free-day-holiday-badge-border")
+            fg = qss_color("free-day-holiday-badge-text")
         else:
-            bg = qss_color("free-day-lecture-badge-bg", "#dbeafe")
-            border = qss_color("free-day-lecture-badge-border", "#8bb7f0")
-            fg = qss_color("free-day-lecture-badge-text", "#173a69")
+            bg = qss_color("free-day-lecture-badge-bg")
+            border = qss_color("free-day-lecture-badge-border")
+            fg = qss_color("free-day-lecture-badge-text")
 
         painter.setBrush(bg)
         painter.setPen(QPen(border, 0.5))

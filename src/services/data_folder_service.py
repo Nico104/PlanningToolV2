@@ -178,10 +178,3 @@ def initialize_missing_project_files(data_dir: Path, filenames: list[str]) -> li
         write_json(path, {root_key: default_items})
         created.append(filename)
     return created
-
-
-def validate_or_initialize_data_dir(data_dir: Path) -> tuple[list[str], list[str]]:
-    inspection = inspect_project_folder(data_dir)
-    if inspection.invalid_files:
-        return [], inspection.invalid_files
-    return initialize_missing_project_files(data_dir, inspection.missing_files), []

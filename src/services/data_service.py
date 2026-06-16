@@ -108,7 +108,15 @@ class DataService:
 
     def load_raeume(self) -> List[Raum]:
         raw = self._read("raeume.json")["raeume"]
-        return [Raum(id=clean_json_id(x.get("id")), name=x["name"], kapazitaet=int(x["kapazitaet"])) for x in raw]
+        return [
+            Raum(
+                id=clean_json_id(x.get("id")),
+                name=x["name"],
+                kapazitaet=int(x["kapazitaet"]),
+                gebaeude=str(x.get("gebaeude", "") or "").strip(),
+            )
+            for x in raw
+        ]
 
     def load_lvas(self) -> List[Lehrveranstaltung]:
         settings = self.load_settings()
@@ -184,8 +192,15 @@ class DataService:
         return load_app_settings()
 
     def save_raeume(self, raeume: List[Raum]) -> None:
+        rows = []
+        for r in raeume:
+            item = {"id": clean_json_id(r.id), "name": r.name, "kapazitaet": r.kapazitaet}
+            gebaeude = str(getattr(r, "gebaeude", "") or "").strip()
+            if gebaeude:
+                item["gebaeude"] = gebaeude
+            rows.append(item)
         self._write("raeume.json", {
-            "raeume": [{"id": clean_json_id(r.id), "name": r.name, "kapazitaet": r.kapazitaet} for r in raeume]
+            "raeume": rows
         })
 
     def save_lvas(self, lvas: List[Lehrveranstaltung]) -> None:

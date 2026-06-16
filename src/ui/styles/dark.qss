@@ -307,23 +307,24 @@ QDialog#FreeDayImportDialog QTableWidget#FreeDayImportTable::item:selected {
   color: #f1f5f9;
 }
 
-QDialog#TissRoomImportPreviewDialog {
+QDialog#CatalogImportDialog {
   background: #1b1f24;
 }
 
-QDialog#TissRoomImportPreviewDialog QLabel#TissRoomImportTitle {
+QDialog#CatalogImportDialog QLabel#CatalogImportTitle {
   color: #f1f5f9;
   font-size: 16px;
   font-weight: 700;
 }
 
-QDialog#TissRoomImportPreviewDialog QLabel#TissRoomImportSummary {
+QDialog#CatalogImportDialog QLabel#CatalogImportSubtitle,
+QDialog#CatalogImportDialog QLabel#CatalogImportSummary {
   color: #9ca3af;
   font-size: 12px;
   font-weight: 600;
 }
 
-QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable {
+QDialog#CatalogImportDialog QTableWidget#CatalogImportTable {
   background: #1b1f24;
   alternate-background-color: #20242a;
   border: 1px solid #333a43;
@@ -332,14 +333,30 @@ QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable {
   outline: 0;
 }
 
-QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable::item {
+QDialog#CatalogImportDialog QTableWidget#CatalogImportTable::item {
   padding: 5px 6px;
   color: #f1f5f9;
 }
 
-QDialog#TissRoomImportPreviewDialog QTableWidget#TissRoomImportTable::item:selected {
+QDialog#CatalogImportDialog QTableWidget#CatalogImportTable::item:selected {
   background: transparent;
   color: #f1f5f9;
+}
+
+QFrame#CatalogImportBusyOverlay {
+  background: rgba(27, 31, 36, 196);
+}
+
+QFrame#CatalogImportBusyPanel {
+  background: #1f2328;
+  border: 1px solid #333a43;
+  border-radius: 8px;
+}
+
+QLabel#CatalogImportBusyText {
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* Cards, chips, and summaries */
@@ -526,6 +543,13 @@ QLabel#DayRoomPagerLabel {
   font-size: 12px;
   font-weight: 600;
   padding: 0px 4px;
+}
+
+QFrame#HeaderSeparator {
+  color: #333a43;
+  background: #333a43;
+  max-width: 1px;
+  margin: 4px 2px;
 }
 
 
@@ -1092,8 +1116,87 @@ QDialog#AppDialog QLabel {
   font-weight: 500;
 }
 
+QDialog#AppDialog QLabel#SettingsTitle {
+  color: #f1f5f9;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+QDialog#AppDialog QLabel#SettingsSubtitle {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 140%;
+}
+
+QDialog#AppDialog QFrame#SettingsSection {
+  background: #1f2328;
+  border: 1px solid #333a43;
+  border-radius: 8px;
+}
+
+QDialog#AppDialog QLabel#SettingsSectionTitle {
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+QDialog#AppDialog QLabel#SettingsFieldLabel {
+  color: #d1d5db;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+QDialog#AppDialog QLabel#SettingsHelp {
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+QDialog#AppDialog QTabWidget#SettingsTabs::pane {
+  border: none;
+  background: transparent;
+}
+
+QDialog#AppDialog QTabBar::tab {
+  background: transparent;
+  color: #9ca3af;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  margin-right: 8px;
+  font-weight: 600;
+}
+
+QDialog#AppDialog QTabBar::tab:selected {
+  color: #f1f5f9;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+QDialog#AppDialog QScrollArea#SettingsScroll {
+  background: transparent;
+  border: none;
+}
+
+QDialog#AppDialog QWidget#SettingsConflictList {
+  background: transparent;
+}
+
+QDialog#AppDialog QFrame#SettingsConflictRow {
+  background: #1f2328;
+  border: 1px solid #333a43;
+  border-radius: 8px;
+}
+
+QDialog#AppDialog QLabel#SettingsConflictName {
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 QDialog#AppDialog QLineEdit#Field,
 QDialog#AppDialog QComboBox#Field,
+QDialog#AppDialog QComboBox#HeaderCombo,
 QDialog#AppDialog QDateEdit#Field,
 QDialog#AppDialog QDateEdit#DateEdit,
 QDialog#AppDialog QTimeEdit#Field,
@@ -1115,6 +1218,7 @@ QDialog#AppDialog QTextEdit#Field {
 
 QDialog#AppDialog QLineEdit#Field:hover,
 QDialog#AppDialog QComboBox#Field:hover,
+QDialog#AppDialog QComboBox#HeaderCombo:hover,
 QDialog#AppDialog QDateEdit#Field:hover,
 QDialog#AppDialog QDateEdit#DateEdit:hover,
 QDialog#AppDialog QTimeEdit#Field:hover,
@@ -1127,6 +1231,7 @@ QDialog#AppDialog QTextEdit#Field:hover {
 
 QDialog#AppDialog QLineEdit#Field:focus,
 QDialog#AppDialog QComboBox#Field:focus,
+QDialog#AppDialog QComboBox#HeaderCombo:focus,
 QDialog#AppDialog QDateEdit#Field:focus,
 QDialog#AppDialog QDateEdit#DateEdit:focus,
 QDialog#AppDialog QTimeEdit#Field:focus,
@@ -1139,6 +1244,7 @@ QDialog#AppDialog QTextEdit#Field:focus {
 
 QDialog#AppDialog QLineEdit#Field:disabled,
 QDialog#AppDialog QComboBox#Field:disabled,
+QDialog#AppDialog QComboBox#HeaderCombo:disabled,
 QDialog#AppDialog QDateEdit#Field:disabled,
 QDialog#AppDialog QDateEdit#DateEdit:disabled,
 QDialog#AppDialog QTimeEdit#Field:disabled,
@@ -1623,7 +1729,7 @@ QWidget#Toast {
 }
 
 QLabel#ToastLabel {
-  color: #1b1f24;
+  color: #f8fafc;
   background: rgba(50,50,50,0.95);
   padding: 8px 12px;
   border-radius: 6px;

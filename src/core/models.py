@@ -24,6 +24,7 @@ class Raum:
     id: str
     name: str
     kapazitaet: int
+    gebaeude: str = ""
 
 
 @dataclass(frozen=True)

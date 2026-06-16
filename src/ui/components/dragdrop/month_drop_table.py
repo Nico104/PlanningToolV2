@@ -139,7 +139,7 @@ class MonthDropTable(QTableWidget):
         w = self.columnWidth(self._hover_col)
         h = self.rowHeight(self._hover_row)
         p = QPainter(self.viewport())
-        color = qss_color("planner-drop-conflict-bg", "#CC3333")
+        color = qss_color("planner-drop-conflict-bg")
         color.setAlpha(120)
         p.fillRect(x + 1, y + 1, w - 2, h - 2, color)
         p.end()

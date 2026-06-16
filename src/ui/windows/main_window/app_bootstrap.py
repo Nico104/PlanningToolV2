@@ -7,14 +7,12 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QFileDialog
 
 from ....services.data_folder_service import (
     data_path_for_settings,
-    initialize_missing_project_files,
-    inspect_project_folder,
     load_settings,
     resolve_data_dir,
     save_settings,
-    validate_or_initialize_data_dir,
 )
 from ... import resources_rc  # type: ignore  # noqa: F401
+from ...utils.project_folder_flow import prepare_project_folder
 from ...utils.qss_tokens import set_qss_tokens
 from .main_window import MainWindow
 
@@ -55,7 +53,7 @@ def _choose_data_path(settings: dict, current_data_dir: Path):
     folder = _choose_project_folder("Projektordner wählen", current_data_dir)
     if folder is None:
         return settings, current_data_dir
-    if not _prepare_project_folder(folder, title="Projekt öffnen", require_existing_project=True):
+    if prepare_project_folder(None, folder, title="Projekt öffnen", require_existing_project=True) is None:
         return settings, current_data_dir
     return _save_project_folder(folder)
 
@@ -70,83 +68,6 @@ def _save_project_folder(target_dir: Path) -> tuple[dict, Path]:
     settings["data_path"] = data_path_for_settings(target_dir)
     save_settings(settings)
     return settings, target_dir
-
-
-def _project_folder_details(target_dir: Path, inspection) -> str:
-    parts = [str(target_dir)]
-    if inspection.valid_files:
-        parts.append("Gefunden:\n" + "\n".join(inspection.valid_files))
-    if inspection.missing_files:
-        parts.append("Wird angelegt:\n" + "\n".join(inspection.missing_files))
-    return "\n\n".join(parts)
-
-
-def _confirm_project_folder_change(title: str, text: str, target_dir: Path, inspection) -> bool:
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Question)
-    msg.setWindowTitle(title)
-    msg.setText(text)
-    msg.setInformativeText(_project_folder_details(target_dir, inspection))
-    ok_btn = msg.addButton("Fortfahren", QMessageBox.AcceptRole)
-    msg.addButton("Abbrechen", QMessageBox.RejectRole)
-    msg.setDefaultButton(ok_btn)
-    msg.exec()
-    return msg.clickedButton() == ok_btn
-
-
-def _show_invalid_project_files(invalid_files: list[str]) -> None:
-    error = QMessageBox()
-    error.setIcon(QMessageBox.Critical)
-    error.setWindowTitle("Projektdateien ungültig")
-    error.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
-    error.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
-    error.setDetailedText("\n".join(invalid_files))
-    error.exec()
-
-
-def _prepare_project_folder(
-    folder: Path,
-    *,
-    title: str,
-    require_existing_project: bool = False,
-    creating_new: bool = False,
-) -> bool:
-    try:
-        if creating_new:
-            folder.mkdir(parents=True, exist_ok=True)
-        inspection = inspect_project_folder(folder)
-    except Exception as exc:
-        QMessageBox.warning(None, title, f"Projektordner konnte nicht vorbereitet werden: {exc}")
-        return False
-
-    if require_existing_project and not inspection.has_project_files:
-        QMessageBox.warning(None, title, "Dieser Ordner enthält kein Planungsprojekt.")
-        return False
-
-    if inspection.invalid_files:
-        _show_invalid_project_files(inspection.invalid_files)
-        return False
-
-    if creating_new and inspection.has_project_files:
-        ok = _confirm_project_folder_change(
-            title,
-            "Der Ordner enthält bereits Projektdateien. Dieses Projekt verwenden?",
-            folder,
-            inspection,
-        )
-        if not ok:
-            return False
-    elif inspection.missing_files:
-        text = (
-            "Der Projektordner ist unvollständig. Fehlende Dateien werden angelegt."
-            if require_existing_project
-            else "In diesem Ordner werden Projektdateien angelegt."
-        )
-        if not _confirm_project_folder_change(title, text, folder, inspection):
-            return False
-
-    initialize_missing_project_files(folder, inspection.missing_files)
-    return True
 
 
 def _choose_initial_project(project_root: Path) -> tuple[dict, Path] | None:
@@ -178,14 +99,15 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path] | None:
             continue
 
         if clicked == create_btn:
-            prepared = _prepare_project_folder(folder, title="Neues Projekt", creating_new=True)
+            prepared = prepare_project_folder(None, folder, title="Neues Projekt", creating_new=True)
         else:
-            prepared = _prepare_project_folder(
+            prepared = prepare_project_folder(
+                None,
                 folder,
                 title="Projekt öffnen",
                 require_existing_project=True,
             )
-        if not prepared:
+        if prepared is None:
             continue
 
         return _save_project_folder(folder)
@@ -266,25 +188,16 @@ def run_gui() -> None:
                 continue
             return
 
-        created_files, invalid_files = validate_or_initialize_data_dir(data_dir)
-        if not invalid_files:
-            if created_files:
-                QMessageBox.information(
-                    None,
-                    "Datenordner initialisiert",
-                    "Fehlende Projektdateien wurden angelegt:\n\n" + "\n".join(created_files),
-                )
+        if prepare_project_folder(None, data_dir, title="Datenordner prüfen", require_existing_project=True) is not None:
             break
 
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
-        msg.setWindowTitle("Projektdateien ungültig")
-        msg.setText(f"Der Datenordner '{data_dir}' enthält ungültige Projektdateien.")
+        msg.setWindowTitle("Datenordner nicht verwendbar")
+        msg.setText(f"Der Datenordner '{data_dir}' ist ungültig oder unvollständig.")
         msg.setInformativeText(
-            "Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Datenordner "
-            "oder setzen Sie den Datenpfad zurück."
+            "Bitte wählen Sie einen anderen Datenordner oder setzen Sie den Datenpfad zurück."
         )
-        msg.setDetailedText("\n".join(invalid_files))
         reset_btn = msg.addButton("Zurücksetzen", QMessageBox.AcceptRole)
         set_btn = msg.addButton("Pfad wählen", QMessageBox.ActionRole)
         msg.addButton("Abbrechen", QMessageBox.RejectRole)

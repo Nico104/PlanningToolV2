@@ -29,8 +29,6 @@ class PlannerWorkspace(QWidget):
     """Main planner container coordinating day/week/month views and shared state
     """
 
-    DAY_ROOM_PAGE_SIZE = 8
-
     def __init__(self, parent: QWidget, ds: DataService, on_data_changed, global_filter_dock=None):
         super().__init__(parent)
         
@@ -175,7 +173,7 @@ class PlannerWorkspace(QWidget):
     def _apply_planner_table_palette(self, table: QTableWidget) -> None:
         pal = QPalette(table.palette())
         pal.setColor(QPalette.Highlight, QColor(0, 0, 0, 0))
-        pal.setColor(QPalette.HighlightedText, qss_color("planner-text", "#111111"))
+        pal.setColor(QPalette.HighlightedText, qss_color("planner-text"))
         table.setPalette(pal)
 
     def _qdate_to_pydate(self, qd: QDate) -> date:
@@ -222,6 +220,7 @@ class PlannerWorkspace(QWidget):
         if gf is None:
             return {
                 "raum_id": None,
+                "gebaeude": None,
                 "lva_id": None,
                 "typ": None,
                 "dozent": None,
@@ -232,6 +231,7 @@ class PlannerWorkspace(QWidget):
             }
         return {
             "raum_id": gf.raum_id,
+            "gebaeude": getattr(gf, "gebaeude", None),
             "lva_id": gf.lva_id,
             "typ": gf.typ,
             "dozent": getattr(gf, "dozent", None),
@@ -256,6 +256,8 @@ class PlannerWorkspace(QWidget):
             studiensemester=filters_for_planner["studiensemester"],
             zu_besprechen=filters_for_planner["zu_besprechen"],
         )
+        if filters_for_planner.get("gebaeude") and not filters_for_planner.get("raum_id"):
+            filtered = self._filter_terms_by_building(filtered, filters_for_planner["gebaeude"])
         expanded = expand_termine(filtered)
 
         view = str(self.view_cb.currentData())
@@ -314,13 +316,25 @@ class PlannerWorkspace(QWidget):
 
     def _day_rooms_for_filters(self, filters) -> list:
         rooms = self.state.raeume
+        if filters.get("gebaeude"):
+            rooms = [
+                r for r in rooms
+                if str(getattr(r, "gebaeude", "") or "").strip() == filters["gebaeude"]
+            ]
         if filters["raum_id"]:
             return [r for r in rooms if r.id == filters["raum_id"]]
         return rooms
 
+    def _filter_terms_by_building(self, termine: list, gebaeude: str) -> list:
+        room_by_id = {str(room.id): room for room in self.state.raeume}
+        return [
+            termin for termin in termine
+            if str(getattr(room_by_id.get(str(termin.raum_id)), "gebaeude", "") or "").strip() == gebaeude
+        ]
+
     def _paged_day_rooms(self, rooms: list, has_room_filter: bool) -> list:
         total = len(rooms)
-        page_size = self.DAY_ROOM_PAGE_SIZE
+        page_size = self._day_room_page_size()
         show_pager = not has_room_filter and total > page_size
 
         if not show_pager:
@@ -339,6 +353,13 @@ class PlannerWorkspace(QWidget):
         self.day_room_next_btn.setEnabled(end < total)
         return rooms[start:end]
 
+    def _day_room_page_size(self) -> int:
+        try:
+            value = int(self.state.settings.get("day_room_page_size", 8))
+        except Exception:
+            value = 8
+        return max(4, min(24, value))
+
     def _shift_day_room_page(self, direction: int) -> None:
         self._day_room_page = max(0, self._day_room_page + direction)
         self.refresh(emit=False)
@@ -348,7 +369,7 @@ class PlannerWorkspace(QWidget):
             return
         for idx, room in enumerate(self.state.raeume):
             if room.id == room_id:
-                self._day_room_page = idx // self.DAY_ROOM_PAGE_SIZE
+                self._day_room_page = idx // self._day_room_page_size()
                 return
 
     def _edit_termin_by_id(self, tid: str):

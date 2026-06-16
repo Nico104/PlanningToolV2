@@ -95,9 +95,9 @@ class FreeDayProvider:
 
     def _load_free_day_styles(self) -> dict[str, object]:
         styles: dict[str, object] = {}
-        styles["holiday_bg"] = qss_color("free-day-holiday-bg", "#f9e7c0")
-        styles["lecture_bg"] = qss_color("free-day-lecture-bg", "#dbeafe")
-        styles["cell_border"] = qss_color("free-day-cell-border", "#dfe6ee")
+        styles["holiday_bg"] = qss_color("free-day-holiday-bg")
+        styles["lecture_bg"] = qss_color("free-day-lecture-bg")
+        styles["cell_border"] = qss_color("free-day-cell-border")
         return styles
 
     def _parse_iso_date(self, raw: str) -> Optional[date]:

@@ -1,63 +1,6 @@
 {
   "lehrveranstaltungen": [
     {
-      "id": "123.456",
-      "name": "Einführung in die Psychologie",
-      "vortragende": {
-        "name": "Dr. Max Mustermann",
-        "email": "max.mustermann@uni.at"
-      },
-      "studiensemester": [
-        "sem1"
-      ],
-      "studienrichtung": "ETIT",
-      "ects": ""
-    },
-    {
-      "id": "370.007",
-      "name": "Energieversorgung – Einfluss der PV-Einspeisung",
-      "vortragende": {
-        "name": "",
-        "email": ""
-      },
-      "studiensemester": [
-        "sem3",
-        "qs1",
-        "sem1"
-      ],
-      "studienrichtung": "ETIT",
-      "ects": ""
-    },
-    {
-      "id": "410.101",
-      "name": "Programmieren 1",
-      "vortragende": {
-        "name": "DI Lukas Code",
-        "email": "lukas.code@uni.at"
-      },
-      "studiensemester": [
-        "sem1",
-        "sem2",
-        "sem3",
-        "sem4"
-      ],
-      "studienrichtung": "ETIT",
-      "ects": "5"
-    },
-    {
-      "ects": "4.0",
-      "id": "363.015",
-      "name": "Elektrotechnik 1",
-      "studienrichtung": "ETIT",
-      "studiensemester": [
-        "sem1"
-      ],
-      "vortragende": {
-        "email": "guenther.zeck@tuwien.ac.at",
-        "name": "Zeck, Günther Michael"
-      }
-    },
-    {
       "ects": "1.0",
       "id": "350.002",
       "name": "Orientierung ETIT",
@@ -73,6 +16,19 @@
     {
       "ects": "5.0",
       "id": "363.014",
+      "name": "Elektrotechnik 1",
+      "studienrichtung": "ETIT",
+      "studiensemester": [
+        "sem1"
+      ],
+      "vortragende": {
+        "email": "guenther.zeck@tuwien.ac.at",
+        "name": "Zeck, Günther Michael"
+      }
+    },
+    {
+      "ects": "4.0",
+      "id": "363.015",
       "name": "Elektrotechnik 1",
       "studienrichtung": "ETIT",
       "studiensemester": [
@@ -871,6 +827,17 @@
       "vortragende": {
         "email": "matthias.hofer@tuwien.ac.at",
         "name": "Hofer, Matthias"
+      }
+    },
+    {
+      "ects": "5.0",
+      "id": "370.007",
+      "name": "Fachvertiefung - Energiesysteme",
+      "studienrichtung": "ETIT",
+      "studiensemester": [],
+      "vortragende": {
+        "email": "bernd.kloeckl@tuwien.ac.at",
+        "name": "Klöckl, Bernd"
       }
     },
     {

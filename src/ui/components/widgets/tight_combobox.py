@@ -153,12 +153,12 @@ class TightComboBox(QComboBox):
     def _sync_popup_styling(self):
         v = self.view()
         w = v.window()
-        popup_bg = qss_token("popup-bg", "#f8f8f8")
-        popup_border = qss_token("popup-border", "#4a4a4a")
-        selection_bg = qss_token("popup-selection-bg", "#4f86ff")
-        popup_text = qss_token("popup-text", "black")
-        selection_text = qss_token("popup-selection-text", "white")
-        hover_bg = qss_token("popup-hover-bg", "rgba(255,255,255,14%)")
+        popup_bg = qss_token("popup-bg")
+        popup_border = qss_token("popup-border")
+        selection_bg = qss_token("popup-selection-bg")
+        popup_text = qss_token("popup-text")
+        selection_text = qss_token("popup-selection-text")
+        hover_bg = qss_token("popup-hover-bg")
 
         w.setAttribute(Qt.WA_StyledBackground, True)
         w.setStyleSheet(f"""

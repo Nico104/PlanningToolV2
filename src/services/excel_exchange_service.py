@@ -22,7 +22,7 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
     "raeume.json": {
         "sheet": "Raeume",
         "list_key": "raeume",
-        "columns": ["id", "name", "kapazitaet"],
+        "columns": ["id", "name", "kapazitaet", "gebaeude"],
     },
     "lehrveranstaltungen.json": {
         "sheet": "Lehrveranstaltungen",
@@ -78,6 +78,7 @@ _EXCEL_HEADER_LABELS: Dict[str, str] = {
     "raeume.json:id": "Raumnummer",
     "raeume.json:name": "Raum",
     "raeume.json:kapazitaet": "Kapazität",
+    "raeume.json:gebaeude": "Gebäude",
     "lehrveranstaltungen.json:id": "LVA-Nr.",
     "lehrveranstaltungen.json:name": "Name",
     "lehrveranstaltungen.json:vortragende.name": "Vortragende",
@@ -112,6 +113,10 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
         "Raum": "name",
         "Kapazität": "kapazitaet",
         "Kapazitaet": "kapazitaet",
+        "Gebäude": "gebaeude",
+        "Gebaeude": "gebaeude",
+        "Gebäudekürzel": "gebaeude",
+        "Gebaeudekuerzel": "gebaeude",
     },
     "termine.json": {
         "LVA-Nr": "lva_id",
@@ -961,6 +966,19 @@ _TISS_ROOM_COLUMN_ALIASES: Dict[str, set[str]] = {
     "id": {"raumnummer", "raumnr", "raumnummercode", "raumcode", "code", "id", "nummer"},
     "name": {"raum", "raumname", "raumbezeichnung", "bezeichnung", "name"},
     "kapazitaet": {"kapazitaet", "kapazitat", "plaetze", "platze", "plätze", "kapaz", "capacity"},
+    "gebaeude": {
+        "gebaeude",
+        "gebauede",
+        "gebäude",
+        "gebaude",
+        "gebaeudekuerzel",
+        "gebaudekurzel",
+        "gebaeudecode",
+        "gebaudecode",
+        "building",
+        "buildingcode",
+    },
+    "adresse": {"adresse", "anschrift", "address"},
 }
 
 
@@ -1010,6 +1028,8 @@ def import_tiss_rooms_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
         id_col = columns["id"]
         name_col = columns["name"]
         capacity_col = columns["kapazitaet"]
+        building_col = columns.get("gebaeude")
+        address_col = columns.get("adresse")
 
         for row_idx in range(header_row + 1, (ws.max_row or 0) + 1):
             room_id = _safe_text(ws.cell(row=row_idx, column=id_col).value)
@@ -1021,16 +1041,25 @@ def import_tiss_rooms_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
             if capacity is None:
                 continue
 
-            rooms_by_id[room_id] = {
+            room = {
                 "id": room_id,
                 "name": name,
                 "kapazitaet": capacity,
             }
+            building = _safe_text(ws.cell(row=row_idx, column=building_col).value) if building_col else ""
+            address = _safe_text(ws.cell(row=row_idx, column=address_col).value) if address_col else ""
+            if building:
+                room["gebaeude"] = building
+                room["__catalog_gebaeude"] = building
+            if address:
+                room["__catalog_adresse"] = address
+            rooms_by_id[room_id] = room
 
     rooms = list(rooms_by_id.values())
     if not rooms:
         raise ValueError(
-            "Keine TISS-Räume erkannt. Erwartet werden die Spalten 'Raumnummer', 'Raum' und 'Kapazität'."
+            "Keine TISS-Räume erkannt. Erwartet werden mindestens die Spalten "
+            "'Raumnummer', 'Raum' und 'Kapazität'. Optional wird 'Gebäude' übernommen."
         )
 
     return {"raeume.json": {"raeume": rooms}}
