@@ -24,8 +24,6 @@ from PySide6.QtWidgets import (
 )
 
 from ...services.excel_exchange_service import LvaExportOption, SemesterExportOption
-from ...services.semester_rules import semester_from_id
-
 
 class TeacherExportDialog(QDialog):
     """Select semesters and teachers for the teacher Excel export."""
@@ -40,7 +38,7 @@ class TeacherExportDialog(QDialog):
     ):
         super().__init__(parent)
         self.setObjectName("TeacherExportDialog")
-        self.setWindowTitle("Terminexport")
+        self.setWindowTitle("Export für Lehrende")
         self.setModal(True)
         self.resize(1120, 720)
         self.setMinimumSize(920, 640)
@@ -49,7 +47,6 @@ class TeacherExportDialog(QDialog):
         self._teachers = self._lvas
         self._semesters = list(semesters)
         self._updating_teacher_selection = False
-        self._syncing_date_range = False
         today = date.today()
         self._default_from = default_from or today
         self._default_to = default_to or self._default_from
@@ -58,11 +55,11 @@ class TeacherExportDialog(QDialog):
         root.setContentsMargins(18, 16, 18, 14)
         root.setSpacing(12)
 
-        title = QLabel("Terminexport")
+        title = QLabel("Export für Lehrende")
         title.setObjectName("DialogTitle")
         root.addWidget(title)
 
-        subtitle = QLabel("Wählen Sie aus, welche LVAs, Semester und welches Format exportiert werden.")
+        subtitle = QLabel("Termine nach LVA, Lehrperson, Semester und Zeitraum als Excel-Datei exportieren.")
         subtitle.setObjectName("DialogSubtitle")
         root.addWidget(subtitle)
 
@@ -100,6 +97,11 @@ class TeacherExportDialog(QDialog):
         self.search.textChanged.connect(self._apply_filter)
         tools.addWidget(self.search, 1)
 
+        self.only_with_terms_cb = QCheckBox("Nur LVAs mit Terminen")
+        self.only_with_terms_cb.setChecked(True)
+        self.only_with_terms_cb.stateChanged.connect(self._apply_filter)
+        tools.addWidget(self.only_with_terms_cb)
+
         left.addLayout(tools)
 
         self.table = QTableWidget(0, 5, self)
@@ -116,9 +118,10 @@ class TeacherExportDialog(QDialog):
         header.setSectionResizeMode(0, QHeaderView.Fixed)
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.Interactive)
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         self.table.setColumnWidth(0, 42)
+        self.table.setColumnWidth(3, 260)
 
         left.addWidget(self.table, 1)
         content.addLayout(left, 1)
@@ -153,11 +156,16 @@ class TeacherExportDialog(QDialog):
         range_form.setSpacing(8)
         self.date_from_de = self._new_date_edit(self._default_from)
         self.date_to_de = self._new_date_edit(self._default_to)
-        self.date_from_de.dateChanged.connect(self._update_summary)
-        self.date_to_de.dateChanged.connect(self._update_summary)
+        self.date_from_de.dateChanged.connect(self._update_teacher_counts)
+        self.date_to_de.dateChanged.connect(self._update_teacher_counts)
         range_form.addRow("Von:", self.date_from_de)
         range_form.addRow("Bis:", self.date_to_de)
         right.addLayout(range_form)
+
+        range_help = QLabel("Exportiert werden Termine, die im Zeitraum und in den ausgewählten Semestern liegen.")
+        range_help.setObjectName("TeacherExportHint")
+        range_help.setWordWrap(True)
+        right.addWidget(range_help)
 
         calendar_label = QLabel("Kalender")
         calendar_label.setObjectName("TeacherExportSectionLabel")
@@ -231,7 +239,8 @@ class TeacherExportDialog(QDialog):
         self._populate_teachers()
         self._update_teacher_counts()
         self._select_teachers_with_terms()
-        self._rebuild_semesters_for_selected_teachers(checked_ids={semester.id for semester in self._semesters[-2:]})
+        self._rebuild_semesters_for_selected_teachers(checked_ids=self._default_checked_semester_ids())
+        self._update_teacher_counts()
 
     def selected_lva_ids(self) -> list[str]:
         selected = []
@@ -287,6 +296,22 @@ class TeacherExportDialog(QDialog):
     def selected_calendar_slot_minutes(self) -> int:
         return 60 if self.full_hour_rb.isChecked() else 30
 
+    def selected_term_count(self) -> int:
+        total = 0
+        for row in range(self.table.rowCount()):
+            checkbox = self.table.item(row, 0)
+            if checkbox and checkbox.checkState() == Qt.Checked:
+                total += self._row_term_count(row)
+        return total
+
+    def selected_lva_count_with_terms(self) -> int:
+        count = 0
+        for row in range(self.table.rowCount()):
+            checkbox = self.table.item(row, 0)
+            if checkbox and checkbox.checkState() == Qt.Checked and self._row_term_count(row) > 0:
+                count += 1
+        return count
+
     def _new_date_edit(self, value: date) -> QDateEdit:
         edit = QDateEdit(self)
         edit.setCalendarPopup(True)
@@ -300,30 +325,19 @@ class TeacherExportDialog(QDialog):
         return date(qdate.year(), qdate.month(), qdate.day())
 
     @staticmethod
-    def _set_date_edit(edit: QDateEdit, value: date) -> None:
-        edit.setDate(QDate(value.year, value.month, value.day))
+    def _count_text(count: int, singular: str, plural: str) -> str:
+        return f"{count} {singular if count == 1 else plural}"
 
-    def _sync_date_range_to_selected_semesters(self) -> None:
-        if self.semester_table is None or self._syncing_date_range:
-            return
-
-        selected = self.selected_semester_ids() or []
-        semesters = [semester_from_id(semester_id) for semester_id in selected]
-        semesters = [semester for semester in semesters if semester is not None]
-        if not semesters:
-            return
-
-        self._syncing_date_range = True
-        self.date_from_de.blockSignals(True)
-        self.date_to_de.blockSignals(True)
-        try:
-            self._set_date_edit(self.date_from_de, min(semester.start for semester in semesters))
-            self._set_date_edit(self.date_to_de, max(semester.end for semester in semesters))
-        finally:
-            self.date_from_de.blockSignals(False)
-            self.date_to_de.blockSignals(False)
-            self._syncing_date_range = False
-        self._update_summary()
+    def _default_checked_semester_ids(self) -> set[str]:
+        selected_teachers = self._selected_teacher_options()
+        in_range = {
+            semester.id
+            for semester in self._semesters
+            if self._term_count_for_semester_in_current_range(semester.id, selected_teachers) > 0
+        }
+        if in_range:
+            return in_range
+        return {semester.id for semester in self._semesters if semester.term_count > 0}
 
     def _populate_semesters(
         self,
@@ -334,7 +348,7 @@ class TeacherExportDialog(QDialog):
             return
 
         rows = rows if rows is not None else [(semester, semester.term_count) for semester in self._semesters]
-        checked_ids = checked_ids if checked_ids is not None else {semester.id for semester in self._semesters[-2:]}
+        checked_ids = checked_ids if checked_ids is not None else self._default_checked_semester_ids()
 
         self.semester_table.blockSignals(True)
         self.semester_table.setRowCount(len(rows))
@@ -348,7 +362,6 @@ class TeacherExportDialog(QDialog):
             self._set_semester_text_item(row, 1, semester.name)
             self._set_semester_text_item(row, 2, str(term_count), Qt.AlignCenter)
         self.semester_table.blockSignals(False)
-        self._sync_date_range_to_selected_semesters()
 
     def _populate_teachers(self) -> None:
         self.table.blockSignals(True)
@@ -364,16 +377,26 @@ class TeacherExportDialog(QDialog):
             self._set_text_item(row, 1, lva.id)
             self._set_text_item(row, 2, lva.name or "-")
             teacher_text = lva.teacher_name or "-"
+            teacher_tooltip = teacher_text
             if lva.teacher_email:
-                teacher_text = f"{teacher_text} · {lva.teacher_email}"
-            self._set_text_item(row, 3, teacher_text)
+                teacher_tooltip = f"{teacher_text}\n{lva.teacher_email}"
+            self._set_text_item(row, 3, teacher_text, tooltip=teacher_tooltip)
             self._set_text_item(row, 4, "0", Qt.AlignCenter)
         self.table.blockSignals(False)
 
-    def _set_text_item(self, row: int, column: int, text: str, alignment=Qt.AlignVCenter | Qt.AlignLeft) -> None:
+    def _set_text_item(
+        self,
+        row: int,
+        column: int,
+        text: str,
+        alignment=Qt.AlignVCenter | Qt.AlignLeft,
+        *,
+        tooltip: Optional[str] = None,
+    ) -> None:
         item = QTableWidgetItem(text)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
         item.setTextAlignment(alignment)
+        item.setToolTip(tooltip or text)
         self.table.setItem(row, column, item)
 
     def _set_semester_text_item(self, row: int, column: int, text: str, alignment=Qt.AlignVCenter | Qt.AlignLeft) -> None:
@@ -382,6 +405,7 @@ class TeacherExportDialog(QDialog):
         item = QTableWidgetItem(text)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
         item.setTextAlignment(alignment)
+        item.setToolTip(text)
         self.semester_table.setItem(row, column, item)
 
     def _selected_semesters_for_counts(self) -> Optional[list[str]]:
@@ -393,6 +417,15 @@ class TeacherExportDialog(QDialog):
     def _teacher_for_row(self, row: int) -> Optional[LvaExportOption]:
         checkbox = self.table.item(row, 0)
         return checkbox.data(Qt.UserRole + 1) if checkbox else None
+
+    def _row_term_count(self, row: int) -> int:
+        item = self.table.item(row, 4)
+        if item is None:
+            return 0
+        try:
+            return int(item.text() or "0")
+        except ValueError:
+            return 0
 
     def _selected_teacher_options(self) -> list[LvaExportOption]:
         selected = []
@@ -406,15 +439,41 @@ class TeacherExportDialog(QDialog):
 
     def _update_teacher_counts(self) -> None:
         selected_semesters = self._selected_semesters_for_counts()
+        date_from, date_to = self.selected_date_range()
         self.table.blockSignals(True)
         for row in range(self.table.rowCount()):
             teacher = self._teacher_for_row(row)
             if teacher is None:
                 continue
-            lva_count, term_count = teacher.counts_for_semesters(selected_semesters)
+            lva_count, term_count = teacher.counts_for_filters(selected_semesters, date_from, date_to)
             self.table.item(row, 4).setText(str(term_count))
         self.table.blockSignals(False)
+        self._update_semester_counts_for_current_range()
         self._apply_filter(self.search.text())
+
+    def _term_count_for_semester_in_current_range(self, semester_id: str, teachers: list[LvaExportOption]) -> int:
+        date_from, date_to = self.selected_date_range()
+        total = 0
+        for teacher in teachers:
+            _lva_count, term_count = teacher.counts_for_filters([semester_id], date_from, date_to)
+            total += term_count
+        return total
+
+    def _update_semester_counts_for_current_range(self) -> None:
+        if self.semester_table is None:
+            return
+        teachers = self._selected_teacher_options()
+        self.semester_table.blockSignals(True)
+        try:
+            for row in range(self.semester_table.rowCount()):
+                checkbox = self.semester_table.item(row, 0)
+                count_item = self.semester_table.item(row, 2)
+                if checkbox is None or count_item is None:
+                    continue
+                semester_id = str(checkbox.data(Qt.UserRole) or "")
+                count_item.setText(str(self._term_count_for_semester_in_current_range(semester_id, teachers)))
+        finally:
+            self.semester_table.blockSignals(False)
 
     def _rebuild_semesters_for_selected_teachers(
         self,
@@ -431,19 +490,15 @@ class TeacherExportDialog(QDialog):
         selected_teachers = self._selected_teacher_options()
         rows: list[tuple[SemesterExportOption, int]] = []
         for semester in self._semesters:
-            term_count = sum(int(teacher.semester_term_counts.get(semester.id, 0)) for teacher in selected_teachers)
-            if term_count > 0:
-                rows.append((semester, term_count))
+            term_count = self._term_count_for_semester_in_current_range(semester.id, selected_teachers)
+            rows.append((semester, term_count))
 
         if check_all_visible:
-            checked_ids = {semester.id for semester, _term_count in rows}
-        elif rows and not any(semester.id in checked_ids for semester, _term_count in rows):
-            checked_ids = {semester.id for semester, _term_count in rows}
+            checked_ids = {semester.id for semester, term_count in rows if term_count > 0}
 
         self._populate_semesters(rows, checked_ids)
 
     def _on_semester_selection_changed(self, *_args) -> None:
-        self._sync_date_range_to_selected_semesters()
         self._update_teacher_counts()
         self._update_summary()
 
@@ -454,22 +509,30 @@ class TeacherExportDialog(QDialog):
         self._update_teacher_counts()
 
     def _apply_filter(self, text: str) -> None:
-        needle = text.strip().lower()
+        needle = self.search.text().strip().lower() if isinstance(text, int) else str(text or "").strip().lower()
+        only_with_terms = self.only_with_terms_cb.isChecked()
         for row in range(self.table.rowCount()):
+            teacher = self._teacher_for_row(row)
             haystack = " ".join(
-                self.table.item(row, col).text().lower()
-                for col in range(1, self.table.columnCount())
-                if self.table.item(row, col)
+                [
+                    *[
+                        self.table.item(row, col).text().lower()
+                        for col in range(1, self.table.columnCount())
+                        if self.table.item(row, col)
+                    ],
+                    teacher.teacher_name.lower() if teacher else "",
+                    teacher.teacher_email.lower() if teacher else "",
+                ]
             )
-            self.table.setRowHidden(row, bool(needle and needle not in haystack))
+            hidden = bool(needle and needle not in haystack)
+            if only_with_terms and (teacher is None or teacher.term_count <= 0):
+                hidden = True
+            self.table.setRowHidden(row, hidden)
         self._update_summary()
 
     def _set_all_checked(self, checked: bool) -> None:
         self._set_teacher_checked(checked)
-        if checked:
-            self._rebuild_semesters_for_selected_teachers(check_all_visible=True)
-        else:
-            self._populate_semesters([], set())
+        self._rebuild_semesters_for_selected_teachers()
         self._update_teacher_counts()
         self._update_summary()
 
@@ -477,6 +540,8 @@ class TeacherExportDialog(QDialog):
         self._updating_teacher_selection = True
         self.table.blockSignals(True)
         for row in range(self.table.rowCount()):
+            if self.table.isRowHidden(row):
+                continue
             self.table.item(row, 0).setCheckState(Qt.Checked if checked else Qt.Unchecked)
         self.table.blockSignals(False)
         self._updating_teacher_selection = False
@@ -485,8 +550,9 @@ class TeacherExportDialog(QDialog):
         self._updating_teacher_selection = True
         self.table.blockSignals(True)
         for row in range(self.table.rowCount()):
-            term_count = int(self.table.item(row, 4).text() or "0")
-            self.table.item(row, 0).setCheckState(Qt.Checked if term_count > 0 else Qt.Unchecked)
+            teacher = self._teacher_for_row(row)
+            has_terms = teacher is not None and teacher.term_count > 0
+            self.table.item(row, 0).setCheckState(Qt.Checked if has_terms else Qt.Unchecked)
         self.table.blockSignals(False)
         self._updating_teacher_selection = False
         self._rebuild_semesters_for_selected_teachers()
@@ -495,11 +561,8 @@ class TeacherExportDialog(QDialog):
     def _update_summary(self) -> None:
         selected_lvas = len(self.selected_lva_ids())
         visible_teachers = sum(not self.table.isRowHidden(row) for row in range(self.table.rowCount()))
-        total_terms = 0
-        for row in range(self.table.rowCount()):
-            checkbox = self.table.item(row, 0)
-            if checkbox and checkbox.checkState() == Qt.Checked:
-                total_terms += int(self.table.item(row, 4).text() or "0")
+        total_terms = self.selected_term_count()
+        selected_lvas_with_terms = self.selected_lva_count_with_terms()
 
         selected_semesters = self.selected_semester_ids()
         has_semester_selection = selected_semesters is not None
@@ -511,19 +574,27 @@ class TeacherExportDialog(QDialog):
                 days = "mit Wochenende" if self.selected_include_weekend() else "Mo-Fr"
                 raster = "60 min" if self.selected_calendar_slot_minutes() == 60 else "30 min"
                 calendar_options = f" · {days} · {raster}"
+            terms_text = self._count_text(total_terms, "Termin", "Termine")
+            lvas_text = self._count_text(selected_lvas_with_terms, "LVA", "LVAs")
+            semester_text = self._count_text(semester_count, "Semester", "Semestern")
             self.summary.setText(
-                f"{selected_lvas} LVAs · {visible_teachers} sichtbar · "
-                f"{semester_count} Semester · {total_terms} Termine · {self.selected_export_format_label()}{calendar_options}"
+                f"Export: {terms_text} aus {lvas_text} in "
+                f"{semester_text} · {visible_teachers} sichtbar · "
+                f"{self.selected_export_format_label()}{calendar_options}"
             )
-            self.export_btn.setEnabled(selected_lvas > 0 and semester_count > 0)
+            self.export_btn.setText(f"{terms_text} exportieren" if total_terms > 0 else "Keine Termine ausgewählt")
+            self.export_btn.setEnabled(selected_lvas > 0 and semester_count > 0 and total_terms > 0)
         else:
             calendar_options = ""
             if self.selected_export_format() == "calendar":
                 days = "mit Wochenende" if self.selected_include_weekend() else "Mo-Fr"
                 raster = "60 min" if self.selected_calendar_slot_minutes() == 60 else "30 min"
                 calendar_options = f" · {days} · {raster}"
+            terms_text = self._count_text(total_terms, "Termin", "Termine")
+            lvas_text = self._count_text(selected_lvas_with_terms, "LVA", "LVAs")
             self.summary.setText(
-                f"{selected_lvas} LVAs · {visible_teachers} sichtbar · "
-                f"{total_terms} Termine · {self.selected_export_format_label()}{calendar_options}"
+                f"Export: {terms_text} aus {lvas_text} · "
+                f"{visible_teachers} sichtbar · {self.selected_export_format_label()}{calendar_options}"
             )
-            self.export_btn.setEnabled(selected_lvas > 0)
+            self.export_btn.setText(f"{terms_text} exportieren" if total_terms > 0 else "Keine Termine ausgewählt")
+            self.export_btn.setEnabled(selected_lvas > 0 and total_terms > 0)

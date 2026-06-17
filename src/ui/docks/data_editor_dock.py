@@ -43,9 +43,9 @@ class DataEditorDock(QDockWidget):
         self.tab_rooms = EditorTab("Räume", ["Raumnummer", "Raum", "Kapazität", "Gebäude"], self.tabs, id_column=0)
         self.tab_free = EditorTab(
             "Freie Tage",
-            ["Typ", "Art", "Datum", "Von", "Bis", "Beschreibung", "ID"],
+            ["Typ", "Von", "Bis", "Beschreibung", "ID"],
             self.tabs,
-            id_column=6,
+            id_column=4,
         )
         self.tab_termine = EditorTab(
             "Termine",
@@ -78,7 +78,7 @@ class DataEditorDock(QDockWidget):
             undo_service=getattr(parent, "undo_service", None),
         )
 
-        self.tab_free.table.setColumnHidden(6, True)
+        self.tab_free.table.setColumnHidden(4, True)
 
         self.tab_lva.add_clicked.connect(self._crud.add_lva)
         self.tab_lva.edit_clicked.connect(self._crud.edit_lva)
@@ -183,18 +183,10 @@ class DataEditorDock(QDockWidget):
         rows = []
         for it in freie:
             typ = str(it.get("typ", ""))
-            if "datum" in it and it.get("datum"):
-                art = "single"
-                datum = str(it.get("datum", ""))
-                von = ""
-                bis = ""
-            else:
-                art = "range"
-                datum = ""
-                von = str(it.get("von_datum", ""))
-                bis = str(it.get("bis_datum", ""))
+            von = str(it.get("von_datum", ""))
+            bis = str(it.get("bis_datum", ""))
             beschr = str(it.get("beschreibung", ""))
-            rows.append([typ, art, datum, von, bis, beschr, str(it.get("id", ""))])
+            rows.append([typ, von, bis, beschr, str(it.get("id", ""))])
         self._fill_table(self.tab_free.table, rows)
         
     def _refresh_termine(self) -> None:

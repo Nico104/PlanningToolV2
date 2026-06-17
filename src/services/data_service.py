@@ -125,7 +125,9 @@ class DataService:
         raw = json.loads(path.read_text(encoding="utf-8-sig"))["lehrveranstaltungen"]
         out: List[Lehrveranstaltung] = []
         for x in raw:
-            v = x["vortragende"]
+            v = x.get("vortragende", {})
+            if not isinstance(v, dict):
+                v = {}
             raw_studiensemester = x.get("studiensemester", [])
             if not isinstance(raw_studiensemester, list):
                 raw_studiensemester = []
@@ -139,10 +141,17 @@ class DataService:
                 studiensemester.append(semester_id)
             out.append(Lehrveranstaltung(
                 id=clean_json_id(x.get("id")),
-                name=x["name"],
-                vortragende=Vortragende(name=v["name"], email=v.get("email", "")),
+                name=str(x.get("name", "") or "").strip(),
+                vortragende=Vortragende(
+                    name=str(v.get("name", "") or "").strip(),
+                    email=str(v.get("email", "") or "").strip(),
+                ),
                 studiensemester=studiensemester,
-                studienrichtung=clean_json_id(x.get("studienrichtung")) or clean_json_id(studienrichtung) or "ETIT",
+                studienrichtung=(
+                    clean_json_id(x.get("studienrichtung"))
+                    if "studienrichtung" in x
+                    else clean_json_id(studienrichtung) or "ETIT"
+                ),
                 ects=str(x.get("ects", "")).strip(),
             ))
         return out
@@ -212,7 +221,7 @@ class DataService:
                 "name": l.name,
                 "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
                 "studiensemester": [clean_json_id(item) for item in l.studiensemester if clean_json_id(item)],
-                "studienrichtung": clean_json_id(getattr(l, "studienrichtung", "")) or clean_json_id(studienrichtung) or "ETIT",
+                "studienrichtung": clean_json_id(getattr(l, "studienrichtung", "")),
                 "ects": str(getattr(l, "ects", "")).strip(),
             } for l in lvas]
         })
@@ -316,6 +325,7 @@ class DataService:
                 for key, value in dict(item).items()
                 if key not in {"quelle", "quelle_id"}
             }
+            cleaned.pop("datum", None)
             cleaned["id"] = clean_json_id(cleaned.get("id"))
             cleaned_items.append(cleaned)
         self._write("freie_tage.json", {"freie_tage": cleaned_items})

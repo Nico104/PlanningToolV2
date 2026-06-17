@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QPushButton, QHBoxLayout,
+    QPushButton, QHBoxLayout, QLabel, QFrame,
 )
 
 from ...core.models import Studiensemester, Lehrveranstaltung, Vortragende
@@ -30,15 +30,22 @@ class LVADialog(QDialog):
         self._studienrichtung_value = getattr(lva, "studienrichtung", "ETIT") if lva else "ETIT"
 
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(16, 16, 16, 16)
+        lay.setContentsMargins(18, 16, 18, 14)
         lay.setSpacing(12)
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(560)
+
+        title = QLabel("Lehrveranstaltung", self)
+        title.setObjectName("DialogTitle")
+        lay.addWidget(title)
+        subtitle = QLabel("Stammdaten, Vortragende und Studiensemester-Zuordnung einer LVA erfassen.", self)
+        subtitle.setObjectName("DialogSubtitle")
+        subtitle.setWordWrap(True)
+        lay.addWidget(subtitle)
 
         form = QFormLayout()
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(10)
         form.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        lay.addLayout(form)
 
         self.id_le = QLineEdit(lva.id if lva else "")
         self.id_le.setObjectName("Field")
@@ -117,6 +124,7 @@ class LVADialog(QDialog):
         self.sem_cb.view().setMinimumHeight(32 * len(self.sem_objects))
         self.sem_cb.view().setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.btn_add_sem = QPushButton("Hinzufügen")
+        self.btn_add_sem.setObjectName("SecondaryButton")
         sem_add_layout.addWidget(self.sem_cb)
         sem_add_layout.addWidget(self.btn_add_sem)
 
@@ -144,19 +152,34 @@ class LVADialog(QDialog):
         form.addRow("Studienrichtung:", self.studienrichtung_cb)
 
         form.addRow("Studiensemester:", self.sem_list)
-        form.addRow("Studiensemester hinzufügen/entfernen:", sem_add_layout)
+        form.addRow("Studiensemester hinzufügen:", sem_add_layout)
+        lay.addWidget(self._section("LVA-Daten", form))
 
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.setObjectName("DialogButtons")
         ok_btn = bb.button(QDialogButtonBox.Ok)
         cancel_btn = bb.button(QDialogButtonBox.Cancel)
         if ok_btn:
+            ok_btn.setText("Speichern")
             ok_btn.setObjectName("PrimaryButton")
         if cancel_btn:
+            cancel_btn.setText("Abbrechen")
             cancel_btn.setObjectName("SecondaryButton")
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
         lay.addWidget(bb)
+
+    def _section(self, title: str, content_layout: QFormLayout) -> QFrame:
+        section = QFrame(self)
+        section.setObjectName("DialogSection")
+        layout = QVBoxLayout(section)
+        layout.setContentsMargins(14, 12, 14, 14)
+        layout.setSpacing(10)
+        label = QLabel(title, section)
+        label.setObjectName("DialogSectionTitle")
+        layout.addWidget(label)
+        layout.addLayout(content_layout)
+        return section
 
     def _accept(self):
         cid = self.id_le.text().strip()

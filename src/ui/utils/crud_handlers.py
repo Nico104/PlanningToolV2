@@ -13,6 +13,7 @@ from ..components.widgets.editor_tab_widget import selected_id
 from ..dialogs.freie_tage_dialog import FreieTageDialog
 from ..dialogs.studienrichtung_dialog import StudienrichtungDialog
 from ..dialogs.lva_termin_dialog import LVATerminDialog
+from ..components.widgets.action_dialog import ActionDialog, DialogAction
 from ..components.widgets.delete_dialog import DeleteDialog
 from ..components.widgets.toast import Toast
 
@@ -45,6 +46,15 @@ class CrudHandlers:
         if any(existing.id == item.id for existing in items):
             return [item if existing.id == item.id else existing for existing in items]
         return [*items, item]
+
+    @staticmethod
+    def _termin_uses_room(termin: Termin, room_id: str) -> bool:
+        if str(getattr(termin, "raum_id", "")) == room_id:
+            return True
+        return any(
+            str(getattr(item, "raum_id", "") or "") == room_id
+            for item in (getattr(termin, "serien_ausnahmen", []) or [])
+        )
 
 
     def add_studienrichtung(self) -> None:
@@ -114,12 +124,33 @@ class CrudHandlers:
         if row is None:
             return
 
-        if QMessageBox.question(self.parent, "Löschen", "Studienrichtung wirklich löschen?") != QMessageBox.Yes:
+        cur = studienrichtungen[row]
+        affected_lvas = [
+            l for l in self.ds.load_lvas()
+            if str(getattr(l, "studienrichtung", "")).strip() == selected_id
+        ]
+        detail = f"Studienrichtung: {cur.get('name') or selected_id}"
+        if affected_lvas:
+            detail += f"\n{len(affected_lvas)} LVA(s) behalten ihre Termine; die Studienrichtung wird dort geleert."
+
+        if DeleteDialog(
+            self.parent,
+            "Diese Studienrichtung wird aus den Stammdaten entfernt.",
+            detail=detail,
+            title="Studienrichtung löschen",
+        ).exec() != QDialog.Accepted:
             return
 
         studienrichtungen.pop(row)
         self._record_undo_snapshot()
         self.ds.save_studienrichtungen(studienrichtungen)
+        if affected_lvas:
+            self.ds.save_lvas([
+                replace(l, studienrichtung="")
+                if str(getattr(l, "studienrichtung", "")).strip() == selected_id
+                else l
+                for l in self.ds.load_lvas()
+            ])
         if self.planner:
             self.planner.refresh()
         if hasattr(self.parent, "_refresh_studienrichtungen"):
@@ -244,7 +275,11 @@ class CrudHandlers:
         if not selected_id:
             return
 
-        if QMessageBox.question(self.parent, "Löschen", "Eintrag wirklich löschen?") != QMessageBox.Yes:
+        if DeleteDialog(
+            self.parent,
+            "Dieser freie Zeitraum wird aus dem Projekt entfernt.",
+            title="Freien Zeitraum löschen",
+        ).exec() != QDialog.Accepted:
             return
 
         freie = self.ds.load_freie_tage()
@@ -460,6 +495,7 @@ class CrudHandlers:
         if not t:
             return False
 
+        series_action = None
         if t.is_series():
             series_action = self._confirm_move_series(t, occurrence_date)
             if series_action == "cancel":
@@ -629,31 +665,32 @@ class CrudHandlers:
         moved_date = occurrence_date or termin.datum
         date_text = moved_date.strftime("%d.%m.%Y") if moved_date else "dieser Termin"
 
-        msg = QMessageBox(self.parent)
-        msg.setIcon(QMessageBox.Warning)
-        msg.setWindowTitle("Serientermin verschieben")
-        msg.setText(
-            f"'{termin_label}' am {date_text} ist Teil einer Serie.\n"
-            "Was möchtest du verschieben?"
+        dlg = ActionDialog(
+            self.parent,
+            title="Serientermin verschieben",
+            subtitle=f"'{termin_label}' am {date_text} ist Teil einer Serie.",
+            section_title="Auswirkung der Verschiebung",
+            actions=[
+                DialogAction(
+                    "series",
+                    "Ganze Serie verschieben",
+                    "Alle Termine der Serie werden um dieselbe Differenz verschoben.",
+                ),
+                DialogAction(
+                    "single",
+                    "Nur diesen Termin verschieben",
+                    "Der Termin bleibt Teil der Serie. Für dieses Vorkommen wird eine Ausnahme gespeichert.",
+                ),
+                DialogAction(
+                    "detach",
+                    "Als Einzeltermin lösen",
+                    "Dieses Vorkommen wird als normaler Termin gespeichert und in der Serie ausgelassen.",
+                ),
+            ],
         )
-        msg.setInformativeText(
-            "In Serie behalten speichert eine Ausnahme für dieses Vorkommen. "
-            "Als Einzeltermin lösen erstellt einen normalen Termin und überspringt dieses Vorkommen in der Serie."
-        )
-        btn_series = msg.addButton("Ganze Serie verschieben", QMessageBox.AcceptRole)
-        btn_single = msg.addButton("Nur diesen Termin in Serie verschieben", QMessageBox.AcceptRole)
-        btn_detach = msg.addButton("Als Einzeltermin lösen", QMessageBox.AcceptRole)
-        btn_cancel = msg.addButton("Abbrechen", QMessageBox.RejectRole)
-        msg.setDefaultButton(btn_cancel)
-        msg.exec()
-        clicked = msg.clickedButton()
-        if clicked == btn_series:
-            return "series"
-        if clicked == btn_single:
-            return "single"
-        if clicked == btn_detach:
-            return "detach"
-        return "cancel"
+        if dlg.exec() != QDialog.Accepted:
+            return "cancel"
+        return dlg.result_key or "cancel"
 
     def unassign_termin(self, termin_id: str) -> bool:
         termine = self.ds.load_termine()
@@ -664,36 +701,62 @@ class CrudHandlers:
 
         if t.is_series():
             termin_label = t.name or termin_id
+            occurrence_date = occurrence_date_from_id(termin_id)
             details = []
-            if t.datum:
-                details.append(t.datum.strftime("%d.%m.%Y"))
+            display_date = occurrence_date or t.datum
+            if display_date:
+                details.append(display_date.strftime("%d.%m.%Y"))
             if t.start_zeit:
                 details.append(t.start_zeit.strftime("%H:%M"))
             detail_text = f" ({', '.join(details)})" if details else ""
 
-            msg = QMessageBox(self.parent)
-            msg.setWindowTitle("Serientermin zurück in die Terminliste")
-            msg.setText(
-                f"'{termin_label}'{detail_text} ist Teil einer Serie.\n"
-                "Der ganze Serientermin wird zurück in die Terminliste verschoben."
-            )
-            btn_series = msg.addButton("Serientermin zurückschieben", QMessageBox.AcceptRole)
-            btn_cancel = msg.addButton("Abbrechen", QMessageBox.RejectRole)
-            msg.exec()
+            actions = [
+                DialogAction(
+                    "series",
+                    "Ganze Serie zurückschieben",
+                    "Alle Vorkommen der Serie werden aus dem Kalender entfernt und als unzugewiesener Termin geführt.",
+                ),
+            ]
+            if occurrence_date:
+                actions.append(
+                    DialogAction(
+                        "single_cancel",
+                        "Nur dieser Termin fällt aus",
+                        "Dieses Vorkommen wird aus dem Kalender entfernt. Die restliche Serie bleibt unverändert.",
+                    )
+                )
 
-            clicked = msg.clickedButton()
-            if clicked != btn_series or clicked == btn_cancel:
+            dlg = ActionDialog(
+                self.parent,
+                title="Serientermin zurück in die Terminliste",
+                subtitle=f"'{termin_label}'{detail_text} ist Teil einer Serie.",
+                section_title="Auswirkung",
+                actions=actions,
+            )
+            if dlg.exec() != QDialog.Accepted:
                 return False
 
-            new_t = replace(
-                t,
-                datum=None,
-                start_zeit=None,
-                datum_bis=None,
-                periodizitaet=None,
-                ausfall_daten=[],
-                serien_ausnahmen=[],
-            )
+            series_action = dlg.result_key
+            if series_action == "single_cancel" and occurrence_date:
+                skipped_dates = sorted({*(getattr(t, "ausfall_daten", []) or []), occurrence_date})
+                exceptions = [
+                    item
+                    for item in (getattr(t, "serien_ausnahmen", []) or [])
+                    if getattr(item, "original_datum", None) != occurrence_date
+                ]
+                new_t = replace(t, ausfall_daten=skipped_dates, serien_ausnahmen=exceptions)
+            elif series_action == "series":
+                new_t = replace(
+                    t,
+                    datum=None,
+                    start_zeit=None,
+                    datum_bis=None,
+                    periodizitaet=None,
+                    ausfall_daten=[],
+                    serien_ausnahmen=[],
+                )
+            else:
+                return False
             termine = [new_t if x.id == source_id else x for x in termine]
         else:
             new_t = replace(t, datum=None, start_zeit=None)
@@ -702,7 +765,10 @@ class CrudHandlers:
         self._record_undo_snapshot()
         self.ds.save_termine(termine)
         self.planner.refresh()
-        self._show_toast("Serientermin zurück in die Terminliste verschoben." if t.is_series() else "Termin-Zuweisung entfernt.")
+        if t.is_series() and series_action == "single_cancel":
+            self._show_toast("Termin als Ausfall markiert.")
+        else:
+            self._show_toast("Serientermin zurück in die Terminliste verschoben." if t.is_series() else "Termin-Zuweisung entfernt.")
         return True
 
     def add_lva(self) -> None:
@@ -766,20 +832,24 @@ class CrudHandlers:
         if not cid:
             return
 
-        if QMessageBox.question(
-            self.parent,
-            "Löschen",
-            f"LVA {cid} wirklich löschen? (Termine werden auch gelöscht)"
-        ) != QMessageBox.Yes:
-            return
-
-        lvas = [l for l in self.ds.load_lvas() if l.id != cid]
         all_terms = self.ds.load_termine()
         terms = [t for t in all_terms if t.lva_id != cid]
         deleted_count = len(all_terms) - len(terms)
+        detail = f"{deleted_count} Termin(e) werden mitgelöscht." if deleted_count else ""
+
+        if DeleteDialog(
+            self.parent,
+            f"LVA {cid} wird aus den Stammdaten entfernt.",
+            detail=detail,
+            title="LVA löschen",
+        ).exec() != QDialog.Accepted:
+            return
+
+        lvas = [l for l in self.ds.load_lvas() if l.id != cid]
         self._record_undo_snapshot()
         self.ds.save_lvas(lvas)
-        self.ds.save_termine(terms)
+        if deleted_count:
+            self.ds.save_termine(terms)
         self.planner.refresh()
         message = "LVA gelöscht."
         if deleted_count > 0:
@@ -837,22 +907,39 @@ class CrudHandlers:
         if not rid:
             return
 
-        if QMessageBox.question(
+        all_terms = self.ds.load_termine()
+        used_count = sum(1 for t in all_terms if self._termin_uses_room(t, rid))
+        detail = ""
+        if used_count:
+            detail = f"{used_count} Termin(e) behalten bestehen; der Raum wird dort entfernt."
+
+        if DeleteDialog(
             self.parent,
-            "Löschen",
-            f"Raum {rid} wirklich löschen? (Termine werden auch gelöscht)"
-        ) != QMessageBox.Yes:
+            f"Raum {rid} wird aus den Stammdaten entfernt.",
+            detail=detail,
+            title="Raum löschen",
+        ).exec() != QDialog.Accepted:
             return
 
         rooms = [r for r in self.ds.load_raeume() if r.id != rid]
-        all_terms = self.ds.load_termine()
-        terms = [t for t in all_terms if t.raum_id != rid]
-        deleted_count = len(all_terms) - len(terms)
+        terms = [
+            replace(
+                t,
+                raum_id="" if str(getattr(t, "raum_id", "")) == rid else getattr(t, "raum_id", ""),
+                serien_ausnahmen=[
+                    replace(item, raum_id=None)
+                    if str(getattr(item, "raum_id", "") or "") == rid
+                    else item
+                    for item in (getattr(t, "serien_ausnahmen", []) or [])
+                ],
+            )
+            if self._termin_uses_room(t, rid)
+            else t
+            for t in all_terms
+        ]
         self._record_undo_snapshot()
         self.ds.save_raeume(rooms)
-        self.ds.save_termine(terms)
+        if used_count:
+            self.ds.save_termine(terms)
         self.planner.refresh()
-        message = "Raum gelöscht."
-        if deleted_count > 0:
-            message += f" {self._count_message(deleted_count, 'Termin', 'Termine', 'mitgelöscht')}"
-        self._show_toast(message)
+        self._show_toast("Raum gelöscht.")

@@ -13,6 +13,7 @@ QWidget#PlannerStyleTokens {
   planner-drop-conflict-text: #ffffff;
   termin-vo-bg: #e3f2fd;
   termin-ue-bg: #e8f5e9;
+  termin-vu-bg: #e8e0ff;
   termin-lu-bg: #fff3e0;
   termin-se-bg: #f3e5f5;
   termin-default-bg: #f7f7f7;
@@ -56,6 +57,33 @@ QTableWidget#PlannerTable QWidget[monthConflictHighlight="true"] {
 }
 
 /* Import and export dialogs */
+QDialog#importDialog {
+  background: #ffffff;
+}
+
+QDialog#importDialog QLabel#ImportHeader {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111111;
+}
+
+QDialog#importDialog QLabel#ImportSubHeader,
+QDialog#importDialog QLabel#ImportHelp {
+  font-size: 12px;
+  font-weight: 500;
+  color: #555555;
+}
+
+QDialog#importDialog QLabel#ImportWarning {
+  background: #fff8e6;
+  border: 1px solid #f1c76a;
+  border-radius: 7px;
+  color: #7a4a00;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 10px;
+}
+
 QDialog#ImportEntryMergePrompt {
   background: #f2f2f2;
 }
@@ -109,6 +137,12 @@ QDialog#TeacherExportDialog QLabel#TeacherExportSectionLabel {
   font-weight: 700;
 }
 
+QDialog#TeacherExportDialog QLabel#TeacherExportHint {
+  color: #666666;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
 QDialog#TeacherExportDialog QLineEdit#TeacherSearch {
   background: #ffffff;
   border: 1px solid #e5e5e5;
@@ -156,10 +190,49 @@ QDialog#SemesterToolsDialog QLabel#SemesterToolsTitle {
   font-weight: 700;
 }
 
+QDialog#SemesterToolsDialog QLabel#SemesterToolsSubtitle,
+QDialog#SemesterToolsDialog QLabel#SemesterToolsHelp {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 QDialog#SemesterToolsDialog QLabel#SemesterToolsSummary {
   color: #666666;
   font-size: 12px;
   font-weight: 600;
+}
+
+QDialog#SemesterToolsDialog QFrame#SemesterToolsSection {
+  background: #fbfbfb;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+}
+
+QDialog#SemesterToolsDialog QLabel#SemesterToolsSectionTitle {
+  color: #111111;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+QDialog#SemesterToolsDialog QTabWidget#SemesterToolsTabs::pane {
+  border: none;
+  background: transparent;
+}
+
+QDialog#SemesterToolsDialog QTabBar::tab {
+  background: transparent;
+  color: #666666;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  margin-right: 8px;
+  font-weight: 600;
+}
+
+QDialog#SemesterToolsDialog QTabBar::tab:selected {
+  color: #111111;
+  border-bottom: 2px solid #111111;
 }
 
 QDialog#SemesterToolsDialog QRadioButton {
@@ -199,6 +272,25 @@ QDialog#SemesterToolsDialog QTableWidget#SemesterToolsTable::item:selected {
   color: #111111;
 }
 
+QDialog#SemesterToolsDialog QPushButton#DangerButton {
+  background: #7f1d1d;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  min-height: 36px;
+  font-weight: 600;
+}
+
+QDialog#SemesterToolsDialog QPushButton#DangerButton:hover {
+  background: #991b1b;
+}
+
+QDialog#SemesterToolsDialog QPushButton#DangerButton:disabled {
+  background: #d7d7d7;
+  color: #ffffff;
+}
+
 QDialog#FreeDayImportDialog {
   background: #ffffff;
 }
@@ -207,6 +299,20 @@ QDialog#FreeDayImportDialog QLabel#FreeDayImportTitle {
   color: #111111;
   font-size: 18px;
   font-weight: 700;
+}
+
+QDialog#FreeDayImportDialog QLabel#FreeDayImportSubtitle,
+QDialog#FreeDayImportDialog QLabel#FreeDayImportHelp {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+QDialog#FreeDayImportDialog QFrame#FreeDayImportPanel,
+QDialog#FreeDayImportDialog QFrame#FreeDayImportPreviewPanel {
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 8px;
 }
 
 QDialog#FreeDayImportDialog QLabel#FreeDayImportPanelTitle {
@@ -466,6 +572,20 @@ QLabel#ChipDiscuss {
   color: #6b4300;
   font-weight: 600;
   font-size: 9px;
+}
+
+QLabel#ChipMissingRoom {
+  background: #fff7ed;
+  border: 1px solid #f0a35a;
+  color: #9a3412;
+  font-weight: 600;
+}
+
+QLabel#ChipGroup {
+  background: #eef6ff;
+  border: 1px solid #bdd7ff;
+  color: #1d4f91;
+  font-weight: 600;
 }
 
 
@@ -851,12 +971,20 @@ QDialog#DayEventsDialog {
   border-radius: 12px;
 }
 
+QDialog#DayEventsDialog QLabel#DialogTitle,
 QWidget#DayEventsDialog QLabel#DialogTitle {
   font-size: 16px;
   font-weight: 600;
   color: #222222;
 }
 
+QDialog#DayEventsDialog QLabel#DialogSubtitle {
+  color: #666666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+QDialog#DayEventsDialog QLabel#DialogDate,
 QWidget#DayEventsDialog QLabel#DialogDate {
   font-size: 14px;
   color: #555555;
@@ -1092,12 +1220,14 @@ QDialog#AppDialog QLabel {
   font-weight: 500;
 }
 
+QDialog#AppDialog QLabel#DialogTitle,
 QDialog#AppDialog QLabel#SettingsTitle {
   color: #111111;
   font-size: 20px;
   font-weight: 700;
 }
 
+QDialog#AppDialog QLabel#DialogSubtitle,
 QDialog#AppDialog QLabel#SettingsSubtitle {
   color: #666666;
   font-size: 12px;
@@ -1105,12 +1235,14 @@ QDialog#AppDialog QLabel#SettingsSubtitle {
   line-height: 140%;
 }
 
+QDialog#AppDialog QFrame#DialogSection,
 QDialog#AppDialog QFrame#SettingsSection {
   background: #fbfbfb;
   border: 1px solid #eeeeee;
   border-radius: 8px;
 }
 
+QDialog#AppDialog QLabel#DialogSectionTitle,
 QDialog#AppDialog QLabel#SettingsSectionTitle {
   color: #111111;
   font-size: 13px;
@@ -1293,6 +1425,21 @@ QDialog#AppDialog QPushButton#PrimaryButton:disabled {
   color: #ffffff;
 }
 
+QDialog#AppDialog QPushButton#DangerButton {
+  background: #b91c1c;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+}
+
+QDialog#AppDialog QPushButton#DangerButton:hover {
+  background: #991b1b;
+}
+
+QDialog#AppDialog QPushButton#DangerButton:pressed {
+  background: #7f1d1d;
+}
+
 QDialog#AppDialog QPushButton#SecondaryButton {
   background: #f8f8f8;
   color: #111111;
@@ -1307,6 +1454,31 @@ QDialog#AppDialog QPushButton#SecondaryButton:hover {
 
 QDialog#AppDialog QPushButton#SecondaryButton:pressed {
   background: #e8e8e8;
+}
+
+QDialog#AppDialog QPushButton#ActionChoiceButton {
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #e3e3e3;
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+}
+
+QDialog#AppDialog QPushButton#ActionChoiceButton:hover {
+  border-color: #cfcfcf;
+  background: #f7f7f7;
+}
+
+QDialog#AppDialog QPushButton#ActionChoiceButton[role="primary"] {
+  background: #111111;
+  color: #ffffff;
+  border: none;
+}
+
+QDialog#AppDialog QPushButton#ActionChoiceButton[role="primary"]:hover {
+  background: #2a2a2a;
 }
 
 QDialog#AppDialog QWidget#ConflictSettingsRow {
@@ -1349,6 +1521,20 @@ QDialog#AppDialog QTableWidget#Field {
 QDialog#AppDialog QTableWidget#Field::item {
   border: none;
   padding: 2px 0;
+}
+
+QDialog#AppDialog QTableWidget#SeriesOccurrenceTable {
+  background: #ffffff;
+  alternate-background-color: #fbfbfb;
+  border: 1px solid #eeeeee;
+  border-radius: 8px;
+  gridline-color: #f2f2f2;
+  outline: 0;
+}
+
+QDialog#AppDialog QTableWidget#SeriesOccurrenceTable::item {
+  border: none;
+  padding: 8px 6px;
 }
 
 QDialog#AppDialog QLabel#SemesterWarning {
@@ -1432,6 +1618,19 @@ QTabBar::tab:selected {
   padding-bottom: 8px;
 }
 
+QLabel#ConflictTabBadge {
+  color: #ffffff;
+  background: #c62828;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+QLabel#ConflictTabBadge[state="warning"] {
+  background: #d98200;
+}
+
 /* Docks */
 QDockWidget {
   color: #111111;
@@ -1489,6 +1688,36 @@ QLabel#NavigationDockTitle {
 QDockWidget#dock_date_navigation QWidget#HeaderBar {
   background: #ffffff;
   border: none;
+}
+
+QDockWidget#dock_global_filters QScrollArea#HeaderScrollArea {
+  background: #ffffff;
+  border: none;
+}
+
+QDockWidget#dock_global_filters QScrollArea#HeaderScrollArea QWidget#HeaderBar {
+  background: #ffffff;
+}
+
+QDockWidget#dock_global_filters QScrollBar:horizontal {
+  background: transparent;
+  height: 7px;
+  margin: 0px 6px 2px 6px;
+}
+
+QDockWidget#dock_global_filters QScrollBar::handle:horizontal {
+  background: #c8c8c8;
+  border-radius: 3px;
+  min-width: 40px;
+}
+
+QDockWidget#dock_global_filters QScrollBar::handle:horizontal:hover {
+  background: #a8a8a8;
+}
+
+QDockWidget#dock_global_filters QScrollBar::add-line:horizontal,
+QDockWidget#dock_global_filters QScrollBar::sub-line:horizontal {
+  width: 0px;
 }
 
 /* Inputs */

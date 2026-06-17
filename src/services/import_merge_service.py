@@ -122,7 +122,34 @@ def classify_entry(entry: dict[str, Any], existing_by_id: dict[str, dict[str, An
     existing = existing_by_id.get(entry_id or "")
     if existing is None:
         return "new"
-    return "identical" if existing == entry else "changed"
+    return "identical" if existing == effective_import_entry(existing, entry) else "changed"
+
+
+def is_empty_import_value(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() == ""
+    if isinstance(value, list):
+        return len(value) == 0
+    if isinstance(value, dict):
+        return all(is_empty_import_value(item) for item in value.values())
+    return False
+
+
+def effective_import_entry(existing: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
+    if existing is None:
+        return dict(incoming)
+
+    merged = dict(existing)
+    for key, value in incoming.items():
+        if key == "id":
+            merged[key] = value
+            continue
+        if is_empty_import_value(value):
+            continue
+        merged[key] = value
+    return merged
 
 
 def build_payload(entries_by_file: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, list[dict[str, Any]]]]:
@@ -142,6 +169,7 @@ def payload_has_changes(data_dir: Path, incoming_payload: dict[str, Any]) -> boo
         existing = existing_entry_map(data_dir, file_name)
         for entry in payload_list(incoming, schema):
             entry_id = get_entry_id(entry, schema.id_field)
-            if entry_id is None or existing.get(entry_id) != entry:
+            current = existing.get(entry_id or "")
+            if entry_id is None or current != effective_import_entry(current, entry):
                 return True
     return False

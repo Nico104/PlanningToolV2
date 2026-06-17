@@ -32,11 +32,6 @@
       "kapazitaet": 151
     },
     {
-      "id": "CD0304",
-      "name": "EI 11 HS - INF",
-      "kapazitaet": 81
-    },
-    {
       "id": "CDEG13",
       "name": "EI 7 Hörsaal - ETIT",
       "kapazitaet": 434
@@ -55,12 +50,6 @@
       "id": "CC0117",
       "name": "Labor CC0117",
       "kapazitaet": 20,
-      "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
-    },
-    {
-      "id": "CD0312",
-      "name": "Lernraum Gußhaus CD0312",
-      "kapazitaet": 16,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
@@ -97,7 +86,7 @@
     },
     {
       "id": "CA0322",
-      "name": "Seminarraum CA 0322 (Ersatz Proj.-Raum 15)",
+      "name": "Seminarraum CA0322 (Ersatz Proj.-Raum 15)",
       "kapazitaet": 36,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
@@ -109,1515 +98,1527 @@
     },
     {
       "id": "BB05C01",
-      "kapazitaet": 32,
       "name": "Analytische Chemie Hörerlabor links",
+      "kapazitaet": 32,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB05C17",
-      "kapazitaet": 32,
       "name": "Analytische Chemie Hörerlabor rechts",
+      "kapazitaet": 32,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB04C23",
-      "kapazitaet": 3,
       "name": "Anorganische Spurenalanlytik",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "ATIB",
-      "kapazitaet": 25,
       "name": "Atominstitut Bibliothek",
+      "kapazitaet": 25,
       "gebaeude": "ZA - Atominstitut"
     },
     {
       "id": "ABL",
-      "kapazitaet": 120,
       "name": "Aufbaulabor - Achtung! Werkraum, kein Hörsaal!",
+      "kapazitaet": 120,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "OZEG43",
-      "kapazitaet": 14,
       "name": "Besprechung O214 - 1",
+      "kapazitaet": 14,
       "gebaeude": "OZ - ARSENAL Objekt 214"
     },
     {
       "id": "BC01A04",
-      "kapazitaet": 5,
       "name": "Besprechungsraum 01",
+      "kapazitaet": 5,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "FB0411",
-      "kapazitaet": 10,
       "name": "Besprechungsraum 01",
+      "kapazitaet": 10,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "FB0402",
-      "kapazitaet": 10,
       "name": "Besprechungsraum 02",
+      "kapazitaet": 10,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "CH0205B",
-      "kapazitaet": 12,
       "name": "Besprechungsraum 362 - 2",
+      "kapazitaet": 12,
       "gebaeude": "CH - ZMNS"
     },
     {
       "id": "BRG",
-      "kapazitaet": 12,
       "name": "Besprechungsraum Galerie",
+      "kapazitaet": 12,
       "gebaeude": "EA - Institutsgebäude"
     },
     {
       "id": "BRK",
-      "kapazitaet": 6,
       "name": "Besprechungsraum Kuppel",
+      "kapazitaet": 6,
       "gebaeude": "EA - Institutsgebäude"
     },
     {
       "id": "CF0117",
-      "kapazitaet": 20,
       "name": "Bibliothek E354",
+      "kapazitaet": 20,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "BZ0101",
-      "kapazitaet": 3,
       "name": "Büro Birner-Grünberger",
+      "kapazitaet": 3,
       "gebaeude": "BZ - Geniegebäude"
     },
     {
       "id": "BB03I25",
-      "kapazitaet": 3,
       "name": "Büro Kasper-Giebl",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB05N25",
-      "kapazitaet": 3,
       "name": "Büro Marchetti-Deschmann",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BI02A07",
-      "kapazitaet": 5,
       "name": "Büro Schnürch",
+      "kapazitaet": 5,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "BI02H08",
-      "kapazitaet": 3,
       "name": "Büro Stanetty",
+      "kapazitaet": 3,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "BD 07 D32",
-      "kapazitaet": 60,
       "name": "CAD-Labor Saal 1 und 2",
+      "kapazitaet": 60,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "BD 06 B33",
-      "kapazitaet": 30,
       "name": "CAD-Labor Saal 3",
+      "kapazitaet": 30,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "DA08G10",
-      "kapazitaet": 13,
       "name": "CAD1",
+      "kapazitaet": 13,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DA07E10",
-      "kapazitaet": 15,
       "name": "CAD2",
+      "kapazitaet": 15,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "AE0138",
-      "kapazitaet": 30,
       "name": "CEE EDV-Lehrraum",
+      "kapazitaet": 30,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AE0144",
-      "kapazitaet": 20,
       "name": "CEE Sitzungszimmer",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "DE0328",
-      "kapazitaet": 11,
       "name": "CPS Bibliothek",
+      "kapazitaet": 11,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DE0302",
-      "kapazitaet": 10,
       "name": "CPS Labor",
+      "kapazitaet": 10,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "PCEG13",
-      "kapazitaet": 25,
       "name": "CPS Robotik-Labor",
+      "kapazitaet": 25,
       "gebaeude": "P - Lab.f.Fert.Technik"
     },
     {
       "id": "Ch0217",
-      "kapazitaet": 18,
       "name": "Computerlabor CH0217",
+      "kapazitaet": 18,
       "gebaeude": "CH - ZMNS"
     },
     {
       "id": "EA U1 20B",
-      "kapazitaet": 24,
       "name": "DSLab",
+      "kapazitaet": 24,
       "gebaeude": "EA - Institutsgebäude"
     },
     {
       "id": "EDVP",
-      "kapazitaet": 32,
       "name": "EDV Praktikum Physik",
+      "kapazitaet": 32,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DA02K20",
-      "kapazitaet": 28,
       "name": "EDV-Raum. DA grün 02 D",
+      "kapazitaet": 28,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "E1",
-      "kapazitaet": 63,
       "name": "EI 1 Petritsch HS",
+      "kapazitaet": 63,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E2",
-      "kapazitaet": 135,
       "name": "EI 2 Pichelmayer HS - ETIT",
+      "kapazitaet": 135,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E3",
-      "kapazitaet": 184,
       "name": "EI 3 Sahulka HS - UIW",
+      "kapazitaet": 184,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E3A",
-      "kapazitaet": 57,
       "name": "EI 3A Hörsaal",
+      "kapazitaet": 57,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E4",
-      "kapazitaet": 90,
       "name": "EI 4 Reithoffer HS",
+      "kapazitaet": 90,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E5",
-      "kapazitaet": 114,
       "name": "EI 5 Hochenegg HS",
+      "kapazitaet": 114,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E6",
-      "kapazitaet": 30,
       "name": "EI 6 Eckert HS",
+      "kapazitaet": 30,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "E8",
-      "kapazitaet": 139,
       "name": "EI 8 Pötzl HS - QUER",
+      "kapazitaet": 139,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "E9",
-      "kapazitaet": 181,
       "name": "EI 9 Hlawka HS - ETIT",
+      "kapazitaet": 181,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "FCEG13A",
-      "kapazitaet": 10,
       "name": "Ersatzraum Prechtlsaal 1",
+      "kapazitaet": 10,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "FBEG13",
-      "kapazitaet": 22,
       "name": "Ersatzraum Prechtlsaal 2",
+      "kapazitaet": 22,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "FBEG09",
-      "kapazitaet": 10,
       "name": "Ersatzraum Prechtlsaal 3",
+      "kapazitaet": 10,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "FAV1",
-      "kapazitaet": 106,
       "name": "FAV Hörsaal 1 Helmut Veith - INF",
+      "kapazitaet": 106,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "FAV2",
-      "kapazitaet": 35,
       "name": "FAV Hörsaal 2",
+      "kapazitaet": 35,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "ZEMS",
-      "kapazitaet": 50,
       "name": "FAV Hörsaal 3 Zemanek (Seminarraum Zemanek)",
+      "kapazitaet": 50,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "BCEGH21",
-      "kapazitaet": 3,
       "name": "FG Labs Fleig/Opitz/Fafilek 1",
+      "kapazitaet": 3,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BCEGH31",
-      "kapazitaet": 3,
       "name": "FG Labs Fleig/Opitz/Fafilek 3",
+      "kapazitaet": 3,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "F8",
-      "kapazitaet": 203,
       "name": "FH 8 Nöbauer HS - MATH",
+      "kapazitaet": 203,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F1",
-      "kapazitaet": 383,
       "name": "FH Hörsaal 1 - MWB",
+      "kapazitaet": 383,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F2",
-      "kapazitaet": 53,
       "name": "FH Hörsaal 2",
+      "kapazitaet": 53,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F3",
-      "kapazitaet": 86,
       "name": "FH Hörsaal 3 - MATH",
+      "kapazitaet": 86,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F4",
-      "kapazitaet": 53,
       "name": "FH Hörsaal 4",
+      "kapazitaet": 53,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F5",
-      "kapazitaet": 198,
       "name": "FH Hörsaal 5 - TPH",
+      "kapazitaet": 198,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F6",
-      "kapazitaet": 198,
       "name": "FH Hörsaal 6 - TPH",
+      "kapazitaet": 198,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "F7",
-      "kapazitaet": 70,
       "name": "FH Hörsaal 7 - GEO",
+      "kapazitaet": 70,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "BH03A01",
-      "kapazitaet": 5,
       "name": "Forschungslabor",
+      "kapazitaet": 5,
       "gebaeude": "BH - Institutsgebäude"
     },
     {
       "id": "DC01F02",
-      "kapazitaet": 40,
       "name": "GIS Labor DC rot 01",
+      "kapazitaet": 40,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "AUDI",
-      "kapazitaet": 491,
       "name": "GM 1 Audi. Max.- ARCH-INF",
+      "kapazitaet": 491,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "RADI",
-      "kapazitaet": 240,
       "name": "GM 2 Radinger Hörsaal - TCH",
+      "kapazitaet": 240,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "VORT HS",
-      "kapazitaet": 102,
       "name": "GM 3 Vortmann Hörsaal - VT",
+      "kapazitaet": 102,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "KNOL",
-      "kapazitaet": 104,
       "name": "GM 4 Knoller Hörsaal - VT",
+      "kapazitaet": 104,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "BA_PRAKT",
-      "kapazitaet": 232,
       "name": "GM 5 Praktikum HS- TCH",
+      "kapazitaet": 232,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "KSCH",
-      "kapazitaet": 30,
       "name": "GM 7 Kleiner Schiffbau",
+      "kapazitaet": 30,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "BAU1_ZID",
-      "kapazitaet": 72,
       "name": "GM 8/9 - Hörsaal des Internationalen Wiener Motorensymposiums",
+      "kapazitaet": 72,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "H13",
-      "kapazitaet": 174,
       "name": "HS 13 Ernst Melan - RPL",
+      "kapazitaet": 174,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H14A",
-      "kapazitaet": 102,
       "name": "HS 14A Günther Feuerstein",
+      "kapazitaet": 102,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H17",
-      "kapazitaet": 211,
       "name": "HS 17 Friedrich Hartmann - ARCH",
+      "kapazitaet": 211,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H18",
-      "kapazitaet": 200,
       "name": "HS 18 Czuber - MB",
+      "kapazitaet": 200,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H7",
-      "kapazitaet": 143,
       "name": "HS 7 Schütte-Lihotzky - ARCH",
+      "kapazitaet": 143,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H8",
-      "kapazitaet": 196,
       "name": "HS 8 Heinz Parkus - CEE",
+      "kapazitaet": 196,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "OZEG80",
-      "kapazitaet": 150,
       "name": "HS Atrium 1",
+      "kapazitaet": 150,
       "gebaeude": "OZ - ARSENAL Objekt 214"
     },
     {
       "id": "OZEG76",
-      "kapazitaet": 86,
       "name": "HS Atrium 2",
+      "kapazitaet": 86,
       "gebaeude": "OZ - ARSENAL Objekt 214"
     },
     {
       "id": "OA01E29",
-      "kapazitaet": 131,
       "name": "HS O221",
+      "kapazitaet": 131,
       "gebaeude": "OA - Objekt 221"
     },
     {
       "id": "BI04G12",
-      "kapazitaet": 9,
       "name": "Hauptlabor des VT-Instituts",
+      "kapazitaet": 9,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "AIHS",
-      "kapazitaet": 196,
       "name": "Helmut Rauch Hörsaal - TPH",
+      "kapazitaet": 196,
       "gebaeude": "ZA - Atominstitut"
     },
     {
       "id": "BHEGA01",
-      "kapazitaet": 22,
       "name": "Hörerlabor",
+      "kapazitaet": 22,
       "gebaeude": "BH - Institutsgebäude"
     },
     {
       "id": "BC04H01",
-      "kapazitaet": 21,
       "name": "Hörerlabor BC 1",
+      "kapazitaet": 21,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BC04H11",
-      "kapazitaet": 18,
       "name": "Hörerlabor BC 2",
+      "kapazitaet": 18,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BC04H21",
-      "kapazitaet": 20,
       "name": "Hörerlabor BC 3",
+      "kapazitaet": 20,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BC04H31",
-      "kapazitaet": 23,
       "name": "Hörerlabor BC 4",
+      "kapazitaet": 23,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BC04H41",
-      "kapazitaet": 27,
       "name": "Hörerlabor BC 5",
+      "kapazitaet": 27,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "BKU1B03",
-      "kapazitaet": 62,
       "name": "Hörerlabor BK",
+      "kapazitaet": 62,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "H14",
-      "kapazitaet": 36,
       "name": "Hörsaal 14",
+      "kapazitaet": 36,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H15",
-      "kapazitaet": 52,
       "name": "Hörsaal 15",
+      "kapazitaet": 52,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "H6",
-      "kapazitaet": 173,
       "name": "Hörsaal 6 - RPL",
+      "kapazitaet": 173,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU141",
-      "kapazitaet": 184,
       "name": "Hörsaal AE U1 - 1 - CEE",
+      "kapazitaet": 184,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "BB04C13",
-      "kapazitaet": 3,
       "name": "Imaging MS",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "HGEG05",
-      "kapazitaet": 25,
       "name": "InfLab Frogger",
+      "kapazitaet": 25,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HGEG15",
-      "kapazitaet": 10,
       "name": "InfLab Pong",
+      "kapazitaet": 10,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HGEG05A",
-      "kapazitaet": 25,
       "name": "InfLab Q*bert",
+      "kapazitaet": 25,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "INFH",
-      "kapazitaet": 392,
       "name": "Informatikhörsaal - ARCH-INF",
+      "kapazitaet": 392,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "S1",
-      "kapazitaet": 40,
       "name": "Konferenzraum der Fakultät Architektur und Raumplanung",
+      "kapazitaet": 40,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "HCEG13",
-      "kapazitaet": 7,
       "name": "Labor",
+      "kapazitaet": 7,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HE0250",
-      "kapazitaet": 7,
       "name": "Labor",
+      "kapazitaet": 7,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HAEG04",
-      "kapazitaet": 9,
       "name": "Labor - Ofenraum",
+      "kapazitaet": 9,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "BI03A09",
-      "kapazitaet": 3,
       "name": "Labor 2 des FB MVT und Luftreinhaltetechnik",
+      "kapazitaet": 3,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "CF0141",
-      "kapazitaet": 10,
       "name": "Labor CF0141",
+      "kapazitaet": 10,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "DA04A05",
-      "kapazitaet": 4,
       "name": "Labor DA04A05",
+      "kapazitaet": 4,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "BD U1 D42",
-      "kapazitaet": 5,
       "name": "Labor Fördertechnik",
+      "kapazitaet": 5,
       "gebaeude": "BE - Lückenbau"
     },
     {
       "id": "BFEGG12",
-      "kapazitaet": 7,
       "name": "Labor Mechanische Prüfung",
+      "kapazitaet": 7,
       "gebaeude": "BF - Institutsgebäude"
     },
     {
       "id": "HAEG09",
-      "kapazitaet": 6,
       "name": "Labor Mechanische Prüfung I",
+      "kapazitaet": 6,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "CH0213",
-      "kapazitaet": 18,
       "name": "Labor Technische Elektronik (LVA 362.132)",
+      "kapazitaet": 18,
       "gebaeude": "CH - ZMNS"
     },
     {
       "id": "BF02G20",
-      "kapazitaet": 7,
       "name": "Labor Thermische Analyse I",
+      "kapazitaet": 7,
       "gebaeude": "BF - Institutsgebäude"
     },
     {
       "id": "HAEG11",
-      "kapazitaet": 7,
       "name": "Labor WM",
+      "kapazitaet": 7,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HAEG16",
-      "kapazitaet": 8,
       "name": "Labor WM1",
+      "kapazitaet": 8,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "CF0426",
-      "kapazitaet": 36,
       "name": "Labor Übungsraum E370",
+      "kapazitaet": 36,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "BB01C15",
-      "kapazitaet": 3,
       "name": "Laborraum BB01C15",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB01C19",
-      "kapazitaet": 3,
       "name": "Laborraum BB01C19",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB01C23",
-      "kapazitaet": 3,
       "name": "Laborraum BB01C23",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "BB02G02",
-      "kapazitaet": 3,
       "name": "Laborraum BB02G02",
+      "kapazitaet": 3,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "DCEGD03",
-      "kapazitaet": 70,
       "name": "Lernraum Altes GZ",
+      "kapazitaet": 70,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "BD01A29",
-      "kapazitaet": 12,
       "name": "Lernraum BD01A29",
+      "kapazitaet": 12,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "DEZE11",
-      "kapazitaet": 17,
       "name": "Lernraum DEZE11",
+      "kapazitaet": 17,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "AHZE03",
-      "kapazitaet": 20,
       "name": "Lernraum Karlsplatz AHZE03",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AIEG01A",
-      "kapazitaet": 10,
       "name": "Luftpavillon",
+      "kapazitaet": 10,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "BF02G10",
-      "kapazitaet": 7,
       "name": "Ofenraum",
+      "kapazitaet": 7,
       "gebaeude": "BF - Institutsgebäude"
     },
     {
       "id": "AF0106",
-      "kapazitaet": 29,
       "name": "PC1",
+      "kapazitaet": 29,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0105",
-      "kapazitaet": 9,
       "name": "PC2",
+      "kapazitaet": 9,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0113",
-      "kapazitaet": 8,
       "name": "PC3",
+      "kapazitaet": 8,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0122",
-      "kapazitaet": 15,
       "name": "PC4",
+      "kapazitaet": 15,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0116",
-      "kapazitaet": 15,
       "name": "PC5",
+      "kapazitaet": 15,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0101",
-      "kapazitaet": 7,
       "name": "PC6",
+      "kapazitaet": 7,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AFEG 06",
-      "kapazitaet": 29,
       "name": "PC7",
+      "kapazitaet": 29,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AFEG03",
-      "kapazitaet": 13,
       "name": "PC8",
+      "kapazitaet": 13,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "CFEG47",
-      "kapazitaet": 54,
       "name": "Programmier-Labor",
+      "kapazitaet": 54,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "XKEG05",
-      "kapazitaet": 20,
       "name": "Projektraum 1",
+      "kapazitaet": 20,
       "gebaeude": "XK - Ausweichquatier"
     },
     {
       "id": "ZS13",
-      "kapazitaet": 25,
       "name": "Projektraum 13 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 25,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "ZS14",
-      "kapazitaet": 25,
       "name": "Projektraum 14 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 25,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "XKEG13",
-      "kapazitaet": 40,
       "name": "Projektraum 2",
+      "kapazitaet": 40,
       "gebaeude": "XK - Ausweichquatier"
     },
     {
       "id": "ZS2",
-      "kapazitaet": 25,
       "name": "Projektraum 2 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 25,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "ZS8",
-      "kapazitaet": 25,
       "name": "Projektraum 8 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 25,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AC0230",
-      "kapazitaet": 32,
       "name": "Projektraum DAP 1/259",
+      "kapazitaet": 32,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "2532",
-      "kapazitaet": 20,
       "name": "Projektraum GBL - 2/253 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0326",
-      "kapazitaet": 40,
       "name": "Projektraum GSTL - 253-06 - Achtung Werkraum! Kein Seminarraum!",
+      "kapazitaet": 40,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "S6",
-      "kapazitaet": 20,
       "name": "Projektraum HB1 - 6/253 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "2537",
-      "kapazitaet": 20,
       "name": "Projektraum HB2 - 7/253 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "2534",
-      "kapazitaet": 20,
       "name": "Projektraum RG - 4/253 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "5260",
-      "kapazitaet": 20,
       "name": "Projektraum STB - 5/260 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "2533",
-      "kapazitaet": 20,
       "name": "Projektraum WB - 3/253 - Achtung! Werkraum, kein Seminarraum!",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "BC01A50",
-      "kapazitaet": 5,
       "name": "Raum Madsen",
+      "kapazitaet": 5,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "ACEG12",
-      "kapazitaet": 20,
       "name": "Raumlabor",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "CG0118",
-      "kapazitaet": 30,
       "name": "Sem 389",
+      "kapazitaet": 30,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "DA02E08",
-      "kapazitaet": 44,
       "name": "Sem.R. DA grün 02 A - GEO",
+      "kapazitaet": 44,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DA02F16",
-      "kapazitaet": 40,
       "name": "Sem.R. DA grün 02 B - GEO",
+      "kapazitaet": 40,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DA02F20",
-      "kapazitaet": 18,
       "name": "Sem.R. DA grün 02 C - GEO",
+      "kapazitaet": 18,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "101A",
-      "kapazitaet": 48,
       "name": "Sem.R. DA grün 03 A",
+      "kapazitaet": 48,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "101B",
-      "kapazitaet": 32,
       "name": "Sem.R. DA grün 03 B",
+      "kapazitaet": 32,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "101C",
-      "kapazitaet": 30,
       "name": "Sem.R. DA grün 04",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "104",
-      "kapazitaet": 60,
       "name": "Sem.R. DA grün 05",
+      "kapazitaet": 60,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "107",
-      "kapazitaet": 30,
       "name": "Sem.R. DA grün 06A",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "1016",
-      "kapazitaet": 16,
       "name": "Sem.R. DA grün 06B",
+      "kapazitaet": 16,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "325/2",
-      "kapazitaet": 30,
       "name": "Sem.R. DB gelb 03",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "105A",
-      "kapazitaet": 30,
       "name": "Sem.R. DB gelb 04",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "134",
-      "kapazitaet": 30,
       "name": "Sem.R. DB gelb 05 A",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "134A",
-      "kapazitaet": 24,
       "name": "Sem.R. DB gelb 05 B",
+      "kapazitaet": 24,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "138A",
-      "kapazitaet": 30,
       "name": "Sem.R. DB gelb 07",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "138C",
-      "kapazitaet": 29,
       "name": "Sem.R. DB gelb 09",
+      "kapazitaet": 29,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "136",
-      "kapazitaet": 29,
       "name": "Sem.R. DB gelb 10",
+      "kapazitaet": 29,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "138B",
-      "kapazitaet": 24,
       "name": "Sem.R. DC rot 07",
+      "kapazitaet": 24,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "OC 01 I27",
-      "kapazitaet": 54,
       "name": "Seminarraum 1",
+      "kapazitaet": 54,
       "gebaeude": "OC - Arsenal, Obj. 236"
     },
     {
       "id": "1071",
-      "kapazitaet": 24,
       "name": "Seminarraum 107/1",
+      "kapazitaet": 24,
       "gebaeude": "AP - Goldenes Lamm"
     },
     {
       "id": "123",
-      "kapazitaet": 34,
       "name": "Seminarraum 127",
+      "kapazitaet": 34,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "OC 01 H23",
-      "kapazitaet": 66,
       "name": "Seminarraum 2",
+      "kapazitaet": 66,
       "gebaeude": "OC - Arsenal, Obj. 236"
     },
     {
       "id": "OC 01 E23",
-      "kapazitaet": 34,
       "name": "Seminarraum 3",
+      "kapazitaet": 34,
       "gebaeude": "OC - Arsenal, Obj. 236"
     },
     {
       "id": "CH0236",
-      "kapazitaet": 36,
       "name": "Seminarraum 362 - 1",
+      "kapazitaet": 36,
       "gebaeude": "CH - ZMNS"
     },
     {
       "id": "351",
-      "kapazitaet": 50,
       "name": "Seminarraum 363",
+      "kapazitaet": 50,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "122",
-      "kapazitaet": 36,
       "name": "Seminarraum 366",
+      "kapazitaet": 36,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "387",
-      "kapazitaet": 30,
       "name": "Seminarraum 387",
+      "kapazitaet": 30,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "2503",
-      "kapazitaet": 20,
       "name": "Seminarraum 8",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "ZS15",
-      "kapazitaet": 35,
       "name": "Seminarraum AA 02 – 1",
+      "kapazitaet": 35,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AA0352",
-      "kapazitaet": 50,
       "name": "Seminarraum AA 03 - 1 - CEE",
+      "kapazitaet": 50,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AC0246",
-      "kapazitaet": 36,
       "name": "Seminarraum AC 02 - 1 - UIW",
+      "kapazitaet": 36,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AC0240",
-      "kapazitaet": 36,
       "name": "Seminarraum AC 02 - 2",
+      "kapazitaet": 36,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AC0340",
-      "kapazitaet": 29,
       "name": "Seminarraum AC 03 - 1",
+      "kapazitaet": 29,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AC0440",
-      "kapazitaet": 50,
       "name": "Seminarraum AC0440",
+      "kapazitaet": 50,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "ACEG01",
-      "kapazitaet": 34,
       "name": "Seminarraum ACEG01 Executive Learning Space",
+      "kapazitaet": 34,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "222",
-      "kapazitaet": 46,
       "name": "Seminarraum AD 03 - 1",
+      "kapazitaet": 46,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU103",
-      "kapazitaet": 30,
       "name": "Seminarraum AE U1 - 1",
+      "kapazitaet": 30,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU107",
-      "kapazitaet": 26,
       "name": "Seminarraum AE U1 - 2",
+      "kapazitaet": 26,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU115",
-      "kapazitaet": 24,
       "name": "Seminarraum AE U1 - 3",
+      "kapazitaet": 24,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU119",
-      "kapazitaet": 40,
       "name": "Seminarraum AE U1 - 4",
+      "kapazitaet": 40,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU125",
-      "kapazitaet": 40,
       "name": "Seminarraum AE U1 - 5",
+      "kapazitaet": 40,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU131",
-      "kapazitaet": 24,
       "name": "Seminarraum AE U1 - 6",
+      "kapazitaet": 24,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AEU140",
-      "kapazitaet": 52,
       "name": "Seminarraum AE U1 - 7",
+      "kapazitaet": 52,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "234",
-      "kapazitaet": 25,
       "name": "Seminarraum AEEG-1",
+      "kapazitaet": 25,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0222",
-      "kapazitaet": 24,
       "name": "Seminarraum AF 02 - 1 CEE",
+      "kapazitaet": 24,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0228",
-      "kapazitaet": 24,
       "name": "Seminarraum AF 02 - 2 CEE",
+      "kapazitaet": 24,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "AF0312",
-      "kapazitaet": 20,
       "name": "Seminarraum AF 03-1",
+      "kapazitaet": 20,
       "gebaeude": "AA - Hauptgebäude"
     },
     {
       "id": "ARG",
-      "kapazitaet": 50,
       "name": "Seminarraum Argentinierstrasse",
+      "kapazitaet": 50,
       "gebaeude": "EA - Institutsgebäude"
     },
     {
       "id": "SEM BA 02A",
-      "kapazitaet": 36,
       "name": "Seminarraum BA 02A",
+      "kapazitaet": 36,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BA 02B",
-      "kapazitaet": 63,
       "name": "Seminarraum BA 02B",
+      "kapazitaet": 63,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BA 02C",
-      "kapazitaet": 22,
       "name": "Seminarraum BA 02C",
+      "kapazitaet": 22,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "BA03 D13",
-      "kapazitaet": 10,
       "name": "Seminarraum BA 03/ Prüfungszimmer Dekanat",
+      "kapazitaet": 10,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BA 05",
-      "kapazitaet": 40,
       "name": "Seminarraum BA 05 - MB",
+      "kapazitaet": 40,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BA 08A",
-      "kapazitaet": 40,
       "name": "Seminarraum BA 08A - MB",
+      "kapazitaet": 40,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BA 08B",
-      "kapazitaet": 30,
       "name": "Seminarraum BA 08B - MB",
+      "kapazitaet": 30,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SR BA 10B",
-      "kapazitaet": 30,
       "name": "Seminarraum BA 10B - MB",
+      "kapazitaet": 30,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "SEM BD 02C",
-      "kapazitaet": 18,
       "name": "Seminarraum BD 02C",
+      "kapazitaet": 18,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "307A",
-      "kapazitaet": 24,
       "name": "Seminarraum BD 03",
+      "kapazitaet": 24,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "SEMBE02",
-      "kapazitaet": 25,
       "name": "Seminarraum BE 01",
+      "kapazitaet": 25,
       "gebaeude": "BE - Lückenbau"
     },
     {
       "id": "166S-5",
-      "kapazitaet": 10,
       "name": "Seminarraum BH 03 Biotechnologie",
+      "kapazitaet": 10,
       "gebaeude": "BH - Institutsgebäude"
     },
     {
       "id": "1665",
-      "kapazitaet": 25,
       "name": "Seminarraum BH Biosciences",
+      "kapazitaet": 25,
       "gebaeude": "BH - Institutsgebäude"
     },
     {
       "id": "CF 01 53",
-      "kapazitaet": 20,
       "name": "Seminarraum CF 01 53",
+      "kapazitaet": 20,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "CHEG34",
-      "kapazitaet": 30,
       "name": "Seminarraum CHEG - ETIT",
+      "kapazitaet": 30,
       "gebaeude": "CH - ZMNS"
     },
     {
       "id": "DE0110",
-      "kapazitaet": 30,
       "name": "Seminarraum DE0110",
+      "kapazitaet": 30,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "EBEG03",
-      "kapazitaet": 12,
       "name": "Seminarraum EB EG-1 - RPL",
+      "kapazitaet": 12,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "EBEG09",
-      "kapazitaet": 32,
       "name": "Seminarraum EBEG-2 - RPL",
+      "kapazitaet": 32,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "EBEG20",
-      "kapazitaet": 30,
       "name": "Seminarraum EBEG-3 - RPL",
+      "kapazitaet": 30,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "EBU103",
-      "kapazitaet": 16,
       "name": "Seminarraum EBU1-1 - RPL",
+      "kapazitaet": 16,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "EBU109",
-      "kapazitaet": 30,
       "name": "Seminarraum EBU1-2 - RPL",
+      "kapazitaet": 30,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "EBU120",
-      "kapazitaet": 18,
       "name": "Seminarraum EBU1-3 - RPL",
+      "kapazitaet": 18,
       "gebaeude": "EB - Institutsgebäude"
     },
     {
       "id": "1832",
-      "kapazitaet": 22,
       "name": "Seminarraum FAV 01 A (Seminarraum 183/2)",
+      "kapazitaet": 22,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "1872",
-      "kapazitaet": 25,
       "name": "Seminarraum FAV 01 B (Seminarraum 187/2)",
+      "kapazitaet": 25,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "1882",
-      "kapazitaet": 30,
       "name": "Seminarraum FAV 01 C (Seminarraum 188/2)",
+      "kapazitaet": 30,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "186",
-      "kapazitaet": 36,
       "name": "Seminarraum FAV 05 (Seminarraum 186)",
+      "kapazitaet": 36,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "HAEG02",
-      "kapazitaet": 30,
       "name": "Seminarraum FAV EG A",
+      "kapazitaet": 30,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "SEMN",
-      "kapazitaet": 18,
       "name": "Seminarraum FAV EG B (Seminarraum von Neumann)",
+      "kapazitaet": 18,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "SEMG",
-      "kapazitaet": 30,
       "name": "Seminarraum FAV EG C (Seminarraum Gödel)",
+      "kapazitaet": 30,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "Lehar 01",
-      "kapazitaet": 18,
       "name": "Seminarraum Lehar 01",
+      "kapazitaet": 18,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "Lehar 02",
-      "kapazitaet": 18,
       "name": "Seminarraum Lehar 02",
+      "kapazitaet": 18,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "1633",
-      "kapazitaet": 18,
       "name": "Seminarraum Lehar 03",
+      "kapazitaet": 18,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "LeharEG",
-      "kapazitaet": 18,
       "name": "Seminarraum Lehar EG",
+      "kapazitaet": 18,
       "gebaeude": "BC - Lehartrakt"
     },
     {
       "id": "OAEGC11",
-      "kapazitaet": 25,
       "name": "Seminarraum O221-1",
+      "kapazitaet": 25,
       "gebaeude": "OA - Objekt 221"
     },
     {
       "id": "OAEGC45",
-      "kapazitaet": 25,
       "name": "Seminarraum O221-2",
+      "kapazitaet": 25,
       "gebaeude": "OA - Objekt 221"
     },
     {
       "id": "OD0122",
-      "kapazitaet": 23,
       "name": "Seminarraum OD 01 - 1",
+      "kapazitaet": 23,
       "gebaeude": "OD - Arsenal OD"
     },
     {
       "id": "SETI",
-      "kapazitaet": 23,
       "name": "Seminarraum Techn. Informatik",
+      "kapazitaet": 23,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "ZE0105",
-      "kapazitaet": 30,
       "name": "Seminarraum ZE 01 - 1",
+      "kapazitaet": 30,
       "gebaeude": "ZE - Stadionallee 2 Neubau"
     },
     {
       "id": "BF02C23",
-      "kapazitaet": 7,
       "name": "Studierendenlabor",
+      "kapazitaet": 7,
       "gebaeude": "BF - Institutsgebäude"
     },
     {
       "id": "DE ZE 24",
-      "kapazitaet": 9,
       "name": "TILab Raum 1",
+      "kapazitaet": 9,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DE ZE 32",
-      "kapazitaet": 9,
       "name": "TILab Raum 2",
+      "kapazitaet": 9,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DE ZE 40",
-      "kapazitaet": 9,
       "name": "TILab Raum 3",
+      "kapazitaet": 9,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DE ZE 64",
-      "kapazitaet": 11,
       "name": "TILab Raum 4",
+      "kapazitaet": 11,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DE ZE 72",
-      "kapazitaet": 3,
       "name": "TILab Raum 5",
+      "kapazitaet": 3,
       "gebaeude": "DE - Institutsgebäude"
     },
     {
       "id": "DCEGD19",
-      "kapazitaet": 30,
       "name": "TU.it Internet-Raum FH1",
+      "kapazitaet": 30,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DCEGD15",
-      "kapazitaet": 9,
       "name": "TU.it Internet-Raum FH1A",
+      "kapazitaet": 9,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "BAU162",
-      "kapazitaet": 17,
       "name": "TU.it Internet-Raum GM1 PC Labor",
+      "kapazitaet": 17,
       "gebaeude": "BA - Plus Energie Büro Hochhaus"
     },
     {
       "id": "DCEGJ15",
-      "kapazitaet": 12,
       "name": "TU.it Schulungsraum",
+      "kapazitaet": 12,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "FCEG14H",
-      "kapazitaet": 300,
       "name": "TVFA Halle - Achtung! Ausstellungsraum/Werkraum",
+      "kapazitaet": 300,
       "gebaeude": "FB - Erzherzog-Johann-Pl. 1"
     },
     {
       "id": "BBEGL17",
-      "kapazitaet": 25,
       "name": "Technikum",
+      "kapazitaet": 25,
       "gebaeude": "BB - Eckbau"
     },
     {
       "id": "THE1",
-      "kapazitaet": 67,
       "name": "Theresianumgasse HS 1 - MWB",
+      "kapazitaet": 67,
       "gebaeude": "XQ - Außenstandort"
     },
     {
       "id": "THE2",
-      "kapazitaet": 21,
       "name": "Theresianumgasse HS 2",
+      "kapazitaet": 21,
       "gebaeude": "XQ - Außenstandort"
     },
     {
       "id": "BD 04 B33",
-      "kapazitaet": 8,
       "name": "Vortragsraum Konstruktionslehre",
+      "kapazitaet": 8,
       "gebaeude": "BD - Hoftrakt"
     },
     {
       "id": "HIEG08",
-      "kapazitaet": 7,
       "name": "Werkstatt",
+      "kapazitaet": 7,
       "gebaeude": "HA - Institutsgebäude"
     },
     {
       "id": "DA 08 E10",
-      "kapazitaet": 40,
       "name": "Zeichensaal 1",
+      "kapazitaet": 40,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "DA07A05",
-      "kapazitaet": 80,
       "name": "Zeichensaal 3",
+      "kapazitaet": 80,
       "gebaeude": "DA - Freihausgebäude"
     },
     {
       "id": "CF0335",
-      "kapazitaet": 20,
       "name": "Zeichensaal CF0335",
+      "kapazitaet": 20,
       "gebaeude": "CF - Haupttrakt"
     },
     {
       "id": "BIU1G18",
-      "kapazitaet": 218,
       "name": "Zentralgarderobe BIU1",
+      "kapazitaet": 218,
       "gebaeude": "BI - Loschmitdt Trakt"
     },
     {
       "id": "EAEG 19",
-      "kapazitaet": 26,
       "name": "complang-Labor",
+      "kapazitaet": 26,
       "gebaeude": "EA - Institutsgebäude"
     },
     {
       "id": "E10",
-      "kapazitaet": 151,
       "name": "EI 10 Fritz Paschke HS - UIW",
+      "kapazitaet": 151,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "E11",
-      "kapazitaet": 81,
       "name": "EI 11 HS - INF",
+      "kapazitaet": 81,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
     },
     {
       "id": "E7",
-      "kapazitaet": 434,
       "name": "EI 7 Hörsaal - ETIT",
+      "kapazitaet": 434,
       "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
+    },
+    {
+      "id": "CD0312",
+      "name": "Lernraum Gußhaus CD0312",
+      "kapazitaet": 16,
+      "gebaeude": "CA - Gußhausstr. 27-29 - Neu El"
+    },
+    {
+      "id": "TMP-R001",
+      "name": "Import-Test Raum",
+      "kapazitaet": 24,
+      "gebaeude": "TMP - Testgebäude"
     }
   ]
 }

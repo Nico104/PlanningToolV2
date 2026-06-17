@@ -24,6 +24,7 @@ class DateNavigationDock(QDockWidget):
     def __init__(self, parent=None):
         super().__init__("Navigation", parent)
         self.setAllowedAreas(Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
+        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self._syncing_navigation = False
 
         title_bar = QWidget(self)
@@ -131,6 +132,9 @@ class DateNavigationDock(QDockWidget):
 
         self._sync_selectors_with_dates()
         self._on_view_change()
+
+    def preferred_inline_width(self) -> int:
+        return 560
 
     def _monday_of(self, date: QDate) -> QDate:
         return date.addDays(1 - date.dayOfWeek())

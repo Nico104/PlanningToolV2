@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QDateEdit,
     QDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -48,8 +49,8 @@ class FreeDayImportDialog(QDialog):
         self.setObjectName("FreeDayImportDialog")
         self.setModal(True)
         self.setWindowTitle("Freie Tage importieren")
-        self.resize(920, 640)
-        self.setMinimumSize(760, 520)
+        self.resize(980, 760)
+        self.setMinimumSize(860, 680)
 
         today = date.today()
         self._existing_items = list(existing_items)
@@ -67,6 +68,14 @@ class FreeDayImportDialog(QDialog):
         title.setObjectName("FreeDayImportTitle")
         root.addWidget(title)
 
+        subtitle = QLabel(
+            "Feiertage und vorlesungsfreie Zeiträume aus öffentlichen Quellen laden oder manuell ergänzen.",
+            self,
+        )
+        subtitle.setObjectName("FreeDayImportSubtitle")
+        subtitle.setWordWrap(True)
+        root.addWidget(subtitle)
+
         controls = QHBoxLayout()
         controls.setSpacing(16)
         controls.setAlignment(Qt.AlignTop)
@@ -75,10 +84,6 @@ class FreeDayImportDialog(QDialog):
         controls.addWidget(api_panel, 1, Qt.AlignTop)
         controls.addWidget(manual_panel, 1, Qt.AlignTop)
         root.addLayout(controls)
-
-        self.summary_label = QLabel(self)
-        self.summary_label.setObjectName("FreeDayImportSummary")
-        root.addWidget(self.summary_label)
 
         self.table = QTableWidget(0, 7, self)
         self.table.setObjectName("FreeDayImportTable")
@@ -105,7 +110,26 @@ class FreeDayImportDialog(QDialog):
         self.table.setColumnWidth(4, 110)
         self.table.setColumnWidth(5, 130)
         self.table.setColumnWidth(6, 130)
-        root.addWidget(self.table, 1)
+
+        preview_panel = QFrame(self)
+        preview_panel.setObjectName("FreeDayImportPreviewPanel")
+        preview_panel.setMinimumHeight(280)
+        preview_layout = QVBoxLayout(preview_panel)
+        preview_layout.setContentsMargins(14, 12, 14, 14)
+        preview_layout.setSpacing(10)
+
+        preview_header = QHBoxLayout()
+        preview_title = QLabel("Vorschau", preview_panel)
+        preview_title.setObjectName("FreeDayImportPanelTitle")
+        preview_header.addWidget(preview_title)
+        preview_header.addStretch(1)
+        self.summary_label = QLabel(preview_panel)
+        self.summary_label.setObjectName("FreeDayImportSummary")
+        self.summary_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        preview_header.addWidget(self.summary_label)
+        preview_layout.addLayout(preview_header)
+        preview_layout.addWidget(self.table, 1)
+        root.addWidget(preview_panel, 1)
 
         actions = QHBoxLayout()
         actions.addStretch(1)
@@ -114,7 +138,7 @@ class FreeDayImportDialog(QDialog):
         self.cancel_btn.clicked.connect(self.reject)
         actions.addWidget(self.cancel_btn)
 
-        self.save_btn = QPushButton("Freie Tage importieren", self)
+        self.save_btn = QPushButton("Ausgewählte importieren", self)
         self.save_btn.setObjectName("PrimaryButton")
         self.save_btn.clicked.connect(self._accept_selection)
         actions.addWidget(self.save_btn)
@@ -127,16 +151,23 @@ class FreeDayImportDialog(QDialog):
         return list(self._result_candidates)
 
     def _build_api_panel(self, default_from: date, default_to: date) -> QWidget:
-        panel = QWidget(self)
+        panel = QFrame(self)
         panel.setObjectName("FreeDayImportPanel")
         panel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 12, 14, 14)
+        layout.setSpacing(8)
 
         label = QLabel("Automatisch laden", panel)
         label.setObjectName("FreeDayImportPanelTitle")
         layout.addWidget(label)
+        help_label = QLabel(
+            "Gesetzliche Feiertage werden über OpenHolidays geladen. TU-Wien-Zeiträume werden von der TU-Wien-Website übernommen; es werden nur dort bereits eingetragene Zeiträume gefunden.",
+            panel,
+        )
+        help_label.setObjectName("FreeDayImportHelp")
+        help_label.setWordWrap(True)
+        layout.addWidget(help_label)
 
         form = QFormLayout()
         form.setContentsMargins(0, 0, 0, 0)
@@ -153,7 +184,7 @@ class FreeDayImportDialog(QDialog):
 
         row = QHBoxLayout()
         row.addStretch(1)
-        self.load_btn = QPushButton("Gesetzliche Feiertage (OpenHolidays) + TU-Wien-Ferien laden", panel)
+        self.load_btn = QPushButton("Feiertage und TU-Wien-Zeiträume laden", panel)
         self.load_btn.setObjectName("SecondaryButton")
         self.load_btn.clicked.connect(self._load_automatic_sources)
         row.addWidget(self.load_btn)
@@ -161,16 +192,20 @@ class FreeDayImportDialog(QDialog):
         return panel
 
     def _build_manual_panel(self) -> QWidget:
-        panel = QWidget(self)
+        panel = QFrame(self)
         panel.setObjectName("FreeDayImportPanel")
         panel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 12, 14, 14)
+        layout.setSpacing(8)
 
-        label = QLabel("Freien Zeitraum manuell ergänzen", panel)
+        label = QLabel("Manuell ergänzen", panel)
         label.setObjectName("FreeDayImportPanelTitle")
         layout.addWidget(label)
+        help_label = QLabel("Eigene vorlesungsfreie Zeiträume oder Feiertage in die Vorschau aufnehmen.", panel)
+        help_label.setObjectName("FreeDayImportHelp")
+        help_label.setWordWrap(True)
+        layout.addWidget(help_label)
 
         form = QFormLayout()
         form.setContentsMargins(0, 0, 0, 0)
@@ -241,7 +276,7 @@ class FreeDayImportDialog(QDialog):
                 errors.append(f"TU Wien: {exc}")
         finally:
             self.load_btn.setEnabled(True)
-            self.load_btn.setText("Gesetzliche Feiertage (OpenHolidays) + TU-Wien-Ferien laden")
+            self.load_btn.setText("Feiertage und TU-Wien-Zeiträume laden")
 
         self._refresh_preview()
         if errors and not self._api_candidates and not self._tuwien_candidates:

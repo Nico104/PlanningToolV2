@@ -46,6 +46,11 @@ class CatalogImportDialog(QDialog):
         "raeume.json": "Räume",
     }
 
+    _IMPORT_LABELS = {
+        "lehrveranstaltungen.json": ("LVA", "LVAs"),
+        "raeume.json": ("Raum", "Räume"),
+    }
+
     _COLUMNS = {
         "lehrveranstaltungen.json": [
             ("status", "Status"),
@@ -442,5 +447,7 @@ class CatalogImportDialog(QDialog):
                     changed += 1
         label = self._FILE_LABELS.get(file_name, "Einträge")
         self.summary_label.setText(f"{label}: {selected} ausgewählt · {new} neu · {changed} geändert · {total} gesamt")
-        self.import_btn.setText(f"{label} importieren")
+        singular, plural = self._IMPORT_LABELS.get(file_name, ("Eintrag", "Einträge"))
+        item_label = singular if selected == 1 else plural
+        self.import_btn.setText(f"{selected} {item_label} importieren")
         self.import_btn.setEnabled(selected > 0 and not self._busy)

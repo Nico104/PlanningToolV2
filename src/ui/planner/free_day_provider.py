@@ -46,13 +46,6 @@ class FreeDayProvider:
                 continue
             description = str(item.get("beschreibung", "")).strip()
 
-            single_raw = str(item.get("datum", "")).strip()
-            if single_raw:
-                d = self._parse_iso_date(single_raw)
-                if d is not None and start <= d <= end:
-                    raw.setdefault(d, []).append((day_type, description))
-                continue
-
             start_raw = str(item.get("von_datum", "")).strip()
             end_raw = str(item.get("bis_datum", "")).strip()
             d0 = self._parse_iso_date(start_raw)

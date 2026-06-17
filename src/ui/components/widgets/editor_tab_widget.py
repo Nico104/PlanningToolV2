@@ -15,9 +15,15 @@ def make_item(text: str) -> QTableWidgetItem:
 
 def selected_id(table: QTableWidget) -> Optional[str]:
     row = table.currentRow()
-    # gibt -1 zurück wenn keine Zeile selektiert ist
     if row < 0:
-        return None
+        selected_rows = table.selectionModel().selectedRows() if table.selectionModel() else []
+        if selected_rows:
+            row = selected_rows[0].row()
+        else:
+            selected_items = table.selectedItems()
+            if not selected_items:
+                return None
+            row = selected_items[0].row()
 
     id_col = table.property("id_column")
     if not isinstance(id_col, int) or id_col < 0 or id_col >= table.columnCount():

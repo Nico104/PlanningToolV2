@@ -5,11 +5,11 @@ Konflikte Dock Widget - displays schedule conflicts and warnings.
 from typing import List, Optional
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QScrollArea, QFrame, QStyle
+    QLabel, QPushButton, QScrollArea, QFrame, QStyle, QTabBar
 )
 
 from ...core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
@@ -31,7 +31,7 @@ class ConflictsDock(QDockWidget):
     # What the user sees
     _CATEGORY_LABELS = {
         "room": "Raum",
-        "lecturer": "Vortragende",
+        "lecturer": "Lehrperson",
         "holiday": "Feiertag",
         "lecture_free": "Vorlesungsfrei",
         "free_day": "Freier Tag",
@@ -68,9 +68,13 @@ class ConflictsDock(QDockWidget):
         super().__init__("Konflikte", parent)
         self.setObjectName("dock_conflicts")
         self.setAllowedAreas(Qt.AllDockWidgetAreas)
+        self._base_title = "Konflikte"
+        self._tab_badge_total = 0
+        self._tab_badge_has_conflicts = False
         
         self._issues: List[ConflictIssue] = []
         self._detector: Optional[ConflictDetector] = None
+        self._max_visible_cards = 250
         
         # Filter state
         self._filter_severity = "all"   # "all", "conflict", "warning"
@@ -172,6 +176,7 @@ class ConflictsDock(QDockWidget):
         
         conflicts = [i for i in self._issues if i.severity == "conflict"]
         warnings = [i for i in self._issues if i.severity == "warning"]
+        self._update_title_indicator(len(conflicts), len(warnings))
         
         if not self._issues:
             summary = "✓ Keine Konflikte"
@@ -189,13 +194,72 @@ class ConflictsDock(QDockWidget):
         
         # Update cards with filtered results
         self._populate_cards()
+
+    def _update_title_indicator(self, conflict_count: int, warning_count: int) -> None:
+        total = int(conflict_count) + int(warning_count)
+        self.setWindowTitle(self._base_title)
+        self.setWindowIcon(QIcon())
+        self._tab_badge_total = total
+        self._tab_badge_has_conflicts = conflict_count > 0
+        self.setToolTip(
+            f"{conflict_count} Konflikt(e), {warning_count} Warnung(en)"
+            if total
+            else "Keine Konflikte"
+        )
+        QTimer.singleShot(0, self._sync_tab_badge)
+
+    def _sync_tab_badge(self) -> None:
+        tabbar = self._dock_tabbar()
+        if tabbar is None:
+            return
+
+        index = self._dock_tab_index(tabbar)
+        if index < 0:
+            return
+
+        tabbar.setTabToolTip(index, self.toolTip())
+        if self._tab_badge_total <= 0:
+            tabbar.setTabButton(index, QTabBar.RightSide, None)
+            return
+
+        badge = QLabel("99+" if self._tab_badge_total > 99 else str(self._tab_badge_total), tabbar)
+        badge.setObjectName("ConflictTabBadge")
+        badge.setAlignment(Qt.AlignCenter)
+        badge.setMinimumSize(28, 20)
+        badge.setToolTip(self.toolTip())
+        badge.setProperty("state", "conflict" if self._tab_badge_has_conflicts else "warning")
+        tabbar.setTabButton(index, QTabBar.RightSide, badge)
+
+    def _dock_tabbar(self) -> Optional[QTabBar]:
+        window = self.window()
+        for tabbar in window.findChildren(QTabBar):
+            if self._dock_tab_index(tabbar) >= 0:
+                return tabbar
+        return None
+
+    def _dock_tab_index(self, tabbar: QTabBar) -> int:
+        for index in range(tabbar.count()):
+            if tabbar.tabText(index).strip() == self._base_title:
+                return index
+        return -1
         
     def _populate_cards(self) -> None:
         self._clear_cards()
 
         filtered_issues = self._apply_filters()
+        visible_issues = filtered_issues[: self._max_visible_cards]
 
-        for issue in filtered_issues:
+        if len(filtered_issues) > len(visible_issues):
+            note = QLabel(
+                f"{len(filtered_issues)} Einträge gefunden. "
+                f"Die ersten {len(visible_issues)} werden angezeigt; Filter grenzen die Liste ein.",
+                self.cards_container,
+            )
+            note.setObjectName("SettingsHelp")
+            note.setWordWrap(True)
+            self.cards_layout.insertWidget(self.cards_layout.count() - 1, note)
+
+        for issue in visible_issues:
             type_text = "Konflikt" if issue.severity == "conflict" else "Warnung"
             zeit_str = ""
             if issue.zeit_von and issue.zeit_bis:

@@ -1,12 +1,26 @@
 from pathlib import Path
 from datetime import date, datetime, timedelta
 from time import monotonic
+import csv
 import json
+import re
 import subprocess
 import sys
-from PySide6.QtCore import Qt, QTimer, QDate
-from PySide6.QtGui import QAction, QActionGroup
-from PySide6.QtWidgets import QDialog, QMainWindow, QFileDialog, QMessageBox, QPushButton
+from typing import Any
+from PySide6.QtCore import Qt, QTimer, QDate, QUrl
+from PySide6.QtGui import QAction, QActionGroup, QDesktopServices
+from PySide6.QtWidgets import (
+    QDialog,
+    QFrame,
+    QFileDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+)
 
 from ....services.data_service import DataService
 from ....services.excel_exchange_service import (
@@ -15,6 +29,7 @@ from ....services.excel_exchange_service import (
     export_week_calendar_to_excel,
     get_lva_export_options,
     get_teacher_export_semester_options,
+    import_lvas_from_excel,
     import_project_from_excel,
     import_tiss_rooms_from_excel,
 )
@@ -23,7 +38,7 @@ from ....services.import_merge_service import normalize_import_payload, payload_
 from ....services.undo_service import UndoService
 from ....services.semester_tools_service import copy_semester_termine, delete_semester_termine
 from ....services.free_day_import_service import append_free_day_candidates
-from ....services.semester_rules import semester_from_id, semester_id_for_date
+from ....services.semester_rules import semester_for_kind_year, semester_from_id, semester_id_for_date
 from ....services.data_folder_service import (
     data_path_for_settings,
     load_settings,
@@ -51,6 +66,7 @@ from ...dialogs import (
 )
 from ...dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
+from ...components.widgets.action_dialog import ActionDialog, DialogAction
 
 
 class MainWindow(QMainWindow):
@@ -178,7 +194,8 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
-        #refresh card heights
+        if hasattr(self, "global_filter_dock") and hasattr(self, "date_navigation_dock"):
+            QTimer.singleShot(0, self._update_top_dock_layout)
         QTimer.singleShot(120, self._refresh_planner_only)
 
     def _refresh_planner_only(self) -> None:
@@ -293,17 +310,33 @@ class MainWindow(QMainWindow):
             sys.exit(0)
 
     def _offer_default_catalog_for_new_project(self, target_dir: Path) -> bool:
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowTitle("Standarddaten importieren")
-        msg.setText("Standarddaten für das neue Projekt auswählen?")
-        msg.setInformativeText(f"{DEFAULT_CATALOG_LABEL}: Räume und LVAs für Elektrotechnik Bachelor.")
-        import_btn = QPushButton("Auswählen")
-        msg.addButton("Überspringen", QMessageBox.RejectRole)
-        msg.addButton(import_btn, QMessageBox.AcceptRole)
-        msg.setDefaultButton(import_btn)
-        msg.exec()
-        if msg.clickedButton() != import_btn:
+        dlg = ActionDialog(
+            self,
+            title="Standarddaten importieren",
+            subtitle=(
+                f"{DEFAULT_CATALOG_LABEL}. Die Daten enthalten Räume und LVAs für den "
+                "Elektrotechnik-Bachelor-Katalog und können für das neue Projekt vorausgewählt werden."
+            ),
+            section_title="Standarddaten für das neue Projekt",
+            actions=[
+                DialogAction(
+                    "select",
+                    "Auswählen",
+                    "Räume und LVAs in einer Vorschau auswählen. Räume können dort nach Gebäude gefiltert werden.",
+                ),
+                DialogAction(
+                    "all",
+                    "Alle Standarddaten importieren",
+                    "Alle Räume und LVAs aus den Standarddaten direkt in das neue Projekt übernehmen.",
+                ),
+                DialogAction(
+                    "skip",
+                    "Ohne Standarddaten fortfahren",
+                    "Das Projekt bleibt leer und Stammdaten können später importiert oder manuell angelegt werden.",
+                ),
+            ],
+        )
+        if dlg.exec() != QDialog.Accepted or dlg.result_key not in {"select", "all"}:
             return False
 
         try:
@@ -311,6 +344,15 @@ class MainWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Standarddaten importieren", f"Standarddaten konnten nicht gelesen werden: {e}")
             return False
+
+        if dlg.result_key == "all":
+            return self._run_import_payload(
+                normalized,
+                success_text="Alle Standarddaten in neues Projekt importiert.",
+                auto_import_new=True,
+                data_dir=target_dir,
+                refresh_after=False,
+            )
 
         return self._select_catalog_import(
             normalized,
@@ -380,17 +422,13 @@ class MainWindow(QMainWindow):
 
         import_export_menu = file_menu.addMenu("Import/Export")
 
-        self.act_import = QAction("Projekt importieren…", self)
-        self.act_import.triggered.connect(self.import_project)
+        self.act_import = QAction("Importieren…", self)
+        self.act_import.triggered.connect(self.import_data)
         import_export_menu.addAction(self.act_import)
 
         self.act_export = QAction("Projekt exportieren…", self)
         self.act_export.triggered.connect(self.export_project)
         import_export_menu.addAction(self.act_export)
-
-        self.act_tiss_room_import = QAction("TISS-Raumliste importieren…", self)
-        self.act_tiss_room_import.triggered.connect(self.import_tiss_room_list)
-        import_export_menu.addAction(self.act_tiss_room_import)
 
         self.act_default_catalog_import = QAction("Standarddaten importieren…", self)
         self.act_default_catalog_import.triggered.connect(self.import_default_catalog)
@@ -534,6 +572,156 @@ class MainWindow(QMainWindow):
     def _semester_id_for_calendar_date(self, value: date) -> str:
         return semester_id_for_date(value)
 
+    def _default_teacher_export_range(self, current_date: date) -> tuple[date, date]:
+        if current_date.month >= 10:
+            winter_year = current_date.year
+        elif current_date.month <= 2:
+            winter_year = current_date.year - 1
+        else:
+            winter_year = current_date.year - 1
+
+        winter = semester_for_kind_year("WS", winter_year)
+        summer = semester_for_kind_year("SS", winter_year + 1)
+        return winter.start, summer.end
+
+    def _show_export_finished_dialog(self, path: Path, text: str, details: str = "") -> None:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Information)
+        msg.setWindowTitle("Export erstellt")
+        msg.setText(text)
+        if details:
+            msg.setInformativeText(details)
+        open_file_btn = QPushButton("Datei öffnen")
+        open_folder_btn = QPushButton("Ordner öffnen")
+        msg.addButton("Schließen", QMessageBox.RejectRole)
+        msg.addButton(open_file_btn, QMessageBox.AcceptRole)
+        msg.addButton(open_folder_btn, QMessageBox.ActionRole)
+        msg.setDefaultButton(open_file_btn)
+        msg.exec()
+
+        clicked = msg.clickedButton()
+        if clicked == open_file_btn:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+        elif clicked == open_folder_btn:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.parent)))
+
+    @staticmethod
+    def _import_result_rows(counts_by_file: dict[str, dict[str, int]]) -> tuple[dict[str, int], list[tuple[str, dict[str, int]]]]:
+        labels = {
+            "raeume.json": "Räume",
+            "lehrveranstaltungen.json": "LVAs",
+            "termine.json": "Termine",
+            "studienrichtungen.json": "Studienrichtungen",
+            "freie_tage.json": "Freie Zeiträume",
+        }
+        totals = {"new": 0, "changed": 0, "ignored": 0, "identical": 0, "skipped": 0}
+        rows = []
+        for file_name, counts in counts_by_file.items():
+            row_counts = {
+                "new": int(counts.get("new", 0)),
+                "changed": int(counts.get("changed", 0)),
+                "identical": int(counts.get("identical", 0)),
+                "ignored": int(counts.get("ignored", 0)),
+                "skipped": int(counts.get("skipped", 0)),
+            }
+            for key, value in row_counts.items():
+                totals[key] += value
+            if any(row_counts.values()):
+                rows.append((labels.get(file_name, file_name), row_counts))
+        return totals, rows
+
+    def _import_result_summary(self, counts_by_file: dict[str, dict[str, int]]) -> tuple[str, str]:
+        totals, rows = self._import_result_rows(counts_by_file)
+        headline = f"{totals['new']} neu · {totals['changed']} geändert"
+        if totals["ignored"]:
+            headline += f" · {totals['ignored']} ignoriert"
+        if totals["skipped"]:
+            headline += f" · {totals['skipped']} übersprungen"
+        if totals["identical"]:
+            headline += f" · {totals['identical']} vorhanden"
+        details = "\n".join(
+            f"{label}: {counts['new']} neu, {counts['changed']} geändert, "
+            f"{counts['identical']} vorhanden, {counts['ignored']} ignoriert, {counts['skipped']} übersprungen"
+            for label, counts in rows
+        )
+        return headline, details
+
+    def _show_import_finished_dialog(self, success_text: str, counts_by_file: dict[str, dict[str, int]]) -> None:
+        totals, rows = self._import_result_rows(counts_by_file)
+
+        dlg = QDialog(self)
+        dlg.setObjectName("AppDialog")
+        dlg.setWindowTitle("Import abgeschlossen")
+        dlg.setMinimumWidth(560)
+
+        root = QVBoxLayout(dlg)
+        root.setContentsMargins(18, 18, 18, 18)
+        root.setSpacing(14)
+
+        title = QLabel("Import abgeschlossen")
+        title.setObjectName("DialogTitle")
+        root.addWidget(title)
+
+        subtitle = QLabel(success_text)
+        subtitle.setObjectName("DialogSubtitle")
+        subtitle.setWordWrap(True)
+        root.addWidget(subtitle)
+
+        summary = QFrame(dlg)
+        summary.setObjectName("DialogSection")
+        summary_layout = QGridLayout(summary)
+        summary_layout.setContentsMargins(14, 12, 14, 12)
+        summary_layout.setHorizontalSpacing(20)
+        summary_layout.setVerticalSpacing(8)
+
+        headers = ["Datenbereich", "Neu", "Geändert", "Vorhanden", "Ignoriert", "Übersprungen"]
+        for column, text in enumerate(headers):
+            label = QLabel(text)
+            label.setObjectName("SettingsFieldLabel")
+            if column > 0:
+                label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            summary_layout.addWidget(label, 0, column)
+
+        for row_index, (label_text, counts) in enumerate(rows, start=1):
+            label = QLabel(label_text)
+            label.setObjectName("SettingsHelp")
+            summary_layout.addWidget(label, row_index, 0)
+            for column, key in enumerate(("new", "changed", "identical", "ignored", "skipped"), start=1):
+                value_label = QLabel(str(counts[key]))
+                value_label.setObjectName("SettingsHelp")
+                value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                summary_layout.addWidget(value_label, row_index, column)
+
+        total_row = len(rows) + 1
+        total_label = QLabel("Gesamt")
+        total_label.setObjectName("SettingsFieldLabel")
+        summary_layout.addWidget(total_label, total_row, 0)
+        for column, key in enumerate(("new", "changed", "identical", "ignored", "skipped"), start=1):
+            value_label = QLabel(str(totals[key]))
+            value_label.setObjectName("SettingsFieldLabel")
+            value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            summary_layout.addWidget(value_label, total_row, column)
+
+        root.addWidget(summary)
+
+        if totals["skipped"]:
+            warning = QLabel(
+                "Übersprungene Einträge wurden nicht importiert, weil sie ungültig waren oder auf fehlende Stammdaten verwiesen."
+            )
+            warning.setObjectName("DialogSubtitle")
+            warning.setWordWrap(True)
+            root.addWidget(warning)
+
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+        ok_btn = QPushButton("OK")
+        ok_btn.setObjectName("PrimaryButton")
+        ok_btn.clicked.connect(dlg.accept)
+        buttons.addWidget(ok_btn)
+        root.addLayout(buttons)
+
+        dlg.exec()
+
     def export_project(self) -> None:
         default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
         files = [
@@ -575,55 +763,255 @@ class MainWindow(QMainWindow):
                     json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n",
                     encoding="utf-8",
                 )
-            Toast(self, "Projekt exportiert.", duration_ms=2500).show()
+            summary = self._project_export_summary(export_obj)
+            self._show_export_finished_dialog(
+                out_path,
+                "Projekt exportiert.",
+                summary,
+            )
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
 
-    def import_tiss_room_list(self) -> None:
+    def _project_export_summary(self, export_obj: dict) -> str:
+        labels = [
+            ("raeume.json", "raeume", "Räume"),
+            ("lehrveranstaltungen.json", "lehrveranstaltungen", "LVAs"),
+            ("termine.json", "termine", "Termine"),
+            ("studienrichtungen.json", "studienrichtungen", "Studienrichtungen"),
+            ("freie_tage.json", "freie_tage", "freie Zeiträume"),
+        ]
+        parts = []
+        for file_name, list_key, label in labels:
+            content = export_obj.get(file_name)
+            if not isinstance(content, dict):
+                continue
+            items = content.get(list_key, [])
+            if isinstance(items, list):
+                parts.append(f"{len(items)} {label}")
+        return " · ".join(parts)
+
+    @staticmethod
+    def _import_payload_count(normalized: dict) -> int:
+        total = 0
+        for content in (normalized or {}).values():
+            if isinstance(content, dict):
+                for value in content.values():
+                    if isinstance(value, list):
+                        total += len(value)
+        return total
+
+    @staticmethod
+    def _csv_text(value: Any) -> str:
+        return str(value or "").strip()
+
+    @staticmethod
+    def _csv_int(value: Any) -> int:
+        try:
+            return int(float(str(value or "").strip()))
+        except Exception:
+            return 0
+
+    @staticmethod
+    def _csv_semester_ids(value: Any) -> list[str]:
+        text = str(value or "").strip()
+        if not text:
+            return []
+        ids: list[str] = []
+        for part in (item.strip() for item in re.split(r"[;,/]", text)):
+            if not part:
+                continue
+            if part.casefold() in {"ohne semesterempfehlung", "ohne empfehlung", "none", "null", "-"}:
+                continue
+            semester_id = f"sem{part}" if part.isdigit() else part
+            if semester_id not in ids:
+                ids.append(semester_id)
+        return ids
+
+    @staticmethod
+    def _normalize_csv_header(value: Any) -> str:
+        text = str(value or "").strip().casefold()
+        for src, repl in {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}.items():
+            text = text.replace(src, repl)
+        return re.sub(r"[^a-z0-9]+", "", text)
+
+    @classmethod
+    def _csv_value(cls, row: dict[str, Any], *names: str) -> str:
+        normalized = {cls._normalize_csv_header(key): value for key, value in row.items()}
+        for name in names:
+            value = normalized.get(cls._normalize_csv_header(name))
+            if value is not None:
+                return cls._csv_text(value)
+        return ""
+
+    @classmethod
+    def _import_rooms_from_csv(cls, path: Path) -> dict:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        rooms = []
+        seen = set()
+        for row in rows:
+            room_id = cls._csv_value(row, "id", "raumnummer", "raumnr", "raumcode", "code", "nummer")
+            name = cls._csv_value(row, "name", "raum", "raumname", "bezeichnung", "raumbezeichnung")
+            capacity_text = cls._csv_value(row, "kapazitaet", "kapazität", "plaetze", "plätze", "capacity")
+            if not room_id or not name or not capacity_text or room_id in seen:
+                continue
+            seen.add(room_id)
+            entry = {
+                "id": room_id,
+                "name": name,
+                "kapazitaet": cls._csv_int(capacity_text),
+            }
+            building = cls._csv_value(row, "gebaeude", "gebäude", "gebaeudekuerzel", "gebäudekürzel", "building")
+            address = cls._csv_value(row, "adresse", "anschrift", "address")
+            if building:
+                entry["gebaeude"] = building
+                entry["__catalog_gebaeude"] = building
+            if address:
+                entry["__catalog_adresse"] = address
+            rooms.append(entry)
+        return {"raeume.json": {"raeume": rooms}} if rooms else {}
+
+    @classmethod
+    def _import_lvas_from_csv(cls, path: Path) -> dict:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+        lvas = []
+        seen = set()
+        for row in rows:
+            lva_id = cls._csv_value(row, "id", "lva", "lva nr", "lva-nr", "lva nummer", "nummer")
+            name = cls._csv_value(row, "name", "lehrveranstaltung", "titel", "bezeichnung")
+            if not lva_id or not name or lva_id in seen:
+                continue
+            seen.add(lva_id)
+            teacher_name = cls._csv_value(row, "vortragende_name", "vortragender", "vortragende", "lehrperson", "dozent")
+            teacher_email = cls._csv_value(row, "vortragende_email", "email", "e-mail", "mail")
+            teacher_email = teacher_email.split(";", 1)[0].strip()
+            lvas.append(
+                {
+                    "id": lva_id,
+                    "name": name,
+                    "vortragende": {
+                        "name": teacher_name,
+                        "email": teacher_email,
+                    },
+                    "studiensemester": cls._csv_semester_ids(cls._csv_value(row, "studiensemester", "semester")),
+                    "studienrichtung": cls._csv_value(row, "studienrichtung", "studiengang") or "ETIT",
+                    "ects": cls._csv_value(row, "ects", "credit", "credits"),
+                }
+            )
+        return {"lehrveranstaltungen.json": {"lehrveranstaltungen": lvas}} if lvas else {}
+
+    def _show_import_intro(self) -> bool:
         info = QMessageBox(self)
         info.setIcon(QMessageBox.Information)
-        info.setWindowTitle("TISS-Raumliste importieren")
-        info.setText("Bitte eine Excel-Datei mit Raumdaten auswählen.")
+        info.setWindowTitle("Daten importieren")
+        info.setText("Einzelne Listen oder ein vollständiges Projekt importieren.")
         info.setInformativeText(
-            "Pflichtspalten:\n"
-            "- Raumnummer / Raumcode / ID\n"
-            "- Raum / Raumname / Bezeichnung\n"
-            "- Kapazität / Plätze / Capacity\n\n"
-            "Optional:\n"
-            "- Gebäude / Gebäudekürzel / Building\n"
-            "- Adresse / Anschrift / Address\n\n"
-            "Gebäude wird beim Raum gespeichert und kann später gefiltert werden. "
-            "Adresse wird nur im Importdialog zur Auswahl angezeigt."
+            "Unterstützte Dateien:\n"
+            "- Projektdateien aus dieser App als JSON oder Excel\n"
+            "- Raumlisten als Excel oder CSV\n"
+            "- LVA-Listen als Excel oder CSV\n\n"
+            "Raumlisten benötigen mindestens: Raumnummer, Raumname und Kapazität. Gebäude ist optional.\n"
+            "LVA-Listen benötigen mindestens: LVA-Nr. und Bezeichnung. Optional sind Vortragende, "
+            "E-Mail, ECTS, Studiensemester und Studienrichtung.\n\n"
+            "Nach dem Auswählen erkennt die App den Dateityp und zeigt eine passende Vorschau. "
+            "Neue gültige Einträge werden übernommen. Änderungen an bestehenden Einträgen werden vor dem Import geprüft. "
+            "Einträge mit fehlenden oder ungültigen Stammdaten werden gemeldet und nicht importiert."
         )
         open_btn = QPushButton("Datei wählen")
         info.addButton(QMessageBox.Cancel)
         info.addButton(open_btn, QMessageBox.AcceptRole)
         info.setDefaultButton(open_btn)
         info.exec()
-        if info.clickedButton() != open_btn:
+        return info.clickedButton() == open_btn
+
+    def _detect_import_file(self, path: Path) -> tuple[dict, str, str, bool]:
+        suffix = path.suffix.lower()
+        if suffix == ".json":
+            with path.open(encoding="utf-8-sig") as handle:
+                normalized = normalize_import_payload(json.load(handle))
+            return normalized, "Planungsdaten erkannt", "JSON-Datei mit Projektstruktur aus dieser App.", False
+
+        if suffix == ".xlsx":
+            project_payload = import_project_from_excel(path)
+            if self._import_payload_count(project_payload) > 0:
+                return project_payload, "Planungsdaten erkannt", "Excel-Datei mit Projektstruktur aus dieser App.", False
+            try:
+                room_payload = import_tiss_rooms_from_excel(path)
+            except Exception:
+                room_payload = {}
+            if self._import_payload_count(room_payload) > 0:
+                return (
+                    room_payload,
+                    "Raumliste erkannt",
+                    "Aus der gewählten Excel-Datei erkannte Räume. Gebäude ist optional und kann im nächsten Schritt gefiltert werden.",
+                    True,
+                )
+            lva_payload = import_lvas_from_excel(path)
+            return (
+                lva_payload,
+                "LVA-Liste erkannt",
+                "Aus der gewählten Excel-Datei erkannte LVAs. Erwartete Pflichtspalten: LVA-Nr. und Bezeichnung.",
+                True,
+            )
+
+        if suffix == ".csv":
+            room_payload = self._import_rooms_from_csv(path)
+            if self._import_payload_count(room_payload) > 0:
+                return (
+                    room_payload,
+                    "Raum-CSV erkannt",
+                    "Erkannte Räume aus der CSV-Datei. Erwartete Pflichtspalten: Raumnummer, Raumname und Kapazität. Gebäude ist optional.",
+                    True,
+                )
+            lva_payload = self._import_lvas_from_csv(path)
+            if self._import_payload_count(lva_payload) > 0:
+                return (
+                    lva_payload,
+                    "LVA-CSV erkannt",
+                    "Erkannte LVAs aus der CSV-Datei. Pflichtspalten: LVA-Nr. und Bezeichnung. Optional: Vortragende, E-Mail, ECTS, Studiensemester und Studienrichtung.",
+                    True,
+                )
+            raise ValueError(
+                "CSV-Format nicht erkannt. Räume benötigen Raumnummer, Raumname und Kapazität. "
+                "LVAs benötigen mindestens LVA-Nr. und Bezeichnung."
+            )
+
+        raise ValueError("Dateityp nicht unterstützt. Bitte JSON, XLSX oder CSV wählen.")
+
+    def import_data(self) -> None:
+        if not self._show_import_intro():
             return
 
         fn, _ = QFileDialog.getOpenFileName(
             self,
-            "TISS-Raumliste importieren",
+            "Daten importieren",
             str(self.data_dir),
-            "Excel Files (*.xlsx)",
+            "Importdateien (*.json *.xlsx *.csv);;JSON Files (*.json);;Excel Files (*.xlsx);;CSV Files (*.csv)",
         )
         if not fn:
             return
 
+        path = Path(fn)
         try:
-            normalized = import_tiss_rooms_from_excel(Path(fn))
+            normalized, title, subtitle, needs_selection = self._detect_import_file(path)
         except Exception as e:
-            QMessageBox.warning(self, "TISS-Raumliste importieren", f"Raumliste konnte nicht gelesen werden: {e}")
+            QMessageBox.warning(self, "Import Fehler", f"Importdatei konnte nicht gelesen werden:\n{e}")
             return
 
-        self._select_catalog_import(
-            normalized,
-            title="TISS-Raumliste importieren",
-            subtitle="Aus der gewählten TISS-Excel-Datei erkannte Räume. Gefilterte Auswahl wird anschließend über den normalen Import geprüft.",
-            success_text="TISS-Raumliste importiert.",
-        )
+        if not normalized or self._import_payload_count(normalized) <= 0:
+            QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
+            return
+
+        if needs_selection:
+            self._select_catalog_import(
+                normalized,
+                title=title,
+                subtitle=subtitle + " Die Auswahl wird anschließend über den normalen Import geprüft.",
+                success_text="Daten importiert.",
+            )
+        else:
+            self._run_import_payload(normalized, success_text=f"{title}.")
 
     def import_default_catalog(self) -> None:
         try:
@@ -679,6 +1067,8 @@ class MainWindow(QMainWindow):
                 if imported:
                     imported_any = True
                     dlg.refresh_statuses()
+                    headline, _details = self._import_result_summary(getattr(self, "_last_import_counts", {}))
+                    Toast(self, f"Import: {headline}", duration_ms=3000).show()
             finally:
                 dlg.set_busy(False)
 
@@ -701,9 +1091,7 @@ class MainWindow(QMainWindow):
             return
 
         current_date = self._current_calendar_date()
-        current_semester = semester_from_id(self._semester_id_for_calendar_date(current_date))
-        default_from = current_semester.start if current_semester else current_date - timedelta(days=current_date.weekday())
-        default_to = current_semester.end if current_semester else default_from + timedelta(days=6)
+        default_from, default_to = self._default_teacher_export_range(current_date)
         dlg = TeacherExportDialog(
             lva_options,
             semester_options,
@@ -717,6 +1105,8 @@ class MainWindow(QMainWindow):
         selected_teachers = dlg.selected_teachers()
         selected_semesters = dlg.selected_semester_ids()
         export_format = dlg.selected_export_format()
+        export_term_count = dlg.selected_term_count()
+        export_lva_count = dlg.selected_lva_count_with_terms()
         date_from, date_to = dlg.selected_date_range()
         include_weekend = dlg.selected_include_weekend()
         calendar_slot_minutes = dlg.selected_calendar_slot_minutes()
@@ -774,7 +1164,13 @@ class MainWindow(QMainWindow):
                     date_from=date_from,
                     date_to=date_to,
                 )
-            Toast(self, "Export für Lehrende erstellt.", duration_ms=2500).show()
+            term_label = "Termin" if export_term_count == 1 else "Termine"
+            lva_label = "LVA" if export_lva_count == 1 else "LVAs"
+            self._show_export_finished_dialog(
+                out_path,
+                "Export für Lehrende erstellt.",
+                f"{export_term_count} {term_label} aus {export_lva_count} {lva_label}.",
+            )
         except Exception as e:
             QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export für Lehrende: {e}")
 
@@ -804,39 +1200,16 @@ class MainWindow(QMainWindow):
         dlg = ImportDialog(self, target_dir, normalized, auto_import_new=auto_import_new)
         if dlg.exec() != QDialog.Accepted:
             return False
+        self._last_import_counts = dlg.result_counts
+        self._last_import_reference_warnings = dlg.reference_warnings
         if show_success_toast:
-            Toast(self, success_text, duration_ms=3000).show()
+            self._show_import_finished_dialog(success_text, dlg.result_counts)
         if refresh_after:
             self.refresh_everything()
         return True
 
     def import_project(self) -> None:
-        fn, _ = QFileDialog.getOpenFileName(
-            self,
-            "Projekt importieren",
-            str(self.data_dir),
-            "Excel/JSON Files (*.xlsx *.json);;Excel Files (*.xlsx);;JSON Files (*.json)",
-        )
-        if not fn:
-            return
-
-        in_path = Path(fn)
-        try:
-            if in_path.suffix.lower() == ".xlsx":
-                normalized = import_project_from_excel(in_path)
-            else:
-                with open(fn, encoding="utf-8") as f:
-                    data = json.load(f)
-                normalized = normalize_import_payload(data)
-        except Exception as e:
-            QMessageBox.warning(self, "Import Fehler", f"Fehler beim Lesen der Import-Datei: {e}")
-            return
-
-        if not normalized:
-            QMessageBox.warning(self, "Import Fehler", "Keine importierbaren Daten gefunden.")
-            return
-
-        self._run_import_payload(normalized)
+        self.import_data()
 
     def _setup_docks(self) -> None:
         self.global_filter_dock = GlobalFilterDock(self)
@@ -847,8 +1220,8 @@ class MainWindow(QMainWindow):
         self.date_navigation_dock.setObjectName("dock_date_navigation")
         self.addDockWidget(Qt.TopDockWidgetArea, self.date_navigation_dock)
 
-        self.splitDockWidget(self.global_filter_dock, self.date_navigation_dock, Qt.Horizontal)
-        # QTimer.singleShot(0, self._resize_top_docks_to_content)
+        self._update_top_dock_layout()
+        QTimer.singleShot(0, self._update_top_dock_layout)
 
         self.planner = PlannerWorkspace(
             self,
@@ -890,14 +1263,25 @@ class MainWindow(QMainWindow):
         self.date_navigation_dock.navNext.connect(self._on_nav_next)
         self.date_navigation_dock.previousYearToggled.connect(self.set_previous_year_enabled)
 
-    # def _resize_top_docks_to_content(self) -> None:
-    #     filter_width = self.global_filter_dock.widget().sizeHint().width() + 8
-    #     navigation_width = self.date_navigation_dock.widget().sizeHint().width() + 10
-    #     self.resizeDocks(
-    #         [self.global_filter_dock, self.date_navigation_dock],
-    #         [max(filter_width, self.width() - navigation_width), navigation_width],
-    #         Qt.Horizontal,
-    #     )
+    def _update_top_dock_layout(self) -> None:
+        filter_widget = self.global_filter_dock.widget()
+        navigation_widget = self.date_navigation_dock.widget()
+        if filter_widget is None or navigation_widget is None:
+            return
+
+        navigation_width_hint = (
+            self.date_navigation_dock.preferred_inline_width()
+            if hasattr(self.date_navigation_dock, "preferred_inline_width")
+            else navigation_widget.sizeHint().width()
+        )
+        self.splitDockWidget(self.global_filter_dock, self.date_navigation_dock, Qt.Horizontal)
+        navigation_width = min(navigation_width_hint + 12, max(420, self.width() // 2))
+        filter_width = max(240, self.width() - navigation_width)
+        self.resizeDocks(
+            [self.global_filter_dock, self.date_navigation_dock],
+            [filter_width, navigation_width],
+            Qt.Horizontal,
+        )
 
     def _on_global_filters_changed(self, fs: FilterState) -> None:
         """Apply global filter changes and optionally jump to semester start"""

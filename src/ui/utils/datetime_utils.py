@@ -4,7 +4,7 @@ from PySide6.QtCore import QDate
 
 def fmt_date(d: date | None) -> str:
     if d is None:
-        return "Unassigned"
+        return "Nicht zugewiesen"
     return d.strftime("%d.%m.%Y")
 
 

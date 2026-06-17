@@ -20,6 +20,7 @@ class TerminCard(QFrame):
         ap: bool,
         duration: int = 0,
         name: str = None,
+        gruppe: str = "",
         parent=None,
         zu_besprechen: bool = False,
         besprechungshinweis: str = "",
@@ -69,16 +70,19 @@ class TerminCard(QFrame):
             return l
 
         chips.addWidget(chip(typ, "ChipType"))
-        chips.addWidget(chip(raum, "ChipRoom"))
-        if ap:
-            chips.addWidget(chip("AP", "ChipAP"))
-        if duration > 0:
-            chips.addWidget(chip(f"{duration} min", "ChipDuration"))
+        if str(gruppe or "").strip():
+            chips.addWidget(chip(str(gruppe).strip(), "ChipGroup"))
+        if str(raum or "").strip():
+            chips.addWidget(chip(raum, "ChipRoom"))
+        else:
+            chips.addWidget(chip("Kein Raum", "ChipMissingRoom"))
         if self._zu_besprechen:
             discuss_chip = chip("Zu besprechen", "ChipDiscuss")
             if self._besprechungshinweis:
                 discuss_chip.setToolTip(self._besprechungshinweis)
             chips.addWidget(discuss_chip)
+        # if ap:
+        #     chips.addWidget(chip("Anwesenheitspflicht", "ChipAP"))
 
         chips.addStretch(1)
         root.addLayout(chips)

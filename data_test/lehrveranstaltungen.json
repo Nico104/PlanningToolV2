@@ -10,23 +10,17 @@
       "studiensemester": [
         "sem1"
       ],
-      "studienrichtung": "ETIT",
-      "ects": ""
+      "studienrichtung": "ETIT"
     },
     {
       "id": "370.007",
       "name": "Energieversorgung – Einfluss der PV-Einspeisung",
-      "vortragende": {
-        "name": "",
-        "email": ""
-      },
       "studiensemester": [
         "sem3",
         "qs1",
         "sem1"
       ],
-      "studienrichtung": "ETIT",
-      "ects": ""
+      "studienrichtung": "ETIT"
     },
     {
       "id": "410.101",
@@ -45,954 +39,967 @@
       "ects": "5"
     },
     {
-      "ects": "4.0",
       "id": "363.015",
       "name": "Elektrotechnik 1",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Zeck, Günther Michael",
+        "email": "guenther.zeck@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "guenther.zeck@tuwien.ac.at",
-        "name": "Zeck, Günther Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "1.0",
       "id": "350.002",
       "name": "Orientierung ETIT",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schmid, Silvan",
+        "email": "silvan.schmid@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "silvan.schmid@tuwien.ac.at",
-        "name": "Schmid, Silvan"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "1.0"
     },
     {
-      "ects": "5.0",
       "id": "363.014",
       "name": "Elektrotechnik 1",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Zeck, Günther Michael",
+        "email": "guenther.zeck@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "guenther.zeck@tuwien.ac.at",
-        "name": "Zeck, Günther Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "6.0",
       "id": "101.679",
       "name": "Mathematik 1 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Taghizadeh, Leila",
+        "email": "leila.taghizadeh@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "leila.taghizadeh@tuwien.ac.at",
-        "name": "Taghizadeh, Leila"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "6.0"
     },
     {
-      "ects": "6.0",
       "id": "101.998",
       "name": "Höhere Mathematik 1 bei Quereinstieg",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Nannen, Lothar",
+        "email": "lothar.nannen@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1",
         "qs1"
       ],
-      "vortragende": {
-        "email": "lothar.nannen@tuwien.ac.at",
-        "name": "Nannen, Lothar"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "6.0"
     },
     {
-      "ects": "3.0",
       "id": "101.680",
       "name": "Mathematik 1 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Taghizadeh, Leila",
+        "email": "leila.taghizadeh@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "leila.taghizadeh@tuwien.ac.at",
-        "name": "Taghizadeh, Leila"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "3.0",
       "id": "101.A02",
       "name": "Höhere Mathematik 1 bei Quereinstieg",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Nannen, Lothar",
+        "email": "lothar.nannen@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1",
         "qs1"
       ],
-      "vortragende": {
-        "email": "lothar.nannen@tuwien.ac.at",
-        "name": "Nannen, Lothar"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "2.5",
       "id": "384.193",
       "name": "Digitale Systeme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Bauer, Friedrich",
+        "email": "friedrich.bauer@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "friedrich.bauer@tuwien.ac.at",
-        "name": "Bauer, Friedrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "2.5"
     },
     {
-      "ects": "1.5",
       "id": "384.194",
       "name": "Digitale Systeme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Bauer, Friedrich",
+        "email": "friedrich.bauer@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "friedrich.bauer@tuwien.ac.at",
-        "name": "Bauer, Friedrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "1.5"
     },
     {
-      "ects": "5.0",
       "id": "360.058",
       "name": "Einführung in das wissenschaftliche Programmieren",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Waltl, Michael",
+        "email": "michael.waltl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem1"
       ],
-      "vortragende": {
-        "email": "michael.waltl@tuwien.ac.at",
-        "name": "Waltl, Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "363.016",
       "name": "Elektrotechnik 2",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Zeck, Günther Michael",
+        "email": "guenther.zeck@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "guenther.zeck@tuwien.ac.at",
-        "name": "Zeck, Günther Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "4.0",
       "id": "363.017",
       "name": "Elektrotechnik 2",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Zeck, Günther Michael",
+        "email": "guenther.zeck@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "guenther.zeck@tuwien.ac.at",
-        "name": "Zeck, Günther Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "3.0",
       "id": "366.109",
       "name": "Materialien der Elektrotechnik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schmid, Silvan",
+        "email": "silvan.schmid@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "silvan.schmid@tuwien.ac.at",
-        "name": "Schmid, Silvan"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "6.0",
       "id": "101.682",
       "name": "Mathematik 2 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Taghizadeh, Leila",
+        "email": "leila.taghizadeh@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "leila.taghizadeh@tuwien.ac.at",
-        "name": "Taghizadeh, Leila"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "6.0"
     },
     {
-      "ects": "3.0",
       "id": "101.683",
       "name": "Mathematik 2 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Taghizadeh, Leila",
+        "email": "leila.taghizadeh@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "leila.taghizadeh@tuwien.ac.at",
-        "name": "Taghizadeh, Leila"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "7.0",
       "id": "360.062",
       "name": "Systemnahes Programmieren",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Filipovic, Lado",
+        "email": "lado.filipovic@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem2"
       ],
-      "vortragende": {
-        "email": "lado.filipovic@tuwien.ac.at",
-        "name": "Filipovic, Lado"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "7.0"
     },
     {
-      "ects": "1.0",
       "id": "366.110",
       "name": "Materialien der Elektrotechnik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Fulmek, Paul",
+        "email": "paul.fulmek@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "paul.fulmek@tuwien.ac.at",
-        "name": "Fulmek, Paul"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "1.0"
     },
     {
-      "ects": "4.5",
       "id": "362.129",
       "name": "Halbleiterphysik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Grüneis, Alexander",
+        "email": "alexander.grueneis@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "alexander.grueneis@tuwien.ac.at",
-        "name": "Grüneis, Alexander"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.5"
     },
     {
-      "ects": "4.0",
       "id": "101.685",
       "name": "Mathematik 3 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Szmolyan, Peter",
+        "email": "peter.szmolyan@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "peter.szmolyan@tuwien.ac.at",
-        "name": "Szmolyan, Peter"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "2.0",
       "id": "101.686",
       "name": "Mathematik 3 für ET",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Szmolyan, Peter",
+        "email": "peter.szmolyan@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "peter.szmolyan@tuwien.ac.at",
-        "name": "Szmolyan, Peter"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "2.0"
     },
     {
-      "ects": "4.0",
       "id": "384.173",
       "name": "Mikrocomputer",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Bauer, Friedrich",
+        "email": "friedrich.bauer@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "friedrich.bauer@tuwien.ac.at",
-        "name": "Bauer, Friedrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "4.0",
       "id": "376.045",
       "name": "Neue LVA Nummer: 369.010 Messtechnik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Csencsics, Ernst Karl",
+        "email": "ernst.csencsics@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "ernst.csencsics@tuwien.ac.at",
-        "name": "Csencsics, Ernst Karl"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "4.0",
       "id": "369.010",
       "name": "Messtechnik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Csencsics, Ernst Karl",
+        "email": "ernst.csencsics@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "ernst.csencsics@tuwien.ac.at",
-        "name": "Csencsics, Ernst Karl"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "4.5",
       "id": "387.098",
       "name": "Zeitkontinuierliche Signale und Systeme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Müller, Thomas",
+        "email": "thomas.mueller@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "thomas.mueller@tuwien.ac.at",
-        "name": "Müller, Thomas"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.5"
     },
     {
-      "ects": "3.0",
       "id": "351.018",
       "name": "Technik und Gesellschaft",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Fuchs, Daniela",
+        "email": "daniela.fuchs@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem3"
       ],
-      "vortragende": {
-        "email": "daniela.fuchs@tuwien.ac.at",
-        "name": "Fuchs, Daniela"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "8.0",
       "id": "360.051",
       "name": "Elektrodynamik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Waldhör, Dominic",
+        "email": "dominic.waldhoer@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "dominic.waldhoer@tuwien.ac.at",
-        "name": "Waldhör, Dominic"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "8.0"
     },
     {
-      "ects": "4.0",
       "id": "362.072",
       "name": "Elektronische Bauelemente",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Weber, Walter Michael",
+        "email": "walter.weber@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "walter.weber@tuwien.ac.at",
-        "name": "Weber, Walter Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "2.0",
       "id": "384.996",
       "name": "Mikrocomputer Labor",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Bauer, Friedrich",
+        "email": "friedrich.bauer@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "friedrich.bauer@tuwien.ac.at",
-        "name": "Bauer, Friedrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "2.0"
     },
     {
-      "ects": "4.0",
       "id": "369.012",
       "name": "Schaltungstechnik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schneider-Hornstein, Kerstin",
+        "email": "kerstin.schneider-hornstein@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "kerstin.schneider-hornstein@tuwien.ac.at",
-        "name": "Schneider-Hornstein, Kerstin"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "4.0",
       "id": "389.055",
       "name": "Zeitdiskrete Signale und Systeme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Görtz, Norbert",
+        "email": "norbert.goertz@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "norbert.goertz@tuwien.ac.at",
-        "name": "Görtz, Norbert"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "4.0",
       "id": "376.104",
       "name": "Modellbildung",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Kemmetmüller, Wolfgang",
+        "email": "wolfgang.kemmetmueller@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem4"
       ],
-      "vortragende": {
-        "email": "wolfgang.kemmetmueller@tuwien.ac.at",
-        "name": "Kemmetmüller, Wolfgang"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "5.0",
       "id": "389.232",
       "name": "Wellenausbreitung",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Mecklenbräuker, Christoph",
+        "email": "christoph.mecklenbraeuker@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "christoph.mecklenbraeuker@tuwien.ac.at",
-        "name": "Mecklenbräuker, Christoph"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "3.5",
       "id": "387.096",
       "name": "Photonik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Baltuska, Andrius",
+        "email": "andrius.baltuska@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "andrius.baltuska@tuwien.ac.at",
-        "name": "Baltuska, Andrius"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.5"
     },
     {
-      "ects": "3.0",
       "id": "370.015",
       "name": "Maschinen und Antriebe",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schrödl, Manfred",
+        "email": "manfred.schroedl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "manfred.schroedl@tuwien.ac.at",
-        "name": "Schrödl, Manfred"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "3.0",
       "id": "376.091",
       "name": "Neue LVA Nummer: 369.011 Messtechnik Labor",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Csencsics, Ernst Karl",
+        "email": "ernst.csencsics@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "ernst.csencsics@tuwien.ac.at",
-        "name": "Csencsics, Ernst Karl"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "3.0",
       "id": "369.011",
       "name": "Messtechnik Labor",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Csencsics, Ernst Karl",
+        "email": "ernst.csencsics@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "ernst.csencsics@tuwien.ac.at",
-        "name": "Csencsics, Ernst Karl"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "2.0",
       "id": "362.128",
       "name": "Labor für Halbleiterelektronik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Smoliner, Jürgen",
+        "email": "juergen.smoliner@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "juergen.smoliner@tuwien.ac.at",
-        "name": "Smoliner, Jürgen"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "2.0"
     },
     {
-      "ects": "5.0",
       "id": "376.103",
       "name": "Automatisierung",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Kugi, Andreas",
+        "email": "andreas.kugi@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem5"
       ],
-      "vortragende": {
-        "email": "andreas.kugi@tuwien.ac.at",
-        "name": "Kugi, Andreas"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "3.0",
       "id": "370.103",
       "name": "Elektrische Energiesysteme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Klöckl, Bernd",
+        "email": "bernd.kloeckl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "bernd.kloeckl@tuwien.ac.at",
-        "name": "Klöckl, Bernd"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "3.0",
       "id": "366.071",
       "name": "Sensorik und Sensorsysteme",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schmid, Ulrich",
+        "email": "ulrich.e366.schmid@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "ulrich.e366.schmid@tuwien.ac.at",
-        "name": "Schmid, Ulrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "3.0"
     },
     {
-      "ects": "4.0",
       "id": "389.231",
       "name": "Telekommunikation",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schwarz, Stefan",
+        "email": "stefan.schwarz@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "stefan.schwarz@tuwien.ac.at",
-        "name": "Schwarz, Stefan"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "4.0"
     },
     {
-      "ects": "1.5",
       "id": "366.111",
       "name": "Kommunikation und Präsentation",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Lendl, Peter",
+        "email": "peter.lendl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "peter.lendl@tuwien.ac.at",
-        "name": "Lendl, Peter"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "1.5"
     },
     {
-      "ects": "10.0",
       "id": "362.133",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Hobler, Gerhard",
+        "email": "gerhard.hobler@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "gerhard.hobler@tuwien.ac.at",
-        "name": "Hobler, Gerhard"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "370.005",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schrödl, Manfred",
+        "email": "manfred.schroedl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "manfred.schroedl@tuwien.ac.at",
-        "name": "Schrödl, Manfred"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "384.997",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Jantsch, Axel",
+        "email": "axel.jantsch@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "axel.jantsch@tuwien.ac.at",
-        "name": "Jantsch, Axel"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "354.995",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Arthaber, Holger",
+        "email": "holger.arthaber@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "holger.arthaber@tuwien.ac.at",
-        "name": "Arthaber, Holger"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "360.220",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Kosina, Hans",
+        "email": "hans.kosina@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "hans.kosina@tuwien.ac.at",
-        "name": "Kosina, Hans"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "366.072",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schmid, Ulrich",
+        "email": "ulrich.e366.schmid@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "ulrich.e366.schmid@tuwien.ac.at",
-        "name": "Schmid, Ulrich"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "376.038",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Kugi, Andreas",
+        "email": "andreas.kugi@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "andreas.kugi@tuwien.ac.at",
-        "name": "Kugi, Andreas"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "387.064",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Sorokin, Evgeni",
+        "email": "evgeni.sorokin@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "evgeni.sorokin@tuwien.ac.at",
-        "name": "Sorokin, Evgeni"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "389.139",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Görtz, Norbert",
+        "email": "norbert.goertz@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "norbert.goertz@tuwien.ac.at",
-        "name": "Görtz, Norbert"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "384.167",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Wilker, Stefan",
+        "email": "stefan.wilker@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "stefan.wilker@tuwien.ac.at",
-        "name": "Wilker, Stefan"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "101.938",
       "name": "Bachelorarbeit mit Seminar - Ausgewählte Kapitel aus Mathematik",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Hollaus, Karl",
+        "email": "karl.hollaus@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "karl.hollaus@tuwien.ac.at",
-        "name": "Hollaus, Karl"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "363.001",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Kaniusas, Eugenijus",
+        "email": "eugenijus.kaniusas@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "eugenijus.kaniusas@tuwien.ac.at",
-        "name": "Kaniusas, Eugenijus"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "360.054",
       "name": "Bachelorarbeit mit Seminar",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Waltl, Michael",
+        "email": "michael.waltl@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "michael.waltl@tuwien.ac.at",
-        "name": "Waltl, Michael"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "10.0",
       "id": "369.031",
       "name": "Bachelorarbeit",
-      "studienrichtung": "ETIT",
+      "vortragende": {
+        "name": "Schitter, Georg",
+        "email": "georg.schitter@tuwien.ac.at"
+      },
       "studiensemester": [
         "sem6"
       ],
-      "vortragende": {
-        "email": "georg.schitter@tuwien.ac.at",
-        "name": "Schitter, Georg"
-      }
+      "studienrichtung": "ETIT",
+      "ects": "10.0"
     },
     {
-      "ects": "5.0",
       "id": "101.440",
       "name": "Fachvertiefung - Mathematik (Ausgewählte Kapitel)",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "karl.hollaus@tuwien.ac.at",
-        "name": "Hollaus, Karl"
-      }
+        "name": "Hollaus, Karl",
+        "email": "karl.hollaus@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "369.014",
       "name": "Fachvertiefung - Computergesteuerte Messsysteme - Virtuelle Instrumentierung",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "michael.hofbauer@tuwien.ac.at",
-        "name": "Hofbauer, Michael"
-      }
+        "name": "Hofbauer, Michael",
+        "email": "michael.hofbauer@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "360.222",
       "name": "Fachvertiefung - Numerische Aspekte der Mikrostruktursimulation",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "hajdin.ceric@tuwien.ac.at",
-        "name": "Ceric, Hajdin"
-      }
+        "name": "Ceric, Hajdin",
+        "email": "hajdin.ceric@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "362.136",
       "name": "Fachvertiefung - Mikroelektronik-Bauelemente, Labor",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "juergen.smoliner@tuwien.ac.at",
-        "name": "Smoliner, Jürgen"
-      }
+        "name": "Smoliner, Jürgen",
+        "email": "juergen.smoliner@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "362.135",
       "name": "Fachvertiefung - Nanoelektronik und Informationstechnologie",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "gerhard.hobler@tuwien.ac.at",
-        "name": "Hobler, Gerhard"
-      }
+        "name": "Hobler, Gerhard",
+        "email": "gerhard.hobler@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "362.138",
       "name": "Fachvertiefung - Biophysik",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "klaus.becker@tuwien.ac.at",
-        "name": "Becker, Klaus"
-      }
+        "name": "Becker, Klaus",
+        "email": "klaus.becker@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "366.074",
       "name": "Fachvertiefung - Mikrosensortechnologie",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "ulrich.e366.schmid@tuwien.ac.at",
-        "name": "Schmid, Ulrich"
-      }
+        "name": "Schmid, Ulrich",
+        "email": "ulrich.e366.schmid@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "366.078",
       "name": "Fachvertiefung - Wirtschaft und Technik",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "peter.lendl@tuwien.ac.at",
-        "name": "Lendl, Peter"
-      }
+        "name": "Lendl, Peter",
+        "email": "peter.lendl@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "372.750",
       "name": "Fachvertiefung - Antriebstechnik",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "matthias.hofer@tuwien.ac.at",
-        "name": "Hofer, Matthias"
-      }
+        "name": "Hofer, Matthias",
+        "email": "matthias.hofer@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "376.042",
       "name": "Fachvertiefung - Automatisierungs- und Regelungstechnik",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "cedric.jung@tuwien.ac.at",
-        "name": "Jung, Cedric Daniel"
-      }
+        "name": "Jung, Cedric Daniel",
+        "email": "cedric.jung@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "376.041",
       "name": "Neue LVA Nummer: 369.013 Fachvertiefung - Mechatronik und Instrumentierung",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "georg.schitter@tuwien.ac.at",
-        "name": "Schitter, Georg"
-      }
+        "name": "Schitter, Georg",
+        "email": "georg.schitter@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "369.013",
       "name": "Fachvertiefung - Mechatronik und Instrumentierung",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "georg.schitter@tuwien.ac.at",
-        "name": "Schitter, Georg"
-      }
+        "name": "Schitter, Georg",
+        "email": "georg.schitter@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "376.040",
       "name": "Fachvertiefung - Robotik und Bildverarbeitung",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "markus.vincze@tuwien.ac.at",
-        "name": "Vincze, Markus"
-      }
+        "name": "Vincze, Markus",
+        "email": "markus.vincze@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "384.141",
       "name": "Fachvertiefung - Softwareentwicklung",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "benedikt.herold@tuwien.ac.at",
-        "name": "Herold, Benedikt"
-      }
+        "name": "Herold, Benedikt",
+        "email": "benedikt.herold@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "384.139",
       "name": "Fachvertiefung - Computersysteme",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "axel.jantsch@tuwien.ac.at",
-        "name": "Jantsch, Axel"
-      }
+        "name": "Jantsch, Axel",
+        "email": "axel.jantsch@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "387.066",
       "name": "Fachvertiefung - Photonik Labor",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "evgeni.sorokin@tuwien.ac.at",
-        "name": "Sorokin, Evgeni"
-      }
+        "name": "Sorokin, Evgeni",
+        "email": "evgeni.sorokin@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "389.141",
       "name": "Fachvertiefung - Telekommunikation",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "christoph.mecklenbraeuker@tuwien.ac.at",
-        "name": "Mecklenbräuker, Christoph"
-      }
+        "name": "Mecklenbräuker, Christoph",
+        "email": "christoph.mecklenbraeuker@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "389.142",
       "name": "Fachvertiefung - Signale und Systeme",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "bernhard.wess@tuwien.ac.at",
-        "name": "Wess, Bernhard"
-      }
+        "name": "Wess, Bernhard",
+        "email": "bernhard.wess@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "389.143",
       "name": "Fachvertiefung - Elektromagnetische Felder und Wellen",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "walter.ehrlich-schupita@tuwien.ac.at",
-        "name": "Ehrlich-Schupita, Walter"
-      }
+        "name": "Ehrlich-Schupita, Walter",
+        "email": "walter.ehrlich-schupita@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
     },
     {
-      "ects": "5.0",
       "id": "360.065",
       "name": "Fachvertiefung - Angewandte Halbleiterphysik",
-      "studienrichtung": "ETIT",
-      "studiensemester": [],
       "vortragende": {
-        "email": "michael.waltl@tuwien.ac.at",
-        "name": "Waltl, Michael"
-      }
+        "name": "Waltl, Michael",
+        "email": "michael.waltl@tuwien.ac.at"
+      },
+      "studiensemester": [],
+      "studienrichtung": "ETIT",
+      "ects": "5.0"
+    },
+    {
+      "id": "TMP.001",
+      "name": "Import-Test LVA",
+      "vortragende": {
+        "name": "Test Lehrperson",
+        "email": "test.lehrperson@example.test"
+      },
+      "studiensemester": [
+        "sem1"
+      ],
+      "studienrichtung": "",
+      "ects": 3
     }
   ]
 }

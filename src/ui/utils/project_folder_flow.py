@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout
 
 from ...services.data_folder_service import initialize_missing_project_files, inspect_project_folder
 
@@ -18,26 +18,70 @@ def project_part_labels(file_names: list[str]) -> list[str]:
     return [PROJECT_PART_LABELS.get(file_name, file_name) for file_name in file_names]
 
 
-def _details(target_dir: Path, inspection) -> str:
-    parts = [f"Projektordner:\n{target_dir}"]
-    if inspection.valid_files:
-        parts.append("Bereits vorbereitet:\n- " + "\n- ".join(project_part_labels(inspection.valid_files)))
-    if inspection.missing_files:
-        parts.append("Wird vorbereitet:\n- " + "\n- ".join(project_part_labels(inspection.missing_files)))
-    return "\n\n".join(parts)
+def _add_list_section(layout: QVBoxLayout, title: str, items: list[str], parent) -> None:
+    if not items:
+        return
+    label = QLabel(title, parent)
+    label.setObjectName("DialogSectionTitle")
+    layout.addWidget(label)
+    for item in items:
+        row = QLabel(f"- {item}", parent)
+        row.setObjectName("SettingsHelp")
+        layout.addWidget(row)
 
 
 def _confirm(parent, *, title: str, text: str, target_dir: Path, inspection, confirm_label: str) -> bool:
-    msg = QMessageBox(parent)
-    msg.setIcon(QMessageBox.Question)
-    msg.setWindowTitle(title)
-    msg.setText(text)
-    msg.setInformativeText(_details(target_dir, inspection))
-    ok_btn = msg.addButton(confirm_label, QMessageBox.AcceptRole)
-    msg.addButton("Abbrechen", QMessageBox.RejectRole)
-    msg.setDefaultButton(ok_btn)
-    msg.exec()
-    return msg.clickedButton() == ok_btn
+    dlg = QDialog(parent)
+    dlg.setObjectName("AppDialog")
+    dlg.setWindowTitle(title)
+    dlg.setModal(True)
+    dlg.setMinimumWidth(520)
+
+    root = QVBoxLayout(dlg)
+    root.setContentsMargins(18, 16, 18, 14)
+    root.setSpacing(12)
+
+    title_label = QLabel(title, dlg)
+    title_label.setObjectName("DialogTitle")
+    root.addWidget(title_label)
+
+    subtitle = QLabel(text, dlg)
+    subtitle.setObjectName("DialogSubtitle")
+    subtitle.setWordWrap(True)
+    root.addWidget(subtitle)
+
+    section = QFrame(dlg)
+    section.setObjectName("DialogSection")
+    section_layout = QVBoxLayout(section)
+    section_layout.setContentsMargins(14, 12, 14, 14)
+    section_layout.setSpacing(6)
+
+    folder_label = QLabel("Projektordner", section)
+    folder_label.setObjectName("DialogSectionTitle")
+    section_layout.addWidget(folder_label)
+    folder_path = QLabel(str(target_dir), section)
+    folder_path.setObjectName("SettingsHelp")
+    folder_path.setWordWrap(True)
+    section_layout.addWidget(folder_path)
+
+    _add_list_section(section_layout, "Bereits vorhanden", project_part_labels(inspection.valid_files), section)
+    _add_list_section(section_layout, "Wird vorbereitet", project_part_labels(inspection.missing_files), section)
+    root.addWidget(section)
+
+    buttons = QHBoxLayout()
+    buttons.addStretch(1)
+    cancel_btn = QPushButton("Abbrechen", dlg)
+    cancel_btn.setObjectName("SecondaryButton")
+    cancel_btn.clicked.connect(dlg.reject)
+    ok_btn = QPushButton(confirm_label, dlg)
+    ok_btn.setObjectName("PrimaryButton")
+    ok_btn.clicked.connect(dlg.accept)
+    buttons.addWidget(cancel_btn)
+    buttons.addWidget(ok_btn)
+    root.addLayout(buttons)
+
+    ok_btn.setDefault(True)
+    return dlg.exec() == QDialog.Accepted
 
 
 def _show_invalid(parent, invalid_files: list[str]) -> None:

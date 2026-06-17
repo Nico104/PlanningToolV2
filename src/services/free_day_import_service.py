@@ -67,16 +67,12 @@ class FreeDayCandidate:
         return self.start != self.end
 
     def to_item(self) -> dict[str, Any]:
-        item: dict[str, Any] = {
+        return {
             "beschreibung": self.beschreibung,
             "typ": self.typ,
+            "von_datum": self.start.isoformat(),
+            "bis_datum": self.end.isoformat(),
         }
-        if self.is_range:
-            item["von_datum"] = self.start.isoformat()
-            item["bis_datum"] = self.end.isoformat()
-        else:
-            item["datum"] = self.start.isoformat()
-        return item
 
 
 @dataclass(frozen=True)
@@ -335,9 +331,6 @@ def _localized_name(names: Any, language: str) -> str:
 
 def _item_range(item: dict[str, Any]) -> tuple[date, date] | None:
     try:
-        if item.get("datum"):
-            parsed = _parse_iso_date(str(item["datum"]))
-            return parsed, parsed
         if item.get("von_datum") and item.get("bis_datum"):
             start = _parse_iso_date(str(item["von_datum"]))
             end = _parse_iso_date(str(item["bis_datum"]))

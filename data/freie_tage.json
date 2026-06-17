@@ -10,14 +10,16 @@
     {
       "beschreibung": "Neujahr",
       "typ": "Feiertag",
-      "datum": "2026-01-01",
-      "id": "FT002"
+      "id": "FT002",
+      "von_datum": "2026-01-01",
+      "bis_datum": "2026-01-01"
     },
     {
       "beschreibung": "Heilige drei Könige",
       "typ": "Feiertag",
-      "datum": "2026-01-06",
-      "id": "FT003"
+      "id": "FT003",
+      "von_datum": "2026-01-06",
+      "bis_datum": "2026-01-06"
     },
     {
       "beschreibung": "Osterferien",
@@ -29,44 +31,51 @@
     {
       "beschreibung": "Ostermontag",
       "typ": "Feiertag",
-      "datum": "2026-04-06",
-      "id": "FT005"
+      "id": "FT005",
+      "von_datum": "2026-04-06",
+      "bis_datum": "2026-04-06"
     },
     {
       "beschreibung": "Staatsfeiertag",
       "typ": "Feiertag",
-      "datum": "2026-05-01",
-      "id": "FT006"
+      "id": "FT006",
+      "von_datum": "2026-05-01",
+      "bis_datum": "2026-05-01"
     },
     {
       "beschreibung": "Christi Himmelfahrt",
       "typ": "Feiertag",
-      "datum": "2026-05-14",
-      "id": "FT007"
+      "id": "FT007",
+      "von_datum": "2026-05-14",
+      "bis_datum": "2026-05-14"
     },
     {
       "beschreibung": "Rektorstag",
       "typ": "Vorlesungsfrei",
-      "datum": "2026-05-15",
-      "id": "FT008"
+      "id": "FT008",
+      "von_datum": "2026-05-15",
+      "bis_datum": "2026-05-15"
     },
     {
       "beschreibung": "Pfingstmontag",
       "typ": "Feiertag",
-      "datum": "2026-05-25",
-      "id": "FT009"
+      "id": "FT009",
+      "von_datum": "2026-05-25",
+      "bis_datum": "2026-05-25"
     },
     {
       "beschreibung": "Pfingstferien",
       "typ": "Vorlesungsfrei",
-      "datum": "2026-05-26",
-      "id": "FT010"
+      "id": "FT010",
+      "von_datum": "2026-05-26",
+      "bis_datum": "2026-05-26"
     },
     {
       "beschreibung": "Fronleichnam",
       "typ": "Feiertag",
-      "datum": "2026-06-04",
-      "id": "FT011"
+      "id": "FT011",
+      "von_datum": "2026-06-04",
+      "bis_datum": "2026-06-04"
     },
     {
       "beschreibung": "Sommerferien",
@@ -78,32 +87,37 @@
     {
       "beschreibung": "Mariä Himmelfahrt",
       "typ": "Feiertag",
-      "datum": "2026-08-15",
-      "id": "FT013"
+      "id": "FT013",
+      "von_datum": "2026-08-15",
+      "bis_datum": "2026-08-15"
     },
     {
       "beschreibung": "Nationalfeiertag",
       "typ": "Feiertag",
-      "datum": "2026-10-26",
-      "id": "FT014"
+      "id": "FT014",
+      "von_datum": "2026-10-26",
+      "bis_datum": "2026-10-26"
     },
     {
       "beschreibung": "Allerheiligen",
       "typ": "Feiertag",
-      "datum": "2026-11-01",
-      "id": "FT015"
+      "id": "FT015",
+      "von_datum": "2026-11-01",
+      "bis_datum": "2026-11-01"
     },
     {
       "beschreibung": "Allerseelen",
       "typ": "Vorlesungsfrei",
-      "datum": "2026-11-02",
-      "id": "FT016"
+      "id": "FT016",
+      "von_datum": "2026-11-02",
+      "bis_datum": "2026-11-02"
     },
     {
       "beschreibung": "Mariä Empfängnis",
       "typ": "Feiertag",
-      "datum": "2026-12-08",
-      "id": "FT017"
+      "id": "FT017",
+      "von_datum": "2026-12-08",
+      "bis_datum": "2026-12-08"
     },
     {
       "beschreibung": "Weihnachtsferien",
@@ -115,14 +129,16 @@
     {
       "beschreibung": "Christtag",
       "typ": "Feiertag",
-      "datum": "2026-12-25",
-      "id": "FT019"
+      "id": "FT019",
+      "von_datum": "2026-12-25",
+      "bis_datum": "2026-12-25"
     },
     {
       "beschreibung": "Stefanitag",
       "typ": "Feiertag",
-      "datum": "2026-12-26",
-      "id": "FT020"
+      "id": "FT020",
+      "von_datum": "2026-12-26",
+      "bis_datum": "2026-12-26"
     }
   ]
 }

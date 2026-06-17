@@ -16,11 +16,11 @@
         "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
     },
     {
-        "name": "Vortragenden-Konflikt",
+        "name": "Lehrpersonen-Konflikt",
         "key": "lecturer_conflict",
         "enabled": true,
         "type": "conflict",
-        "description": "Zwei Termine unterschiedlicher LVAs mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten.",
+        "description": "Zwei nicht-gruppierte Termine unterschiedlicher LVAs mit derselben hinterlegten Lehrperson, am selben Tag, mit sich überschneidenden Zeiten.",
         "message_template": "{left_lva} ({left_room}) ↔ {right_lva} ({right_room})"
     },
     {

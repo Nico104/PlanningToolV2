@@ -3,7 +3,7 @@ from datetime import date, time
 from functools import partial
 from typing import List
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
     QScrollArea, QMenu, QFrame, QToolButton, QLineEdit, QLabel
@@ -35,6 +35,7 @@ class TermineDock(QDockWidget):
         self._raeume: List[Raum] = []
         self._search_query = ""
         self._read_only = False
+        self._init_group_states()
 
         header = QWidget(self)
         header.setObjectName("HeaderBar")
@@ -100,7 +101,6 @@ class TermineDock(QDockWidget):
         self._lvas = list(lvas)
         self._raeume = list(raeume)
 
-        self._init_group_states()
         self._build_cards()
 
 
@@ -199,7 +199,10 @@ class TermineDock(QDockWidget):
             # Collapsible group header
             group_key = str(lva_id)
             if group_key not in self._group_states:
-                self._group_states[group_key] = True  # default expanded
+                self._group_states[group_key] = False
+            if self._group_states[group_key]:
+                for key in list(self._group_states.keys()):
+                    self._group_states[key] = key == group_key
 
 
             # Count assigned/total termine in group
@@ -218,15 +221,19 @@ class TermineDock(QDockWidget):
             header_btn.setMinimumHeight(28)
             header_btn.setMinimumWidth(120)
 
-            group_cards = []
-            def toggle_group(checked, cards, btn, key):
+            def toggle_group(checked, key):
+                scroll_value = self.scroll.verticalScrollBar().value()
+                for existing_key in list(self._group_states.keys()):
+                    self._group_states[existing_key] = False
                 self._group_states[key] = checked
-                btn.setArrowType(Qt.DownArrow if checked else Qt.RightArrow)
-                for card in cards:
-                    card.setVisible(checked)
+                self._build_cards()
+                QTimer.singleShot(0, lambda: self.scroll.verticalScrollBar().setValue(scroll_value))
 
-            header_btn.toggled.connect(partial(toggle_group, cards=group_cards, btn=header_btn, key=group_key))
+            header_btn.toggled.connect(partial(toggle_group, key=group_key))
             self.list_layout.insertWidget(self.list_layout.count() - 1, header_btn)
+
+            if not self._group_states[group_key]:
+                continue
 
             for t in lva_groups[lva_id]:
                 raum = next((r for r in self._raeume if r.id == t.raum_id), None)
@@ -253,6 +260,7 @@ class TermineDock(QDockWidget):
                     ap=t.anwesenheitspflicht,
                     duration=t.duration,
                     name=getattr(t, "name", None),
+                    gruppe=(t.gruppe.name if t.gruppe else ""),
                     parent=self.container,
                     zu_besprechen=bool(getattr(t, "zu_besprechen", False)),
                     besprechungshinweis=str(getattr(t, "besprechungshinweis", "") or ""),
@@ -262,8 +270,6 @@ class TermineDock(QDockWidget):
                     card.set_read_only(self._read_only)
                 card.double_clicked.connect(self.termin_double_clicked.emit)
                 card.right_clicked.connect(self._open_menu)
-                card.setVisible(self._group_states[group_key])
-                group_cards.append(card)
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)
 
 

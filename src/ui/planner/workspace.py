@@ -168,7 +168,9 @@ class PlannerWorkspace(QWidget):
 
 
     def reload_and_refresh_everything(self) -> None:
-        self.refresh(emit=True)
+        self.refresh(emit=False)
+        if callable(self.on_data_changed):
+            self.on_data_changed()
 
     def _apply_planner_table_palette(self, table: QTableWidget) -> None:
         pal = QPalette(table.palette())

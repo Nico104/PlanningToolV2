@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QRadioButton,
+    QFrame,
     QTableWidget,
     QTableWidgetItem,
     QTabWidget,
@@ -72,6 +73,13 @@ class SemesterToolsDialog(QDialog):
         title = QLabel("Semester-Werkzeuge", self)
         title.setObjectName("SemesterToolsTitle")
         root.addWidget(title)
+        subtitle = QLabel(
+            "Termine semesterweise kopieren oder aus einem Semester entfernen.",
+            self,
+        )
+        subtitle.setObjectName("SemesterToolsSubtitle")
+        subtitle.setWordWrap(True)
+        root.addWidget(subtitle)
 
         tabs = QTabWidget(self)
         tabs.setObjectName("SemesterToolsTabs")
@@ -104,11 +112,16 @@ class SemesterToolsDialog(QDialog):
         layout.setContentsMargins(0, 14, 0, 0)
         layout.setSpacing(12)
 
+        intro = QLabel("Ausgewählte LVAs aus einem Quellsemester in ein Zielsemester kopieren.", self)
+        intro.setObjectName("SemesterToolsHelp")
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
         controls = QFormLayout()
         controls.setContentsMargins(0, 0, 0, 0)
         controls.setHorizontalSpacing(14)
         controls.setVerticalSpacing(10)
-        controls.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        controls.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.copy_source_selector = SemesterSelector(self, include_all=False)
         self.copy_target_selector = SemesterSelector(self, include_all=False)
@@ -116,12 +129,12 @@ class SemesterToolsDialog(QDialog):
         self.copy_target_selector.semesterChanged.connect(self._refresh_copy_summary)
         controls.addRow("Quelle:", self.copy_source_selector)
         controls.addRow("Ziel:", self.copy_target_selector)
-        layout.addLayout(controls)
+        layout.addWidget(self._section("Quelle und Ziel", controls))
 
         mode_row = QHBoxLayout()
         mode_row.setSpacing(12)
         self.mode_group = QButtonGroup(self)
-        self.mode_week_rb = QRadioButton("Gleiche Semesterwoche", self)
+        self.mode_week_rb = QRadioButton("Gleiche Position im Semester", self)
         self.mode_year_rb = QRadioButton("Gleicher Kalendertag", self)
         self.mode_week_rb.setChecked(True)
         self.mode_group.addButton(self.mode_week_rb)
@@ -130,14 +143,22 @@ class SemesterToolsDialog(QDialog):
         mode_row.addWidget(self.mode_week_rb)
         mode_row.addWidget(self.mode_year_rb)
         mode_row.addStretch(1)
-        layout.addLayout(mode_row)
+        mode_help = QLabel("Gleiche Position im Semester übernimmt den gleichen n-ten Wochentag seit Semesterbeginn, z. B. 2. Dienstag zu 2. Dienstag. Gleicher Kalendertag verschiebt das Datum um ein Jahr.", self)
+        mode_help.setObjectName("SemesterToolsHelp")
+        mode_help.setWordWrap(True)
+        mode_layout = QVBoxLayout()
+        mode_layout.setContentsMargins(0, 0, 0, 0)
+        mode_layout.setSpacing(8)
+        mode_layout.addLayout(mode_row)
+        mode_layout.addWidget(mode_help)
+        layout.addWidget(self._section("Datumsübernahme", mode_layout))
 
         tools = QHBoxLayout()
         tools.setSpacing(8)
         self.copy_summary = QLabel(self)
         self.copy_summary.setObjectName("SemesterToolsSummary")
         tools.addWidget(self.copy_summary, 1)
-        layout.addLayout(tools)
+        layout.addWidget(self._section("Auswahl", tools))
 
         self.copy_table = self._new_table(["", "LVA", "Typ", "Termine"])
         self.copy_table.itemChanged.connect(self._refresh_copy_summary)
@@ -145,7 +166,7 @@ class SemesterToolsDialog(QDialog):
 
         actions = QHBoxLayout()
         actions.addStretch(1)
-        self.copy_btn = QPushButton("Kopieren", self)
+        self.copy_btn = QPushButton("Ausgewählte Termine kopieren", self)
         self.copy_btn.setObjectName("PrimaryButton")
         self.copy_btn.clicked.connect(self._accept_copy)
         actions.addWidget(self.copy_btn)
@@ -159,20 +180,27 @@ class SemesterToolsDialog(QDialog):
         layout.setContentsMargins(0, 14, 0, 0)
         layout.setSpacing(12)
 
+        intro = QLabel("Alle Termine des gewählten Semesters werden zur Kontrolle aufgelistet.", self)
+        intro.setObjectName("SemesterToolsHelp")
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
         controls = QFormLayout()
         controls.setContentsMargins(0, 0, 0, 0)
         controls.setHorizontalSpacing(14)
         controls.setVerticalSpacing(10)
-        controls.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        controls.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.clear_selector = SemesterSelector(self, include_all=False)
         self.clear_selector.semesterChanged.connect(self._refresh_clear_table)
         controls.addRow("Semester:", self.clear_selector)
-        layout.addLayout(controls)
+        layout.addWidget(self._section("Semester", controls))
 
         self.clear_summary = QLabel(self)
         self.clear_summary.setObjectName("SemesterToolsSummary")
-        layout.addWidget(self.clear_summary)
+        summary_layout = QHBoxLayout()
+        summary_layout.addWidget(self.clear_summary)
+        layout.addWidget(self._section("Betroffene Termine", summary_layout))
 
         self.clear_table = self._new_table(["LVA", "Typ", "Termine"])
         self.clear_table.setSelectionMode(QAbstractItemView.NoSelection)
@@ -180,13 +208,25 @@ class SemesterToolsDialog(QDialog):
 
         actions = QHBoxLayout()
         actions.addStretch(1)
-        self.clear_btn = QPushButton("Termine löschen", self)
-        self.clear_btn.setObjectName("PrimaryButton")
+        self.clear_btn = QPushButton("Termine aus Semester löschen", self)
+        self.clear_btn.setObjectName("DangerButton")
         self.clear_btn.clicked.connect(self._accept_clear)
         actions.addWidget(self.clear_btn)
         layout.addLayout(actions)
 
         return tab
+
+    def _section(self, title: str, content_layout) -> QFrame:
+        section = QFrame(self)
+        section.setObjectName("SemesterToolsSection")
+        layout = QVBoxLayout(section)
+        layout.setContentsMargins(14, 12, 14, 14)
+        layout.setSpacing(10)
+        label = QLabel(title, self)
+        label.setObjectName("SemesterToolsSectionTitle")
+        layout.addWidget(label)
+        layout.addLayout(content_layout)
+        return section
 
     def _new_table(self, headers: list[str]) -> QTableWidget:
         table = QTableWidget(0, len(headers), self)

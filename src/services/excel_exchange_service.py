@@ -70,7 +70,7 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
     "freie_tage.json": {
         "sheet": "FreieTage",
         "list_key": "freie_tage",
-        "columns": ["id", "typ", "beschreibung", "datum", "von_datum", "bis_datum"],
+        "columns": ["id", "typ", "beschreibung", "von_datum", "bis_datum"],
     },
 }
 
@@ -98,6 +98,7 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
         "LVA": "id",
         "LVA-Name": "name",
         "Lehrveranstaltung": "name",
+        "Bezeichnung": "name",
         "Vortragende": "vortragende.name",
         "Vortragende Name": "vortragende.name",
         "Lehrperson": "vortragende.name",
@@ -111,6 +112,8 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
         "Raumnummer": "id",
         "Raum-Nr": "id",
         "Raum": "name",
+        "Raumname": "name",
+        "Bezeichnung": "name",
         "Kapazität": "kapazitaet",
         "Kapazitaet": "kapazitaet",
         "Gebäude": "gebaeude",
@@ -171,6 +174,7 @@ class LvaExportOption:
     teacher_email: str
     term_count: int
     semester_term_counts: Dict[str, int] = field(default_factory=dict)
+    term_dates_by_semester: Dict[str, Tuple[date, ...]] = field(default_factory=dict)
 
     def counts_for_semesters(self, semester_ids: Optional[Iterable[str]]) -> tuple[int, int]:
         if semester_ids is None:
@@ -178,6 +182,28 @@ class LvaExportOption:
 
         selected_ids = {_safe_text(item) for item in semester_ids}
         term_count = sum(int(self.semester_term_counts.get(semester_id, 0)) for semester_id in selected_ids)
+        return (1 if term_count > 0 else 0), term_count
+
+    def counts_for_filters(
+        self,
+        semester_ids: Optional[Iterable[str]],
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
+    ) -> tuple[int, int]:
+        if date_from is None and date_to is None:
+            return self.counts_for_semesters(semester_ids)
+
+        selected_ids = None if semester_ids is None else {_safe_text(item) for item in semester_ids}
+        term_count = 0
+        for semester_id, dates in self.term_dates_by_semester.items():
+            if selected_ids is not None and semester_id not in selected_ids:
+                continue
+            for value in dates:
+                if date_from is not None and value < date_from:
+                    continue
+                if date_to is not None and value > date_to:
+                    continue
+                term_count += 1
         return (1 if term_count > 0 else 0), term_count
 
 
@@ -395,6 +421,17 @@ def _parse_list(value: Any) -> List[str]:
     return [p.strip() for p in txt.split(";") if p.strip()]
 
 
+def _normalize_studiensemester_ids(value: Any) -> List[str]:
+    ids: List[str] = []
+    for item in _parse_list(value):
+        if item.casefold() in {"ohne semesterempfehlung", "ohne empfehlung", "none", "null", "-"}:
+            continue
+        semester_id = f"sem{item}" if item.isdigit() else item
+        if semester_id not in ids:
+            ids.append(semester_id)
+    return ids
+
+
 def _parse_series_exceptions(value: Any) -> List[Dict[str, Any]]:
     if value is None or value == "":
         return []
@@ -497,7 +534,7 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
             entry["kapazitaet"] = 0 if val is None else val
     elif file_name == "lehrveranstaltungen.json":
         entry.pop("typ", None)
-        entry["studiensemester"] = _parse_list(entry.get("studiensemester"))
+        entry["studiensemester"] = _normalize_studiensemester_ids(entry.get("studiensemester"))
     elif file_name == "termine.json":
         entry["notiz"] = str(entry.get("notiz", ""))
         entry["zu_besprechen"] = _parse_bool(entry.get("zu_besprechen"))
@@ -538,17 +575,12 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
     elif file_name == "freie_tage.json":
         if not str(entry.get("id", "")).strip():
             entry.pop("id", None)
-        datum = str(entry.get("datum", "")).strip()
         von = str(entry.get("von_datum", "")).strip()
         bis = str(entry.get("bis_datum", "")).strip()
-        if datum:
-            entry["datum"] = datum
-            entry.pop("von_datum", None)
-            entry.pop("bis_datum", None)
-        elif von and bis:
+        entry.pop("datum", None)
+        if von and bis:
             entry["von_datum"] = von
             entry["bis_datum"] = bis
-            entry.pop("datum", None)
     return entry
 
 
@@ -1065,6 +1097,63 @@ def import_tiss_rooms_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
     return {"raeume.json": {"raeume": rooms}}
 
 
+def import_lvas_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
+    wb = load_workbook(excel_path, data_only=True)
+    lvas_by_id: dict[str, dict[str, Any]] = {}
+
+    for ws in wb.worksheets:
+        max_scan_row = min(ws.max_row or 0, 30)
+        max_scan_col = min(ws.max_column or 0, 40)
+        detected: tuple[int, dict[str, int]] | None = None
+
+        for row_idx in range(1, max_scan_row + 1):
+            mapping: dict[str, int] = {}
+            for col_idx in range(1, max_scan_col + 1):
+                mapped = _column_from_excel_header(
+                    "lehrveranstaltungen.json",
+                    ws.cell(row=row_idx, column=col_idx).value,
+                )
+                if mapped and mapped not in mapping:
+                    mapping[mapped] = col_idx
+            if "id" in mapping and "name" in mapping:
+                detected = (row_idx, mapping)
+                break
+
+        if detected is None:
+            continue
+
+        header_row, columns = detected
+        for row_idx in range(header_row + 1, (ws.max_row or 0) + 1):
+            entry: dict[str, Any] = {}
+            for field, col_idx in columns.items():
+                raw = ws.cell(row=row_idx, column=col_idx).value
+                if raw is None or _safe_text(raw) == "":
+                    continue
+                _set_nested(entry, field, raw)
+
+            lva_id = _safe_text(entry.get("id"))
+            name = _safe_text(entry.get("name"))
+            if not lva_id or not name:
+                continue
+
+            normalized = _normalize_entry("lehrveranstaltungen.json", entry)
+            teacher = normalized.get("vortragende")
+            if not isinstance(teacher, dict):
+                normalized["vortragende"] = {"name": "", "email": ""}
+            normalized.setdefault("studienrichtung", "ETIT")
+            normalized.setdefault("studiensemester", [])
+            lvas_by_id[lva_id] = normalized
+
+    lvas = list(lvas_by_id.values())
+    if not lvas:
+        raise ValueError(
+            "Keine LVAs erkannt. Erwartet werden mindestens die Spalten "
+            "'LVA-Nr.' und 'Name' oder 'Lehrveranstaltung'."
+        )
+
+    return {"lehrveranstaltungen.json": {"lehrveranstaltungen": lvas}}
+
+
 def get_teacher_export_semester_options(data_dir: Path) -> List[SemesterExportOption]:
     termine = _read_json_list(data_dir / "termine.json", "termine")
     term_counts: Dict[str, int] = defaultdict(int)
@@ -1142,6 +1231,7 @@ def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
 
     lva_terms: Dict[str, int] = defaultdict(int)
     lva_semester_terms: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    lva_semester_dates: Dict[str, Dict[str, List[date]]] = defaultdict(lambda: defaultdict(list))
     for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
@@ -1151,6 +1241,9 @@ def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
         semester_id = _safe_text(termin.get("semester_id"))
         lva_terms[lva_id] += 1
         lva_semester_terms[lva_id][semester_id] += 1
+        datum = _safe_date(termin.get("datum"))
+        if datum is not None:
+            lva_semester_dates[lva_id][semester_id].append(datum)
 
     options: List[LvaExportOption] = []
     seen_lva_ids: set[str] = set()
@@ -1170,6 +1263,10 @@ def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
                 teacher_email=_safe_text(teacher.get("email")),
                 term_count=lva_terms[lva_id],
                 semester_term_counts=dict(lva_semester_terms[lva_id]),
+                term_dates_by_semester={
+                    semester_id: tuple(dates)
+                    for semester_id, dates in lva_semester_dates[lva_id].items()
+                },
             )
         )
 
@@ -1182,6 +1279,10 @@ def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
                 teacher_email="",
                 term_count=lva_terms[lva_id],
                 semester_term_counts=dict(lva_semester_terms[lva_id]),
+                term_dates_by_semester={
+                    semester_id: tuple(dates)
+                    for semester_id, dates in lva_semester_dates[lva_id].items()
+                },
             )
         )
 

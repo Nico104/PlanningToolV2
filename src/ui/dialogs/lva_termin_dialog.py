@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
     QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit, QTabWidget, QScrollArea, QLabel, QPushButton,
     QHBoxLayout,
-    QTableWidget, QTableWidgetItem, QHeaderView, QFrame
+    QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QSizePolicy
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
@@ -237,12 +237,11 @@ class LVATerminDialog(QDialog):
         self.raum_cb = TightComboBox()
         self.raum_cb.setObjectName("HeaderCombo")
         self._raum_by_id = {}
+        self.raum_cb.addItem("Kein Raum ausgewählt", "")
         self.raum_cb.addItem("+ Neuer Raum", NEW_RAUM_SENTINEL)
         for r in raeume:
             self.raum_cb.addItem(f"{r.id} – {r.name}", r.id)
             self._raum_by_id[str(r.id)] = r
-        if raeume and termin is not None:
-            self.raum_cb.setCurrentIndex(1)
 
         self.raum_id_le = QLineEdit()
         self.raum_id_le.setObjectName("Field")
@@ -256,9 +255,14 @@ class LVATerminDialog(QDialog):
 
         def _sync_raum_fields():
             if self.raum_cb.currentData() == NEW_RAUM_SENTINEL:
+                self._set_raum_fields_enabled(True)
                 self._clear_raum_fields_for_new()
                 return
+            if not self.raum_cb.currentData():
+                self._clear_raum_fields_for_unassigned()
+                return
             self._creating_raum = False
+            self._set_raum_fields_enabled(True)
             raum = self._raum_by_id.get(str(self.raum_cb.currentData()))
             self.raum_id_le.setText(getattr(raum, "id", "") if raum else "")
             self.raum_name_le.setText(getattr(raum, "name", "") if raum else "")
@@ -291,18 +295,21 @@ class LVATerminDialog(QDialog):
         self._serien_ausnahmen: List[SerienAusnahme] = list(getattr(termin, "serien_ausnahmen", []) or []) if termin else []
         self._occurrence_row_dates: List[date] = []
         self.occurrence_table = QTableWidget(0, 3)
-        self.occurrence_table.setObjectName("Field")
-        self.occurrence_table.setHorizontalHeaderLabels(["Original", "Termin", ""])
+        self.occurrence_table.setObjectName("SeriesOccurrenceTable")
+        self.occurrence_table.setHorizontalHeaderLabels(["Originaldatum", "Geplanter Termin", "Aktion"])
         self.occurrence_table.verticalHeader().hide()
         self.occurrence_table.setSelectionMode(QTableWidget.NoSelection)
         self.occurrence_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.occurrence_table.setFocusPolicy(Qt.NoFocus)
         self.occurrence_table.setShowGrid(False)
-        self.occurrence_table.setMinimumHeight(260)
+        self.occurrence_table.setMinimumHeight(420)
+        self.occurrence_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.occurrence_table.cellDoubleClicked.connect(self._on_occurrence_row_double_clicked)
-        self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.occurrence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self.occurrence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.occurrence_table.setColumnWidth(0, 140)
+        self.occurrence_table.setColumnWidth(2, 130)
 
         self.ap_cb = TickCheckBox("")
         self.ap_cb.setChecked(bool(termin.anwesenheitspflicht) if termin else False)
@@ -390,6 +397,8 @@ class LVATerminDialog(QDialog):
             self.date_to_de.setDate(self._unassigned_qdate)
             self.time_from.setTime(QTime(8, 0))
             self.time_to.setTime(QTime(9, 0))
+
+        _sync_raum_fields()
 
         if termin and getattr(termin, "datum_bis", None):
             self._series_end_manually_changed = True
@@ -493,10 +502,26 @@ class LVATerminDialog(QDialog):
             "Termin",
         )
 
-        series_occurrences_form = _dialog_form()
-        series_occurrences_form.setLabelAlignment(Qt.AlignLeft | Qt.AlignTop)
-        series_occurrences_form.addRow("Termine:", self.occurrence_table)
-        self.series_occurrences_tab = _scrollable_sections(_section("Serientermine", series_occurrences_form))
+        self.series_occurrences_tab = QWidget()
+        self.series_occurrences_tab.setObjectName("DialogTabContent")
+        series_tab_layout = QVBoxLayout(self.series_occurrences_tab)
+        series_tab_layout.setContentsMargins(12, 12, 12, 12)
+        series_tab_layout.setSpacing(12)
+
+        series_section = QFrame()
+        series_section.setObjectName("SettingsSection")
+        series_section_layout = QVBoxLayout(series_section)
+        series_section_layout.setContentsMargins(14, 12, 14, 14)
+        series_section_layout.setSpacing(10)
+        series_title = QLabel("Serientermine")
+        series_title.setObjectName("SettingsSectionTitle")
+        series_help = QLabel("Doppelklick auf eine Zeile bearbeitet diesen einzelnen Termin der Serie.")
+        series_help.setObjectName("SettingsHelp")
+        series_help.setWordWrap(True)
+        series_section_layout.addWidget(series_title)
+        series_section_layout.addWidget(series_help)
+        series_section_layout.addWidget(self.occurrence_table, 1)
+        series_tab_layout.addWidget(series_section, 1)
 
         gruppe_form = _dialog_form()
         gruppe_form.addRow("Name:", self.grp_name)
@@ -771,6 +796,20 @@ class LVATerminDialog(QDialog):
         self.raum_capacity_sb.setValue(30)
         self.raum_building_le.clear()
         self.raum_id_le.setFocus()
+
+    def _clear_raum_fields_for_unassigned(self) -> None:
+        self._creating_raum = False
+        self.raum_id_le.clear()
+        self.raum_name_le.clear()
+        self.raum_capacity_sb.setValue(30)
+        self.raum_building_le.clear()
+        self._set_raum_fields_enabled(False)
+
+    def _set_raum_fields_enabled(self, enabled: bool) -> None:
+        self.raum_id_le.setEnabled(enabled)
+        self.raum_name_le.setEnabled(enabled)
+        self.raum_capacity_sb.setEnabled(enabled)
+        self.raum_building_le.setEnabled(enabled)
 
     def _current_lva_id(self) -> str:
         return self.lva_id_le.text().strip()
@@ -1136,9 +1175,9 @@ class LVATerminDialog(QDialog):
             errors.append("Studienrichtung fehlt.")
         if not typ:
             errors.append("Typ fehlt.")
-        if not raum_id:
+        if self._creating_raum and not raum_id:
             errors.append("Raumnummer fehlt.")
-        if not raum_name_value:
+        if self._creating_raum and not raum_name_value:
             errors.append("Raum fehlt.")
         if not semester_id:
             errors.append("Semester-ID fehlt.")
@@ -1190,7 +1229,7 @@ class LVATerminDialog(QDialog):
             QMessageBox.warning(self, "Fehler", "Neue LVA-Nr. existiert bereits.")
             return
 
-        existing_raum = self._raum_by_id.get(raum_id)
+        existing_raum = self._raum_by_id.get(raum_id) if raum_id else None
         selected_raum_id = None
         if self.raum_cb.currentData() is not None:
             selected_raum_id = str(self.raum_cb.currentData()).strip()
@@ -1215,7 +1254,12 @@ class LVATerminDialog(QDialog):
             return
 
         self._source_lva_id = None if self._creating_lva else str(self.lva_cb.currentData()).strip() if self.lva_cb.currentData() is not None else None
-        self._source_raum_id = None if self._creating_raum else str(self.raum_cb.currentData()).strip() if self.raum_cb.currentData() is not None else None
+        current_raum_data = self.raum_cb.currentData()
+        self._source_raum_id = (
+            None
+            if self._creating_raum or not current_raum_data
+            else str(current_raum_data).strip()
+        )
         self._result_lva = Lehrveranstaltung(
             id=lva_id,
             name=lva_name_value,
@@ -1224,11 +1268,15 @@ class LVATerminDialog(QDialog):
             studienrichtung=str(lva_studienrichtung_value).strip(),
             ects=lva_ects_value,
         )
-        self._result_raum = Raum(
-            id=raum_id,
-            name=raum_name_value,
-            kapazitaet=int(self.raum_capacity_sb.value()),
-            gebaeude=self.raum_building_le.text().strip(),
+        self._result_raum = (
+            Raum(
+                id=raum_id,
+                name=raum_name_value,
+                kapazitaet=int(self.raum_capacity_sb.value()),
+                gebaeude=self.raum_building_le.text().strip(),
+            )
+            if raum_id
+            else None
         )
 
         termin_id = self.termin.id if self.termin is not None and hasattr(self.termin, "id") else self.new_id

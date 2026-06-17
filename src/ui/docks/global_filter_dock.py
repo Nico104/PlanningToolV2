@@ -5,8 +5,10 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QWidget,
     QHBoxLayout,
+    QVBoxLayout,
     QSizePolicy,
     QFrame,
+    QScrollArea,
 )
 
 from ..components.widgets.tight_combobox import TightComboBox
@@ -25,9 +27,25 @@ class GlobalFilterDock(QDockWidget):
     def __init__(self, parent=None):
         super().__init__("Filter", parent)
         self.setAllowedAreas(Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
+        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self._all_rooms = []
 
-        self._widget = QWidget(self)
+        self._container = QWidget(self)
+        self._container.setObjectName("HeaderBarContainer")
+        container_layout = QVBoxLayout(self._container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
+        self._scroll = QScrollArea(self._container)
+        self._scroll.setObjectName("HeaderScrollArea")
+        self._scroll.setFrameShape(QFrame.NoFrame)
+        self._scroll.setWidgetResizable(False)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._scroll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        container_layout.addWidget(self._scroll)
+
+        self._widget = QWidget(self._scroll)
         self._widget.setObjectName("HeaderBar")
 
         headerBar = QHBoxLayout(self._widget)
@@ -109,7 +127,19 @@ class GlobalFilterDock(QDockWidget):
         self.studiensemester_cb.currentIndexChanged.connect(self._on_change)
         self.zu_besprechen_cb.toggled.connect(self._on_change)
 
-        self.setWidget(self._widget)
+        self._scroll.setWidget(self._widget)
+        self.setWidget(self._container)
+        self.setMinimumWidth(240)
+        self._update_scroll_content_size()
+
+    def preferred_inline_width(self) -> int:
+        return 520
+
+    def _update_scroll_content_size(self) -> None:
+        hint = self._widget.sizeHint()
+        self._widget.setMinimumWidth(hint.width())
+        self._widget.setFixedHeight(hint.height())
+        self._scroll.setFixedHeight(hint.height() + self._scroll.horizontalScrollBar().sizeHint().height() + 2)
 
     def _separator(self) -> QFrame:
         line = QFrame()
@@ -267,6 +297,7 @@ class GlobalFilterDock(QDockWidget):
             cur_dozent,
         )
         self._update_room_filter_visibility()
+        self._update_scroll_content_size()
 
     def _refresh_room_options(self, current_room) -> None:
         active_building = self.building_cb.currentData() or None

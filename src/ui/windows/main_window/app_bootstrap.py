@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
+from PySide6.QtCore import QLibraryInfo, QLocale, QTimer, QTranslator
 from PySide6.QtGui import QPalette, QColor, QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox, QFileDialog
 
@@ -12,6 +12,7 @@ from ....services.data_folder_service import (
     save_settings,
 )
 from ... import resources_rc  # type: ignore  # noqa: F401
+from ...components.widgets.action_dialog import ActionDialog, DialogAction
 from ...utils.project_folder_flow import prepare_project_folder
 from ...utils.qss_tokens import set_qss_tokens
 from .main_window import MainWindow
@@ -55,22 +56,54 @@ def _choose_data_path(settings: dict, current_data_dir: Path):
         return settings, current_data_dir
     if prepare_project_folder(None, folder, title="Projekt öffnen", require_existing_project=True) is None:
         return settings, current_data_dir
-    return _save_project_folder(folder)
+    settings, data_dir, _created_new = _save_project_folder(folder)
+    return settings, data_dir
 
 
 def _choose_project_folder(title: str, start_dir: Path) -> Path | None:
+    if not start_dir.exists():
+        start_dir = start_dir.parent if start_dir.parent.exists() else Path.home() / "Documents"
+    if not start_dir.exists():
+        start_dir = Path.home()
     folder = QFileDialog.getExistingDirectory(None, title, str(start_dir))
     return Path(folder).resolve() if folder else None
 
 
-def _save_project_folder(target_dir: Path) -> tuple[dict, Path]:
+def _invalid_data_dir_action(data_dir: Path, *, prepared: bool) -> str | None:
+    reason = (
+        "Der gespeicherte Projektordner existiert nicht mehr oder ist nicht erreichbar."
+        if not prepared
+        else "Der gespeicherte Projektordner enthält keine vollständig verwendbaren Projektdaten."
+    )
+    dlg = ActionDialog(
+        None,
+        title="Projektordner nicht verwendbar",
+        subtitle=f"{reason}\n\nProjektordner:\n{data_dir}",
+        section_title="Fortfahren",
+        actions=[
+            DialogAction(
+                "reset",
+                "Gespeicherten Pfad vergessen",
+                "Die App vergisst diesen Ordner und fragt danach erneut nach einem Projektordner.",
+            ),
+            DialogAction(
+                "choose",
+                "Anderen Projektordner wählen",
+                "Einen vorhandenen Projektordner direkt auswählen.",
+            ),
+        ],
+    )
+    return dlg.result_key if dlg.exec() else None
+
+
+def _save_project_folder(target_dir: Path, *, created_new: bool = False) -> tuple[dict, Path, bool]:
     settings = load_settings()
     settings["data_path"] = data_path_for_settings(target_dir)
     save_settings(settings)
-    return settings, target_dir
+    return settings, target_dir, created_new
 
 
-def _choose_initial_project(project_root: Path) -> tuple[dict, Path] | None:
+def _choose_initial_project(project_root: Path) -> tuple[dict, Path, bool] | None:
     start_dir = Path.home() / "Documents"
     if not start_dir.exists():
         start_dir = project_root
@@ -110,7 +143,7 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path] | None:
         if prepared is None:
             continue
 
-        return _save_project_folder(folder)
+        return _save_project_folder(folder, created_new=clicked == create_btn)
 
 
 def load_global_style(app: QApplication, theme: str = "light") -> None:
@@ -155,35 +188,26 @@ def run_gui() -> None:
     settings = load_settings()
     load_global_style(app, settings.get("theme", "light"))
     data_dir = resolve_data_dir(settings)
+    initial_project_created = False
     if data_dir is None:
         selected = _choose_initial_project(project_root)
         if selected is None:
             return
-        settings, data_dir = selected
+        settings, data_dir, initial_project_created = selected
 
     while True:
         if not data_dir.exists() or not data_dir.is_dir():
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Datenordner ungültig")
-            msg.setText(f"Der Datenordner '{data_dir}' ist ungültig oder nicht vorhanden.")
-            msg.setInformativeText("Möchten Sie den Datenpfad zurücksetzen oder einen neuen Pfad wählen?")
-            reset_btn = msg.addButton("Zurücksetzen", QMessageBox.AcceptRole)
-            set_btn = msg.addButton("Pfad wählen", QMessageBox.ActionRole)
-            msg.addButton("Abbrechen", QMessageBox.RejectRole)
-            msg.setDefaultButton(reset_btn)
-            msg.exec()
-
-            if msg.clickedButton() == reset_btn:
+            action = _invalid_data_dir_action(data_dir, prepared=False)
+            if action == "reset":
                 settings = load_settings()
                 settings["data_path"] = ""
                 save_settings(settings)
                 selected = _choose_initial_project(project_root)
                 if selected is None:
                     return
-                settings, data_dir = selected
+                settings, data_dir, initial_project_created = selected
                 continue
-            if msg.clickedButton() == set_btn:
+            if action == "choose":
                 settings, data_dir = _choose_data_path(settings, data_dir)
                 continue
             return
@@ -191,29 +215,18 @@ def run_gui() -> None:
         if prepare_project_folder(None, data_dir, title="Datenordner prüfen", require_existing_project=True) is not None:
             break
 
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setWindowTitle("Datenordner nicht verwendbar")
-        msg.setText(f"Der Datenordner '{data_dir}' ist ungültig oder unvollständig.")
-        msg.setInformativeText(
-            "Bitte wählen Sie einen anderen Datenordner oder setzen Sie den Datenpfad zurück."
-        )
-        reset_btn = msg.addButton("Zurücksetzen", QMessageBox.AcceptRole)
-        set_btn = msg.addButton("Pfad wählen", QMessageBox.ActionRole)
-        msg.addButton("Abbrechen", QMessageBox.RejectRole)
-        msg.setDefaultButton(reset_btn)
-        msg.exec()
-
-        if msg.clickedButton() == reset_btn:
+        action = _invalid_data_dir_action(data_dir, prepared=True)
+        if action == "reset":
             settings = load_settings()
             settings["data_path"] = ""
             save_settings(settings)
             selected = _choose_initial_project(project_root)
             if selected is None:
                 return
-            settings, data_dir = selected
-        elif msg.clickedButton() == set_btn:
+            settings, data_dir, initial_project_created = selected
+        elif action == "choose":
             settings, data_dir = _choose_data_path(settings, data_dir)
+            initial_project_created = False
         else:
             return
 
@@ -221,5 +234,7 @@ def run_gui() -> None:
     if not app_icon.isNull():
         w.setWindowIcon(app_icon)
     w.show()
+    if initial_project_created:
+        QTimer.singleShot(0, lambda: w._offer_default_catalog_for_new_project(data_dir))
 
     app.exec()

@@ -39,6 +39,8 @@ class DayEventsDialog(QDialog):
         self.go_day_cb = go_day_cb
 
         lay = QVBoxLayout(self)
+        lay.setContentsMargins(18, 16, 18, 14)
+        lay.setSpacing(12)
         hdr = QWidget()
         hdr_layout = QHBoxLayout(hdr)
         hdr_layout.setContentsMargins(0, 0, 0, 0)
@@ -52,6 +54,10 @@ class DayEventsDialog(QDialog):
             date_lbl.setObjectName("DialogDate")
             hdr_layout.addWidget(date_lbl)
         lay.addWidget(hdr)
+        subtitle = QLabel("Einträge des ausgewählten Kalendertags. Doppelklick öffnet den Termin.", self)
+        subtitle.setObjectName("DialogSubtitle")
+        subtitle.setWordWrap(True)
+        lay.addWidget(subtitle)
 
         self.listw = QListWidget()
         self.listw.setObjectName("DayEventsList")
@@ -85,7 +91,10 @@ class DayEventsDialog(QDialog):
         lay.addWidget(self.listw)
 
         bb = QDialogButtonBox(QDialogButtonBox.Close)
-        bb.button(QDialogButtonBox.Close).setObjectName("PrimaryButton")
+        close_btn = bb.button(QDialogButtonBox.Close)
+        if close_btn:
+            close_btn.setText("Schließen")
+            close_btn.setObjectName("PrimaryButton")
         self.btn_week = bb.addButton("Zur Wochenansicht", QDialogButtonBox.ActionRole)
         self.btn_week.setObjectName("SecondaryButton")
         self.btn_day = bb.addButton("Zur Tagesansicht", QDialogButtonBox.ActionRole)

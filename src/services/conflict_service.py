@@ -1,6 +1,7 @@
 from datetime import date, time, datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 import json
+import re
 from dataclasses import replace
 from pathlib import Path
 from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
@@ -128,6 +129,8 @@ def _merge_default_conflicts(conflicts) -> list:
             continue
         item = dict(default_item)
         item.update(user_by_key.get(key, {}))
+        if key == "lecturer_conflict":
+            item = _migrate_lecturer_conflict_label(item)
         merged.append(item)
         seen_keys.add(key)
 
@@ -138,6 +141,19 @@ def _merge_default_conflicts(conflicts) -> list:
         if key and key not in seen_keys:
             merged.append(item)
     return merged
+
+
+def _migrate_lecturer_conflict_label(item: dict) -> dict:
+    migrated = dict(item)
+    if str(migrated.get("name", "")).strip() == "Vortragenden-Konflikt":
+        migrated["name"] = "Lehrpersonen-Konflikt"
+    old_description = "Zwei Termine unterschiedlicher LVAs mit demselben Dozenten, am selben Tag, mit sich überschneidenden Zeiten."
+    if str(migrated.get("description", "")).strip() == old_description:
+        migrated["description"] = (
+            "Zwei nicht-gruppierte Termine unterschiedlicher LVAs mit derselben hinterlegten Lehrperson, "
+            "am selben Tag, mit sich überschneidenden Zeiten."
+        )
+    return migrated
 
 def save_conflicts(conflicts, path=None):
     try:
@@ -377,13 +393,15 @@ class ConflictDetector:
             lva = next((l for l in self.lvas if l.id == t.lva_id), None)
             if not lva or not lva.vortragende:
                 continue
-            key = (lva.vortragende.email, t.datum)
+            lecturer_key = self._lecturer_key(lva)
+            if not lecturer_key:
+                continue
+            key = (lecturer_key, t.datum)
             by_lecturer_date.setdefault(key, []).append(t)
         for terms in by_lecturer_date.values():
             for i, t1 in enumerate(terms):
                 for t2 in terms[i+1:]:
-                    # Innerhalb derselben LVA übernimmt der Gruppen-Konflikt; VO/fehlende Gruppe bleibt sichtbar.
-                    if str(t1.lva_id) == str(t2.lva_id) and self._both_have_group_names(t1, t2):
+                    if self._are_lecturer_alternatives(t1, t2):
                         continue
                     if self.times_overlap(t1, t2):
                         conflicts.append(self._create_conflict(
@@ -405,9 +423,9 @@ class ConflictDetector:
                 for t2 in terms[i + 1:]:
                     if source_termin_id(t1.id) == source_termin_id(t2.id):
                         continue
-                    if str(t1.lva_id) == str(t2.lva_id):
-                        continue
                     if not self.times_overlap(t1, t2):
+                        continue
+                    if self._are_study_plan_alternatives(t1, t2):
                         continue
 
                     lva1 = self._lva_by_id.get(str(t1.lva_id))
@@ -672,6 +690,49 @@ class ConflictDetector:
         group2 = str(getattr(getattr(t2, "gruppe", None), "name", "") or "").strip()
         return bool(group1 and group2)
 
+    def _lecturer_key(self, lva: Lehrveranstaltung) -> str:
+        lecturer = getattr(lva, "vortragende", None)
+        if not lecturer:
+            return ""
+        email = str(getattr(lecturer, "email", "") or "").strip().casefold()
+        if email:
+            return f"mail:{email}"
+        name = str(getattr(lecturer, "name", "") or "").strip().casefold()
+        return f"name:{name}" if name else ""
+
+    def is_group_term(self, termin: Termin) -> bool:
+        group_obj = getattr(termin, "gruppe", None)
+        group_name = str(getattr(group_obj, "name", "") or "").strip()
+        group_id = str(getattr(termin, "gruppe_id", "") or "").strip()
+        group_label = str(getattr(termin, "gruppenbezeichnung", "") or "").strip()
+        if group_name or group_id or group_label:
+            return True
+
+        for field_name in ("name", "notiz", "besprechungshinweis"):
+            text = str(getattr(termin, field_name, "") or "")
+            if re.search(r"\bgr(?:uppe|\.)?\s*[A-Z0-9]", text, re.IGNORECASE):
+                return True
+        return False
+
+    def _are_study_plan_alternatives(self, t1: Termin, t2: Termin) -> bool:
+        if self.is_group_term(t1) or self.is_group_term(t2):
+            return True
+
+        if str(t1.lva_id) != str(t2.lva_id):
+            return False
+
+        group1 = str(getattr(getattr(t1, "gruppe", None), "name", "") or "").strip()
+        group2 = str(getattr(getattr(t2, "gruppe", None), "name", "") or "").strip()
+        if group1 and group2:
+            return group1 != group2
+
+        return True
+
+    def _are_lecturer_alternatives(self, t1: Termin, t2: Termin) -> bool:
+        if str(t1.lva_id) == str(t2.lva_id):
+            return True
+        return self.is_group_term(t1) or self.is_group_term(t2)
+
 
 
     def _capacity_event_types(self, settings, fallback: str) -> set[str]:
@@ -759,20 +820,6 @@ class ConflictDetector:
         return warnings
 
     def _load_free_days_map(self, conflict_settings_path: Optional[str]) -> Dict[date, set[str]]:
-        """
-        Read freie_tage.json and build a mapping of date -> set of day-type strings.
-
-        Each entry in the JSON is either a single date ('datum') or a date range
-        ('von_datum' / 'bis_datum'). Ranges are expanded day-by-day into individual
-        entries. A single date can carry multiple types (e.g. a date that is both a
-        Feiertag and Vorlesungsfrei), stored as a set so all types are preserved.
-
-        Supported types (from the 'typ' field, case-insensitive):
-        - 'feiertag'       → public holiday; triggers holiday_conflict
-        - 'vorlesungsfrei' → lecture-free period; triggers lecture_free_conflict
-
-        Unknown types are skipped
-        """
         if self.data_dir:
             free_path = self.data_dir / "freie_tage.json"
         elif conflict_settings_path:
@@ -798,15 +845,6 @@ class ConflictDetector:
             else:
                 continue
 
-            # Single-date entry takes priority over range fields (for malformed single entry lines)
-            single_raw = str(item.get("datum", "")).strip()
-            if single_raw:
-                d = self._parse_iso_date(single_raw)
-                if d is not None:
-                    out.setdefault(d, set()).add(day_type)
-                continue
-
-            # Range entry: expand every day between von_datum and bis_datum (inclusive)
             start_raw = str(item.get("von_datum", "")).strip()
             end_raw = str(item.get("bis_datum", "")).strip()
             d0 = self._parse_iso_date(start_raw)

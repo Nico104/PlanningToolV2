@@ -8,8 +8,10 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QFrame,
     QLabel,
     QTimeEdit,
+    QVBoxLayout,
 )
 
 from ...core.models import Raum, SerienAusnahme
@@ -60,7 +62,20 @@ class SeriesOccurrenceDialog(QDialog):
             else base_room_id
         )
 
-        form = QFormLayout(self)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(18, 16, 18, 14)
+        root.setSpacing(12)
+        self.setMinimumWidth(520)
+
+        title = QLabel("Serientermin", self)
+        title.setObjectName("DialogTitle")
+        root.addWidget(title)
+        subtitle = QLabel("Ausnahme für einen einzelnen Termin der Serie bearbeiten.", self)
+        subtitle.setObjectName("DialogSubtitle")
+        subtitle.setWordWrap(True)
+        root.addWidget(subtitle)
+
+        form = QFormLayout()
         form.setContentsMargins(16, 16, 16, 16)
         form.setHorizontalSpacing(14)
         form.setVerticalSpacing(12)
@@ -101,18 +116,34 @@ class SeriesOccurrenceDialog(QDialog):
         ok_btn = bb.button(QDialogButtonBox.Ok)
         cancel_btn = bb.button(QDialogButtonBox.Cancel)
         if ok_btn:
+            ok_btn.setText("Speichern")
             ok_btn.setObjectName("PrimaryButton")
         if cancel_btn:
+            cancel_btn.setText("Abbrechen")
             cancel_btn.setObjectName("SecondaryButton")
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
+        bb.setObjectName("DialogButtons")
         form.addRow("", bb)
+        root.addWidget(self._section("Ausnahme", form))
 
         self._sync_enabled()
 
     @property
     def result(self) -> Optional[SeriesOccurrenceResult]:
         return self._result
+
+    def _section(self, title: str, content_layout: QFormLayout) -> QFrame:
+        section = QFrame(self)
+        section.setObjectName("DialogSection")
+        layout = QVBoxLayout(section)
+        layout.setContentsMargins(14, 12, 14, 14)
+        layout.setSpacing(10)
+        label = QLabel(title, section)
+        label.setObjectName("DialogSectionTitle")
+        layout.addWidget(label)
+        layout.addLayout(content_layout)
+        return section
 
     def _sync_enabled(self) -> None:
         enabled = not self.cancelled_cb.isChecked()
