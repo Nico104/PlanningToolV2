@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from time import monotonic
 import csv
 import json
+import os
 import re
 import subprocess
 import sys
@@ -67,6 +68,25 @@ from ...dialogs import (
 from ...dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
 from ...components.widgets.action_dialog import ActionDialog, DialogAction
+
+
+def restart_application() -> None:
+    env = os.environ.copy()
+    args = [sys.executable]
+    if getattr(sys, "frozen", False):
+        args.extend(sys.argv[1:])
+        env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+        env.pop("QT_PLUGIN_PATH", None)
+        env.pop("QT_QPA_PLATFORM_PLUGIN_PATH", None)
+    else:
+        args.extend(sys.argv)
+
+    subprocess.Popen(
+        args,
+        cwd=str(Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path.cwd()),
+        env=env,
+    )
+    sys.exit(0)
 
 
 class MainWindow(QMainWindow):
@@ -235,9 +255,7 @@ class MainWindow(QMainWindow):
             msg.setDefaultButton(ok_btn)
             msg.exec()
             if msg.clickedButton() == restart_btn:
-                python = sys.executable
-                subprocess.Popen([python] + sys.argv)
-                sys.exit(0)
+                restart_application()
         else:
             Toast(self, "Einstellungen gespeichert.", duration_ms=2500).show()
         self.termine_dock.set_search_enabled(bool(s.get("show_termine_search", True)))
@@ -305,9 +323,7 @@ class MainWindow(QMainWindow):
         msg.setDefaultButton(restart_btn)
         msg.exec()
         if msg.clickedButton() == restart_btn:
-            python = sys.executable
-            subprocess.Popen([python] + sys.argv)
-            sys.exit(0)
+            restart_application()
 
     def _offer_default_catalog_for_new_project(self, target_dir: Path) -> bool:
         dlg = ActionDialog(

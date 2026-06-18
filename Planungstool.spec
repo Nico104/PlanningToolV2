@@ -1,11 +1,22 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
+
+ROOT = Path(SPECPATH).resolve()
 
 a = Analysis(
-    ['C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\main.py'],
+    [str(ROOT / 'main.py')],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\default_tables', 'default_tables'), ('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\settings.json', 'src'), ('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\studiensemester.json', 'src'), ('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\konflikte.json', 'src'), ('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\ui\\styles', 'src\\ui\\styles'), ('C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\ui\\assets', 'src\\ui\\assets')],
+    datas=[
+        (str(ROOT / 'default_tables'), 'default_tables'),
+        (str(ROOT / 'src' / 'settings.json'), 'src'),
+        (str(ROOT / 'src' / 'studiensemester.json'), 'src'),
+        (str(ROOT / 'src' / 'konflikte.json'), 'src'),
+        (str(ROOT / 'src' / 'ui' / 'styles'), 'src\\ui\\styles'),
+        (str(ROOT / 'src' / 'ui' / 'assets'), 'src\\ui\\assets'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -35,5 +46,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\Nico\\Documents\\Bachelorarbeit\\plannerV2\\src\\ui\\assets\\icons\\app_icon.ico'],
+    icon=str(ROOT / 'src' / 'ui' / 'assets' / 'icons' / 'app_icon.ico'),
 )

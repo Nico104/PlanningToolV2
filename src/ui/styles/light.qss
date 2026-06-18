@@ -588,6 +588,26 @@ QLabel#ChipGroup {
   font-weight: 600;
 }
 
+QLabel#ChipSemester {
+  background: #f8fafc;
+  border: 1px solid #d6dce5;
+  color: #334155;
+  font-weight: 600;
+}
+
+QLabel#ChipSemester[kind="ss"] {
+  background: #f3faf6;
+  border-color: #cbded2;
+  color: #31533d;
+}
+
+QLabel#ChipSemester[kind="ws"] {
+  background: #edf5ff;
+  border-color: #bdd7f4;
+  color: #1f4f82;
+  font-weight: 600;
+}
+
 
 
 

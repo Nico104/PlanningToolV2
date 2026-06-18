@@ -9,8 +9,8 @@ description = "Planungstool – LVA-Termin scheduling application with PySide6"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "PySide6>=6.0.0",
-    "openpyxl>=3.1.0",
+    "PySide6>=6.6",
+    "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]

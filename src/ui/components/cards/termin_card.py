@@ -21,6 +21,7 @@ class TerminCard(QFrame):
         duration: int = 0,
         name: str = None,
         gruppe: str = "",
+        semester: str = "",
         parent=None,
         zu_besprechen: bool = False,
         besprechungshinweis: str = "",
@@ -70,6 +71,15 @@ class TerminCard(QFrame):
             return l
 
         chips.addWidget(chip(typ, "ChipType"))
+        semester_text = str(semester or "").strip()
+        if semester_text:
+            semester_chip = chip(semester_text, "ChipSemester")
+            semester_key = semester_text.upper().replace(" ", "")
+            semester_chip.setProperty(
+                "kind",
+                "ss" if semester_key.startswith("SS") else "ws",
+            )
+            chips.addWidget(semester_chip)
         if str(gruppe or "").strip():
             chips.addWidget(chip(str(gruppe).strip(), "ChipGroup"))
         if str(raum or "").strip():

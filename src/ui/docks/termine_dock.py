@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from ..utils.datetime_utils import fmt_date, fmt_time
 from ...core.models import Termin, Lehrveranstaltung, Raum
+from ...services.semester_rules import semester_from_id
 from ..components.cards.termin_card import TerminCard
 from ..components.dragdrop.termin_drop_area import TerminDropArea
 
@@ -162,6 +163,14 @@ class TermineDock(QDockWidget):
             return
         self.termin_jump_requested.emit(assigned[0].id)
 
+    def _semester_chip_text(self, semester_id: str) -> str:
+        semester = semester_from_id(semester_id)
+        if semester is None:
+            return str(semester_id or "").strip()
+        if semester.id.upper().startswith("WS"):
+            return f"WS {semester.start.year % 100:02d}/{semester.end.year % 100:02d}"
+        return f"SS {semester.start.year % 100:02d}"
+
     def _build_cards(self) -> None:
         # clear old cards (leave last stretch)
         while self.list_layout.count() > 1:
@@ -261,6 +270,7 @@ class TermineDock(QDockWidget):
                     duration=t.duration,
                     name=getattr(t, "name", None),
                     gruppe=(t.gruppe.name if t.gruppe else ""),
+                    semester=self._semester_chip_text(getattr(t, "semester_id", "")),
                     parent=self.container,
                     zu_besprechen=bool(getattr(t, "zu_besprechen", False)),
                     besprechungshinweis=str(getattr(t, "besprechungshinweis", "") or ""),

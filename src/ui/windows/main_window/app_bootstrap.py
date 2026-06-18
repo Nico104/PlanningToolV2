@@ -109,21 +109,29 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path, bool] | Non
         start_dir = project_root
 
     while True:
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowTitle("Projekt auswählen")
-        msg.setText("Es ist noch kein Projektordner ausgewählt.")
-        msg.setInformativeText("Bitte legen Sie ein neues Projekt an oder wählen Sie einen bestehenden Projektordner.")
-        create_btn = msg.addButton("Neues Projekt", QMessageBox.AcceptRole)
-        choose_btn = msg.addButton("Projektordner wählen", QMessageBox.ActionRole)
-        msg.addButton("Abbrechen", QMessageBox.RejectRole)
-        msg.setDefaultButton(create_btn)
-        msg.exec()
+        dlg = ActionDialog(
+            None,
+            title="Projekt auswählen",
+            subtitle="Es ist noch kein Projektordner ausgewählt. Legen Sie ein neues Planungsprojekt an oder öffnen Sie einen bestehenden Projektordner.",
+            section_title="Fortfahren",
+            actions=[
+                DialogAction(
+                    "create",
+                    "Neues Projekt anlegen",
+                    "Einen leeren Projektordner vorbereiten und optional Standarddaten importieren.",
+                ),
+                DialogAction(
+                    "choose",
+                    "Bestehendes Projekt öffnen",
+                    "Einen Ordner auswählen, der bereits Projektdaten enthält.",
+                ),
+            ],
+        )
+        action = dlg.result_key if dlg.exec() else None
 
-        clicked = msg.clickedButton()
-        if clicked == create_btn:
+        if action == "create":
             folder = _choose_project_folder("Neues Projekt anlegen", start_dir)
-        elif clicked == choose_btn:
+        elif action == "choose":
             folder = _choose_project_folder("Projektordner wählen", start_dir)
         else:
             return None
@@ -131,7 +139,7 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path, bool] | Non
         if folder is None:
             continue
 
-        if clicked == create_btn:
+        if action == "create":
             prepared = prepare_project_folder(None, folder, title="Neues Projekt", creating_new=True)
         else:
             prepared = prepare_project_folder(
@@ -143,7 +151,7 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path, bool] | Non
         if prepared is None:
             continue
 
-        return _save_project_folder(folder, created_new=clicked == create_btn)
+        return _save_project_folder(folder, created_new=action == "create")
 
 
 def load_global_style(app: QApplication, theme: str = "light") -> None:

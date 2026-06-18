@@ -6,3 +6,7 @@ venv/
 .env
 .idea/
 .vscode/
+.mypy_cache/
+.pytest_cache/
+build/
+data_test/
