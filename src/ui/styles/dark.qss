@@ -789,20 +789,20 @@ QComboBox#SemesterKindCombo {
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 4px 24px 4px 12px;
+  padding: 4px 12px 4px 12px;
   color: #f1f5f9;
 }
 
 QComboBox#SemesterKindCombo::drop-down {
-  width: 22px;
+  width: 0px;
   border: none;
   background: transparent;
 }
 
 QComboBox#SemesterKindCombo::down-arrow {
-  width: 9px;
-  height: 9px;
-  image: url(":/assets/icons/chevron-down_white.svg");
+  image: none;
+  width: 0px;
+  height: 0px;
 }
 
 QSpinBox#SemesterYearSpin {
@@ -810,15 +810,47 @@ QSpinBox#SemesterYearSpin {
   border: none;
   border-left: 1px solid #2d333b;
   border-radius: 0;
-  padding: 4px 4px 4px 10px;
+  padding: 4px 22px 4px 10px;
   color: #f1f5f9;
 }
 
 QSpinBox#SemesterYearSpin::up-button,
 QSpinBox#SemesterYearSpin::down-button {
   width: 18px;
-  background: transparent;
-  border: none;
+  background: #20242a;
+  border-left: 1px solid #2d333b;
+}
+
+QSpinBox#SemesterYearSpin::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  border-top-right-radius: 6px;
+}
+
+QSpinBox#SemesterYearSpin::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  border-bottom-right-radius: 6px;
+}
+
+QSpinBox#SemesterYearSpin::up-arrow {
+  image: url(":/assets/icons/chevron-up_white.svg");
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  margin-right: 5px;
+}
+
+QSpinBox#SemesterYearSpin::down-arrow {
+  image: url(":/assets/icons/chevron-down_white.svg");
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 8px;
+  height: 8px;
+  margin-bottom: 4px;
+  margin-right: 5px;
 }
 
 

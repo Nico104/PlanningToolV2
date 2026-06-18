@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QTime
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLineEdit, QSpinBox, QTimeEdit, QPushButton, QLabel, QFrame, QWidget,
-    QTabWidget, QScrollArea
+    QTabWidget, QScrollArea, QApplication
 )
 
 from ...services.conflict_service import load_conflicts, save_conflicts
@@ -41,9 +41,9 @@ class SettingsDialog(QDialog):
         self.tabs.setObjectName("SettingsTabs")
         root.addWidget(self.tabs, 1)
 
-        general_page = QWidget()
-        general_page.setObjectName("SettingsPage")
-        lay = QVBoxLayout(general_page)
+        general_page = self._scrollable_page()
+        general_content = general_page.widget()
+        lay = QVBoxLayout(general_content)
         lay.setContentsMargins(0, 12, 0, 0)
         lay.setSpacing(14)
         self.tabs.addTab(general_page, "Allgemein")
@@ -145,6 +145,31 @@ class SettingsDialog(QDialog):
         self.day_end_te.timeChanged.connect(lambda *_: self._enforce_hour_times())
 
         self.load(settings or {})
+        self._fit_to_screen()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self._fit_to_screen()
+
+    def _fit_to_screen(self) -> None:
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return
+        available = screen.availableGeometry()
+        max_height = max(520, available.height() - 80)
+        max_width = max(720, available.width() - 80)
+        self.setMaximumSize(max_width, max_height)
+        self.resize(min(max(self.width(), 760), max_width), min(max(self.height(), 640), max_height))
+
+    def _scrollable_page(self) -> QScrollArea:
+        scroll = QScrollArea()
+        scroll.setObjectName("SettingsScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        content = QWidget()
+        content.setObjectName("SettingsPage")
+        scroll.setWidget(content)
+        return scroll
 
     def _section(self, title: str) -> tuple[QFrame, QGridLayout]:
         frame = QFrame()

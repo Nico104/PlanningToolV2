@@ -40,9 +40,16 @@ class SemesterYearSpinBox(QSpinBox):
 
     def valueFromText(self, text: str) -> int:
         raw = str(text or "").strip()
+        academic_match = re.search(r"(\d{2}|\d{4})\s*/\s*(\d{2}|\d{4})", raw)
+        if academic_match:
+            start = academic_match.group(1)
+            return int(start) if len(start) == 4 else 2000 + int(start)
         match = re.search(r"\d{4}", raw)
         if match:
             return int(match.group(0))
+        short_match = re.search(r"\d{2}", raw)
+        if short_match:
+            return 2000 + int(short_match.group(0))
         return super().valueFromText(text)
 
 
@@ -90,7 +97,7 @@ class SemesterSelector(QWidget):
         self.year_sb.setValue(date.today().year)
         self.year_sb.setAccelerated(True)
         self.year_sb.setKeyboardTracking(False)
-        self.year_sb.setFixedWidth(96)
+        self.year_sb.setFixedWidth(112)
         self.year_sb.setFixedHeight(36)
         self.year_sb.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
