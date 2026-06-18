@@ -1,56 +1,101 @@
+# Planungstool
 
-Erweiterungen zur letzten gezeigten Version:
+Desktop-Anwendung zur Planung von LVA-Terminen, Räumen, Studiensemestern und Konflikten. Die App ist für lokale Projektordner ausgelegt: Ein Projekt besteht aus mehreren JSON-Dateien, kann aber auch als Excel-Datei importiert oder exportiert werden.
 
-- Im Kalender wird das Datum angezeigt
+## Starten
 
-- Tag/Wochen/Monats Ansicht (Monatsansicht funktioniert mit list dialog der Termine)
+### Als EXE
 
-- Wenn im Data Editor ein neuer Termin erstellt wird gibt es die Möglichkeit diesen zu wiederholen (Serientermin)
+Die gebaute Anwendung liegt unter:
 
-- Serientermine werden als ein Termin mit Beginn-Datum, Enddatum und Periodizität gespeichert, nicht als viele einzelne Termine
+```text
+dist/Planungstool.exe
+```
 
-- Freier Tag kann entweder ein Feiertag oder Vorlesungsfrei sein und wird demensprechend im Kalendar angezeigt. Diese beiden Fälle wirden auch mit 2 Konflikten erweitert.
+Beim ersten Start fragt die App nach einem Projektordner. Es kann ein neues Projekt angelegt oder ein bestehendes Projekt geöffnet werden.
 
-- Studiensemester als LVA-Attribut, kann gefiltert werden
+### Aus dem Quellcode
 
-- Kalendersemester werden automatisch aus Sommersemester/Wintersemester und Jahr erzeugt, es gibt keine semester.json mehr
+```powershell
+.venv\Scripts\python.exe main.py
+```
 
-- Unter Tools -> Semester-Werkzeuge können Termine eines Semesters nach LVA-Auswahl in ein Zielsemester kopiert oder komplett aus einem Semester gelöscht werden
+Benötigte Pakete:
 
-- Termin Drag and Drop Liste wird nach LVA gruppiert und es wird angezeigt wie viele von den Terminen einem Datum und Zeitslot zugewiesen sind
+```powershell
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-- Export/Import Funktion (JSON und Excel) mit User Entscheidung ob eine Änderung behalten oder ignoriert werden soll (Diese Logik muss wahrscheinlich besser definiert und überarbeitet werden)
+## Projektordner
 
-- Zusätzlicher Excel-Export für Lehrende mit Tabellenblatt pro Lehrperson und einem Gesamtblatt
+Ein Projektordner enthält die Planungsdaten der App:
 
-- Filter Dock und Navigations Dock sind jetzt 2 individuelle Docks
+- Räume
+- LVAs
+- Termine
+- Studienrichtungen
+- freie Tage und vorlesungsfreie Zeiträume
 
-- In der Termin Liste gibt es bei Rechtsklick jetzt eine "Springe zu" Option
+Der zuletzt verwendete Projektordner wird in den Einstellungen gespeichert. Wenn dieser Ordner nicht mehr existiert oder ungültig ist, fragt die App beim Start nach einem neuen Projektordner.
 
-- LVA haben jetzt Studienrichtung als Attribut und Studienrichtungen können im Data Editor Tab erstellt und bearbeitet werden
+## Standarddaten
 
-- In den Einstellungen ist als Data-Path "data_test" gesetzt, dies sind die Daten mit denen ich diese App entwickelt/getested habe. Wenn Sie diesen String im Settings-Dialog löschen dann wird der normale data Ordner verwendet und die App wird in einem neuen Speicherstand gestartet
+Für neue Projekte können Standarddaten importiert werden:
 
-- Wenn Sie das Projekt als zip/ordner herunterladen müsste man dieses mit Doppelklick auf Start_PlanningTool öffnen können, alternativ die main.py starten
+- TISS-Daten TU Wien ETIT, Juni 2026
+- Räume
+- LVAs des Elektrotechnik-Bachelor-Katalogs
 
-Weitere wichtige Flows:
+Beim Anlegen eines neuen Projekts kann ausgewählt werden, ob die Standarddaten vollständig importiert, gezielt ausgewählt oder übersprungen werden sollen.
 
-- Konflikt Highlight-Flow: Bei Klick auf eine Konflikt-Card wird ein Signal mit Termin-IDs bis ins Main Window weitergeleitet und von dort an den PlannerWorkspace übergeben. In der View wird anschließend die Highlight-Funktion aufgerufen, die die betroffenen Termine visuell hervorhebt und zum ersten betroffenen Termin (Tag/Woche) springt.
+## Import
 
-- Globaler Filter-Flow: Eine Filteränderung aktualisiert Planner-Ansicht, Terminliste, Data-Editor-Optionen und Konflikte konsistent.
+Die App unterstützt:
 
-- Navigation/View-Flow: Tag, Woche, Monat sowie Vor/Zurück wechseln die Periode und triggern ein Refresh mit den aktiven Filtern.
+- vollständige Projektimporte aus Excel oder JSON
+- einzelne Listen für Räume oder LVAs aus Excel/CSV
+- Standarddatenimport aus den mitgelieferten Tabellen
 
-- Drag-and-Drop-Verschiebung: Ein Drop in Tag/Woche/Monat schreibt neue Terminwerte und lädt danach alle betroffenen Views neu.
+Beim Import prüft die App neue, geänderte und bereits vorhandene Einträge. Einträge mit fehlenden Pflichtverweisen werden nicht still übernommen, sondern im Importablauf ausgewiesen.
 
-- Unassign-Flow: Ein Termin kann zurück in die Liste gezogen werden und wird dadurch aus Datum/Zeit-Zuweisung gelöst.
+## Export
 
-- CRUD-Flow im Data Editor: Add/Edit/Delete läuft zentral über Crud-Handler und endet in einem vollständigen UI-Refresh.
+Wichtige Exporte:
 
-- Konflikt-Regel-Flow: Änderungen in den Konflikt-Einstellungen werden gespeichert und die Konflikte danach neu berechnet.
+- Projekt-Export als Excel-Datei
+- Export für Lehrende
+- Wochenkalender-Export
 
-- Refresh-Kaskade: Ein globales Refresh lädt State neu und synchronisiert Kalender, Docks, Filteroptionen und Konfliktanzeige.
+Das Beispielprojekt `Beispiel_Projekt.xlsx` liegt bewusst im Repository und kann zum Testen in ein neues Projekt importiert werden.
 
-- Import-Flow: Importdaten werden normalisiert, über einen Dialog bestätigt und anschließend vollständig übernommen/aktualisiert.
+## Konflikte
 
-- Export-Flow: Alle relevanten Daten können als JSON-Projektdatei oder als Excel-Austauschdatei exportiert werden.
+Die Konfliktprüfung markiert auffällige Planungsfälle, blockiert die Planung aber nicht. Unterstützt werden unter anderem:
+
+- Raum-Konflikte
+- Gruppen-Konflikte
+- Lehrpersonen-Konflikte
+- Studienplan-Warnungen
+- Feiertags- und vorlesungsfreie Konflikte
+- Kapazitätswarnungen
+- unvollständige Termine
+
+Die aktiven Konfliktregeln und Schwellenwerte können in den Einstellungen angepasst werden.
+
+## EXE bauen
+
+```powershell
+.\build_exe.ps1
+```
+
+Das Script verwendet `Planungstool.spec`. Dort ist definiert, welche Dateien in die EXE aufgenommen werden, z. B. Standardtabellen, Styles, Icons und Konfigurationsdateien.
+
+## Entwicklung
+
+Schneller Syntaxcheck:
+
+```powershell
+.venv\Scripts\python.exe -m compileall src main.py
+```
+
+Der Ordner `dist/` wird bewusst nicht ignoriert, damit die gebaute EXE bei Bedarf mitgegeben werden kann. Temporäre Build- und Testordner wie `build/`, `.pytest_cache/`, `.mypy_cache/` und `data_test/` sind ignoriert.

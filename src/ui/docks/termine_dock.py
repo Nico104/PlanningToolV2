@@ -222,6 +222,7 @@ class TermineDock(QDockWidget):
 
             header_btn = QToolButton()
             header_btn.setText(header_text)
+            header_btn.setToolTip(header_text)
             header_btn.setCheckable(True)
             header_btn.setChecked(self._group_states[group_key])
             header_btn.setArrowType(Qt.DownArrow if self._group_states[group_key] else Qt.RightArrow)
