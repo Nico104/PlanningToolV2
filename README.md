@@ -1,101 +1,94 @@
 # Planungstool
 
-Desktop-Anwendung zur Planung von LVA-Terminen, Räumen, Studiensemestern und Konflikten. Die App ist für lokale Projektordner ausgelegt: Ein Projekt besteht aus mehreren JSON-Dateien, kann aber auch als Excel-Datei importiert oder exportiert werden.
+Das Planungstool ist eine Desktop-Anwendung zur Verwaltung und Planung von Lehrveranstaltungsterminen. Es wurde im Rahmen einer Bachelorarbeit entwickelt und unterstützt das Erfassen, Importieren, Prüfen und Exportieren von Termindaten.
+
+Die Anwendung arbeitet mit lokalen Projektordnern. Ein Projektordner enthält die Stammdaten und Termine eines Planungsstands. Zusätzlich können Projektdaten als Excel-Datei ausgetauscht werden.
+
+## Funktionsumfang
+
+Die Anwendung umfasst im Wesentlichen:
+
+- Verwaltung von LVAs, Räumen, Studienrichtungen, Terminen und freien Zeiträumen
+- Kalenderansichten für Tag, Woche und Monat
+- Terminplanung per Dialog oder Drag-and-Drop
+- Unterstützung von Serienterminen
+- Filter nach Semester, Studienrichtung, Studiensemester, LVA, Lehrperson, Typ, Gebäude und Raum
+- Konfliktprüfung für relevante Planungsfälle
+- Import und Export von Planungsdaten
+- Export von Terminlisten für Lehrende
+
+## Projektstruktur
+
+Ein Projekt wird als Ordner gespeichert. Darin liegen die Projektdaten getrennt nach Datenbereichen, unter anderem:
+
+- `raeume.json`
+- `lehrveranstaltungen.json`
+- `termine.json`
+- `studienrichtungen.json`
+- `freie_tage.json`
+
+Der verwendete Projektordner wird in den Einstellungen gespeichert. Beim Start prüft die Anwendung, ob der gespeicherte Ordner vorhanden und gültig ist. Falls kein gültiger Ordner gefunden wird, kann ein neuer Projektordner angelegt oder ein bestehender Projektordner ausgewählt werden.
+
+## Standarddaten
+
+Für neue Projekte können mitgelieferte Standarddaten importiert werden. Diese basieren auf TISS-Daten der TU Wien ETIT vom Juni 2026 und enthalten Räume sowie LVAs für den Elektrotechnik-Bachelor-Katalog.
+
+Beim Anlegen eines neuen Projekts kann entschieden werden, ob diese Standarddaten übernommen, gezielt ausgewählt oder übersprungen werden.
+
+## Import und Export
+
+Planungsdaten können als Excel- oder JSON-Dateien importiert werden. Der Import unterscheidet zwischen neuen, geänderten und bereits vorhandenen Einträgen. Einträge mit fehlenden Pflichtverweisen werden nicht automatisch übernommen.
+
+Der Export unterstützt vollständige Projektdateien sowie spezielle Ausgaben, zum Beispiel für Lehrende oder als Wochenkalender.
+
+Das Beispielprojekt `Beispiel_Projekt.xlsx` ist als Test- und Demonstrationsdatei beigelegt.
+
+## Konfliktprüfung
+
+Die Konfliktprüfung dient als Hinweisfunktion. Konflikte blockieren die Planung nicht, sondern markieren Einträge, die geprüft werden sollten.
+
+Geprüft werden unter anderem:
+
+- Raumbelegungen
+- Gruppenüberschneidungen
+- Lehrpersonenüberschneidungen
+- Studienplanüberschneidungen
+- Feiertage und vorlesungsfreie Zeiträume
+- Raumkapazitäten
+- unvollständige Termine
+
+Die aktiven Prüfungen und Schwellenwerte können in den Einstellungen angepasst werden.
 
 ## Starten
 
-### Als EXE
-
-Die gebaute Anwendung liegt unter:
-
-```text
-dist/Planungstool.exe
-```
-
-Beim ersten Start fragt die App nach einem Projektordner. Es kann ein neues Projekt angelegt oder ein bestehendes Projekt geöffnet werden.
-
-### Aus dem Quellcode
+Aus dem Quellcode:
 
 ```powershell
 .venv\Scripts\python.exe main.py
 ```
 
-Benötigte Pakete:
+Abhängigkeiten installieren:
 
 ```powershell
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-## Projektordner
+## EXE erstellen
 
-Ein Projektordner enthält die Planungsdaten der App:
-
-- Räume
-- LVAs
-- Termine
-- Studienrichtungen
-- freie Tage und vorlesungsfreie Zeiträume
-
-Der zuletzt verwendete Projektordner wird in den Einstellungen gespeichert. Wenn dieser Ordner nicht mehr existiert oder ungültig ist, fragt die App beim Start nach einem neuen Projektordner.
-
-## Standarddaten
-
-Für neue Projekte können Standarddaten importiert werden:
-
-- TISS-Daten TU Wien ETIT, Juni 2026
-- Räume
-- LVAs des Elektrotechnik-Bachelor-Katalogs
-
-Beim Anlegen eines neuen Projekts kann ausgewählt werden, ob die Standarddaten vollständig importiert, gezielt ausgewählt oder übersprungen werden sollen.
-
-## Import
-
-Die App unterstützt:
-
-- vollständige Projektimporte aus Excel oder JSON
-- einzelne Listen für Räume oder LVAs aus Excel/CSV
-- Standarddatenimport aus den mitgelieferten Tabellen
-
-Beim Import prüft die App neue, geänderte und bereits vorhandene Einträge. Einträge mit fehlenden Pflichtverweisen werden nicht still übernommen, sondern im Importablauf ausgewiesen.
-
-## Export
-
-Wichtige Exporte:
-
-- Projekt-Export als Excel-Datei
-- Export für Lehrende
-- Wochenkalender-Export
-
-Das Beispielprojekt `Beispiel_Projekt.xlsx` liegt bewusst im Repository und kann zum Testen in ein neues Projekt importiert werden.
-
-## Konflikte
-
-Die Konfliktprüfung markiert auffällige Planungsfälle, blockiert die Planung aber nicht. Unterstützt werden unter anderem:
-
-- Raum-Konflikte
-- Gruppen-Konflikte
-- Lehrpersonen-Konflikte
-- Studienplan-Warnungen
-- Feiertags- und vorlesungsfreie Konflikte
-- Kapazitätswarnungen
-- unvollständige Termine
-
-Die aktiven Konfliktregeln und Schwellenwerte können in den Einstellungen angepasst werden.
-
-## EXE bauen
+Die Windows-EXE kann mit folgendem Script gebaut werden:
 
 ```powershell
 .\build_exe.ps1
 ```
 
-Das Script verwendet `Planungstool.spec`. Dort ist definiert, welche Dateien in die EXE aufgenommen werden, z. B. Standardtabellen, Styles, Icons und Konfigurationsdateien.
+Die PyInstaller-Konfiguration liegt in `Planungstool.spec`. Dort ist festgelegt, welche Zusatzdateien in die Anwendung aufgenommen werden.
 
-## Entwicklung
+## Hinweise zur Entwicklung
 
-Schneller Syntaxcheck:
+Ein einfacher Syntaxcheck kann mit folgendem Befehl ausgeführt werden:
 
 ```powershell
 .venv\Scripts\python.exe -m compileall src main.py
 ```
 
-Der Ordner `dist/` wird bewusst nicht ignoriert, damit die gebaute EXE bei Bedarf mitgegeben werden kann. Temporäre Build- und Testordner wie `build/`, `.pytest_cache/`, `.mypy_cache/` und `data_test/` sind ignoriert.
+Der Ordner `dist/` wird nicht ignoriert, da die gebaute EXE bei Bedarf mitgegeben wird. Temporäre Ordner wie `build/`, `.pytest_cache/`, `.mypy_cache/` und `data_test/` sind in `.gitignore` eingetragen.
