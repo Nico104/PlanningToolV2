@@ -10,17 +10,23 @@
       "studiensemester": [
         "sem1"
       ],
-      "studienrichtung": "ETIT"
+      "studienrichtung": "ETIT",
+      "ects": ""
     },
     {
       "id": "370.007",
       "name": "Energieversorgung – Einfluss der PV-Einspeisung",
+      "vortragende": {
+        "name": "",
+        "email": ""
+      },
       "studiensemester": [
         "sem3",
         "qs1",
         "sem1"
       ],
-      "studienrichtung": "ETIT"
+      "studienrichtung": "ETIT",
+      "ects": ""
     },
     {
       "id": "410.101",
@@ -999,7 +1005,7 @@
         "sem1"
       ],
       "studienrichtung": "",
-      "ects": 3
+      "ects": "3"
     }
   ]
 }

@@ -15,3 +15,15 @@ def type_color_for(typ: str) -> QColor:
         except KeyError:
             pass
     return qss_color("termin-default-bg")
+
+
+def type_accent_color_for(typ: str) -> QColor:
+    key = (typ or "").strip().lower()
+    colors = {
+        "vo": "#1d4ed8",
+        "ue": "#15803d",
+        "vu": "#7c3aed",
+        "lu": "#d97706",
+        "se": "#a21caf",
+    }
+    return QColor(colors.get(key, "#64748b"))

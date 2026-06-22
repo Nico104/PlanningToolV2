@@ -581,6 +581,13 @@ QLabel#ChipDiscuss {
   font-size: 9px;
 }
 
+QLabel#ChipSeries {
+  background: #25224a;
+  border: 1px solid #818cf8;
+  color: #c7d2fe;
+  font-weight: 600;
+}
+
 QLabel#ChipMissingRoom {
   background: #442413;
   border: 1px solid #f59e0b;

@@ -2,6 +2,8 @@ from PySide6.QtCore import Qt, Signal, QPoint, QMimeData, QRectF
 from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
 
+from ...utils.color_constants import type_accent_color_for
+
 
 class TerminCard(QFrame):
     """Interactive Termin card with drag-and-drop plus double/right-click signals"""
@@ -25,26 +27,34 @@ class TerminCard(QFrame):
         parent=None,
         zu_besprechen: bool = False,
         besprechungshinweis: str = "",
+        is_series: bool = False,
     ):
         super().__init__(parent)
         self.termin_id = termin_id
         self._press_pos: QPoint | None = None
         self._read_only = False
+        self._accent_color = type_accent_color_for(typ)
         self._zu_besprechen = bool(zu_besprechen)
         self._besprechungshinweis = str(besprechungshinweis or "").strip()
+        self._is_series = bool(is_series)
 
         self.setObjectName("TerminCard")
         self.setProperty("zuBesprechen", self._zu_besprechen)
+        self.setProperty("series", self._is_series)
         self.setCursor(Qt.PointingHandCursor)
         self.setAttribute(Qt.WA_StyledBackground, True)
+        tooltip_lines = []
+        if self._is_series:
+            tooltip_lines.append("Serientermin")
         if self._zu_besprechen:
-            tooltip = "Zu besprechen"
+            tooltip_lines.append("Zu besprechen")
             if self._besprechungshinweis:
-                tooltip = f"{tooltip}\n{self._besprechungshinweis}"
-            self.setToolTip(tooltip)
+                tooltip_lines.append(self._besprechungshinweis)
+        if tooltip_lines:
+            self.setToolTip("\n".join(tooltip_lines))
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(12, 10, 12, 10)
+        root.setContentsMargins(16, 10, 12, 10)
         
         root.setSpacing(6)
 
@@ -82,6 +92,8 @@ class TerminCard(QFrame):
             chips.addWidget(semester_chip)
         if str(gruppe or "").strip():
             chips.addWidget(chip(str(gruppe).strip(), "ChipGroup"))
+        if self._is_series:
+            chips.addWidget(chip("Serie", "ChipSeries"))
         if str(raum or "").strip():
             chips.addWidget(chip(raum, "ChipRoom"))
         else:
@@ -96,6 +108,16 @@ class TerminCard(QFrame):
 
         chips.addStretch(1)
         root.addLayout(chips)
+
+    def paintEvent(self, event) -> None:
+        super().paintEvent(event)
+
+        painter = QPainter(self)
+        try:
+            if not self._zu_besprechen:
+                painter.fillRect(1, 1, 5, max(0, self.height() - 2), self._accent_color)
+        finally:
+            painter.end()
 
     def set_read_only(self, read_only: bool) -> None:
         self._read_only = bool(read_only)

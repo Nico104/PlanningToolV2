@@ -14,7 +14,7 @@ from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 from .free_day_provider import FreeDayProvider
-from .render_helpers import FreeDayHeaderView, render_grouped_termine_column
+from .render_helpers import FreeDayHeaderView, render_grouped_termine_column, week_day_accent_color
 
 
 class PlannerWeekView:
@@ -173,11 +173,40 @@ class PlannerWeekView:
 
         header_labels = ["Zeit"]
         free_day_badges: dict[int, tuple[str, str, str]] = {}
+        header_accents = {}
+        header_tooltips = {}
+        visible_term_counts_by_day = defaultdict(int)
+        grid_start_min = slots[0].hour * 60 + slots[0].minute if slots else 0
+        grid_end_min = (
+            slots[-1].hour * 60 + slots[-1].minute + slot_min
+            if slots
+            else grid_start_min
+        )
+        for termin in terms:
+            end_time = termin.get_end_time()
+            start_time = termin.start_zeit
+            if (
+                termin.datum is not None
+                and start_time is not None
+                and end_time is not None
+                and (end_time.hour * 60 + end_time.minute) > grid_start_min
+                and (start_time.hour * 60 + start_time.minute) < grid_end_min
+            ):
+                visible_term_counts_by_day[termin.datum] += 1
+
         for i, day in enumerate(days):
             day_date = week_mo + timedelta(days=i)
             header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}")
             day_info = self._free_days_by_date.get(day_date)
             day_type = day_info.day_type if day_info else None
+            term_count = visible_term_counts_by_day.get(day_date, 0)
+            accent = week_day_accent_color(term_count)
+            if accent is not None:
+                header_accents[1 + i] = accent
+            tooltip_lines = [
+                f"{day}, {day_date.strftime('%d.%m.%Y')}",
+                f"{term_count} sichtbare Termin(e)",
+            ]
             badge_label = self._free_day_provider.badge_for_info(day_info)
             if day_type in {"feiertag", "vorlesungsfrei"} and badge_label:
                 free_day_badges[1 + i] = (
@@ -185,6 +214,8 @@ class PlannerWeekView:
                     day_type,
                     self._free_day_provider.label_for_info(day_info),
                 )
+                tooltip_lines.append(self._free_day_provider.label_for_info(day_info))
+            header_tooltips[1 + i] = "\n".join(tooltip_lines)
 
         # Clear all cell widgets before rebuilding
         for row in range(self.week_table.rowCount()):
@@ -203,8 +234,9 @@ class PlannerWeekView:
 
         header = self.week_table.horizontalHeader()
         if isinstance(header, FreeDayHeaderView):
+            header.set_section_accent_colors(header_accents)
             header.set_free_day_badges(free_day_badges)
-        for section, (_text, _day_type, tooltip) in free_day_badges.items():
+        for section, tooltip in header_tooltips.items():
             hdr_item = self.week_table.horizontalHeaderItem(section)
             if hdr_item is not None:
                 hdr_item.setToolTip(tooltip)

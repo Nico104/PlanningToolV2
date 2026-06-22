@@ -14,7 +14,7 @@ from .state import PlannerState
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
 from .free_day_provider import FreeDayProvider
-from .render_helpers import FreeDayHeaderView, render_grouped_termine_column
+from .render_helpers import FreeDayHeaderView, render_grouped_termine_column, section_accent_color
 
 
 class PlannerDayView:
@@ -176,9 +176,14 @@ class PlannerDayView:
         for idx, room in enumerate(rooms, start=1):
             hdr_item = self.day_table.horizontalHeaderItem(idx)
             if hdr_item is not None:
-                hdr_item.setToolTip(
-                    f"{room.id} – {room.name}\nKapazität: {room.kapazitaet}"
-                )
+                tooltip_lines = [
+                    f"{room.id} – {room.name}",
+                    f"Kapazität: {room.kapazitaet}",
+                ]
+                building = str(getattr(room, "gebaeude", "") or "").strip()
+                if building:
+                    tooltip_lines.append(f"Gebäude: {building}")
+                hdr_item.setToolTip("\n".join(tooltip_lines))
 
         # header sizing: time column fixed, rooms stretch
         h = self.day_table.horizontalHeader()
@@ -212,6 +217,16 @@ class PlannerDayView:
 
         header = self.day_table.horizontalHeader()
         if isinstance(header, FreeDayHeaderView):
+            header.set_section_accent_colors(
+                {
+                    idx: section_accent_color(
+                        str(getattr(room, "gebaeude", "") or "").strip()
+                        or room.id
+                        or room.name
+                    )
+                    for idx, room in enumerate(rooms, start=1)
+                }
+            )
             header.set_free_day_badges(free_day_badges)
 
         if hasattr(self.day_table, "current_day_qdate"):

@@ -5,7 +5,7 @@
       "id": "T10",
       "lva_id": "370.007",
       "typ": "UE",
-      "datum": "2026-06-01",
+      "datum": "2026-02-11",
       "start_zeit": "10:30",
       "raum_id": "E17",
       "gruppe": {
@@ -71,8 +71,8 @@
       "id": "T14",
       "lva_id": "123.456",
       "typ": "SE",
-      "datum": null,
-      "start_zeit": null,
+      "datum": "2026-02-03",
+      "start_zeit": "08:30",
       "raum_id": "E17",
       "gruppe": null,
       "anwesenheitspflicht": true,
@@ -91,8 +91,8 @@
       "id": "T2",
       "lva_id": "370.007",
       "typ": "UE",
-      "datum": null,
-      "start_zeit": null,
+      "datum": "2026-02-11",
+      "start_zeit": "13:30",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe B",
@@ -166,31 +166,6 @@
       ]
     },
     {
-      "name": "1. Vorlesung Programmieren",
-      "id": "T1",
-      "lva_id": "123.456",
-      "typ": "VO",
-      "datum": "2026-02-11",
-      "start_zeit": "09:30",
-      "raum_id": "",
-      "gruppe": {
-        "name": "Gruppe A",
-        "groesse": 30
-      },
-      "anwesenheitspflicht": true,
-      "notiz": "Einführung in das Fach",
-      "zu_besprechen": true,
-      "besprechungshinweis": "testhinweis",
-      "duration": 435,
-      "semester_id": "WS25",
-      "datum_bis": "2026-03-04",
-      "periodizitaet": "wöchentlich",
-      "ausfall_daten": [
-        "2026-02-18"
-      ],
-      "serien_ausnahmen": []
-    },
-    {
       "name": "",
       "id": "T13",
       "lva_id": "123.456",
@@ -214,12 +189,35 @@
       "serien_ausnahmen": []
     },
     {
+      "name": "1. Vorlesung Programmieren",
+      "id": "T1",
+      "lva_id": "123.456",
+      "typ": "VO",
+      "datum": "2026-02-11",
+      "start_zeit": "09:30",
+      "raum_id": "",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 30
+      },
+      "anwesenheitspflicht": true,
+      "notiz": "Einführung in das Fach",
+      "zu_besprechen": true,
+      "besprechungshinweis": "testhinweis",
+      "duration": 435,
+      "semester_id": "WS25",
+      "datum_bis": "2026-02-18",
+      "periodizitaet": "wöchentlich",
+      "ausfall_daten": [],
+      "serien_ausnahmen": []
+    },
+    {
       "name": "1. Seminar Datenanalyse",
       "id": "T3",
       "lva_id": "123.456",
       "typ": "SE",
       "datum": "2026-02-09",
-      "start_zeit": "08:15",
+      "start_zeit": "09:30",
       "raum_id": "",
       "gruppe": {
         "name": "Gruppe C",
@@ -229,7 +227,7 @@
       "notiz": "Seminararbeit",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "duration": 120,
+      "duration": 115,
       "semester_id": "WS26",
       "datum_bis": null,
       "periodizitaet": null,
