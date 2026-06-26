@@ -72,6 +72,8 @@ class PlannerDayView:
             self.day_table.set_text_provider(_text_provider)
         if hasattr(self.day_table, "set_conflict_checker"):
             def _conflict_checker_day(tid: str, row: int, col: int) -> bool:
+                if not bool(self.state.settings.get("dynamic_drag_conflict_preview", True)):
+                    return False
                 if col <= 0 or not self._room_list or col > len(self._room_list):
                     return False
                 target_raum_id = self._room_list[col - 1].id

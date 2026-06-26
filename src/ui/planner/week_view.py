@@ -70,6 +70,8 @@ class PlannerWeekView:
             self.week_table.set_text_provider(_text_provider)
         if hasattr(self.week_table, "set_conflict_checker"):
             def _conflict_checker_week(tid: str, row: int, col: int) -> bool:
+                if not bool(self.state.settings.get("dynamic_drag_conflict_preview", True)):
+                    return False
                 if col <= 0:
                     return False
                 week_mo = self._current_week_monday()

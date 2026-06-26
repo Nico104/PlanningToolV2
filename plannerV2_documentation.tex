@@ -19,9 +19,73 @@
 
 \begin{document}
 
-\maketitle
+%\maketitle
+\begin{titlepage}
+\centering
+
+{\Large Technische Universität Wien\par}
+\vspace{0.5cm}
+{\large Fakultät für Elektrotechnik und Informationstechnik\par}
+\vspace{2cm}
+
+{\LARGE\bfseries Konzeption und Implementierung eines Python-basierten Planungstools zur Unterstützung der Lehrveranstaltungsplanung\par}
+
+\vspace{2cm}
+{\Large Bachelorarbeit\par}
+
+\vfill
+
+\begin{tabular}{ll}
+Verfasser: & Nicolas Carraro \\
+Matrikelnummer: & 12202357 \\
+Betreuer: & Univ.Prof. Dipl.-Ing. Dr.techn. Michael Waltl \\
+\end{tabular}
+
+\vfill
+
+Wien, \today
+
+\end{titlepage}
+
+\section*{Kurzfassung}
+\addcontentsline{toc}{section}{Kurzfassung}
+
+Diese Bachelorarbeit beschreibt die Konzeption und Implementierung eines Python-basierten Desktop-Planungstools zur Unterstützung der Lehrveranstaltungsplanung. Ausgangspunkt ist ein manueller Planungsprozess, bei dem Termine, Räume, Lehrpersonen, Gruppen und freie Zeiträume in mehreren Tabellen verwaltet werden. Ziel der Arbeit ist es, diese Informationen zentral zu strukturieren, Termine übersichtlich in Kalenderansichten darzustellen und typische Planungskonflikte besser sichtbar zu machen.
+
+Das entwickelte Tool verwendet PySide6 für die grafische Benutzeroberfläche und speichert Projektdaten lokal in JSON-Dateien. Es unterstützt Tages-, Wochen- und Monatsansichten, Drag-and-Drop zur Terminplanung, Filter- und Suchfunktionen, Serientermine, Import- und Exportfunktionen sowie eine regelbasierte Konflikterkennung. Die Evaluation erfolgt durch manuelle Tests typischer Arbeitsabläufe. Die Ergebnisse zeigen, dass das Tool den Planungsprozess nicht automatisiert ersetzt, aber die Bearbeitung, Kontrolle und Nachvollziehbarkeit der Lehrveranstaltungsplanung verbessert.
+
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+This bachelor thesis describes the design and implementation of a Python-based desktop planning tool for supporting course scheduling. The starting point is a manual planning process in which appointments, rooms, lecturers, groups and free periods are managed across several tables. The goal of the thesis is to structure this information centrally, present appointments in calendar views and make typical scheduling conflicts easier to detect.
+
+The developed tool uses PySide6 for the graphical user interface and stores project data locally in JSON files. It supports day, week and month views, drag-and-drop scheduling, filtering and search, recurring appointments, import and export functions, and rule-based conflict detection. The evaluation is based on manual tests of typical workflows. The results show that the tool does not replace the planning decisions themselves, but improves editing, checking and traceability in course scheduling.
+\newpage
 
 \tableofcontents
+\newpage
+
+\listoffigures
+\newpage
+
+\listoftables
+\newpage
+
+\section*{Abkürzungsverzeichnis}
+\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+
+\begin{tabular}{ll}
+CSV & Comma-Separated Values \\
+CRUD & Create, Read, Update, Delete \\
+ETIT & Elektrotechnik und Informationstechnik \\
+JSON & JavaScript Object Notation \\
+LVA & Lehrveranstaltung \\
+SS & Sommersemester \\
+WS & Wintersemester \\
+TISS & TU Wien Informations-Systeme und Services \\
+UI & User Interface \\
+\end{tabular}
+
 \newpage
 
 \section{Einleitung}
@@ -153,14 +217,14 @@ Wenn der Nutzer einen Termin auswählt, einen Filter setzt oder Daten in einem D
 
 \subsubsection{JSON als Datenformat}
 
-Die Planungsdaten werden in JSON-Dateien gespeichert. Dazu gehören zum Beispiel Termine, Lehrveranstaltungen, Räume, Semester und weitere Informationen, die für die Planung benötigt werden. JSON wurde gewählt, weil sich damit strukturierte Daten unkompliziert speichern, wieder laden und bei Bedarf auch direkt in der Datei manuell bearbeiten lassen \cite{bray2017json}.
+Die Planungsdaten werden in mehreren JSON-Dateien eines Projektordners gespeichert. Dazu gehören Termine, Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume. Die regulären Sommer- und Wintersemester werden dagegen aus Semester-ID und Jahr erzeugt. Die Studiensemester werden global in \texttt{src/studiensemester.json} verwaltet. JSON wurde gewählt, weil sich damit strukturierte Daten unkompliziert speichern, wieder laden und bei Bedarf auch direkt in der Datei manuell bearbeiten lassen \cite{bray2017json}.
 
 Da die JSON-Dateien auch außerhalb des Programms geöffnet werden können, bleibt nachvollziehbar, welche Daten gespeichert wurden. Das kann zum Beispiel hilfreich sein, wenn Fehler gesucht werden oder überprüft werden soll, ob Daten richtig übernommen wurden.
 
 Grundsätzlich hätten für die Speicherung auch CSV-Dateien verwendet werden können. CSV eignet sich vor allem für einfache tabellarische Daten. Für das Planungstool ist das jedoch nicht immer passend, da die Daten teilweise stärker miteinander verknüpft sind. Ein Termin kann zum Beispiel mehrere Eigenschaften oder Verweise auf andere Daten enthalten, wie auf eine LVA oder einen Raum.
 JSON ist dafür besser geeignet, weil zusammenhängende Informationen als Objekte gespeichert werden können. Dadurch lassen sich die Planungsdaten strukturierter abbilden als in einer einfachen Tabelle.
 
-Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Für den Austausch mit Lehrenden kann das Tool die Planungsdaten zusätzlich in eine Excel-Datei exportieren und wieder importieren. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
+Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Für den Datenaustausch unterstützt das Tool Excel- und JSON-Projektdateien. Zusätzlich können Raum- und LVA-Listen aus Excel- oder CSV-Dateien übernommen werden. Für Lehrende können gefilterte Terminlisten oder Wochenkalender als Excel-Datei exportiert werden. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
 
 \newpage
 
@@ -184,7 +248,7 @@ Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software
 \hline
 Terminverwaltung & Termine sollen erstellt, bearbeitet und gelöscht werden können. \\
 \hline
-Datenverwaltung & Lehrveranstaltungen, Räume, Semester, Studienrichtungen und weitere Daten sollen verwaltet werden können. \\
+Datenverwaltung & Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume sollen verwaltet werden können. Reguläre Semester werden automatisch erzeugt und Studiensemester als globale Auswahlwerte verwendet. \\
 \hline
 Terminzuordnung & Termine sollen mit Lehrveranstaltungen, Räumen, Semestern oder Gruppen verbunden werden können. \\
 \hline
@@ -198,7 +262,7 @@ Konflikterkennung & Mögliche Konflikte, wie doppelt belegte Räume oder zeitlic
 \hline
 Speicherung & Planungsdaten sollen gespeichert und beim erneuten Start wieder geladen werden können. \\
 \hline
-Import und Export & Planungsdaten sollen importiert und exportiert werden können. \\
+Import und Export & Projektstände sollen als JSON oder Excel ausgetauscht werden können. Zusätzlich sollen Raum- und LVA-Listen aus Excel oder CSV importiert und Terminlisten für Lehrende exportiert werden können. \\
 \hline
 \end{tabular}
 \caption{Funktionale Anforderungen an das Planungstool}
@@ -229,6 +293,8 @@ Nachvollziehbarkeit & Daten und Änderungen sollen verständlich und kontrollier
 \hline
 Stabilität & Die Anwendung soll Daten zuverlässig speichern und laden können. \\
 \hline
+Responsivität & Die Anwendung soll auch bei größeren Terminmengen flüssig reagieren. Rechenintensive Komfortfunktionen sollen deshalb bei Bedarf deaktiviert werden können. \\
+\hline
 Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden können und keinen Server benötigen. \\
 \hline
 \end{tabular}
@@ -244,7 +310,7 @@ Das Planungstool wurde als Unterstützung für die jährliche Lehrveranstaltungs
 
 Nicht Teil dieser Version ist eine automatische Optimierung der gesamten Planung. Die Software erstellt also nicht selbstständig den bestmöglichen Stundenplan, sondern unterstützt den bestehenden Planungsprozess. Auch eine direkte Anbindung an offizielle Universitätssysteme oder eine automatische Raumreservierung ist aktuell nicht umgesetzt.
 
-Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen. Funktionen wie eine Anbindung an bestehende Systeme, automatische Raumreservierung oder Mehrnutzerbetrieb könnten sinnvolle Erweiterungen für eine spätere Version des Tools sein.
+Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen. Funktionen wie eine direkte Live-Anbindung an TISS oder andere Universitätssysteme, automatische Raumreservierung, automatische Optimierung oder Mehrnutzerbetrieb sind nicht Teil dieser Version und bleiben mögliche Erweiterungen.
 
 \newpage
 
@@ -276,7 +342,7 @@ Die grundlegende Aufteilung der Benutzeroberfläche ist in Abbildung \ref{fig:ha
 
 Dadurch wird sichtbar, dass die Kalenderansicht den zentralen Arbeitsbereich bildet, während andere Bereiche wie Terminliste, Filter und Konfliktanzeige als Docks am Rand angeordnet sind.
 
-Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Semester, Studienrichtungen oder freie Tage zu erstellen, zu bearbeiten oder zu löschen.
+Die Terminliste dient dazu, vorhandene Termine übersichtlich anzuzeigen. Sie ist besonders wichtig für Termine, die noch nicht vollständig eingeplant wurden. Der Dateneditor wird verwendet, um Termine und Stammdaten wie Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume zu erstellen, zu bearbeiten oder zu löschen. Studiensemester werden dabei als feste globale Auswahlwerte verwendet und reguläre Semester werden automatisch aus Sommer- bzw. Wintersemester und Jahr erzeugt.
 
 Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrveranstaltung, Raum, Dozent oder Semester. Die Konfliktanzeige zeigt eine interaktive Liste aller aktuellen Planungskonflikte. Mit dem Navigationsbereich kann der Benutzer beliebig zwischen den Ansichten wechseln und innerhalb der jeweiligen Zeitintervalle navigieren.
 
@@ -284,7 +350,7 @@ Der Filterbereich grenzt die Terminliste gezielt ein, zum Beispiel nach Lehrvera
 
 Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen die Termine, da sie die eigentlichen Planungseinträge darstellen. Ein Termin besteht aber nicht nur aus einem Datum und einer Uhrzeit, sondern ist mit weiteren Informationen verbunden. Dazu gehören zum Beispiel die zugehörige LVA, ein Raum, ein Semester, ein Veranstaltungstyp oder eine Gruppe.
 
-Neben den Terminen gibt es noch andere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Semester, geplante Semester, Studienrichtungen und freie Tage. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
+Neben den Terminen gibt es weitere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume. Lehrveranstaltungen können einer Studienrichtung und mehreren Studiensemestern zugeordnet werden. Termine speichern zusätzlich eine Semester-ID, zum Beispiel \texttt{SS26} oder \texttt{WS26}. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
 
 Die Verbindung zwischen den Daten erfolgt über IDs. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
 
@@ -294,7 +360,9 @@ Neben den Planungsdaten speichert die Anwendung auch Einstellungen und Konfliktp
 
 Der Arbeitsablauf im Planungstool beginnt in der Regel mit dem Laden der vorhandenen Daten. Danach können bei Bedarf Stammdaten ergänzt oder angepasst werden. Auf dieser Grundlage werden die einzelnen Termine erstellt und weiter geplant.
 
-Ein Termin kann entweder direkt mit Datum, Uhrzeit und Raum angelegt werden oder zunächst ohne feste Zuordnung bestehen. Dafür verwendet das Tool Startzeit und Dauer statt Start- und Endzeit. So können unzugewiesene Termine ohne Startzeit gespeichert werden und bei Drag-and-Drop ist die Dauer in der Vorschau direkt sichtbar. Noch nicht zugewiesene Termine können später aus der Terminliste in die Kalenderansicht per Drag-and-Drop übernommen werden. Während des Drag-and-Drops werden mögliche Konflikte direkt als rote Vorschau im Kalender angezeigt.
+Ein Termin kann entweder direkt mit Datum, Uhrzeit, Raum und Semester-ID angelegt werden oder zunächst ohne vollständige zeitliche Zuordnung bestehen. Zusätzlich können Termine als Serientermine mit Enddatum, Periodizität, Ausfallterminen und einzelnen Serien-Ausnahmen gespeichert werden. Dafür verwendet das Tool Startzeit und Dauer statt Start- und Endzeit. 
+So können unzugewiesene Termine ohne Startzeit gespeichert werden und bei Drag-and-Drop ist die Dauer in der Vorschau direkt sichtbar. Noch nicht zugewiesene Termine können später aus der Terminliste in die Kalenderansicht per Drag-and-Drop übernommen werden. 
+Während des Drag-and-Drops werden mögliche Konflikte in der Tages- und Wochenansicht direkt als rote Vorschau angezeigt.
 
 Während der Planung können Filter genutzt werden, um nur bestimmte Termine anzuzeigen. Die Konfliktanzeige hilft zusätzlich dabei, mögliche Probleme schnell zu erkennen.
 
@@ -322,7 +390,7 @@ Der Quellcode ist in mehrere Bereiche aufgeteilt. Im \texttt{src}-Verzeichnis be
 
 Um Wartbarkeit und Übersichtlichkeit zu verbessern, wurden alle grafischen Anpassungen in einer separaten \texttt{qss}-Datei gebündelt.
 
-Die Planungsdaten liegen in JSON-Dateien und befinden sich je nach ausgewähltem Datenpfad zum Beispiel im Ordner \texttt{data}. Dadurch kann das Tool mit unterschiedlichen Datensätzen verwendet werden.
+Die Planungsdaten liegen in JSON-Dateien im ausgewählten Projektordner. Dadurch kann das Tool mit unterschiedlichen Planungsständen oder Testprojekten verwendet werden.
 
 Für die benötigten Pakete wird eine \texttt{requirements.txt}-Datei verwendet. Zusätzlich enthält das Projekt eine \texttt{pyproject.toml}, in der weitere Projektinformationen und Einstellungen festgelegt werden.
 
@@ -445,7 +513,7 @@ Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von
 
 \subsection{Termin- und Stammdatenverwaltung}
 
-Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören nicht nur einzelne Termine, sondern auch Lehrveranstaltungen, Semester, Räume, Studienrichtungen, freie Tage und geplante Semester.
+Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören einzelne Termine sowie Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume. Studiensemester werden im Editor nur als Zuordnung bei Lehrveranstaltungen verwendet, nicht als projektbezogene Stammdaten gepflegt.
 
 Der Dateneditor ist in Abbildung \ref{fig:dateneditor} dargestellt.
 
@@ -461,11 +529,11 @@ Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch
 Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
 
 \begin{verbatim}
-def read_geplante_semester_models(self) -> List[GeplantesSemester]:
-    models: List[GeplantesSemester] = []
-    for item in self.ds.load_geplante_semester():
+def read_studiensemester_models(self) -> List[Studiensemester]:
+    models: List[Studiensemester] = []
+    for item in self.ds.load_studiensemester():
         try:
-            models.append(GeplantesSemester(**item))
+            models.append(Studiensemester(**item))
         except Exception:
             continue
     return models
@@ -535,6 +603,8 @@ Eine solche Konfliktvorschau während des Verschiebens zeigt Abbildung \ref{fig:
 
 Diese Prüfung ist nur eine Vorschau. Die eigentlichen Termindaten werden erst geändert, wenn der Termin wirklich abgelegt wird.
 
+Da diese dynamische Konfliktvorschau während des Ziehens wiederholt ausgeführt wird, kann sie bei sehr vielen Terminen oder auf leistungsschwächeren Geräten die Responsivität der Benutzeroberfläche beeinflussen. Deshalb wurde die Vorschau als optionale Komfortfunktion umgesetzt. In den Einstellungen kann die dynamische Konfliktvorschau deaktiviert werden. In diesem Fall wird während des Ziehens keine rote Konfliktvorschau berechnet, das Verschieben von Terminen bleibt jedoch weiterhin möglich.
+
 \subsection{Filterfunktion}
 
 %Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dort wird der aktuelle Filterzustand gespeichert und für die Anzeige verwendet. Der aktuelle Zustand aller Filter wird dabei im \texttt{FilterState} gespeichert.
@@ -542,13 +612,15 @@ Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Dieser Zustand wird 
 
 \begin{verbatim}
 class FilterState:
-    fachrichtung: Optional[str] = None
+    studienrichtung: Optional[str] = None
     semester: Optional[str] = None
     lva_id: Optional[str] = None
+    gebaeude: Optional[str] = None
     raum_id: Optional[str] = None
     typ: Optional[str] = None
     dozent: Optional[str] = None
-    geplante_semester: Optional[str] = None
+    studiensemester: Optional[str] = None
+    zu_besprechen: bool = False
 \end{verbatim}
 
 Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben.
@@ -569,13 +641,13 @@ def _on_global_filters_changed(self, fs: FilterState) -> None:
 \end{verbatim}
 
 Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabei, die Planung in kleineren Ausschnitten zu betrachten.
+Ergänzend zu den globalen Filtern besitzt die Terminliste eine Suchfunktion. Damit kann nach Terminname, Termin-ID, LVA, Raum, Lehrperson oder Besprechungshinweis gesucht werden. Wenn ein passender Termin bereits eingeplant ist, kann über das Kontextmenü der Terminliste direkt zu diesem Termin im Kalender gesprungen werden.
 
 \subsection{Konflikterkennung}
 
-Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte können zum Beispiel entstehen, wenn ein Raum zur gleichen Zeit doppelt belegt ist, eine Lehrperson gleichzeitig in mehreren Terminen eingetragen wurde oder ein Termin auf einen freien Tag fällt. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen \cite{babaei2015survey}.
+Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte und Warnungen können entstehen, wenn Räume, Gruppen oder Lehrpersonen zeitlich überschneiden, wenn Termine auf Feiertage oder vorlesungsfreie Zeiträume fallen, wenn Kapazitäten nicht ausreichen oder wenn Termine für dieselbe Studienrichtung und dasselbe Studiensemester parallel liegen. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen \cite{babaei2015survey}.
 
-Das folgende vereinfachte Codebeispiel zeigt die Erkennung von Konflikten bei Lehrpersonen. Dafür werden Termine zuerst nach Lehrperson und Datum gruppiert. Anschließend werden die Termine innerhalb jeder Gruppe auf zeitliche Überschneidungen geprüft.
-
+Das folgende Pseudocode-Beispiel zeigt vereinfacht die Erkennung von Konflikten bei Lehrpersonen. Dafür werden Termine zuerst nach Lehrperson und Datum gruppiert. Anschließend wird jeder Termin innerhalb einer Gruppe mit jedem folgenden Termin verglichen, um zeitliche Überschneidungen zu finden.
 %detect snippet
 \begin{verbatim}
 def detect_lecturer_conflicts(self, termine):
@@ -583,12 +655,14 @@ def detect_lecturer_conflicts(self, termine):
     groups = self.group_terms_by_lecturer_and_date(termine)
 
     for terms in groups.values():
-        for t1, t2 in self.get_term_pairs(terms):
-            if self.times_overlap(t1, t2):
-                conflicts.append(self._create_conflict("lecturer", t1, t2))
+        for i, t1 in enumerate(terms):
+            for t2 in terms[i + 1:]:
+                if self.times_overlap(t1, t2):
+                    conflicts.append(self._create_conflict("lecturer", t1, t2))
 
     return conflicts
 \end{verbatim}
+Die innere Schleife verwendet \texttt{terms[i + 1:]}, damit ein Termin nur mit den nachfolgenden Terminen der Liste verglichen wird. Dadurch wird jedes Terminpaar genau einmal geprüft und doppelte oder selbstbezogene Vergleiche werden vermieden.
 
 Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt{konflikte.json} geladen und können einzeln aktiviert, deaktiviert oder angepasst werden. Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
 
@@ -641,7 +715,7 @@ def highlight_termine(self, ids):
     self._highlight_month_cells(ids)
 \end{verbatim}
 
-Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird derselbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige.
+Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird derselbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige. Die Drag-and-Drop Konfliktvorschau ist aus Performancegründen als optionale Komfortfunktion umgesetzt.
 
 \subsection{Import, Export und Speicherung}
 
@@ -656,23 +730,29 @@ tmp.write_text(json_text, encoding="utf-8")
 tmp.replace(path)
 \end{verbatim}
 
-Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Export werden die Stammdaten in einer gemeinsamen JSON-Datei zusammengefasst. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
+Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Projektexport können die aktuellen Projektdaten als JSON oder als Excel-Datei gespeichert werden. Die Excel-Datei enthält getrennte Tabellenblätter für Räume, Lehrveranstaltungen, Termine, Studienrichtungen und freie Zeiträume. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
+Neben dem vollständigen Projektexport gibt es einen speziellen Export für Lehrende. Dabei können LVAs mit den zugehörigen Lehrpersonen, ein oder mehrere Semester sowie ein Zeitraum ausgewählt werden. Die Termine werden anschließend entweder als Tabellenliste oder als Wochenkalender in eine Excel-Datei geschrieben.
+
 
 \begin{verbatim}
 files = [
     "raeume.json",
     "lehrveranstaltungen.json",
     "termine.json",
-    "semester.json",
-    "fachrichtungen.json",
+    "studienrichtungen.json",
     "freie_tage.json",
-    "geplante_semester.json",
 ]
 \end{verbatim}
 
-Beim Import wird eine JSON-Datei eingelesen und zunächst überprüft, welche Daten darin enthalten sind. Danach kann entschieden werden, ob die importierten Änderungen übernommen werden sollen. Dadurch werden vorhandene Daten nicht ungeprüft ersetzt.
+Beim Import können JSON-, Excel- oder CSV-Dateien eingelesen werden. Die Anwendung erkennt Projektdateien, Raumlisten und LVA-Listen, zeigt neue, geänderte und bereits vorhandene Einträge an und überspringt Einträge mit fehlenden Pflichtverweisen. Danach kann entschieden werden, ob die importierten Änderungen übernommen werden sollen. Dadurch werden vorhandene Daten nicht ungeprüft ersetzt.
 
-Außerdem kann in den Einstellungen festgelegt werden, welcher Datenordner verwendet werden soll. Dadurch kann das Tool mit unterschiedlichen Datensätzen arbeiten, zum Beispiel mit Testdaten oder mit den eigentlichen Planungsdaten.
+Zusätzlich enthält die Anwendung optionale Standarddaten. Diese basieren auf TISS-Daten der TU Wien für Räume und auf ETIT-LVA-Daten mit Stand Juni 2026. Beim Anlegen eines neuen Projekts können diese Daten übernommen, gezielt ausgewählt oder übersprungen werden. Sie dienen als Einstiegshilfe und ersetzen keine direkte Anbindung an TISS.
+
+Außerdem kann in den Einstellungen festgelegt werden, welcher Projektordner verwendet werden soll. Dadurch kann das Tool mit unterschiedlichen Datensätzen arbeiten, zum Beispiel mit Testdaten oder mit den eigentlichen Planungsdaten.
+
+\subsection{Semester-Werkzeuge}
+
+Für wiederkehrende Planungsarbeiten wurden Semester-Werkzeuge umgesetzt. Damit können Termine eines Quellsemesters in ein Zielsemester kopiert oder Termine eines ausgewählten Semesters gelöscht werden. Beim Kopieren kann das Datum entweder nach der Position im Semester oder nach dem gleichen Kalendertag übertragen werden. Dadurch können bestehende Planungsstände als Grundlage für ein neues Semester verwendet werden, ohne Lehrveranstaltungen, Räume oder andere Stammdaten neu anzulegen.
 
 \subsection{Undo/Redo, Shortcuts und Layout-Verwaltung}
 
@@ -712,7 +792,7 @@ Diese Funktionen ändern nichts an der Planung selbst, machen die Bedienung aber
 
 Die Überprüfung des Planungstools wurde durch manuelle Tests durchgeführt. Softwaretests dienen dazu, Fehler zu finden und zu prüfen, ob zentrale Funktionen wie vorgesehen arbeiten \cite{sommerville2016software}. Dafür wurden typische Arbeitsschritte nachgestellt, wie sie auch bei der späteren Nutzung der Anwendung auftreten können. So sollte überprüft werden, ob die wichtigsten Funktionen zuverlässig funktionieren und ob Änderungen in einem Bereich auch an den passenden Stellen der Anwendung übernommen und sichtbar werden.
 
-Im Mittelpunkt standen dabei die zentralen Funktionen des Tools. Dazu zählen vor allem die Terminverwaltung, die verschiedenen Kalenderansichten, Drag-and-Drop-Funktionen, Filtermöglichkeiten, Konflikterkennung sowie Import, Export und die Speicherung von Daten.
+Im Mittelpunkt standen dabei die zentralen Funktionen des Tools. Dazu zählen vor allem die Terminverwaltung einschließlich Serienterminen, die Kalenderansichten, Drag-and-Drop, Filter und Suche, Konflikterkennung, Projektordner, Standarddatenimport, Import/Export, Semester-Werkzeuge, Undo/Redo und Speicherung.
 
 
 \subsection{Durchführung der Tests}
@@ -726,6 +806,8 @@ Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung über
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
 Termin erstellen & Ein neuer Termin wird über den Termin-Dialog mit gültigen Daten erstellt. & Der Termin wird gespeichert und erscheint in der Terminliste sowie in der passenden Kalenderansicht, falls er mit Datum und Uhrzeit erstellt wurde. \\
+\hline
+Serientermin erstellen & Ein Termin wird mit Enddatum, Periodizität und Ausfalltermin angelegt. & Die einzelnen Vorkommen werden im Kalender korrekt angezeigt und der Ausfalltermin wird nicht dargestellt. \\
 \hline
 Termin bearbeiten & Ein bestehender Termin wird geöffnet und Datum, Uhrzeit oder Raum wird geändert. & Die Änderung wird gespeichert und in Kalenderansicht und Terminliste angezeigt. \\
 \hline
@@ -773,7 +855,9 @@ Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im K
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Lehrveranstaltung, Raum oder Semester. & Die Anzeige wird jeweils auf die passenden Termine eingeschränkt. \\
+Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Semester, Studienrichtung, Studiensemester, LVA, Lehrperson, Typ, Gebäude oder Raum. & Die Anzeige wird jeweils auf die passenden Termine eingeschränkt. \\
+\hline
+Terminsuche & In der Terminliste wird nach einer LVA, einem Raum oder einer Lehrperson gesucht. & Die Terminliste zeigt nur passende Treffer an und ein eingeplanter Treffer kann im Kalender angesprungen werden. \\
 \hline
 Filter zurücksetzen & Ein gesetzter Filter wird entfernt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. \\
 \hline
@@ -794,15 +878,25 @@ Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Ko
 \hline
 Raumkonflikt erzeugen & Zwei Termine werden zur gleichen Zeit im selben Raum eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
-Dozentenkonflikt erzeugen & Zwei Termine mit derselben Lehrperson werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
+Lehrpersonen-Konflikt erzeugen & Zwei Termine mit derselben Lehrperson werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
 Gruppenkonflikt erzeugen & Zwei Termine für dieselbe Gruppe werden zeitgleich eingeplant. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
+\hline
+Studienplan-Warnung erzeugen & Zwei Termine derselben Studienrichtung und desselben Studiensemesters werden zeitgleich eingeplant. & Die Überschneidung wird als Warnung in der Konfliktanzeige dargestellt. \\
+\hline
+Kapazitätswarnung erzeugen & Ein Termin wird in einen Raum gelegt, dessen Kapazität für die Gruppengröße nicht ausreicht. & Die Kapazitätswarnung wird in der Konfliktanzeige angezeigt. \\
 \hline
 Termin auf freien Tag legen & Ein Termin wird auf einen eingetragenen freien Tag gelegt. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
 Konflikt anklicken & Ein erkannter Konflikt wird in der Konfliktanzeige ausgewählt. & Die betroffenen Termine werden im Kalender hervorgehoben. \\
 \hline
 Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenansicht auf eine problematische Position gezogen. & Die Vorschau zeigt an, dass an dieser Stelle ein Konflikt entstehen kann. \\
+\hline
+Dynamische Konfliktvorschau deaktivieren & Die Einstellung für die dynamische Konfliktvorschau wird deaktiviert und ein Termin wird per Drag-and-Drop verschoben. & Während des Ziehens wird keine rote Konfliktvorschau angezeigt, das Verschieben bleibt möglich. \\
+\hline
+Konfliktanzeige nach deaktivierter Vorschau & Nach deaktivierter Vorschau wird ein Termin so verschoben, dass ein Konflikt entsteht. & Der Konflikt wird nach der Änderung weiterhin in der Konfliktanzeige dargestellt. \\
+\hline
+Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem leistungsschwächeren Gerät mit vielen Terminen verwendet. Ein Termin wird mit aktivierter und anschließend mit deaktivierter dynamischer Konfliktvorschau per Drag-and-Drop verschoben. & Bei aktivierter Vorschau kann das Verschieben verzögert reagieren. Nach dem Deaktivieren der dynamischen Vorschau bleibt das Drag-and-Drop flüssiger. \\
 \hline
 \end{tabular}
 \caption{Manuelle Tests der Konflikterkennung}
@@ -834,9 +928,19 @@ Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die A
 \hline
 Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. \\
 \hline
-Projekt exportieren & Ein vorhandener Planungsstand wird exportiert. & Eine JSON-Exportdatei mit den relevanten Projektdaten wird erstellt. \\
+Neues Projekt anlegen & Ein leerer Ordner wird ausgewählt und als neues Projekt vorbereitet. & Die benötigten Projektdateien werden angelegt und der Projektordner wird als Datenpfad gespeichert. \\
+\hline
+Standarddaten importieren & Beim Anlegen eines Projekts werden die mitgelieferten Standarddaten ausgewählt. & Räume und ETIT-LVAs aus den TISS-basierten Standarddaten werden in das Projekt übernommen. \\
+\hline
+Projekt exportieren & Ein vorhandener Planungsstand wird als Excel- und alternativ als JSON-Datei exportiert. & Die Exportdatei enthält Räume, LVAs, Termine, Studienrichtungen und freie Zeiträume. \\
 \hline
 Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. \\
+\hline
+Raum-Liste importieren & Eine Excel-Datei mit Raum-Daten wird importiert. & Die Anwendung erkennt die Einträge, zeigt neue oder geänderte Daten an und übernimmt die ausgewählten Räume. \\
+\hline
+Export für Lehrende & Für ausgewählte LVAs bzw. Lehrende und einen Zeitraum wird ein Export für Lehrende erstellt. & Eine Excel-Datei als Terminliste oder Wochenkalender wird erzeugt. \\
+\hline
+Semester-Werkzeuge verwenden & Termine eines Semesters werden in ein anderes Semester kopiert oder aus einem Semester entfernt. & Die betroffenen Termine werden korrekt kopiert bzw. gelöscht, ohne Stammdaten zu entfernen. \\
 \hline
 Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. \\
 \hline
@@ -894,7 +998,7 @@ Eine Anbindung an bestehende Universitätssysteme wäre ebenfalls hilfreich, dam
 
 In dieser Arbeit wurde ein Python-basiertes Planungstool für die Lehrveranstaltungsplanung entwickelt. Ziel war es, die Planung übersichtlicher, strukturierter und weniger fehleranfällig zu gestalten.
 
-Das Tool verwaltet Termine, Lehrveranstaltungen, Räume und weitere Planungsdaten. Funktionen wie Kalenderansichten, Filter, Drag-and-Drop und Konflikterkennung unterstützen den Nutzer bei der Bearbeitung der Planung.
+Das Tool verwaltet Termine, Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume in lokalen Projektordnern und unterstützt zusätzlich Serientermine, Standarddatenimport, Semester-Werkzeuge sowie Excel-Exporte für Lehrende. Funktionen wie Kalenderansichten, Filter, Drag-and-Drop und Konflikterkennung unterstützen den Nutzer bei der Bearbeitung der Planung.
 Die Daten werden dabei lokal in JSON-Dateien gespeichert. Das Tool übernimmt die Planung nicht automatisch, erleichtert aber typische Arbeitsschritte und macht mögliche Konflikte schneller sichtbar.
 
 Für die Zukunft wären eine Datenbankanbindung, ein Mehrbenutzerbetrieb und die Integration in bereits vorhandene Universitätssysteme sinnvolle Erweiterungen.

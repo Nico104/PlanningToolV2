@@ -16,14 +16,14 @@ class TimeGridDropTable(QTableWidget):
     All context-specific knowledge (duration, color, text, conflict checking)
     is injected via provider callbacks so this widget stays generic.
 
-    Key design decisions:
+    design decisions:
     - MIME type 'application/termin-id' carries just the Termin ID as UTF-8 bytes.
       The actual Termin object is never serialized into the drag; it is looked up
       from the shared state via the injected providers.
     - Span calculation: duration_minutes / slot_minutes = number of rows
       the preview block should cover. This mirrors how TerminCards are placed.
-    - Conflict checking is done on every dragMoveEvent via a callback that runs
-      the full ConflictDetector on a simulated state (see has_preview_conflict).
+    - Conflict checking is send to a callback so views can decide whether
+      live preview checks should run for the current settings.
     - Auto-scroll: a 25 ms QTimer scrolls the viewport when the cursor is within
       20 px of any edge, enabling drags to rows that are not currently visible.
     """

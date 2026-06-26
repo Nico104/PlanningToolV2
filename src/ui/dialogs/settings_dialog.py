@@ -75,6 +75,8 @@ class SettingsDialog(QDialog):
         self.data_path_le.setObjectName("Field")
         self.show_termine_search_cb = TickCheckBox()
         self.show_termine_search_cb.setObjectName("Field")
+        self.dynamic_drag_conflict_preview_cb = TickCheckBox()
+        self.dynamic_drag_conflict_preview_cb.setObjectName("Field")
         self.jump_to_semester_start_cb = TickCheckBox()
         self.jump_to_semester_start_cb.setObjectName("Field")
         self.previous_year_shortcut_mode_cb = TightComboBox()
@@ -111,7 +113,8 @@ class SettingsDialog(QDialog):
         left_col.addWidget(view_section)
         self._add_field(view_grid, 0, "Räume pro Tagesseite", self.day_room_page_size_sb, "Wie viele Raumspalten gleichzeitig in der Tagesansicht sichtbar sind.")
         self._add_field(view_grid, 1, "Termine-Suche", self.show_termine_search_cb, "Suchfeld im Termine-Dock anzeigen.")
-        self._add_field(view_grid, 2, "Semesterfilter springt", self.jump_to_semester_start_cb, "Beim Auswählen eines Semesters zur ersten passenden Woche springen.")
+        self._add_field(view_grid, 2, "Dynamische Konfliktvorschau", self.dynamic_drag_conflict_preview_cb, "Rote Konfliktvorschau während des Verschiebens anzeigen.")
+        self._add_field(view_grid, 3, "Semesterfilter springt", self.jump_to_semester_start_cb, "Beim Auswählen eines Semesters zur ersten passenden Woche springen.")
         left_col.addStretch(1)
 
         app_section, app_grid = self._section("Projekt und App")
@@ -358,6 +361,7 @@ class SettingsDialog(QDialog):
         self._sync_time_edit_constraints()
         self.data_path_le.setText(s.get("data_path", ""))
         self.show_termine_search_cb.setChecked(bool(s.get("show_termine_search", True)))
+        self.dynamic_drag_conflict_preview_cb.setChecked(bool(s.get("dynamic_drag_conflict_preview", True)))
         self.jump_to_semester_start_cb.setChecked(bool(s.get("jump_to_semester_start_on_filter", True)))
         mode = str(s.get("previous_year_shortcut_mode", "hold")).strip().lower()
         mode_idx = self.previous_year_shortcut_mode_cb.findData(mode)
@@ -376,6 +380,7 @@ class SettingsDialog(QDialog):
             "day_end": self.day_end_te.time().toString("HH:mm"),
             "data_path": self.data_path_le.text(),
             "show_termine_search": self.show_termine_search_cb.isChecked(),
+            "dynamic_drag_conflict_preview": self.dynamic_drag_conflict_preview_cb.isChecked(),
             "jump_to_semester_start_on_filter": self.jump_to_semester_start_cb.isChecked(),
             "previous_year_shortcut_mode": self.previous_year_shortcut_mode_cb.currentData() or "hold",
             "theme": self.theme_cb.currentData() or "light",
