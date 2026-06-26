@@ -27,27 +27,29 @@ class TerminCard(QLabel):
         besprechungshinweis: str = "",
         typ: str = "",
         is_series: bool = False,
+        missing_room: bool = False,
         details_tooltip: str = "",
     ):
-        display_text = f"! {text}" if zu_besprechen else text
-        super().__init__(display_text, parent)
+        super().__init__(text, parent)
         self.termin_id = termin_id
         self.bg_color = bg_color
         self.accent_color = type_accent_color_for(typ)
         self._zu_besprechen = bool(zu_besprechen)
         self._besprechungshinweis = str(besprechungshinweis or "").strip()
         self._is_series = bool(is_series)
+        self._missing_room = bool(missing_room)
+        self._needs_attention = self._zu_besprechen or self._missing_room
         self._focused = False 
         self._highlighted = False
         self._read_only = False
 
         self.setWordWrap(True)
-        right_padding = 14 if self._is_series else 2
+        badge_count = int(self._needs_attention) + int(self._is_series)
+        right_padding = 4 + (13 * badge_count) if badge_count else 4
         self._base_style = (
             f"background-color: {bg_color.name()};"
             f"color: {qss_color('planner-text').name()};"
-            f"padding: 2px {right_padding}px 2px 7px;"
-            "border: none;"
+            f"padding: 3px {right_padding}px 3px 10px;"
             "font-size: 10px;"
             "border-radius: 4px;"
         )
@@ -62,6 +64,8 @@ class TerminCard(QLabel):
             tooltip_lines.append("Zu besprechen")
             if self._besprechungshinweis:
                 tooltip_lines.append(self._besprechungshinweis)
+        if self._missing_room:
+            tooltip_lines.append("Kein Raum zugewiesen")
         details_tooltip = str(details_tooltip or "").strip()
         if details_tooltip:
             if tooltip_lines:
@@ -81,13 +85,13 @@ class TerminCard(QLabel):
 
     def _apply_style(self) -> None:
         if self._highlighted:
-            border = f"border: 2px solid {qss_color('planner-drop-conflict-bg').name()};"
+            border = f"border: 1px solid {qss_color('planner-drop-conflict-bg').name()};"
         elif self._focused:
-            border = f"border: 2px solid {qss_color('planner-focus-border').name()};"
+            border = f"border: 1px solid {qss_color('planner-focus-border').name()};"
         elif self._zu_besprechen:
-            border = f"border: 2px solid {qss_color('planner-discuss-border').name()};"
+            border = f"border: 1px solid {qss_color('planner-discuss-border').name()};"
         else:
-            border = "border: none;"
+            border = f"border: 1px solid {qss_color('planner-card-border').name()};"
         self.setStyleSheet(self._base_style + border)
 
     def paintEvent(self, event) -> None:
@@ -95,24 +99,50 @@ class TerminCard(QLabel):
 
         painter = QPainter(self)
         try:
-            show_type_accent = not (self._highlighted or self._focused or self._zu_besprechen)
-            if show_type_accent:
-                painter.fillRect(0, 0, 4, self.height(), self.accent_color)
+            painter.fillRect(1, 1, 3, max(0, self.height() - 2), self.accent_color)
 
-            if self._is_series and self.width() >= 28 and self.height() >= 16:
-                marker_color = QColor(self.accent_color if show_type_accent else qss_color("planner-text"))
-                marker_color.setAlpha(42)
-                text_color = QColor(self.accent_color if show_type_accent else qss_color("planner-text"))
-                badge_rect = self.rect().adjusted(self.width() - 13, 2, -2, -(self.height() - 12))
+            if self.width() < 28 or self.height() < 16:
+                return
+
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            badge_size = 10
+            badge_gap = 3
+            right = 3
+
+            def draw_badge(label: str, bg: QColor, fg: QColor, x_right: int) -> int:
+                x = self.width() - x_right - badge_size
+                rect = self.rect().adjusted(x, 2, -(x_right), -(self.height() - 12))
                 painter.setPen(Qt.NoPen)
-                painter.setBrush(marker_color)
-                painter.drawRoundedRect(badge_rect, 2, 2)
+                painter.setBrush(bg)
+                painter.drawRoundedRect(rect, 2, 2)
                 font = painter.font()
                 font.setBold(True)
                 font.setPointSize(max(6, font.pointSize() - 2))
                 painter.setFont(font)
-                painter.setPen(text_color)
-                painter.drawText(badge_rect, Qt.AlignCenter, "S")
+                painter.setPen(fg)
+                painter.drawText(rect, Qt.AlignCenter, label)
+                return x_right + badge_size + badge_gap
+
+            if self._zu_besprechen:
+                right = draw_badge(
+                    "!",
+                    qss_color("planner-discuss-border"),
+                    qss_color("planner-discuss-badge-text"),
+                    right,
+                )
+
+            if self._missing_room:
+                right = draw_badge(
+                    "R",
+                    qss_color("planner-missing-room-border"),
+                    qss_color("planner-missing-room-badge-text"),
+                    right,
+                )
+
+            if self._is_series:
+                marker_color = QColor(self.accent_color)
+                marker_color.setAlpha(42)
+                draw_badge("S", marker_color, self.accent_color, right)
         finally:
             painter.end()
 
@@ -141,6 +171,9 @@ class TerminCard(QLabel):
         self._apply_style()
 
     def mousePressEvent(self, event):
+        planner = getattr(self.window(), "planner", None)
+        if planner is not None and hasattr(planner, "clear_conflict_highlights"):
+            planner.clear_conflict_highlights()
         if event.button() == Qt.LeftButton:
             self.setFocus()
             self._drag_start_pos = event.pos()

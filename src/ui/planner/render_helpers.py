@@ -130,7 +130,7 @@ def format_termin_text(t: Termin, lvas) -> str:
     end_raw = t.get_end_time()
     lva = next((l for l in lvas if l.id == t.lva_id), None)
     lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
-    room_s = f"{t.raum_id}"
+    room_s = str(t.raum_id or "").strip() or "Kein Raum"
     gname = (t.gruppe.name if t.gruppe else "")
     grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
     ap = " AP" if t.anwesenheitspflicht else ""
@@ -333,6 +333,7 @@ def render_grouped_termine_column(
                 besprechungshinweis=str(getattr(app, "besprechungshinweis", "") or ""),
                 typ=typ,
                 is_series=bool(app.is_series()),
+                missing_room=not bool(str(getattr(app, "raum_id", "") or "").strip()),
                 details_tooltip=format_termin_tooltip(app, lvas),
             )
             card.set_read_only(read_only)

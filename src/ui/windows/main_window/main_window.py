@@ -1351,7 +1351,7 @@ class MainWindow(QMainWindow):
         ).show()
 
     def _on_jump_to_termin(self, tid: str) -> None:
-        self.planner.highlight_termine([tid])
+        self.planner.jump_to_termin(tid)
 
     def _on_nav_prev(self) -> None:
         self.planner._shift_period(-1)

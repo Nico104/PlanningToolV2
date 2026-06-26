@@ -7,16 +7,21 @@ QWidget#PlannerStyleTokens {
   planner-grid-vertical: #eeeeee;
   planner-grid-half-hour: #dddddd;
   planner-grid-hour: #cfcfcf;
+  planner-card-border: #cbd5e1;
   planner-focus-border: #111111;
   planner-discuss-border: #d98200;
+  planner-discuss-badge-text: #ffffff;
+  planner-missing-room-border: #b45309;
+  planner-missing-room-badge-text: #ffffff;
+  planner-drop-conflict-preview-bg: #fde8e8;
   planner-drop-conflict-bg: #cc3333;
   planner-drop-conflict-text: #ffffff;
-  termin-vo-bg: #e3f2fd;
-  termin-ue-bg: #e8f5e9;
-  termin-vu-bg: #e8e0ff;
-  termin-lu-bg: #fff3e0;
-  termin-se-bg: #f3e5f5;
-  termin-default-bg: #f7f7f7;
+  termin-vo-bg: #f5f9ff;
+  termin-ue-bg: #f5fbf7;
+  termin-vu-bg: #f7f5ff;
+  termin-lu-bg: #fff9f2;
+  termin-se-bg: #fdf7fb;
+  termin-default-bg: #f8fafc;
   free-day-holiday-badge-bg: #fff1c2;
   free-day-holiday-badge-border: #c58b00;
   free-day-holiday-badge-text: #5c3c00;
@@ -500,11 +505,11 @@ QLabel#ConflictPercentSign {
 QFrame#TerminCard {
   background: #fcfdff;
   border: 1px solid #dbe3ef;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 QFrame#TerminCard[zuBesprechen="true"] {
-  background: #fffaf0;
+  background: #fffdf8;
   border: 1px solid #d98200;
 }
 
@@ -515,7 +520,7 @@ QFrame#TerminCard:hover {
 
 QFrame#TerminCard[zuBesprechen="true"]:hover {
   border: 1px solid #c16f00;
-  background: #fff5df;
+  background: #fff8ee;
 }
 
 QLabel#CardTitle {

@@ -276,6 +276,7 @@ class TermineDock(QDockWidget):
                     zu_besprechen=bool(getattr(t, "zu_besprechen", False)),
                     besprechungshinweis=str(getattr(t, "besprechungshinweis", "") or ""),
                     is_series=bool(t.is_series()),
+                    missing_room=not bool(str(getattr(t, "raum_id", "") or "").strip()),
                 )
 
                 if hasattr(card, "set_read_only"):

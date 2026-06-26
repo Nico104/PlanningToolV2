@@ -5,6 +5,7 @@ import re
 from dataclasses import replace
 from pathlib import Path
 from ..core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
+from .conflict_labels import conflict_category_label
 from .termin_occurrence_service import expand_termine, source_termin_id
 from .app_config_service import (
     ensure_user_config_file,
@@ -16,7 +17,8 @@ from .app_config_service import (
 
 DEFAULT_CONFLICTS_PATH = user_config_path("konflikte.json")
 
-def has_preview_conflict(
+
+def preview_conflict_issues(
     termine: List[Termin],
     lvas: List[Lehrveranstaltung],
     raeume: List[Raum],
@@ -28,18 +30,14 @@ def has_preview_conflict(
     use_dragged_room: bool = False,
     conflict_settings_path: Optional[str] = None,
     data_dir: str | Path | None = None,
-) -> bool:
+) -> List[ConflictIssue]:
     """
-    Simulate dropping a Termin at a target position and check whether it causes any conflicts.
-
-    This is called on every dragMoveEvent to give real-time conflict feedback during drag.
-    Instead of modifying the actual data, it builds a temporary list where the dragged
-    Termin is replaced with a copy at the proposed new date/time/room, then runs the full
-    ConflictDetector on that simulated list. Only severity='conflict' issues involving the
-    dragged Termin itself are considered (warnings are ignored).
+    Simulates dropping a Termin at a new position to show real-time conflict feedback during dragging.
+    It creates a temporary copy of the appointments with the dragged Termin moved to the proposed date, time, and room, then runs the normal ConflictDetector
+    Only real conflicts involving that dragged Termin are returned, warnings are ignored.
     """
     if not target_date:
-        return False
+        return []
 
    
     expanded = expand_termine(termine)
@@ -48,14 +46,14 @@ def has_preview_conflict(
         source_id = source_termin_id(termin_id)
         dragged = next((t for t in termine if str(t.id) == source_id), None)
     if not dragged:
-        return False
+        return []
 
   
     slot_mins = max(1, int(default_slot_mins or 30))
     start_h = max(0, start_mins) // 60
     start_m = max(0, start_mins) % 60
     if start_h > 23:
-        return False
+        return []
     target_start = time(hour=start_h, minute=start_m)
 
    
@@ -87,13 +85,54 @@ def has_preview_conflict(
         data_dir=data_dir,
     )
     issues = detector.detect_all(simulated)
-   
-    return any(
-        issue.severity == "conflict"
-        and any(source_termin_id(tid) == source_termin_id(termin_id) for tid in issue.termin_ids)
+    return [
+        issue
         for issue in issues
-    )
+        if (
+            issue.severity == "conflict"
+            and any(
+                source_termin_id(tid) == source_termin_id(termin_id)
+                for tid in issue.termin_ids
+            )
+        )
+    ]
 
+
+def preview_conflict_summary(
+    termine: List[Termin],
+    lvas: List[Lehrveranstaltung],
+    raeume: List[Raum],
+    termin_id: str,
+    target_date: Optional[date],
+    start_mins: int,
+    default_slot_mins: int,
+    target_raum_id: Optional[str] = None,
+    use_dragged_room: bool = False,
+    conflict_settings_path: Optional[str] = None,
+    data_dir: str | Path | None = None,
+) -> str:
+    issues = preview_conflict_issues(
+        termine=termine,
+        lvas=lvas,
+        raeume=raeume,
+        termin_id=termin_id,
+        target_date=target_date,
+        start_mins=start_mins,
+        default_slot_mins=default_slot_mins,
+        target_raum_id=target_raum_id,
+        use_dragged_room=use_dragged_room,
+        conflict_settings_path=conflict_settings_path,
+        data_dir=data_dir,
+    )
+    labels = []
+    seen = set()
+    for issue in issues:
+        category = str(getattr(issue, "category", "") or "").strip()
+        label = conflict_category_label(category) or "Konflikt"
+        if label not in seen:
+            seen.add(label)
+            labels.append(label)
+    return ", ".join(labels)
 
 def load_conflicts(path=None):
     target = Path(path) if path else ensure_user_config_file("konflikte.json")

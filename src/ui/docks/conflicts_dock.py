@@ -14,6 +14,11 @@ from PySide6.QtWidgets import (
 
 from ...core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
 from ...services.conflict_service import ConflictDetector
+from ...services.conflict_labels import (
+    CONFLICT_CATEGORY_LABELS,
+    conflict_category_kind,
+    conflict_category_label,
+)
 from ..components.cards.conflict_card import ConflictCard
 from ..utils.datetime_utils import fmt_date, fmt_time
 
@@ -27,42 +32,6 @@ class ConflictsDock(QDockWidget):
     
     # Signal emitted to highlight all related termine
     conflict_items_highlight = Signal(list)
-
-    # What the user sees
-    _CATEGORY_LABELS = {
-        "room": "Raum",
-        "lecturer": "Lehrperson",
-        "holiday": "Feiertag",
-        "lecture_free": "Vorlesungsfrei",
-        "free_day": "Freier Tag",
-        "time_period": "Zeitraum",
-        "group": "Gruppe",
-        "semester": "Studienplan",
-        "incomplete": "Unvollstaendig",
-        "duration": "Dauer",
-        "saturday": "Samstag",
-        "sunday": "Sonntag",
-        "Kapazität Übung": "Kapazität Übung",
-        "Kapazität Vorlesung": "Kapazität Vorlesung",
-    }
-
-    # categories to style keys used by QSS
-    _CATEGORY_KIND_MAP = {
-        "room": "raum",
-        "lecturer": "vortragende",
-        "holiday": "zeitraum",
-        "lecture_free": "zeitraum",
-        "free_day": "zeitraum",
-        "time_period": "zeitraum",
-        "group": "gruppe",
-        "semester": "semester",
-        "incomplete": "unvollstaendig",
-        "duration": "dauer",
-        "saturday": "wochenende",
-        "sunday": "wochenende",
-        "Kapazität Übung": "kapazitaet",
-        "Kapazität Vorlesung": "kapazitaet",
-    }
     
     def __init__(self, parent=None):
         super().__init__("Konflikte", parent)
@@ -304,15 +273,15 @@ class ConflictsDock(QDockWidget):
             self.conflict_items_highlight.emit(termin_ids)
 
     def _get_conflict_kind(self, category: str) -> str:
-        return self._CATEGORY_KIND_MAP.get(category, "default")
+        return conflict_category_kind(category)
 
     def _get_category_label(self, category: str) -> str:
-        return self._CATEGORY_LABELS.get(category, category)
+        return conflict_category_label(category)
 
     def _rebuild_category_filter_options(self) -> None:
         current = self.category_filter.currentData() if hasattr(self, "category_filter") else self._filter_category
 
-        categories = set(self._CATEGORY_LABELS.keys())
+        categories = set(CONFLICT_CATEGORY_LABELS.keys())
         categories.update(i.category for i in self._issues if getattr(i, "category", None))
 
         self.category_filter.blockSignals(True)

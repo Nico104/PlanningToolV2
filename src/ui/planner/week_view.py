@@ -7,7 +7,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QDateEdit, QHeaderView
 
 from ...core.models import Termin
-from ...services.conflict_service import has_preview_conflict
+from ...services.conflict_service import preview_conflict_summary
 from ..utils.datetime_utils import qdate_to_date, monday_of, fmt_time
 from ..utils.color_constants import type_color_for
 from .state import PlannerState
@@ -62,7 +62,7 @@ class PlannerWeekView:
                     return ""
                 lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
                 lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
-                room_s = f"{t.raum_id}"
+                room_s = str(t.raum_id or "").strip() or "Kein Raum"
                 gname = (t.gruppe.name if t.gruppe else "")
                 grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
                 ap = " AP" if t.anwesenheitspflicht else ""
@@ -78,7 +78,7 @@ class PlannerWeekView:
                 target_date = week_mo + timedelta(days=col - 1)
                 day_start, _, slot_min = self._day_bounds()
                 start_mins = day_start.hour * 60 + day_start.minute + row * slot_min
-                return has_preview_conflict(
+                return preview_conflict_summary(
                     termine=self.state.termine,
                     lvas=self.state.lvas,
                     raeume=self.state.raeume,

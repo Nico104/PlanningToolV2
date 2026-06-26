@@ -220,11 +220,11 @@ How snapshots are created:
 
 1. While dragging a Termin over day/week grid cells, the table tracks hover row/column and dragged `termin_id`
 2. The view provides a conflict checker callback (`set_conflict_checker`) used on hover updates
-3. Checker entrypoint is `has_preview_conflict(...)` in `conflict_service.py`
+3. Checker entrypoint is `preview_conflict_summary(...)` in `conflict_service.py`
 4. The checker simulates a temporary drop target (date/time/room) for the dragged Termin
 5. It runs the same `ConflictDetector.detect_all(...)` pipeline as the conflicts dock
 6. Therefore the same conflict rules and enabled/disabled flags from `konflikte.json` apply
-7. If a conflict is detected for the dragged Termin, hover preview is painted red
+7. If a conflict is detected for the dragged Termin, hover preview is painted red and shows the shared conflict category label
 
 Notes:
 - Month view: no preview conflict check is wired (missing target time)

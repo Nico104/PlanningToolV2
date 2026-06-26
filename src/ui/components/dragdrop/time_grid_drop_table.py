@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelec
 import math
 
 from ...utils.qss_tokens import qss_color
+from .time_grid_drag_preview_overlay import TimeGridDragPreviewOverlay
 
 
 class TimeGridDropTable(QTableWidget):
@@ -48,6 +49,7 @@ class TimeGridDropTable(QTableWidget):
         self._hover_termin_id = None
         self._conflict_checker = None
         self._hover_has_conflict = False
+        self._hover_conflict_text = ""
 
         # preview config
         self._duration_provider = None
@@ -60,6 +62,11 @@ class TimeGridDropTable(QTableWidget):
         self._auto_scroll_timer.setInterval(25)
         self._auto_scroll_timer.timeout.connect(self._auto_scroll_tick)
         self._last_drag_pos: QPoint | None = None
+
+        self._drag_preview_overlay = TimeGridDragPreviewOverlay(self.viewport())
+        self._drag_preview_overlay.setGeometry(self.viewport().rect())
+        self.verticalScrollBar().valueChanged.connect(lambda _value: self._sync_drag_preview_overlay())
+        self.horizontalScrollBar().valueChanged.connect(lambda _value: self._sync_drag_preview_overlay())
 
     # Drag and Drop
 
@@ -153,10 +160,10 @@ class TimeGridDropTable(QTableWidget):
     
     def _set_hover(self, r: int, c: int, span: int = 1):
         """
-        Update the hover target cell and trigger a repaint of the preview.
+        Update the hover position and refresh the drag preview.
 
-        When a valid cell is provided, the conflict checker callback is invoked
-        so the preview color can reflect whether dropping here would cause a conflict.
+        If the mouse is over a valid cell, check whether dropping the Termin here
+        would cause a conflict, so the preview can show the right state.
         """
         if r == self._hover_row and c == self._hover_col and span == self._hover_span:
             return
@@ -164,11 +171,19 @@ class TimeGridDropTable(QTableWidget):
 
         if r >= 0 and c >= 0 and self._conflict_checker and self._hover_termin_id:
             try:
-                self._hover_has_conflict = bool(self._conflict_checker(self._hover_termin_id, r, c))
+                result = self._conflict_checker(self._hover_termin_id, r, c)
+                if isinstance(result, str):
+                    self._hover_conflict_text = result.strip()
+                    self._hover_has_conflict = bool(self._hover_conflict_text)
+                else:
+                    self._hover_conflict_text = "Konflikt" if result else ""
+                    self._hover_has_conflict = bool(result)
             except Exception:
                 self._hover_has_conflict = False
+                self._hover_conflict_text = ""
         else:
             self._hover_has_conflict = False
+            self._hover_conflict_text = ""
 
         if r >= 0 and c >= 0:
             self.clearSelection()
@@ -178,10 +193,61 @@ class TimeGridDropTable(QTableWidget):
             self.clearSelection()
             self.setCurrentCell(-1, -1)
 
-        # trigger repaint
+        self._sync_drag_preview_overlay()
         self.viewport().update()
 
-    
+    def _hover_preview_rect(self) -> QRect:
+        if self._hover_row < 0 or self._hover_col < 0:
+            return QRect()
+
+        x = self.columnViewportPosition(self._hover_col)
+        y = self.rowViewportPosition(self._hover_row)
+        w = self.columnWidth(self._hover_col)
+        h = self.rowHeight(self._hover_row)
+        rect = QRect(x, y, w, h)
+
+        end_row = min(self.rowCount() - 1, self._hover_row + max(1, self._hover_span) - 1)
+        if end_row != self._hover_row:
+            bottom_y = self.rowViewportPosition(end_row)
+            bottom_h = self.rowHeight(end_row)
+            rect = rect.united(QRect(x, bottom_y, w, bottom_h))
+
+        return rect
+
+    def _hover_preview_text(self) -> str:
+        if not self._text_provider or not self._hover_termin_id:
+            return ""
+        try:
+            return str(self._text_provider(self._hover_termin_id) or "")
+        except Exception:
+            return ""
+
+    def _hover_preview_fill_color(self):
+        if self._hover_has_conflict:
+            return qss_color("planner-drop-conflict-preview-bg")
+
+        fill_color = qss_color("planner-focus-border")
+        if self._color_provider and self._hover_termin_id:
+            try:
+                fill_color = self._color_provider(self._hover_termin_id)
+            except Exception:
+                pass
+        return fill_color
+
+    def _sync_drag_preview_overlay(self) -> None:
+        if self._hover_row < 0 or self._hover_col < 0:
+            self._drag_preview_overlay.clear_preview()
+            return
+
+        self._drag_preview_overlay.setGeometry(self.viewport().rect())
+        self._drag_preview_overlay.set_preview(
+            rect=self._hover_preview_rect(),
+            text=self._hover_preview_text(),
+            fill_color=self._hover_preview_fill_color(),
+            has_conflict=self._hover_has_conflict,
+            conflict_text=self._hover_conflict_text,
+        )
+
     def _auto_scroll_tick(self):
         """
         Called by the auto-scroll timer during a drag.
@@ -216,6 +282,8 @@ class TimeGridDropTable(QTableWidget):
         if dx:
             sb = self.horizontalScrollBar()
             sb.setValue(sb.value() + dx * 6)
+        if dx or dy:
+            self._sync_drag_preview_overlay()
 
     def set_duration_preview_provider(self, provider, slot_minutes: int) -> None:
         self._duration_provider = provider
@@ -233,72 +301,11 @@ class TimeGridDropTable(QTableWidget):
     
     def paintEvent(self, e):
         """
-        Paint the drag-drop preview block on top of the table cells.
-
-        The preview is drawn after the normal table paint so it always appears on
-        top of cell backgrounds and existing TerminCards. It consists of:
-        - A filled rectangle spanning all rows in _hover_span, colored with the
-          Termin's type color (from _color_provider) or solid red on conflict.
-        - An text label from _text_provider, rendered in white on conflict
-          or dark on normal, with word-wrap inside the block.
-        - A 2 px black border around the block.
+        Paint the table and grid lines. The live drag preview is painted by
+        TimeGridDragPreviewOverlay so it can appear above TerminCard widgets.
         """
         super().paintEvent(e)
         self._paint_time_grid_lines()
-
-        if self._hover_row < 0 or self._hover_col < 0:
-            return
-
-        x = self.columnViewportPosition(self._hover_col)
-        y = self.rowViewportPosition(self._hover_row)
-        w = self.columnWidth(self._hover_col)
-        h = self.rowHeight(self._hover_row)
-        rect = QRect(x, y, w, h)
-
-        # Expand rect to cover span rows
-        end_row = min(self.rowCount() - 1, self._hover_row + max(1, self._hover_span) - 1)
-        if end_row != self._hover_row:
-            bottom_y = self.rowViewportPosition(end_row)
-            bottom_h = self.rowHeight(end_row)
-            bottom_rect = QRect(x, bottom_y, w, bottom_h)
-            rect = rect.united(bottom_rect)
-
-        # draw a filled preview block
-        p = QPainter(self.viewport())
-        p.setRenderHint(QPainter.Antialiasing, False)
-
-        if self._hover_has_conflict:
-            fill_color = qss_color("planner-drop-conflict-bg")
-        else:
-            fill_color = qss_color("planner-focus-border")
-            if self._color_provider and self._hover_termin_id:
-                try:
-                    fill_color = self._color_provider(self._hover_termin_id)
-                except Exception:
-                    pass
-        
-        p.setBrush(fill_color)
-        p.setPen(Qt.NoPen)
-        p.drawRect(rect.adjusted(1, 1, -1, -1))
-
-        # Draw text if available
-        if self._text_provider and self._hover_termin_id:
-            try:
-                text = self._text_provider(self._hover_termin_id)
-                if text:
-                    text_color = qss_color("planner-drop-conflict-text") if self._hover_has_conflict else qss_color("planner-text")
-                    p.setPen(text_color)
-                    p.drawText(rect.adjusted(5, 3, -5, -3), Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, text)
-            except Exception:
-                pass
-
-        #border
-        pen = QPen(Qt.black)
-        pen.setWidth(2)
-        p.setPen(pen)
-        p.setBrush(Qt.NoBrush)
-        p.drawRect(rect.adjusted(1, 1, -1, -1))
-        p.end()
 
     def _paint_time_grid_lines(self) -> None:
         painter = QPainter(self.viewport())

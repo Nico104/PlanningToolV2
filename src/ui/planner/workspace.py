@@ -201,7 +201,7 @@ class PlannerWorkspace(QWidget):
         """Initialize day/week controls to a stable starting point
 
         Preference order:
-        1. Earliest dated Termin in current state.
+        1. Latest dated Termin occurrence in current state.
         2. Today, if Termine exist but none has a date.
         """
         if not self.state.termine:
@@ -212,8 +212,8 @@ class PlannerWorkspace(QWidget):
             self.day_date.setDate(QDate.currentDate())
             return
 
-        min_d = min(dated)
-        self.day_date.setDate(date_to_qdate(min_d))
+        max_d = max(dated)
+        self.day_date.setDate(date_to_qdate(max_d))
 
 
     def current_filters(self):
@@ -414,26 +414,29 @@ class PlannerWorkspace(QWidget):
         self._highlight_day_cells(ids, source_ids)
         self._highlight_month_cells(ids, source_ids)
 
+    def jump_to_termin(self, termin_id: str) -> None:
+        tid = str(termin_id or "").strip()
+        if not tid:
+            return
+
+        ids = {tid}
+        source_ids = {source_termin_id(tid)}
+        self.clear_conflict_highlights()
+        self._jump_to_first_termin(ids)
+        self.refresh(emit=False)
+        self._focus_visible_termin_card(self.week_table, ids, source_ids)
+        self._focus_visible_termin_card(self.day_table, ids, source_ids)
+
     def clear_conflict_highlights(self) -> None:
         TerminCard.clear_global_focus()
         TerminCard.clear_all_highlights()
         self._clear_month_highlights()
 
     def _on_week_cell_clicked(self, row: int, col: int) -> None:
-        cell_widget = self.week_table.cellWidget(row, col)
-        if isinstance(cell_widget, TimeSlotCell):
-            if not cell_widget.get_termin_ids():
-                self.clear_conflict_highlights()
-        else:
-            self.clear_conflict_highlights()
+        self.clear_conflict_highlights()
 
     def _on_day_cell_clicked(self, row: int, col: int) -> None:
-        cell_widget = self.day_table.cellWidget(row, col)
-        if isinstance(cell_widget, TimeSlotCell):
-            if not cell_widget.get_termin_ids():
-                self.clear_conflict_highlights()
-        else:
-            self.clear_conflict_highlights()
+        self.clear_conflict_highlights()
 
     def _on_month_cell_clicked(self, row: int, col: int) -> None:
         self.clear_conflict_highlights()
@@ -479,6 +482,19 @@ class PlannerWorkspace(QWidget):
                             if not first_focused:
                                 card.setFocus()
                                 first_focused = True
+
+    def _focus_visible_termin_card(self, table: QTableWidget, ids: set[str], source_ids: set[str]) -> None:
+        rows = table.rowCount()
+        cols = table.columnCount()
+        for r in range(rows):
+            for c in range(cols):
+                cell_widget = table.cellWidget(r, c)
+                if not isinstance(cell_widget, TimeSlotCell):
+                    continue
+                for card in cell_widget.findChildren(TerminCard):
+                    if card.termin_id in ids or source_termin_id(card.termin_id) in source_ids:
+                        card.setFocus()
+                        return
 
     def _highlight_month_cells(self, ids: set[str], source_ids: set[str]) -> None:
         rows = self.month_table.rowCount()

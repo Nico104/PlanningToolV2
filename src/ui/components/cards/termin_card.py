@@ -3,6 +3,7 @@ from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QFrame
 
 from ...utils.color_constants import type_accent_color_for
+from ...utils.qss_tokens import qss_color
 
 
 class TerminCard(QFrame):
@@ -28,6 +29,7 @@ class TerminCard(QFrame):
         zu_besprechen: bool = False,
         besprechungshinweis: str = "",
         is_series: bool = False,
+        missing_room: bool = False,
     ):
         super().__init__(parent)
         self.termin_id = termin_id
@@ -37,9 +39,12 @@ class TerminCard(QFrame):
         self._zu_besprechen = bool(zu_besprechen)
         self._besprechungshinweis = str(besprechungshinweis or "").strip()
         self._is_series = bool(is_series)
+        self._missing_room = bool(missing_room or not str(raum or "").strip())
+        self._needs_attention = self._zu_besprechen or self._missing_room
 
         self.setObjectName("TerminCard")
         self.setProperty("zuBesprechen", self._zu_besprechen)
+        self.setProperty("needsAttention", self._needs_attention)
         self.setProperty("series", self._is_series)
         self.setCursor(Qt.PointingHandCursor)
         self.setAttribute(Qt.WA_StyledBackground, True)
@@ -50,11 +55,14 @@ class TerminCard(QFrame):
             tooltip_lines.append("Zu besprechen")
             if self._besprechungshinweis:
                 tooltip_lines.append(self._besprechungshinweis)
+        if self._missing_room:
+            tooltip_lines.append("Kein Raum zugewiesen")
         if tooltip_lines:
             self.setToolTip("\n".join(tooltip_lines))
 
+        marker_count = int(self._zu_besprechen) + int(self._missing_room)
         root = QVBoxLayout(self)
-        root.setContentsMargins(16, 10, 12, 10)
+        root.setContentsMargins(16, 10, 12 + (13 * marker_count), 10)
         
         root.setSpacing(6)
 
@@ -94,7 +102,7 @@ class TerminCard(QFrame):
             chips.addWidget(chip(str(gruppe).strip(), "ChipGroup"))
         if self._is_series:
             chips.addWidget(chip("Serie", "ChipSeries"))
-        if str(raum or "").strip():
+        if not self._missing_room:
             chips.addWidget(chip(raum, "ChipRoom"))
         else:
             chips.addWidget(chip("Kein Raum", "ChipMissingRoom"))
@@ -114,8 +122,40 @@ class TerminCard(QFrame):
 
         painter = QPainter(self)
         try:
-            if not self._zu_besprechen:
-                painter.fillRect(1, 1, 5, max(0, self.height() - 2), self._accent_color)
+            painter.fillRect(1, 1, 3, max(0, self.height() - 2), self._accent_color)
+            if self.width() < 32 or self.height() < 24:
+                return
+
+            painter.setRenderHint(QPainter.Antialiasing, True)
+
+            def draw_badge(label: str, bg_name: str, fg_name: str, x_right: int) -> int:
+                rect = QRectF(self.width() - x_right - 10, 8, 10, 10)
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(qss_color(bg_name))
+                painter.drawRoundedRect(rect, 2, 2)
+                font = painter.font()
+                font.setBold(True)
+                font.setPointSize(max(6, font.pointSize() - 2))
+                painter.setFont(font)
+                painter.setPen(qss_color(fg_name))
+                painter.drawText(rect.toRect(), Qt.AlignCenter, label)
+                return x_right + 13
+
+            right = 8
+            if self._zu_besprechen:
+                right = draw_badge(
+                    "!",
+                    "planner-discuss-border",
+                    "planner-discuss-badge-text",
+                    right,
+                )
+            if self._missing_room:
+                draw_badge(
+                    "R",
+                    "planner-missing-room-border",
+                    "planner-missing-room-badge-text",
+                    right,
+                )
         finally:
             painter.end()
 

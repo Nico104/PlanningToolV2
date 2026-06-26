@@ -6,7 +6,7 @@
       "lva_id": "370.007",
       "typ": "UE",
       "datum": "2026-02-11",
-      "start_zeit": "10:30",
+      "start_zeit": "10:00",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe J",
@@ -171,7 +171,7 @@
       "lva_id": "123.456",
       "typ": "UE",
       "datum": "2026-02-11",
-      "start_zeit": "10:00",
+      "start_zeit": "10:30",
       "raum_id": "E17",
       "gruppe": {
         "name": "Gruppe A",
