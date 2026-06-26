@@ -945,9 +945,9 @@ QPushButton#NavButton:hover {
 }
 
 QPushButton#NavButton:checked {
-  background: #e8f1ff;
-  border: 1px solid #7aa7e8;
-  color: #bfdbfe;
+  background: #1f2937;
+  border: 1px solid #3b82f6;
+  color: #dbeafe;
   font-weight: 700;
 }
 
@@ -1219,6 +1219,15 @@ QFrame#ConflictCard[conflictKind="dauer"] {
 
 QFrame#ConflictCard[conflictKind="dauer"]:hover {
   background: #3a2818;
+}
+
+QFrame#ConflictCard[conflictKind="startzeit"] {
+  border-left: 3px solid #f59e0b;
+  background: #342818;
+}
+
+QFrame#ConflictCard[conflictKind="startzeit"]:hover {
+  background: #3d2f1b;
 }
 
 QFrame#ConflictCard[conflictKind="wochenende"] {
@@ -1626,6 +1635,19 @@ QDialog#AppDialog QTableWidget#SeriesOccurrenceTable::item {
   padding: 8px 6px;
 }
 
+QDialog#AppDialog QTableWidget#SeriesOccurrenceTable QHeaderView::section {
+  background: #20242a;
+  color: #f1f5f9;
+  border: none;
+  border-bottom: 1px solid #333a43;
+  padding: 8px 6px;
+  font-weight: 600;
+}
+
+QDialog#AppDialog QWidget#SeriesOccurrenceActions {
+  background: transparent;
+}
+
 QDialog#AppDialog QLabel#SemesterWarning {
   color: #fcd34d;
   background: transparent;
@@ -1767,7 +1789,7 @@ QDockWidget#dock_date_navigation::title {
 
 QWidget#NavigationDockPanel {
   background: #1b1f24;
-  border: 0.75px solid #5c6e6e6e;
+  border: 1px solid #9ca3af;
   /* border-radius: 4px; */
 }
 
@@ -1777,7 +1799,7 @@ QLabel#NavigationDockTitle {
   font-weight: 700;
   font-size: 12px;
   padding: 8px 10px;
-  border-bottom: 1px solid #dbe3ef;
+  border-bottom: 1px solid #333a43;
 }
 
 QDockWidget#dock_date_navigation QWidget#HeaderBar {

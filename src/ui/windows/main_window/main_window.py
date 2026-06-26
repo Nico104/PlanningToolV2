@@ -1328,7 +1328,12 @@ class MainWindow(QMainWindow):
         if self._previous_year_enabled:
             self._show_history_read_only_toast()
             return
-        if self.crud.edit_termin_by_id(tid):
+        saved = self.crud.edit_termin_by_id(tid)
+        jump_to_id = getattr(self.crud, "last_jump_to_termin_id", None)
+        if jump_to_id:
+            self.planner.jump_to_termin(str(jump_to_id))
+            return
+        if saved:
             self.refresh_everything()
 
     def _delete_termin_by_id(self, tid: str) -> None:

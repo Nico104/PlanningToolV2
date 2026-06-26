@@ -6,13 +6,13 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
     QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit, QTabWidget, QScrollArea, QLabel, QPushButton,
-    QHBoxLayout,
+    QHBoxLayout, QMenu,
     QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QSizePolicy
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
 from ...services.semester_rules import semester_for_date, semester_from_id
-from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
+from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, occurrence_id, series_date_sequence
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
 from ..components.widgets.tick_checkbox import TickCheckBox
@@ -108,6 +108,7 @@ class LVATerminDialog(QDialog):
         self._result_raum: Optional[Raum] = None
         self._source_lva_id: Optional[str] = None
         self._source_raum_id: Optional[str] = None
+        self.jump_to_termin_id: Optional[str] = None
         self._suggested_semester_id: Optional[str] = None
         self._auto_series_end_date: Optional[date] = None
         self._series_end_manually_changed = False
@@ -302,14 +303,16 @@ class LVATerminDialog(QDialog):
         self.occurrence_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.occurrence_table.setFocusPolicy(Qt.NoFocus)
         self.occurrence_table.setShowGrid(False)
+        self.occurrence_table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.occurrence_table.setMinimumHeight(420)
         self.occurrence_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.occurrence_table.cellDoubleClicked.connect(self._on_occurrence_row_double_clicked)
+        self.occurrence_table.customContextMenuRequested.connect(self._show_occurrence_context_menu)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Fixed)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.occurrence_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
         self.occurrence_table.setColumnWidth(0, 140)
-        self.occurrence_table.setColumnWidth(2, 130)
+        self.occurrence_table.setColumnWidth(2, 170)
 
         self.ap_cb = TickCheckBox("")
         self.ap_cb.setChecked(bool(termin.anwesenheitspflicht) if termin else False)
@@ -515,7 +518,7 @@ class LVATerminDialog(QDialog):
         series_section_layout.setSpacing(10)
         series_title = QLabel("Serientermine")
         series_title.setObjectName("SettingsSectionTitle")
-        series_help = QLabel("Doppelklick auf eine Zeile bearbeitet diesen einzelnen Termin der Serie.")
+        series_help = QLabel("Doppelklick auf eine Zeile oder Rechtsklick für das Kontextmenü bearbeitet eine einzelne Instanz. Zurücksetzen entfernt Ausfall oder Verschiebung.")
         series_help.setObjectName("SettingsHelp")
         series_help.setWordWrap(True)
         series_section_layout.addWidget(series_title)
@@ -916,14 +919,37 @@ class LVATerminDialog(QDialog):
             self.occurrence_table.setItem(row, 0, original_item)
             self.occurrence_table.setItem(row, 1, detail_item)
 
-            if exception and not hidden:
-                reset_btn = QPushButton("Zurücksetzen")
-                reset_btn.setObjectName("SecondaryButton")
-                reset_btn.setToolTip("Verschiebung entfernen und wieder den normalen Serientermin verwenden")
-                reset_btn.clicked.connect(lambda _checked=False, occurrence_date=value: self._reset_series_exception(occurrence_date))
-                self.occurrence_table.setCellWidget(row, 2, reset_btn)
+            self.occurrence_table.setCellWidget(row, 2, self._occurrence_action_widget(value, hidden, exception))
         self.occurrence_table.resizeRowsToContents()
+        for row, value in enumerate(dates):
+            if value in self._ausfall_dates or exceptions_by_date.get(value):
+                self.occurrence_table.setRowHeight(row, max(self.occurrence_table.rowHeight(row), 40))
         self.occurrence_table.viewport().update()
+
+    def _occurrence_action_widget(
+        self,
+        value: date,
+        hidden: bool,
+        exception: Optional[SerienAusnahme],
+    ) -> QWidget:
+        widget = QWidget(self.occurrence_table)
+        widget.setObjectName("SeriesOccurrenceActions")
+        widget.setMinimumHeight(36)
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(0)
+
+        if hidden or exception:
+            reset_btn = QPushButton("Zurücksetzen", widget)
+            reset_btn.setObjectName("SecondaryButton")
+            reset_btn.setFixedWidth(142)
+            reset_btn.setFixedHeight(32)
+            reset_btn.setToolTip("Ausfall oder Verschiebung entfernen und wieder den normalen Serientermin verwenden")
+            reset_btn.clicked.connect(lambda _checked=False, occurrence_date=value: self._reset_series_occurrence_override(occurrence_date))
+            layout.addWidget(reset_btn)
+
+        layout.addStretch(1)
+        return widget
 
     def _clear_occurrence_table_widgets(self) -> None:
         for row in range(self.occurrence_table.rowCount()):
@@ -936,10 +962,9 @@ class LVATerminDialog(QDialog):
                     widget.deleteLater()
 
         for button in self.occurrence_table.findChildren(QPushButton):
-            if button.text() == "Zurücksetzen":
-                button.hide()
-                button.setParent(None)
-                button.deleteLater()
+            button.hide()
+            button.setParent(None)
+            button.deleteLater()
 
     def _current_ausfall_dates(self) -> List[date]:
         if not self._has_series_range():
@@ -978,6 +1003,53 @@ class LVATerminDialog(QDialog):
         if row < 0 or row >= len(self._occurrence_row_dates):
             return
         self._open_occurrence_dialog(self._occurrence_row_dates[row])
+
+    def _show_occurrence_context_menu(self, pos) -> None:
+        row = self.occurrence_table.rowAt(pos.y())
+        if row < 0 or row >= len(self._occurrence_row_dates):
+            return
+
+        value = self._occurrence_row_dates[row]
+        hidden = value in self._ausfall_dates
+        exception = next(
+            (item for item in self._serien_ausnahmen if item.original_datum == value),
+            None,
+        )
+
+        menu = QMenu(self)
+        title_action = menu.addAction(f"Instanz: {self._occurrence_detail_text(value, exception)}")
+        title_action.setEnabled(False)
+        menu.addSeparator()
+        edit_action = menu.addAction("Diese Instanz bearbeiten")
+        if hidden or exception:
+            reset_action = menu.addAction("Zurücksetzen")
+        else:
+            cancel_action = menu.addAction("Als Ausfall markieren")
+
+        jump_action = None
+        if self.termin is not None and not hidden:
+            menu.addSeparator()
+            jump_action = menu.addAction("Zu dieser Instanz springen")
+
+        action = menu.exec(self.occurrence_table.viewport().mapToGlobal(pos))
+        if action is None:
+            return
+        if action == edit_action:
+            self._open_occurrence_dialog(value)
+        elif hidden or exception:
+            if action == reset_action:
+                self._reset_series_occurrence_override(value)
+        elif action == cancel_action:
+            self._set_occurrence_active(value, False)
+
+        if jump_action is not None and action == jump_action:
+            self._jump_to_occurrence(value)
+
+    def _jump_to_occurrence(self, value: date) -> None:
+        if self.termin is None or not getattr(self.termin, "id", None):
+            return
+        self.jump_to_termin_id = occurrence_id(str(self.termin.id), value)
+        self.reject()
 
     def _open_occurrence_dialog(self, value: date) -> None:
         current = next(
@@ -1047,11 +1119,13 @@ class LVATerminDialog(QDialog):
         self._render_occurrence_table()
         self._update_semester_warning()
 
-    def _reset_series_exception(self, value: date) -> None:
+    def _reset_series_occurrence_override(self, value: date) -> None:
+        self._ausfall_dates.discard(value)
         self._serien_ausnahmen = [
             item for item in self._serien_ausnahmen if item.original_datum != value
         ]
         self._render_occurrence_table()
+        self._update_semester_warning()
 
     def _current_start_time(self) -> Optional[time]:
         if self.date_de.date() == self._unassigned_qdate:

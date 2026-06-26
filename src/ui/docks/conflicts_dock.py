@@ -6,7 +6,7 @@ from typing import List, Optional
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QScrollArea, QFrame, QStyle, QTabBar
@@ -23,6 +23,10 @@ from ..components.cards.conflict_card import ConflictCard
 from ..utils.datetime_utils import fmt_date, fmt_time
 
 from ..components.widgets.tight_combobox import TightComboBox
+
+
+def _is_dark_theme(widget: QWidget) -> bool:
+    return widget.palette().color(QPalette.Window).lightness() < 128
 
 
 class ConflictsDock(QDockWidget):
@@ -93,11 +97,12 @@ class ConflictsDock(QDockWidget):
         header.addStretch()
         
         self.refresh_btn = QPushButton()
+        icon_name = "iconmonstr-reload-lined_white.svg" if _is_dark_theme(self) else "iconmonstr-reload-lined.svg"
         icon_path = (
             Path(__file__).resolve().parent.parent
             / "assets"
             / "icons"
-            / "iconmonstr-reload-lined.svg"
+            / icon_name
         )
         if icon_path.is_file():
             self.refresh_btn.setIcon(QIcon(str(icon_path)))

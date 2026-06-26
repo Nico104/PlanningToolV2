@@ -1,8 +1,6 @@
 from PySide6.QtCore import Qt, Signal, QPoint, QTimer
-from PySide6.QtGui import QDropEvent, QDragMoveEvent, QPainter
+from PySide6.QtGui import QDropEvent, QDragMoveEvent
 from PySide6.QtWidgets import QTableWidget, QAbstractItemView, QTableWidgetSelectionRange
-
-from ...utils.qss_tokens import qss_color
 
 
 class MonthDropTable(QTableWidget):
@@ -24,8 +22,6 @@ class MonthDropTable(QTableWidget):
         self._hover_row = -1
         self._hover_col = -1
         self._hover_termin_id = None
-        self._conflict_checker = None
-        self._hover_has_conflict = False
 
         self._auto_scroll_timer = QTimer(self)
         self._auto_scroll_timer.setInterval(25)
@@ -110,14 +106,6 @@ class MonthDropTable(QTableWidget):
             return
         self._hover_row, self._hover_col = r, c
 
-        if r >= 0 and c >= 0 and self._conflict_checker and self._hover_termin_id:
-            try:
-                self._hover_has_conflict = bool(self._conflict_checker(self._hover_termin_id, r, c))
-            except Exception:
-                self._hover_has_conflict = False
-        else:
-            self._hover_has_conflict = False
-
         if r >= 0 and c >= 0:
             self.clearSelection()
             self.setRangeSelected(QTableWidgetSelectionRange(r, c, r, c), True)
@@ -126,23 +114,6 @@ class MonthDropTable(QTableWidget):
             self.setCurrentCell(-1, -1)
 
         self.viewport().update()
-
-    def set_conflict_checker(self, checker) -> None:
-        self._conflict_checker = checker
-
-    def paintEvent(self, e):
-        super().paintEvent(e)
-        if self._hover_row < 0 or self._hover_col < 0 or not self._hover_has_conflict:
-            return
-        x = self.columnViewportPosition(self._hover_col)
-        y = self.rowViewportPosition(self._hover_row)
-        w = self.columnWidth(self._hover_col)
-        h = self.rowHeight(self._hover_row)
-        p = QPainter(self.viewport())
-        color = qss_color("planner-drop-conflict-bg")
-        color.setAlpha(120)
-        p.fillRect(x + 1, y + 1, w - 2, h - 2, color)
-        p.end()
 
     def _auto_scroll_tick(self):
         if self._last_drag_pos is None:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
 
@@ -63,6 +64,7 @@ class ActionDialog(QDialog):
             if action.description:
                 help_label = QLabel(action.description, section)
                 help_label.setObjectName("SettingsHelp")
+                help_label.setTextFormat(Qt.RichText)
                 help_label.setWordWrap(True)
                 section_layout.addWidget(help_label)
 

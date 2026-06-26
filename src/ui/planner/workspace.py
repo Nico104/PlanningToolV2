@@ -378,7 +378,12 @@ class PlannerWorkspace(QWidget):
         if self._previous_year_enabled:
             self._show_history_read_only_toast()
             return
-        if self.crud.edit_termin_by_id(tid):
+        saved = self.crud.edit_termin_by_id(tid)
+        jump_to_id = getattr(self.crud, "last_jump_to_termin_id", None)
+        if jump_to_id:
+            self.jump_to_termin(str(jump_to_id))
+            return
+        if saved:
             self.reload_and_refresh_everything()
 
     def _show_history_read_only_toast(self) -> None:
@@ -406,6 +411,7 @@ class PlannerWorkspace(QWidget):
         source_ids = {source_termin_id(tid) for tid in ids}
 
         self._jump_to_first_termin(ids)
+        self.refresh(emit=False)
 
         # Clear previous highlights
         self.clear_conflict_highlights()
@@ -484,6 +490,16 @@ class PlannerWorkspace(QWidget):
                                 first_focused = True
 
     def _focus_visible_termin_card(self, table: QTableWidget, ids: set[str], source_ids: set[str]) -> None:
+        for r in range(table.rowCount()):
+            for c in range(table.columnCount()):
+                cell_widget = table.cellWidget(r, c)
+                if not isinstance(cell_widget, TimeSlotCell):
+                    continue
+                for card in cell_widget.findChildren(TerminCard):
+                    if card.termin_id in ids:
+                        card.setFocus()
+                        return
+
         rows = table.rowCount()
         cols = table.columnCount()
         for r in range(rows):

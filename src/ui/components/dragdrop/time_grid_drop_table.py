@@ -25,8 +25,8 @@ class TimeGridDropTable(QTableWidget):
       the preview block should cover. This mirrors how TerminCards are placed.
     - Conflict checking is send to a callback so views can decide whether
       live preview checks should run for the current settings.
-    - Auto-scroll: a 25 ms QTimer scrolls the viewport when the cursor is within
-      20 px of any edge, enabling drags to rows that are not currently visible.
+    - Auto-scroll: a 25 ms QTimer scrolls the viewport vertically when the cursor
+      is near the top/bottom edge, enabling drags to times that are not visible.
     """
 
     terminDropped = Signal(str, int, int)
@@ -40,6 +40,7 @@ class TimeGridDropTable(QTableWidget):
         self.setDragDropMode(QAbstractItemView.DragDrop)
         self.setDefaultDropAction(Qt.MoveAction)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self._read_only = False
         
         # Track current hover target during drag
@@ -251,18 +252,13 @@ class TimeGridDropTable(QTableWidget):
     def _auto_scroll_tick(self):
         """
         Called by the auto-scroll timer during a drag.
-
-        If the cursor is within 20 px of the top/bottom edge, the vertical scrollbar
-        is nudged by 2 pixels per tick. If it is near the left/right edge, the
-        horizontal scrollbar is nudged by 6 pixels per tick (wider columns need faster
-        scroll to feel responsive)
         """
         if self._last_drag_pos is None:
             return
         
-        margin = 20
+        margin = 32
+        step_px = 12
         dy = 0
-        dx = 0
         vp = self.viewport().rect()
         p = self._last_drag_pos
 
@@ -278,12 +274,15 @@ class TimeGridDropTable(QTableWidget):
 
         if dy:
             sb = self.verticalScrollBar()
-            sb.setValue(sb.value() + dy * 2)
-        if dx:
-            sb = self.horizontalScrollBar()
-            sb.setValue(sb.value() + dx * 6)
-        if dx or dy:
-            self._sync_drag_preview_overlay()
+            old_value = sb.value()
+            sb.setValue(old_value + dy * step_px)
+            if sb.value() != old_value:
+                r = self.rowAt(p.y())
+                c = self.columnAt(p.x())
+                if r >= 0 and c >= 0:
+                    self._set_hover(r, c, self._hover_span)
+                else:
+                    self._sync_drag_preview_overlay()
 
     def set_duration_preview_provider(self, provider, slot_minutes: int) -> None:
         self._duration_provider = provider

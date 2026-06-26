@@ -311,6 +311,7 @@ class ConflictDetector:
             ("lecture_free_conflict", self.detect_lecture_free_conflicts, True),
             ("incomplete_warning", self.detect_incomplete_warnings, False),
             ("duration_warning", self.detect_duration_warnings, False),
+            ("full_hour_start_warning", self.detect_full_hour_start_warnings, False),
             ("saturday_warning", self.detect_saturday_warning, False),
             ("sunday_warning", self.detect_sunday_warning, False),
             ("capacity_warning_uebung", self.detect_capacity_warning_uebung, False),
@@ -614,6 +615,32 @@ class ConflictDetector:
                     lva=lva.name if lva else t.lva_id,
                     gruppe=t.gruppe.name if t.gruppe else ""
                 ))
+        return warnings
+
+    def detect_full_hour_start_warnings(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:
+        warnings = []
+        for t in termine:
+            if not self.is_assigned(t):
+                continue
+            if t.start_zeit.minute == 0:
+                continue
+
+            lva = next((l for l in self.lvas if l.id == t.lva_id), None)
+            raum = next((r for r in self.raeume if r.id == t.raum_id), None)
+            start_time = t.start_zeit.strftime("%H:%M")
+            msg = self._render_message(settings, {"start_time": start_time})
+            warnings.append(ConflictIssue(
+                severity="warning",
+                category="start_time",
+                termin_ids=[t.id],
+                message=msg,
+                datum=t.datum,
+                zeit_von=t.start_zeit,
+                zeit_bis=t.get_end_time(),
+                raum=raum.name if raum else "",
+                lva=lva.name if lva else t.lva_id,
+                gruppe=t.gruppe.name if t.gruppe else "",
+            ))
         return warnings
 
     def detect_saturday_warning(self, termine: List[Termin], settings=None) -> List[ConflictIssue]:

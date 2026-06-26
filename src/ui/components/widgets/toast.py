@@ -1,5 +1,5 @@
-from PySide6.QtCore import Qt, QTimer, QPoint
-from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout
+from PySide6.QtCore import Qt, QTimer, QPoint, QRect
+from PySide6.QtWidgets import QWidget, QLabel, QHBoxLayout, QApplication
 
 
 class Toast(QWidget):
@@ -23,12 +23,21 @@ class Toast(QWidget):
 
     def show(self) -> None:
         parent = self.parent() if self.parent() is not None else None
-        if parent:
-            pg = parent.geometry()
+        anchor = parent.window() if isinstance(parent, QWidget) else None
+        if anchor is not None:
+            top_left = anchor.mapToGlobal(anchor.rect().topLeft())
+            anchor_rect = QRect(top_left, anchor.size())
+            screen = anchor.windowHandle().screen() if anchor.windowHandle() else None
+            if screen is None:
+                screen = QApplication.screenAt(anchor_rect.center())
+            screen_rect = screen.availableGeometry() if screen else QApplication.primaryScreen().availableGeometry()
+
             w = self.sizeHint().width()
             h = self.sizeHint().height()
-            x = pg.x() + (pg.width() - w) // 2
-            y = pg.y() + pg.height() - h - 24
-            self.move(QPoint(max(8, x), max(8, y)))
+            x = anchor_rect.x() + (anchor_rect.width() - w) // 2
+            y = anchor_rect.y() + anchor_rect.height() - h - 24
+            x = min(max(screen_rect.left() + 8, x), screen_rect.right() - w - 8)
+            y = min(max(screen_rect.top() + 8, y), screen_rect.bottom() - h - 8)
+            self.move(QPoint(x, y))
         super().show()
         QTimer.singleShot(self.duration_ms, self.close)

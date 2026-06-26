@@ -27,6 +27,7 @@ class TerminCard(QLabel):
         besprechungshinweis: str = "",
         typ: str = "",
         is_series: bool = False,
+        is_series_exception: bool = False,
         missing_room: bool = False,
         details_tooltip: str = "",
     ):
@@ -37,6 +38,7 @@ class TerminCard(QLabel):
         self._zu_besprechen = bool(zu_besprechen)
         self._besprechungshinweis = str(besprechungshinweis or "").strip()
         self._is_series = bool(is_series)
+        self._is_series_exception = bool(is_series_exception)
         self._missing_room = bool(missing_room)
         self._needs_attention = self._zu_besprechen or self._missing_room
         self._focused = False 
@@ -44,8 +46,10 @@ class TerminCard(QLabel):
         self._read_only = False
 
         self.setWordWrap(True)
-        badge_count = int(self._needs_attention) + int(self._is_series)
+        badge_count = int(self._zu_besprechen) + int(self._missing_room) + int(self._is_series)
         right_padding = 4 + (13 * badge_count) if badge_count else 4
+        if self._is_series_exception:
+            right_padding += 5
         self._base_style = (
             f"background-color: {bg_color.name()};"
             f"color: {qss_color('planner-text').name()};"
@@ -57,22 +61,33 @@ class TerminCard(QLabel):
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFocusPolicy(Qt.StrongFocus)
-        tooltip_lines = []
-        if self._is_series:
-            tooltip_lines.append("Serientermin")
-        if self._zu_besprechen:
-            tooltip_lines.append("Zu besprechen")
-            if self._besprechungshinweis:
-                tooltip_lines.append(self._besprechungshinweis)
-        if self._missing_room:
-            tooltip_lines.append("Kein Raum zugewiesen")
         details_tooltip = str(details_tooltip or "").strip()
         if details_tooltip:
-            if tooltip_lines:
-                tooltip_lines.append("")
-            tooltip_lines.extend(details_tooltip.splitlines())
-        if tooltip_lines:
-            self.setToolTip("\n".join(tooltip_lines))
+            self.setToolTip(details_tooltip)
+
+    def _badge_items(self) -> list[tuple[str, QColor, QColor]]:
+        items = []
+        if self._zu_besprechen:
+            items.append((
+                "!",
+                qss_color("planner-discuss-border"),
+                qss_color("planner-discuss-badge-text"),
+            ))
+        if self._missing_room:
+            items.append((
+                "R",
+                qss_color("planner-missing-room-border"),
+                qss_color("planner-missing-room-badge-text"),
+            ))
+        if self._is_series:
+            marker_color = QColor(self.accent_color)
+            marker_color.setAlpha(42)
+            items.append((
+                "SA" if self._is_series_exception else "S",
+                marker_color,
+                self.accent_color,
+            ))
+        return items
 
     def set_read_only(self, read_only: bool) -> None:
         self._read_only = bool(read_only)
@@ -105,12 +120,12 @@ class TerminCard(QLabel):
                 return
 
             painter.setRenderHint(QPainter.Antialiasing, True)
-            badge_size = 10
             badge_gap = 3
             right = 3
 
             def draw_badge(label: str, bg: QColor, fg: QColor, x_right: int) -> int:
-                x = self.width() - x_right - badge_size
+                badge_width = 16 if len(label) > 1 else badge_size
+                x = self.width() - x_right - badge_width
                 rect = self.rect().adjusted(x, 2, -(x_right), -(self.height() - 12))
                 painter.setPen(Qt.NoPen)
                 painter.setBrush(bg)
@@ -121,28 +136,11 @@ class TerminCard(QLabel):
                 painter.setFont(font)
                 painter.setPen(fg)
                 painter.drawText(rect, Qt.AlignCenter, label)
-                return x_right + badge_size + badge_gap
+                return x_right + badge_width + badge_gap
 
-            if self._zu_besprechen:
-                right = draw_badge(
-                    "!",
-                    qss_color("planner-discuss-border"),
-                    qss_color("planner-discuss-badge-text"),
-                    right,
-                )
-
-            if self._missing_room:
-                right = draw_badge(
-                    "R",
-                    qss_color("planner-missing-room-border"),
-                    qss_color("planner-missing-room-badge-text"),
-                    right,
-                )
-
-            if self._is_series:
-                marker_color = QColor(self.accent_color)
-                marker_color.setAlpha(42)
-                draw_badge("S", marker_color, self.accent_color, right)
+            badge_size = 10
+            for label, bg, fg in self._badge_items():
+                right = draw_badge(label, bg, fg, right)
         finally:
             painter.end()
 
@@ -177,7 +175,15 @@ class TerminCard(QLabel):
         if event.button() == Qt.LeftButton:
             self.setFocus()
             self._drag_start_pos = event.pos()
+            event.accept()
+            return
         super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
 
     def focusInEvent(self, event):
         prev = TerminCard._focused_card_ref() if TerminCard._focused_card_ref else None

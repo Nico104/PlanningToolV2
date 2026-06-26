@@ -1,6 +1,6 @@
 {
   "time_slot_minutes": 30,
-  "day_start": "07:30",
+  "day_start": "08:00",
   "day_end": "20:00",
   "date_format_display": "DD.MM.YYYY",
   "duration_step_minutes": 15,

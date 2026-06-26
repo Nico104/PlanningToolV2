@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date, time
+from html import escape
 from typing import Callable, Iterable, Sequence
 
 from PySide6.QtCore import QSize, Qt
@@ -7,9 +8,10 @@ from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QHeaderView, QStyle, QStyleOptionHeader, QTableWidget, QSizePolicy
 
 from ...core.models import Termin
+from ...services.termin_occurrence_service import occurrence_date_from_id, is_occurrence_id
 from ..utils.datetime_utils import fmt_date, fmt_time, mins_from_time
 from ..utils.grouping_utils import group_concurrent_appointments
-from ..utils.color_constants import planner_text_color, type_color_for
+from ..utils.color_constants import planner_text_color, type_accent_color_for, type_color_for
 from ..utils.qss_tokens import qss_color
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
@@ -42,6 +44,20 @@ def week_day_accent_color(term_count: int) -> QColor | None:
     if term_count > 0:
         return QColor("#27ae60")
     return None
+
+
+def is_series_exception_instance(termin: Termin) -> bool:
+    occurrence_date = occurrence_date_from_id(str(getattr(termin, "id", "")))
+    if occurrence_date is None:
+        return False
+    return any(
+        getattr(item, "original_datum", None) == occurrence_date
+        for item in (getattr(termin, "serien_ausnahmen", []) or [])
+    )
+
+
+def is_series_instance(termin: Termin) -> bool:
+    return bool(termin.is_series() or is_occurrence_id(str(getattr(termin, "id", ""))))
 
 
 class FreeDayHeaderView(QHeaderView):
@@ -147,6 +163,36 @@ def format_termin_tooltip(t: Termin, lvas) -> str:
     lva_text = f"{t.lva_id}" + ("" if not lva else f" - {lva.name}")
     room_text = str(t.raum_id or "Kein Raum")
     group_text = t.gruppe.name if t.gruppe else ""
+    missing_room = not str(t.raum_id or "").strip()
+    series_exception = is_series_exception_instance(t)
+    series = is_series_instance(t)
+    discuss = bool(getattr(t, "zu_besprechen", False))
+    discuss_hint = str(getattr(t, "besprechungshinweis", "") or "").strip()
+
+    def badge_line(marker: str, text: str, color: str) -> str:
+        return (
+            f"<span style='color:{color}; font-weight:700;'>{escape(marker)}</span>"
+            f"&nbsp;{escape(text)}"
+        )
+
+    series_color = type_accent_color_for(str(t.typ or "").strip().upper()).name()
+
+    badge_lines = []
+    if series_exception:
+        badge_lines.append(badge_line("SA", "Serienausnahme", series_color))
+    elif series:
+        badge_lines.append(
+            badge_line(
+                "S",
+                f"Serientermin: {t.periodizitaet}, bis {fmt_date(t.datum_bis)}",
+                series_color,
+            )
+        )
+    if missing_room:
+        badge_lines.append(badge_line("R", "Kein Raum zugewiesen", qss_color("planner-missing-room-border").name()))
+    if discuss:
+        text = "Zu besprechen" + (f": {discuss_hint}" if discuss_hint else "")
+        badge_lines.append(badge_line("!", text, qss_color("planner-discuss-border").name()))
 
     lines = [
         str(t.name or "(Ohne Titel)"),
@@ -156,24 +202,25 @@ def format_termin_tooltip(t: Termin, lvas) -> str:
         f"Datum: {fmt_date(t.datum)}",
         f"Zeit: {fmt_time(t.start_zeit)}-{fmt_time(end_raw)}",
         f"Dauer: {int(t.duration or 0)} min",
-        f"Raum: {room_text}",
     ]
 
+    if not missing_room:
+        lines.append(f"Raum: {room_text}")
     if group_text:
         lines.append(f"Gruppe: {group_text}")
     if getattr(t, "semester_id", ""):
         lines.append(f"Semester: {t.semester_id}")
     if t.anwesenheitspflicht:
         lines.append("Anwesenheitspflicht")
-    if t.is_series():
-        lines.append(f"Serie: {t.periodizitaet}, bis {fmt_date(t.datum_bis)}")
-    if getattr(t, "zu_besprechen", False):
-        hint = str(getattr(t, "besprechungshinweis", "") or "").strip()
-        lines.append("Zu besprechen" + (f": {hint}" if hint else ""))
     if str(getattr(t, "notiz", "") or "").strip():
         lines.append(f"Notiz: {str(t.notiz).strip()}")
 
-    return "\n".join(lines)
+    detail_html = "<br>".join(escape(line) for line in lines)
+    if not badge_lines:
+        return f"<html><body>{detail_html}</body></html>"
+
+    badge_html = "<br>".join(badge_lines)
+    return f"<html><body>{badge_html}<br><br>{detail_html}</body></html>"
 
 
 def place_termin_card(
@@ -324,6 +371,8 @@ def render_grouped_termine_column(
             app_text = format_termin_text(app, lvas)
             typ = (app.typ or "").strip().upper()
             bg = type_color_for(typ)
+            is_exception = is_series_exception_instance(app)
+            is_series = is_series_instance(app)
             card = TerminCard(
                 app.id,
                 app_text,
@@ -332,7 +381,8 @@ def render_grouped_termine_column(
                 zu_besprechen=bool(getattr(app, "zu_besprechen", False)),
                 besprechungshinweis=str(getattr(app, "besprechungshinweis", "") or ""),
                 typ=typ,
-                is_series=bool(app.is_series()),
+                is_series=is_series,
+                is_series_exception=is_exception,
                 missing_room=not bool(str(getattr(app, "raum_id", "") or "").strip()),
                 details_tooltip=format_termin_tooltip(app, lvas),
             )

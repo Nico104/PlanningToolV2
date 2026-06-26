@@ -92,6 +92,14 @@
         "max_minutes": 200
     },
     {
+        "name": "Startzeit-Warnung",
+        "key": "full_hour_start_warning",
+        "enabled": true,
+        "type": "warning",
+        "description": "Warnung, wenn ein Termin nicht zu einer vollen Stunde beginnt.",
+        "message_template": "Startzeit: {start_time}. Termin beginnt nicht zu einer vollen Stunde."
+    },
+    {
         "name": "Samstagswarnung",
         "key": "saturday_warning",
         "enabled": false,

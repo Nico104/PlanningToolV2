@@ -191,8 +191,10 @@ class CrudHandlers:
         self.termin_dock = termin_dock or (getattr(mw, "termine_dock", None) if mw else None)
         self.freie_tage_dock = freie_tage_dock
         self.undo_service = undo_service or (getattr(mw, "undo_service", None) if mw else None)
+        self.last_jump_to_termin_id: Optional[str] = None
 
     def edit_termin_by_id(self, tid: str) -> bool:
+        self.last_jump_to_termin_id = None
         termine = self.ds.load_termine()
         source_id = source_termin_id(tid)
         cur = next((t for t in termine if t.id == source_id), None)
@@ -209,7 +211,13 @@ class CrudHandlers:
             settings=self.ds.load_settings(),
             new_id=source_id,
         )
-        if dlg.exec() != QDialog.Accepted or not dlg.result:
+        dialog_result = dlg.exec()
+        jump_to_id = getattr(dlg, "jump_to_termin_id", None)
+        if jump_to_id:
+            self.last_jump_to_termin_id = str(jump_to_id)
+            return False
+
+        if dialog_result != QDialog.Accepted or not dlg.result:
             return False
 
         if isinstance(dlg.result, list):
@@ -495,6 +503,16 @@ class CrudHandlers:
         if not t:
             return False
 
+        if t.is_series() and self._is_existing_series_exception(t, occurrence_date):
+            return self._move_existing_series_exception(
+                termine=termine,
+                termin=t,
+                occurrence_date=occurrence_date,
+                new_date=new_date,
+                new_start=new_start,
+                new_room_id=new_room_id,
+            )
+
         series_action = None
         if t.is_series():
             series_action = self._confirm_move_series(t, occurrence_date)
@@ -537,14 +555,20 @@ class CrudHandlers:
                     updates["ausfall_daten"] = [
                         ausfall + delta for ausfall in (getattr(t, "ausfall_daten", []) or [])
                     ]
-                    updates["serien_ausnahmen"] = [
-                        replace(
-                            ausnahme,
-                            original_datum=ausnahme.original_datum + delta,
-                            datum=ausnahme.datum + delta,
-                        )
-                        for ausnahme in (getattr(t, "serien_ausnahmen", []) or [])
-                    ]
+                    exceptions = list(getattr(t, "serien_ausnahmen", []) or [])
+                    if exceptions and delta.days != 0:
+                        shift_exceptions = self._confirm_shift_series_exceptions(t, exceptions, delta)
+                        if shift_exceptions is None:
+                            return False
+                        if shift_exceptions:
+                            updates["serien_ausnahmen"] = [
+                                replace(
+                                    ausnahme,
+                                    original_datum=ausnahme.original_datum + delta,
+                                    datum=ausnahme.datum + delta,
+                                )
+                                for ausnahme in exceptions
+                            ]
                 else:
                     updates["datum"] = new_date
             else:
@@ -565,6 +589,81 @@ class CrudHandlers:
         self.ds.save_termine(termine)
         self.planner.refresh()
         self._show_toast("Serientermin verschoben." if t.is_series() else "Termin verschoben.")
+        return True
+
+    @staticmethod
+    def _is_existing_series_exception(termin: Termin, occurrence_date: Optional[date]) -> bool:
+        if occurrence_date is None:
+            return False
+        return any(
+            getattr(item, "original_datum", None) == occurrence_date
+            for item in (getattr(termin, "serien_ausnahmen", []) or [])
+        )
+
+    def _move_existing_series_exception(
+        self,
+        *,
+        termine: List[Termin],
+        termin: Termin,
+        occurrence_date: date,
+        new_date: date,
+        new_start: Optional[time],
+        new_room_id: Optional[str],
+    ) -> bool:
+        existing = next(
+            (
+                item
+                for item in (getattr(termin, "serien_ausnahmen", []) or [])
+                if getattr(item, "original_datum", None) == occurrence_date
+            ),
+            None,
+        )
+        if existing is None:
+            return False
+
+        effective_start = (
+            new_start
+            if new_start is not None
+            else existing.start_zeit if existing.start_zeit is not None else termin.start_zeit
+        )
+        effective_room_id = (
+            new_room_id
+            if new_room_id is not None
+            else existing.raum_id if existing.raum_id is not None else termin.raum_id
+        )
+        effective_duration = existing.duration if existing.duration is not None else termin.duration
+        matches_master = (
+            new_date == occurrence_date
+            and effective_start == termin.start_zeit
+            and effective_room_id == termin.raum_id
+            and effective_duration == termin.duration
+        )
+
+        exceptions = [
+            item
+            for item in (getattr(termin, "serien_ausnahmen", []) or [])
+            if getattr(item, "original_datum", None) != occurrence_date
+        ]
+        if not matches_master:
+            exceptions.append(
+                SerienAusnahme(
+                    original_datum=occurrence_date,
+                    datum=new_date,
+                    start_zeit=effective_start,
+                    raum_id=effective_room_id,
+                    duration=effective_duration,
+                )
+            )
+            exceptions.sort(key=lambda item: item.original_datum)
+
+        updated_series = replace(termin, serien_ausnahmen=exceptions)
+        updated = [updated_series if item.id == termin.id else item for item in termine]
+        self._record_undo_snapshot()
+        self.ds.save_termine(updated)
+        self.planner.refresh()
+        self._show_toast(
+            "Serienausnahme zurückgesetzt." if matches_master else "Serienausnahme verschoben."
+        )
         return True
 
     def _move_series_occurrence_as_exception(
@@ -691,6 +790,68 @@ class CrudHandlers:
         if dlg.exec() != QDialog.Accepted:
             return "cancel"
         return dlg.result_key or "cancel"
+
+    def _confirm_shift_series_exceptions(
+        self,
+        termin: Termin,
+        exceptions: List[SerienAusnahme],
+        delta,
+    ) -> Optional[bool]:
+        delta_days = getattr(delta, "days", 0)
+        if not exceptions or delta_days == 0:
+            return False
+
+        direction = "später" if delta_days > 0 else "früher"
+        days_text = f"{abs(delta_days)} Tag(e) {direction}"
+        examples = []
+        for ausnahme in sorted(exceptions, key=lambda item: item.original_datum)[:3]:
+            target_old = ausnahme.datum.strftime("%d.%m.%Y")
+            target_new = (ausnahme.datum + delta).strftime("%d.%m.%Y")
+            time_text = f" um {ausnahme.start_zeit.strftime('%H:%M')}" if ausnahme.start_zeit else ""
+            examples.append(f"<b>{target_old}{time_text} -> {target_new}{time_text}</b>")
+
+        remaining = len(exceptions) - len(examples)
+        if remaining > 0:
+            examples.append(f"... plus {remaining} weitere Ausnahme(n).")
+
+        subtitle = (
+            f"'{termin.name or termin.id}' wird um {days_text} verschoben.\n\n"
+            "Dabei passiert immer:\n"
+            "- Die normale Serie wird verschoben.\n"
+            "- Ausfälle werden mitverschoben.\n\n"
+            "In dieser Serie gibt es zusätzlich einzeln geänderte Termine:"
+        )
+        shifted_description = (
+            "Diese Termine werden mit der Serie verschoben:<br>"
+            + "<br>".join(examples)
+        )
+
+        dlg = ActionDialog(
+            self.parent,
+            title="Einzeln geänderte Termine mitverschieben?",
+            subtitle=subtitle,
+            section_title="Sollen diese einzeln geänderten Termine auch mitverschoben werden?",
+            actions=[
+                DialogAction(
+                    "shift",
+                    "Ja, mitverschieben",
+                    shifted_description,
+                ),
+                DialogAction(
+                    "keep",
+                    "Nein, dort lassen",
+                    "Die einzeln geänderten Termine bleiben auf ihren aktuellen Daten. "
+                    "Nur die normale Serie und die Ausfälle werden verschoben.",
+                ),
+            ],
+        )
+        if dlg.exec() != QDialog.Accepted:
+            return None
+        if dlg.result_key == "shift":
+            return True
+        if dlg.result_key == "keep":
+            return False
+        return None
 
     def unassign_termin(self, termin_id: str) -> bool:
         termine = self.ds.load_termine()
