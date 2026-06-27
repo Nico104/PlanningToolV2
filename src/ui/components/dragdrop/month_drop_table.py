@@ -32,7 +32,9 @@ class MonthDropTable(QTableWidget):
         self._read_only = bool(read_only)
         self.setAcceptDrops(not self._read_only)
         self.setDragEnabled(not self._read_only)
-        self.setDragDropMode(QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop)
+        self.setDragDropMode(
+            QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop
+        )
         if self._read_only:
             self._auto_scroll_timer.stop()
             self._set_hover(-1, -1)

@@ -10,14 +10,20 @@ from ..utils.qss_tokens import qss_color
 
 
 @dataclass(frozen=True)
+class FreeDayBadgeLine:
+    day_type: str
+    text: str
+
+
+@dataclass(frozen=True)
 class FreeDayInfo:
     day_type: str
     descriptions: tuple[str, ...] = ()
+    badge_lines: tuple[FreeDayBadgeLine, ...] = ()
 
 
 class FreeDayProvider:
-    """Shared provider for free-day data and styles used by planner views
-    """
+    """Shared provider for free-day data and styles used by planner views"""
 
     def __init__(self, data_dir: Path):
         self._data_dir = Path(data_dir)
@@ -72,19 +78,29 @@ class FreeDayProvider:
     def label_for_info(self, info: Optional[FreeDayInfo]) -> str:
         if info is None:
             return ""
-        base = self.label_for_type(info.day_type)
-        descriptions = [text for text in info.descriptions if text]
-        if not descriptions:
-            return base
-        return f"{base}: {', '.join(descriptions)}" if base else ", ".join(descriptions)
-
-    def badge_for_info(self, info: Optional[FreeDayInfo]) -> str:
-        if info is None:
-            return ""
         descriptions = [text for text in info.descriptions if text]
         if descriptions:
             return ", ".join(descriptions)
         return self.label_for_type(info.day_type)
+
+    def badge_for_info(self, info: Optional[FreeDayInfo]) -> str:
+        if info is None:
+            return ""
+        badge_lines = self.badge_lines_for_info(info)
+        if badge_lines:
+            return "\n".join(line.text for line in badge_lines[:3])
+        return self.label_for_type(info.day_type)
+
+    def badge_lines_for_info(self, info: Optional[FreeDayInfo]) -> tuple[FreeDayBadgeLine, ...]:
+        if info is None:
+            return ()
+        if info.badge_lines:
+            return info.badge_lines
+        return tuple(
+            FreeDayBadgeLine(info.day_type, text)
+            for text in info.descriptions
+            if text
+        )
 
     def _load_free_day_styles(self) -> dict[str, object]:
         styles: dict[str, object] = {}
@@ -104,17 +120,16 @@ class FreeDayProvider:
         sorted_items = sorted(items, key=lambda item: (priority.get(item[0], 9), item[0], item[1]))
         day_type = sorted_items[0][0]
         descriptions: list[str] = []
+        badge_lines: list[FreeDayBadgeLine] = []
         seen = set()
         for item_type, description in sorted_items:
             if not description or description in seen:
                 continue
             seen.add(description)
             descriptions.append(description)
-        for item_type, _ in sorted_items:
-            if item_type == day_type:
-                continue
-            type_label = self.label_for_type(item_type).lower()
-            if type_label and type_label not in seen:
-                seen.add(type_label)
-                descriptions.append(type_label)
-        return FreeDayInfo(day_type=day_type, descriptions=tuple(descriptions))
+            badge_lines.append(FreeDayBadgeLine(item_type, description))
+        return FreeDayInfo(
+            day_type=day_type,
+            descriptions=tuple(descriptions),
+            badge_lines=tuple(badge_lines),
+        )

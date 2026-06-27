@@ -172,11 +172,7 @@ class CatalogImportDialog(QDialog):
         rows = self._rows_by_file[file_name]
         for row_index, row_data in enumerate(rows):
             item = table.item(row_index, 0)
-            if (
-                item
-                and item.checkState() == Qt.Checked
-                and row_data["status"] != "identical"
-            ):
+            if item and item.checkState() == Qt.Checked and row_data["status"] != "identical":
                 selected.setdefault(file_name, []).append(dict(row_data["import_entry"]))
         return build_payload(selected)
 
@@ -379,7 +375,11 @@ class CatalogImportDialog(QDialog):
 
         teacher = entry.get("vortragende") if isinstance(entry.get("vortragende"), dict) else {}
         semester = entry.get("studiensemester")
-        semester_text = ", ".join(str(item) for item in semester) if isinstance(semester, list) else str(semester or "")
+        semester_text = (
+            ", ".join(str(item) for item in semester)
+            if isinstance(semester, list)
+            else str(semester or "")
+        )
         return {
             "status": self._STATUS_LABELS[status],
             "id": str(entry.get("id", "")),
@@ -397,7 +397,11 @@ class CatalogImportDialog(QDialog):
     def _apply_filter(self, file_name: str) -> None:
         table = self._tables[file_name]
         search = self._search_fields[file_name].text().strip().casefold()
-        building = self._building_filters.get(file_name).currentData() if file_name in self._building_filters else ""
+        building = (
+            self._building_filters.get(file_name).currentData()
+            if file_name in self._building_filters
+            else ""
+        )
 
         for row_index, row_data in enumerate(self._rows_by_file[file_name]):
             visible = True
@@ -446,7 +450,9 @@ class CatalogImportDialog(QDialog):
                 elif row_data["status"] == "changed":
                     changed += 1
         label = self._FILE_LABELS.get(file_name, "Einträge")
-        self.summary_label.setText(f"{label}: {selected} ausgewählt · {new} neu · {changed} geändert · {total} gesamt")
+        self.summary_label.setText(
+            f"{label}: {selected} ausgewählt · {new} neu · {changed} geändert · {total} gesamt"
+        )
         singular, plural = self._IMPORT_LABELS.get(file_name, ("Eintrag", "Einträge"))
         item_label = singular if selected == 1 else plural
         self.import_btn.setText(f"{selected} {item_label} importieren")

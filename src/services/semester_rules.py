@@ -6,7 +6,6 @@ from typing import Optional
 
 from ..core.models import Semester
 
-
 SEMESTER_ID_RE = re.compile(r"^(SS|WS)[\s_-]?(\d{2}|\d{4})$", re.IGNORECASE)
 
 

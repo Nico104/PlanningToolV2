@@ -31,7 +31,7 @@ class TickCheckBox(QCheckBox):
 
         border_color = "#47515c" if dark else "#bbb"
 
-        self.setStyleSheet(f'''
+        self.setStyleSheet(f"""
             QCheckBox::indicator {{
                 width: 18px;
                 height: 18px;
@@ -45,4 +45,4 @@ class TickCheckBox(QCheckBox):
             QCheckBox::indicator:checked {{
                 image: url('{check_icon_path}');
             }}
-        ''')
+        """)

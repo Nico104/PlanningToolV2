@@ -34,16 +34,14 @@ class TightComboBox(QComboBox):
         self._compact_height = compact_height
         self._min_popup_width = min_popup_width
 
-
         self.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        
+
         self.setMinimumHeight(self._compact_height)
 
         self.setItemDelegate(_TightDelegate(self))
         self._apply_popup_window_flags()
-        
-        self.setView(QListView())
 
+        self.setView(QListView())
 
     def _fit_popup_height(self):
         v = self.view()
@@ -58,16 +56,12 @@ class TightComboBox(QComboBox):
         extra = 12
         v.setFixedHeight(row_h * n + extra)
 
-
-
-
-
     def _apply_popup_window_flags(self):
         v = self.view()
         w = v.window()
 
         w.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
-        
+
         w.setAttribute(Qt.WA_TranslucentBackground, True)
         w.setStyleSheet("background: transparent;")
 
@@ -78,8 +72,6 @@ class TightComboBox(QComboBox):
         v.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         v.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-
-
     # def wheelEvent(self, event):
     #     # Prevent accidental changes while scrolling
     #     event.ignore()
@@ -88,7 +80,7 @@ class TightComboBox(QComboBox):
         self._apply_popup_window_flags()
         self._sync_popup_styling()
         self._fit_popup_width()
-        self._fit_popup_height()  
+        self._fit_popup_height()
         super().showPopup()
 
         # Ensure the popup window tightly wraps the view and stays anchored to the combo box.
@@ -128,7 +120,6 @@ class TightComboBox(QComboBox):
             y = max(geo.top(), min(below.y(), geo.bottom() - popup_h + 1))
 
         w.move(x, y)
-
 
     def _fit_popup_width(self):
         fm = QFontMetrics(self.font())
@@ -172,7 +163,7 @@ class TightComboBox(QComboBox):
         if lay:
             lay.setContentsMargins(0, 0, 0, 0)
             lay.setSpacing(0)
-            
+
         v.setStyleSheet(f"""
             QAbstractItemView {{
                 background: transparent;
@@ -201,7 +192,3 @@ class TightComboBox(QComboBox):
                 color: {selection_text};
             }}
         """)
-
-
-
-

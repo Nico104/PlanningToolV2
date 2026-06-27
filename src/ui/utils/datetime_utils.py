@@ -26,9 +26,9 @@ def date_to_qdate(d: date | None) -> QDate:
     return QDate(d.year, d.month, d.day)
 
 
-
 def monday_of(d: date) -> date:
     return d - timedelta(days=d.weekday())
+
 
 def mins_from_time(t: time) -> int:
     return t.hour * 60 + t.minute

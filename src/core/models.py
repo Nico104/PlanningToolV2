@@ -3,7 +3,6 @@ from datetime import date, datetime, time, timedelta
 from typing import Optional, List
 
 
-
 @dataclass(frozen=True)
 class Studiensemester:
     id: str
@@ -90,10 +89,10 @@ class Termin:
             self.datum is not None
             and self.datum_bis is not None
             and self.datum_bis > self.datum
-            and self.periodizitaet in {"täglich", "wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich"}
+            and self.periodizitaet
+            in {"täglich", "wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich"}
         )
 
-    
     def get_end_time(self) -> Optional[time]:
         if self.start_zeit and self.duration > 0:
             dummy_date = date(2000, 1, 1)
@@ -101,13 +100,11 @@ class Termin:
             dt_bis = dt_von + timedelta(minutes=self.duration)
             return dt_bis.time()
         return None
-    
-
 
 
 @dataclass
 class ConflictIssue:
-    #Represents a conflict or warning issue with scheduling
+    # Represents a conflict or warning issue with scheduling
     severity: str  # "conflict" or "warning"
     category: str  # e.g. "room", "group", "lecturer", "incomplete", "time_period"
     termin_ids: List[str]  # one or two termin IDs involved

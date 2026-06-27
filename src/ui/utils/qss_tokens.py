@@ -2,7 +2,6 @@ from pathlib import Path
 
 from PySide6.QtGui import QColor
 
-
 _TOKENS: dict[str, str] = {}
 
 

@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from ....services.data_service import DataService
 from ....services.excel_exchange_service import (
+    export_project_file_to_csv,
     export_project_to_excel,
     export_terms_for_teachers_to_excel,
     export_week_calendar_to_excel,
@@ -32,6 +33,7 @@ from ....services.excel_exchange_service import (
     get_teacher_export_semester_options,
     import_lvas_from_excel,
     import_project_from_excel,
+    import_project_file_from_csv,
     import_tiss_rooms_from_excel,
 )
 from ....services.default_catalog_service import DEFAULT_CATALOG_LABEL, load_default_catalog_payload
@@ -39,7 +41,11 @@ from ....services.import_merge_service import normalize_import_payload, payload_
 from ....services.undo_service import UndoService
 from ....services.semester_tools_service import copy_semester_termine, delete_semester_termine
 from ....services.free_day_import_service import append_free_day_candidates
-from ....services.semester_rules import semester_for_kind_year, semester_from_id, semester_id_for_date
+from ....services.semester_rules import (
+    semester_for_kind_year,
+    semester_from_id,
+    semester_id_for_date,
+)
 from ....services.data_folder_service import (
     data_path_for_settings,
     load_settings,
@@ -64,6 +70,8 @@ from ...dialogs import (
     SemesterToolsDialog,
     FreeDayImportDialog,
     CatalogImportDialog,
+    ProjectExportDialog,
+    ExportFileOption,
 )
 from ...dialogs.import_dialog import ImportDialog
 from ...components.widgets.toast import Toast
@@ -83,7 +91,9 @@ def restart_application() -> None:
 
     subprocess.Popen(
         args,
-        cwd=str(Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path.cwd()),
+        cwd=str(
+            Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path.cwd()
+        ),
         env=env,
     )
     sys.exit(0)
@@ -124,8 +134,7 @@ class MainWindow(QMainWindow):
         return Path(__file__).resolve().parents[4]
 
     def _resolve_start_date_for_semester(self, semester_id: str):
-        """given a semester id, what date should the UI jump to
-        """
+        """given a semester id, what date should the UI jump to"""
 
         sem_obj = semester_from_id(semester_id)
         if sem_obj:
@@ -201,14 +210,16 @@ class MainWindow(QMainWindow):
         install_main_window_shortcuts(self)
 
         startup_settings = self.ds.load_settings()
-        self.termine_dock.set_search_enabled(bool(startup_settings.get("show_termine_search", True)))
+        self.termine_dock.set_search_enabled(
+            bool(startup_settings.get("show_termine_search", True))
+        )
 
         self.refresh_everything()
         self.update_undo_redo_actions()
         self.layout_mgr.init_default()
 
         self.showMaximized()
-        
+
         # Delayed refresh to fix initial card heights after startup layout (50ms not exact time, did not work with 0)
         QTimer.singleShot(50, self._refresh_planner_only)
 
@@ -235,7 +246,9 @@ class MainWindow(QMainWindow):
         if data_path_text:
             data_path = Path(data_path_text).expanduser()
             if not data_path.is_absolute():
-                QMessageBox.warning(self, "Einstellungen", "Der Datenpfad muss ein absoluter Pfad sein.")
+                QMessageBox.warning(
+                    self, "Einstellungen", "Der Datenpfad muss ein absoluter Pfad sein."
+                )
                 return
             s["data_path"] = data_path_for_settings(data_path)
         else:
@@ -301,21 +314,23 @@ class MainWindow(QMainWindow):
         if creating_new:
             msg.setText("Das neue Projekt ist vorbereitet.")
             info_text = (
-                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n"
-                f"{target_dir}"
+                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n" f"{target_dir}"
             )
             if standard_data_imported:
                 info_text += "\n\nAusgewählte Standarddaten wurden importiert."
             if created_files:
-                info_text += "\n\nVorbereitete Bereiche:\n- " + "\n- ".join(project_part_labels(created_files))
+                info_text += "\n\nVorbereitete Bereiche:\n- " + "\n- ".join(
+                    project_part_labels(created_files)
+                )
         else:
             msg.setText("Der Projektordner wurde gespeichert.")
             info_text = (
-                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n"
-                f"{target_dir}"
+                "Nach dem Neustart öffnet die App direkt diesen Projektordner:\n" f"{target_dir}"
             )
             if created_files:
-                info_text += "\n\nErgänzte Bereiche:\n- " + "\n- ".join(project_part_labels(created_files))
+                info_text += "\n\nErgänzte Bereiche:\n- " + "\n- ".join(
+                    project_part_labels(created_files)
+                )
         msg.setInformativeText(info_text)
         restart_btn = QPushButton("Neustart")
         msg.addButton(QMessageBox.Ok)
@@ -358,7 +373,11 @@ class MainWindow(QMainWindow):
         try:
             normalized = load_default_catalog_payload()
         except Exception as e:
-            QMessageBox.warning(self, "Standarddaten importieren", f"Standarddaten konnten nicht gelesen werden: {e}")
+            QMessageBox.warning(
+                self,
+                "Standarddaten importieren",
+                f"Standarddaten konnten nicht gelesen werden: {e}",
+            )
             return False
 
         if dlg.result_key == "all":
@@ -436,24 +455,25 @@ class MainWindow(QMainWindow):
         self.act_refresh.triggered.connect(self.refresh_everything)
         file_menu.addAction(self.act_refresh)
 
-        import_export_menu = file_menu.addMenu("Import/Export")
+        import_menu = file_menu.addMenu("Importieren")
 
         self.act_import = QAction("Importieren…", self)
         self.act_import.triggered.connect(self.import_data)
-        import_export_menu.addAction(self.act_import)
-
-        self.act_export = QAction("Projekt exportieren…", self)
-        self.act_export.triggered.connect(self.export_project)
-        import_export_menu.addAction(self.act_export)
+        import_menu.addAction(self.act_import)
 
         self.act_default_catalog_import = QAction("Standarddaten importieren…", self)
         self.act_default_catalog_import.triggered.connect(self.import_default_catalog)
-        import_export_menu.addAction(self.act_default_catalog_import)
+        import_menu.addAction(self.act_default_catalog_import)
 
-        import_export_menu.addSeparator()
+        export_menu = file_menu.addMenu("Exportieren")
+
+        self.act_export = QAction("Daten exportieren…", self)
+        self.act_export.triggered.connect(self.export_project)
+        export_menu.addAction(self.act_export)
+
         self.act_export_teachers = QAction("Export für Lehrende…", self)
         self.act_export_teachers.triggered.connect(self.export_teacher_terms)
-        import_export_menu.addAction(self.act_export_teachers)
+        export_menu.addAction(self.act_export_teachers)
 
         edit_menu = mb.addMenu("Bearbeiten")
         self.act_undo = QAction("Rückgängig", self)
@@ -551,7 +571,9 @@ class MainWindow(QMainWindow):
             self.refresh_everything()
             Toast(self, message, duration_ms=3000).show()
         except Exception as e:
-            QMessageBox.warning(self, "Semester-Werkzeuge", f"Aktion konnte nicht ausgeführt werden: {e}")
+            QMessageBox.warning(
+                self, "Semester-Werkzeuge", f"Aktion konnte nicht ausgeführt werden: {e}"
+            )
 
     def open_free_day_import(self) -> None:
         default_from, default_to = self._default_free_day_import_range()
@@ -576,7 +598,9 @@ class MainWindow(QMainWindow):
             self.refresh_everything()
             Toast(self, f"{changed_count} freie Tage gespeichert.", duration_ms=3000).show()
         except Exception as e:
-            QMessageBox.warning(self, "Freie Tage importieren", f"Freie Tage konnten nicht gespeichert werden: {e}")
+            QMessageBox.warning(
+                self, "Freie Tage importieren", f"Freie Tage konnten nicht gespeichert werden: {e}"
+            )
 
     def _default_free_day_import_range(self) -> tuple[date, date]:
         year = self._current_calendar_date().year
@@ -622,7 +646,9 @@ class MainWindow(QMainWindow):
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.parent)))
 
     @staticmethod
-    def _import_result_rows(counts_by_file: dict[str, dict[str, int]]) -> tuple[dict[str, int], list[tuple[str, dict[str, int]]]]:
+    def _import_result_rows(
+        counts_by_file: dict[str, dict[str, int]],
+    ) -> tuple[dict[str, int], list[tuple[str, dict[str, int]]]]:
         labels = {
             "raeume.json": "Räume",
             "lehrveranstaltungen.json": "LVAs",
@@ -662,7 +688,9 @@ class MainWindow(QMainWindow):
         )
         return headline, details
 
-    def _show_import_finished_dialog(self, success_text: str, counts_by_file: dict[str, dict[str, int]]) -> None:
+    def _show_import_finished_dialog(
+        self, success_text: str, counts_by_file: dict[str, dict[str, int]]
+    ) -> None:
         totals, rows = self._import_result_rows(counts_by_file)
 
         dlg = QDialog(self)
@@ -702,7 +730,9 @@ class MainWindow(QMainWindow):
             label = QLabel(label_text)
             label.setObjectName("SettingsHelp")
             summary_layout.addWidget(label, row_index, 0)
-            for column, key in enumerate(("new", "changed", "identical", "ignored", "skipped"), start=1):
+            for column, key in enumerate(
+                ("new", "changed", "identical", "ignored", "skipped"), start=1
+            ):
                 value_label = QLabel(str(counts[key]))
                 value_label.setObjectName("SettingsHelp")
                 value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -712,7 +742,9 @@ class MainWindow(QMainWindow):
         total_label = QLabel("Gesamt")
         total_label.setObjectName("SettingsFieldLabel")
         summary_layout.addWidget(total_label, total_row, 0)
-        for column, key in enumerate(("new", "changed", "identical", "ignored", "skipped"), start=1):
+        for column, key in enumerate(
+            ("new", "changed", "identical", "ignored", "skipped"), start=1
+        ):
             value_label = QLabel(str(totals[key]))
             value_label.setObjectName("SettingsFieldLabel")
             value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -739,15 +771,80 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     def export_project(self) -> None:
-        default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
-        files = [
-            "raeume.json",
-            "lehrveranstaltungen.json",
-            "termine.json",
-            "studienrichtungen.json",
-            "freie_tage.json",
-        ]
-        export_obj = {}
+        options = self._project_export_file_options()
+        dlg = ProjectExportDialog(self, options)
+        if dlg.exec() != QDialog.Accepted:
+            return
+
+        selected_files = dlg.selected_files()
+        if not selected_files:
+            QMessageBox.warning(self, "Export Fehler", "Es wurde kein Datenbereich ausgewählt.")
+            return
+
+        export_format = dlg.selected_format()
+        export_obj = self._read_project_export_payload(selected_files)
+        if not export_obj:
+            QMessageBox.warning(self, "Export Fehler", "Keine exportierbaren Daten gefunden.")
+            return
+
+        single_file_name = selected_files[0] if len(selected_files) == 1 else ""
+        suffix = {"json": ".json", "xlsx": ".xlsx", "csv": ".csv"}.get(export_format, ".json")
+        if single_file_name and export_format == "json":
+            default_name = single_file_name
+        elif single_file_name:
+            default_name = Path(single_file_name).with_suffix(suffix).name
+        else:
+            default_name = f"Planungsdaten_{datetime.now().strftime('%Y-%m-%d')}{suffix}"
+
+        fn, _selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Daten exportieren",
+            str(self.data_dir / default_name),
+            self._export_file_dialog_filter(export_format),
+        )
+        if not fn:
+            return
+        try:
+            out_path = Path(fn)
+            if not out_path.suffix:
+                out_path = out_path.with_suffix(suffix)
+
+            if export_format == "xlsx":
+                export_project_to_excel(self.data_dir, out_path, selected_files)
+            elif export_format == "csv":
+                if not single_file_name:
+                    QMessageBox.warning(
+                        self,
+                        "Export Fehler",
+                        "CSV kann nur für eine einzelne Datei exportiert werden.",
+                    )
+                    return
+                export_project_file_to_csv(self.data_dir, single_file_name, out_path)
+            else:
+                payload = export_obj[single_file_name] if single_file_name else export_obj
+                out_path.write_text(
+                    json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+            summary = self._project_export_summary(export_obj)
+            self._show_export_finished_dialog(
+                out_path,
+                "Daten exportiert.",
+                summary,
+            )
+        except Exception as e:
+            QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
+
+    @staticmethod
+    def _export_file_dialog_filter(export_format: str) -> str:
+        if export_format == "xlsx":
+            return "Excel Files (*.xlsx)"
+        if export_format == "csv":
+            return "CSV Files (*.csv)"
+        return "JSON Files (*.json)"
+
+    def _read_project_export_payload(self, files: list[str]) -> dict[str, Any]:
+        export_obj: dict[str, Any] = {}
         for f in files:
             p = self.data_dir / f
             if p.exists():
@@ -755,38 +852,29 @@ class MainWindow(QMainWindow):
                     export_obj[f] = json.loads(p.read_text(encoding="utf-8"))
                 except Exception:
                     export_obj[f] = p.read_text(encoding="utf-8")
+        return export_obj
 
-        fn, selected_filter = QFileDialog.getSaveFileName(
-            self,
-            "Projekt exportieren",
-            str(self.data_dir / default_name),
-            "Excel Files (*.xlsx);;JSON Files (*.json)",
-            "Excel Files (*.xlsx)",
-        )
-        if not fn:
-            return
-        try:
-            out_path = Path(fn)
-            if not out_path.suffix:
-                if selected_filter.startswith("JSON"):
-                    out_path = out_path.with_suffix(".json")
-                else:
-                    out_path = out_path.with_suffix(".xlsx")
-            if out_path.suffix.lower() == ".xlsx":
-                export_project_to_excel(self.data_dir, out_path)
-            else:
-                out_path.write_text(
-                    json.dumps(export_obj, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8",
-                )
-            summary = self._project_export_summary(export_obj)
-            self._show_export_finished_dialog(
-                out_path,
-                "Projekt exportiert.",
-                summary,
-            )
-        except Exception as e:
-            QMessageBox.warning(self, "Export Fehler", f"Fehler beim Export: {e}")
+    @staticmethod
+    def _project_export_file_options() -> list[ExportFileOption]:
+        return [
+            ExportFileOption("termine.json", "Termine", "Geplante und ungeplante Termine."),
+            ExportFileOption("raeume.json", "Räume", "Raumstammdaten."),
+            ExportFileOption(
+                "lehrveranstaltungen.json",
+                "Lehrveranstaltungen",
+                "LVA-Stammdaten inklusive Vortragende und Studiensemester.",
+            ),
+            ExportFileOption(
+                "studienrichtungen.json",
+                "Studienrichtungen",
+                "Studienrichtungen/Stammdaten für Filter und Zuordnung.",
+            ),
+            ExportFileOption(
+                "freie_tage.json",
+                "Freie Tage",
+                "Feiertage und vorlesungsfreie Zeiträume.",
+            ),
+        ]
 
     def _project_export_summary(self, export_obj: dict) -> str:
         labels = [
@@ -836,7 +924,13 @@ class MainWindow(QMainWindow):
         for part in (item.strip() for item in re.split(r"[;,/]", text)):
             if not part:
                 continue
-            if part.casefold() in {"ohne semesterempfehlung", "ohne empfehlung", "none", "null", "-"}:
+            if part.casefold() in {
+                "ohne semesterempfehlung",
+                "ohne empfehlung",
+                "none",
+                "null",
+                "-",
+            }:
                 continue
             semester_id = f"sem{part}" if part.isdigit() else part
             if semester_id not in ids:
@@ -866,9 +960,13 @@ class MainWindow(QMainWindow):
         rooms = []
         seen = set()
         for row in rows:
-            room_id = cls._csv_value(row, "id", "raumnummer", "raumnr", "raumcode", "code", "nummer")
+            room_id = cls._csv_value(
+                row, "id", "raumnummer", "raumnr", "raumcode", "code", "nummer"
+            )
             name = cls._csv_value(row, "name", "raum", "raumname", "bezeichnung", "raumbezeichnung")
-            capacity_text = cls._csv_value(row, "kapazitaet", "kapazität", "plaetze", "plätze", "capacity")
+            capacity_text = cls._csv_value(
+                row, "kapazitaet", "kapazität", "plaetze", "plätze", "capacity"
+            )
             if not room_id or not name or not capacity_text or room_id in seen:
                 continue
             seen.add(room_id)
@@ -877,7 +975,9 @@ class MainWindow(QMainWindow):
                 "name": name,
                 "kapazitaet": cls._csv_int(capacity_text),
             }
-            building = cls._csv_value(row, "gebaeude", "gebäude", "gebaeudekuerzel", "gebäudekürzel", "building")
+            building = cls._csv_value(
+                row, "gebaeude", "gebäude", "gebaeudekuerzel", "gebäudekürzel", "building"
+            )
             address = cls._csv_value(row, "adresse", "anschrift", "address")
             if building:
                 entry["gebaeude"] = building
@@ -899,7 +999,9 @@ class MainWindow(QMainWindow):
             if not lva_id or not name or lva_id in seen:
                 continue
             seen.add(lva_id)
-            teacher_name = cls._csv_value(row, "vortragende_name", "vortragender", "vortragende", "lehrperson", "dozent")
+            teacher_name = cls._csv_value(
+                row, "vortragende_name", "vortragender", "vortragende", "lehrperson", "dozent"
+            )
             teacher_email = cls._csv_value(row, "vortragende_email", "email", "e-mail", "mail")
             teacher_email = teacher_email.split(";", 1)[0].strip()
             lvas.append(
@@ -910,8 +1012,11 @@ class MainWindow(QMainWindow):
                         "name": teacher_name,
                         "email": teacher_email,
                     },
-                    "studiensemester": cls._csv_semester_ids(cls._csv_value(row, "studiensemester", "semester")),
-                    "studienrichtung": cls._csv_value(row, "studienrichtung", "studiengang") or "ETIT",
+                    "studiensemester": cls._csv_semester_ids(
+                        cls._csv_value(row, "studiensemester", "semester")
+                    ),
+                    "studienrichtung": cls._csv_value(row, "studienrichtung", "studiengang")
+                    or "ETIT",
                     "ects": cls._csv_value(row, "ects", "credit", "credits"),
                 }
             )
@@ -923,16 +1028,22 @@ class MainWindow(QMainWindow):
         info.setWindowTitle("Daten importieren")
         info.setText("Einzelne Listen oder ein vollständiges Projekt importieren.")
         info.setInformativeText(
-            "Unterstützte Dateien:\n"
-            "- Projektdateien aus dieser App als JSON oder Excel\n"
-            "- Raumlisten als Excel oder CSV\n"
-            "- LVA-Listen als Excel oder CSV\n\n"
-            "Raumlisten benötigen mindestens: Raumnummer, Raumname und Kapazität. Gebäude ist optional.\n"
-            "LVA-Listen benötigen mindestens: LVA-Nr. und Bezeichnung. Optional sind Vortragende, "
-            "E-Mail, ECTS, Studiensemester und Studienrichtung.\n\n"
-            "Nach dem Auswählen erkennt die App den Dateityp und zeigt eine passende Vorschau. "
-            "Neue gültige Einträge werden übernommen. Änderungen an bestehenden Einträgen werden vor dem Import geprüft. "
-            "Einträge mit fehlenden oder ungültigen Stammdaten werden gemeldet und nicht importiert."
+            "Die App kann zwei Arten von Dateien importieren:\n\n"
+            "1. Dateien aus dieser App\n"
+            "- Ganzes Projekt: JSON oder Excel\n"
+            "- Einzelner Projektbereich: JSON, Excel oder CSV\n"
+            "  Beispiele: freie Tage, Räume, LVAs, Termine oder Studienrichtungen.\n"
+            "  Praktisch z.B., um freie Tage zu exportieren, in Excel zu ergänzen und wieder zu importieren.\n"
+            "  Diese Dateien passen automatisch, wenn sie über Exportieren erstellt wurden.\n\n"
+            "2. Externe Tabellen\n"
+            "- Raumliste als Excel oder CSV: benötigt Raumnummer, Raumname und Kapazität. Gebäude ist optional.\n"
+            "- LVA-Liste als Excel oder CSV: benötigt LVA-Nr. und Bezeichnung. Optional sind Vortragende, "
+            "E-Mail, ECTS, Studiensemester und Studienrichtung.\n"
+            "  Die App erkennt gängige Spaltennamen. Wenn Pflichtspalten fehlen oder nicht erkannt werden, "
+            "wird nichts importiert.\n\n"
+            "Nach dem Auswählen zeigt die App eine Vorschau. Neue Einträge werden übernommen. "
+            "Änderungen an bestehenden Einträgen werden vor dem Import geprüft. Einträge mit fehlenden "
+            "oder ungültigen Verweisen werden übersprungen."
         )
         open_btn = QPushButton("Datei wählen")
         info.addButton(QMessageBox.Cancel)
@@ -946,12 +1057,22 @@ class MainWindow(QMainWindow):
         if suffix == ".json":
             with path.open(encoding="utf-8-sig") as handle:
                 normalized = normalize_import_payload(json.load(handle))
-            return normalized, "Planungsdaten erkannt", "JSON-Datei mit Projektstruktur aus dieser App.", False
+            return (
+                normalized,
+                "Planungsdaten erkannt",
+                "JSON-Datei mit Projektstruktur aus dieser App.",
+                False,
+            )
 
         if suffix == ".xlsx":
             project_payload = import_project_from_excel(path)
             if self._import_payload_count(project_payload) > 0:
-                return project_payload, "Planungsdaten erkannt", "Excel-Datei mit Projektstruktur aus dieser App.", False
+                return (
+                    project_payload,
+                    "Planungsdaten erkannt",
+                    "Excel-Datei mit Projektstruktur aus dieser App.",
+                    False,
+                )
             try:
                 room_payload = import_tiss_rooms_from_excel(path)
             except Exception:
@@ -988,9 +1109,18 @@ class MainWindow(QMainWindow):
                     "Erkannte LVAs aus der CSV-Datei. Pflichtspalten: LVA-Nr. und Bezeichnung. Optional: Vortragende, E-Mail, ECTS, Studiensemester und Studienrichtung.",
                     True,
                 )
+            project_csv_payload = import_project_file_from_csv(path)
+            if self._import_payload_count(project_csv_payload) > 0:
+                return (
+                    project_csv_payload,
+                    "Planungsdaten erkannt",
+                    "CSV-Datei mit einem Projektbereich aus dieser App.",
+                    False,
+                )
             raise ValueError(
                 "CSV-Format nicht erkannt. Räume benötigen Raumnummer, Raumname und Kapazität. "
-                "LVAs benötigen mindestens LVA-Nr. und Bezeichnung."
+                "LVAs benötigen mindestens LVA-Nr. und Bezeichnung. Exportierte Projekt-CSV-Dateien "
+                "benötigen die Spalten aus dem App-Export."
             )
 
         raise ValueError("Dateityp nicht unterstützt. Bitte JSON, XLSX oder CSV wählen.")
@@ -1012,7 +1142,9 @@ class MainWindow(QMainWindow):
         try:
             normalized, title, subtitle, needs_selection = self._detect_import_file(path)
         except Exception as e:
-            QMessageBox.warning(self, "Import Fehler", f"Importdatei konnte nicht gelesen werden:\n{e}")
+            QMessageBox.warning(
+                self, "Import Fehler", f"Importdatei konnte nicht gelesen werden:\n{e}"
+            )
             return
 
         if not normalized or self._import_payload_count(normalized) <= 0:
@@ -1023,7 +1155,8 @@ class MainWindow(QMainWindow):
             self._select_catalog_import(
                 normalized,
                 title=title,
-                subtitle=subtitle + " Die Auswahl wird anschließend über den normalen Import geprüft.",
+                subtitle=subtitle
+                + " Die Auswahl wird anschließend über den normalen Import geprüft.",
                 success_text="Daten importiert.",
             )
         else:
@@ -1033,7 +1166,11 @@ class MainWindow(QMainWindow):
         try:
             normalized = load_default_catalog_payload()
         except Exception as e:
-            QMessageBox.warning(self, "Standarddaten importieren", f"Standarddaten konnten nicht gelesen werden: {e}")
+            QMessageBox.warning(
+                self,
+                "Standarddaten importieren",
+                f"Standarddaten konnten nicht gelesen werden: {e}",
+            )
             return
 
         self._select_catalog_import(
@@ -1069,7 +1206,11 @@ class MainWindow(QMainWindow):
             if not selected:
                 Toast(self, "Keine Einträge ausgewählt.", duration_ms=2500).show()
                 return
-            busy_text = "Räume werden importiert..." if "raeume.json" in selected else "LVAs werden importiert..."
+            busy_text = (
+                "Räume werden importiert..."
+                if "raeume.json" in selected
+                else "LVAs werden importiert..."
+            )
             dlg.set_busy(True, busy_text)
             try:
                 imported = self._run_import_payload(
@@ -1083,7 +1224,9 @@ class MainWindow(QMainWindow):
                 if imported:
                     imported_any = True
                     dlg.refresh_statuses()
-                    headline, _details = self._import_result_summary(getattr(self, "_last_import_counts", {}))
+                    headline, _details = self._import_result_summary(
+                        getattr(self, "_last_import_counts", {})
+                    )
                     Toast(self, f"Import: {headline}", duration_ms=3000).show()
             finally:
                 dlg.set_busy(False)
@@ -1134,15 +1277,24 @@ class MainWindow(QMainWindow):
         else:
             export_name = f"{len(selected_lva_ids)}_LVAs"
         if selected_semesters:
-            semester_part = "_".join(selected_semesters) if len(selected_semesters) <= 2 else f"{len(selected_semesters)}_Semester"
+            semester_part = (
+                "_".join(selected_semesters)
+                if len(selected_semesters) <= 2
+                else f"{len(selected_semesters)}_Semester"
+            )
             export_name = f"{export_name}_{semester_part}"
         export_name = f"{export_name}_{date_from:%Y-%m-%d}_bis_{date_to:%Y-%m-%d}"
-        safe_export_name = "".join(
-            char if char.isalnum() or char in (" ", "-", "_") else "_"
-            for char in export_name
-        ).strip().replace(" ", "_")
+        safe_export_name = (
+            "".join(
+                char if char.isalnum() or char in (" ", "-", "_") else "_" for char in export_name
+            )
+            .strip()
+            .replace(" ", "_")
+        )
         export_prefix = "Wochenkalender" if export_format == "calendar" else "Termine"
-        default_name = f"{export_prefix}_{safe_export_name}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+        default_name = (
+            f"{export_prefix}_{safe_export_name}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+        )
         fn, _ = QFileDialog.getSaveFileName(
             self,
             "Export für Lehrende speichern",
@@ -1365,7 +1517,9 @@ class MainWindow(QMainWindow):
         self.planner._shift_period(+1)
 
     def previous_year_shortcut_mode(self) -> str:
-        mode = str(self.ds.load_settings().get("previous_year_shortcut_mode", "hold")).strip().lower()
+        mode = (
+            str(self.ds.load_settings().get("previous_year_shortcut_mode", "hold")).strip().lower()
+        )
         return mode if mode in {"hold", "toggle"} else "hold"
 
     def toggle_previous_year(self) -> None:
@@ -1479,7 +1633,9 @@ class MainWindow(QMainWindow):
 
         studienrichtungen = self.ds.load_studienrichtungen()
 
-        typ_list = [t.typ for t in getattr(self.planner.state, "termine", []) if getattr(t, "typ", None)]
+        typ_list = [
+            t.typ for t in getattr(self.planner.state, "termine", []) if getattr(t, "typ", None)
+        ]
 
         self.global_filter_dock.refresh_filter_options(
             studienrichtungen,
@@ -1511,8 +1667,7 @@ class MainWindow(QMainWindow):
         self.refresh_conflicts()
 
     def _compute_filtered_termine(self, fs: FilterState | None):
-        """Return the filtered list of Termine for the given filter state
-        """
+        """Return the filtered list of Termine for the given filter state"""
 
         if fs:
             room = fs.raum_id
@@ -1549,7 +1704,9 @@ class MainWindow(QMainWindow):
         if building and not room:
             room_by_id = {str(r.id): r for r in self.planner.state.raeume}
             terms = [
-                t for t in terms
-                if str(getattr(room_by_id.get(str(t.raum_id)), "gebaeude", "") or "").strip() == building
+                t
+                for t in terms
+                if str(getattr(room_by_id.get(str(t.raum_id)), "gebaeude", "") or "").strip()
+                == building
             ]
         return terms

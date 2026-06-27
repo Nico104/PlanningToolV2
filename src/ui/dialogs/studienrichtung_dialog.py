@@ -1,8 +1,15 @@
 from typing import Optional
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QLabel, QFrame,
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QLabel,
+    QFrame,
 )
 
 
@@ -12,7 +19,9 @@ class StudienrichtungDialog(QDialog):
     def __init__(self, parent: QWidget, studienrichtung: Optional[dict] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")
-        self.setWindowTitle("Studienrichtung bearbeiten" if studienrichtung else "Studienrichtung hinzufügen")
+        self.setWindowTitle(
+            "Studienrichtung bearbeiten" if studienrichtung else "Studienrichtung hinzufügen"
+        )
         self.setModal(True)
         self._result: Optional[dict] = None
 

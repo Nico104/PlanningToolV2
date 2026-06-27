@@ -2,8 +2,16 @@ from typing import Optional
 from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox, QSpinBox,
-    QLabel, QFrame,
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QSpinBox,
+    QLabel,
+    QFrame,
 )
 
 from ...core.models import Raum
@@ -11,6 +19,7 @@ from ...core.models import Raum
 
 class RaumDialog(QDialog):
     """Dialog for creating or editing a room with name and capacity"""
+
     def __init__(self, parent: QWidget, raum: Optional[Raum] = None):
         super().__init__(parent)
         self.setObjectName("AppDialog")
@@ -26,7 +35,9 @@ class RaumDialog(QDialog):
         title = QLabel("Raum", self)
         title.setObjectName("DialogTitle")
         lay.addWidget(title)
-        subtitle = QLabel("Raumnummer, Bezeichnung, Kapazität und Gebäude für die Planung erfassen.", self)
+        subtitle = QLabel(
+            "Raumnummer, Bezeichnung, Kapazität und Gebäude für die Planung erfassen.", self
+        )
         subtitle.setObjectName("DialogSubtitle")
         subtitle.setWordWrap(True)
         lay.addWidget(subtitle)

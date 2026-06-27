@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QSpinBox, QWidget
 
 from .tight_combobox import TightComboBox
 
-
 _SEMESTER_ID_RE = re.compile(r"^(SS|WS)[\s_-]?(\d{2}|\d{4})$", re.IGNORECASE)
 
 

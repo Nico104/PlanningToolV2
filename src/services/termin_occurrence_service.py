@@ -5,7 +5,6 @@ from typing import Iterable, List, Optional
 
 from ..core.models import Termin
 
-
 OCCURRENCE_SEPARATOR = "@"
 SUPPORTED_PERIODIZITAET = {"täglich", "wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich"}
 
@@ -117,9 +116,15 @@ def expand_termin(termin: Termin) -> List[Termin]:
                     termin,
                     id=occurrence_id(termin.id, occurrence_date),
                     datum=exception.datum,
-                    start_zeit=exception.start_zeit if exception.start_zeit is not None else termin.start_zeit,
+                    start_zeit=(
+                        exception.start_zeit
+                        if exception.start_zeit is not None
+                        else termin.start_zeit
+                    ),
                     raum_id=exception.raum_id if exception.raum_id is not None else termin.raum_id,
-                    duration=exception.duration if exception.duration is not None else termin.duration,
+                    duration=(
+                        exception.duration if exception.duration is not None else termin.duration
+                    ),
                 )
             )
         else:

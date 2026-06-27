@@ -42,7 +42,7 @@ class TimeGridDropTable(QTableWidget):
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self._read_only = False
-        
+
         # Track current hover target during drag
         self._hover_row = -1
         self._hover_col = -1
@@ -66,8 +66,12 @@ class TimeGridDropTable(QTableWidget):
 
         self._drag_preview_overlay = TimeGridDragPreviewOverlay(self.viewport())
         self._drag_preview_overlay.setGeometry(self.viewport().rect())
-        self.verticalScrollBar().valueChanged.connect(lambda _value: self._sync_drag_preview_overlay())
-        self.horizontalScrollBar().valueChanged.connect(lambda _value: self._sync_drag_preview_overlay())
+        self.verticalScrollBar().valueChanged.connect(
+            lambda _value: self._sync_drag_preview_overlay()
+        )
+        self.horizontalScrollBar().valueChanged.connect(
+            lambda _value: self._sync_drag_preview_overlay()
+        )
 
     # Drag and Drop
 
@@ -75,12 +79,14 @@ class TimeGridDropTable(QTableWidget):
         self._read_only = bool(read_only)
         self.setAcceptDrops(not self._read_only)
         self.setDragEnabled(not self._read_only)
-        self.setDragDropMode(QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop)
+        self.setDragDropMode(
+            QAbstractItemView.NoDragDrop if self._read_only else QAbstractItemView.DragDrop
+        )
         if self._read_only:
             self._auto_scroll_timer.stop()
             self._set_hover(-1, -1)
         self.viewport().update()
-    
+
     # Accept valid Termin drags and start edge auto-scroll
     def dragEnterEvent(self, e):
         if self._read_only:
@@ -97,7 +103,6 @@ class TimeGridDropTable(QTableWidget):
         self._auto_scroll_timer.stop()
         self._set_hover(-1, -1)
         super().dragLeaveEvent(e)
-
 
     # Update hover preview while dragging over the grid (does the snapping to the grid)
     def dragMoveEvent(self, e: QDragMoveEvent):
@@ -158,7 +163,6 @@ class TimeGridDropTable(QTableWidget):
         self.terminDropped.emit(termin_id, r, c)
         e.acceptProposedAction()
 
-    
     def _set_hover(self, r: int, c: int, span: int = 1):
         """
         Update the hover position and refresh the drag preview.
@@ -255,7 +259,7 @@ class TimeGridDropTable(QTableWidget):
         """
         if self._last_drag_pos is None:
             return
-        
+
         margin = 32
         step_px = 12
         dy = 0
@@ -297,7 +301,6 @@ class TimeGridDropTable(QTableWidget):
     def set_conflict_checker(self, checker) -> None:
         self._conflict_checker = checker
 
-    
     def paintEvent(self, e):
         """
         Paint the table and grid lines. The live drag preview is painted by
@@ -370,12 +373,12 @@ class TimeGridDropTable(QTableWidget):
 
         current_row = self.currentRow()
         current_col = self.currentColumn()
-        
+
         if current_row < 0 or current_col < 0:
             return
 
         cell_widget = self.cellWidget(current_row, current_col)
-        if cell_widget and hasattr(cell_widget, 'termin_id'):
+        if cell_widget and hasattr(cell_widget, "termin_id"):
             termin_id = cell_widget.termin_id
         else:
             return

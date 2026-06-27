@@ -8,8 +8,16 @@ from pathlib import Path
 from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
-    QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QScrollArea, QFrame, QStyle, QTabBar
+    QDockWidget,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QFrame,
+    QStyle,
+    QTabBar,
 )
 
 from ...core.models import Termin, Lehrveranstaltung, Raum, ConflictIssue
@@ -33,10 +41,10 @@ class ConflictsDock(QDockWidget):
     """
     Dock widget for displaying conflicts and warnings
     """
-    
+
     # Signal emitted to highlight all related termine
     conflict_items_highlight = Signal(list)
-    
+
     def __init__(self, parent=None):
         super().__init__("Konflikte", parent)
         self.setObjectName("dock_conflicts")
@@ -44,21 +52,21 @@ class ConflictsDock(QDockWidget):
         self._base_title = "Konflikte"
         self._tab_badge_total = 0
         self._tab_badge_has_conflicts = False
-        
+
         self._issues: List[ConflictIssue] = []
         self._detector: Optional[ConflictDetector] = None
         self._max_visible_cards = 250
-        
+
         # Filter state
-        self._filter_severity = "all"   # "all", "conflict", "warning"
-        self._filter_category = "all"   # "all" or specific category key
-        
+        self._filter_severity = "all"  # "all", "conflict", "warning"
+        self._filter_category = "all"  # "all" or specific category key
+
         # Main widget
         main_widget = QWidget(self)
         layout = QVBoxLayout(main_widget)
         layout.setContentsMargins(4, 4, 4, 4)
         layout.setSpacing(4)
-        
+
         filter_bar = QWidget(self)
         filter_bar.setObjectName("HeaderBar")
         filter_layout = QHBoxLayout(filter_bar)
@@ -84,26 +92,25 @@ class ConflictsDock(QDockWidget):
         filter_layout.addStretch()
 
         layout.addWidget(filter_bar)
-        
-        #Header
+
+        # Header
         header = QHBoxLayout()
         header.setSpacing(8)
-        
+
         self.summary_label = QLabel("Keine Konflikte")
         self.summary_label.setObjectName("ConflictsSummary")
         self.summary_label.setProperty("state", "ok")
         header.addWidget(self.summary_label)
-        
+
         header.addStretch()
-        
+
         self.refresh_btn = QPushButton()
-        icon_name = "iconmonstr-reload-lined_white.svg" if _is_dark_theme(self) else "iconmonstr-reload-lined.svg"
-        icon_path = (
-            Path(__file__).resolve().parent.parent
-            / "assets"
-            / "icons"
-            / icon_name
+        icon_name = (
+            "iconmonstr-reload-lined_white.svg"
+            if _is_dark_theme(self)
+            else "iconmonstr-reload-lined.svg"
         )
+        icon_path = Path(__file__).resolve().parent.parent / "assets" / "icons" / icon_name
         if icon_path.is_file():
             self.refresh_btn.setIcon(QIcon(str(icon_path)))
         else:
@@ -113,9 +120,9 @@ class ConflictsDock(QDockWidget):
         self.refresh_btn.setIconSize(QSize(16, 16))
         self.refresh_btn.clicked.connect(self._on_refresh_clicked)
         header.addWidget(self.refresh_btn)
-        
+
         layout.addLayout(header)
-        
+
         # Scrollable card list
         self.scroll = QScrollArea(self)
         self.scroll.setWidgetResizable(True)
@@ -129,29 +136,28 @@ class ConflictsDock(QDockWidget):
 
         self.scroll.setWidget(self.cards_container)
         layout.addWidget(self.scroll)
-        
+
         self.setWidget(main_widget)
-    
-    def initialize_detector(self, 
-                          lvas: List[Lehrveranstaltung],
-                          raeume: List[Raum],
-                          data_dir=None) -> None:
+
+    def initialize_detector(
+        self, lvas: List[Lehrveranstaltung], raeume: List[Raum], data_dir=None
+    ) -> None:
         """Initialize the conflict detector with current data."""
         self._detector = ConflictDetector(lvas, raeume, data_dir=data_dir)
-    
+
     def refresh_conflicts(self, termine: List[Termin]) -> None:
         """Detect and display conflicts for the given Termine."""
         if not self._detector:
             return
-        
+
         # Detect all issues
         self._issues = self._detector.detect_all(termine)
         self._rebuild_category_filter_options()
-        
+
         conflicts = [i for i in self._issues if i.severity == "conflict"]
         warnings = [i for i in self._issues if i.severity == "warning"]
         self._update_title_indicator(len(conflicts), len(warnings))
-        
+
         if not self._issues:
             summary = "✓ Keine Konflikte"
             state = "ok"
@@ -161,11 +167,11 @@ class ConflictsDock(QDockWidget):
                 state = "conflict"
             else:
                 state = "warning"
-        
+
         self.summary_label.setProperty("state", state)
         self.summary_label.style().polish(self.summary_label)
         self.summary_label.setText(summary)
-        
+
         # Update cards with filtered results
         self._populate_cards()
 
@@ -216,7 +222,7 @@ class ConflictsDock(QDockWidget):
             if tabbar.tabText(index).strip() == self._base_title:
                 return index
         return -1
-        
+
     def _populate_cards(self) -> None:
         self._clear_cards()
 
@@ -284,7 +290,11 @@ class ConflictsDock(QDockWidget):
         return conflict_category_label(category)
 
     def _rebuild_category_filter_options(self) -> None:
-        current = self.category_filter.currentData() if hasattr(self, "category_filter") else self._filter_category
+        current = (
+            self.category_filter.currentData()
+            if hasattr(self, "category_filter")
+            else self._filter_category
+        )
 
         categories = set(CONFLICT_CATEGORY_LABELS.keys())
         categories.update(i.category for i in self._issues if getattr(i, "category", None))
@@ -305,30 +315,29 @@ class ConflictsDock(QDockWidget):
                 self.category_filter.setCurrentIndex(i)
                 return
         self.category_filter.setCurrentIndex(0)
-    
+
     def _on_refresh_clicked(self) -> None:
         # connected to the main window's refresh method
         parent = self.parent()
-        if parent and hasattr(parent, 'refresh_conflicts'):
+        if parent and hasattr(parent, "refresh_conflicts"):
             parent.refresh_conflicts()
-    
+
     def _on_filter_changed(self) -> None:
         self._filter_severity = self.severity_filter.currentData() or "all"
         self._filter_category = self.category_filter.currentData() or "all"
         self._populate_cards()
-    
+
     def _apply_filters(self) -> List[ConflictIssue]:
         filtered = self._issues
-        
+
         # Filter by severity
         if self._filter_severity == "conflict":
             filtered = [i for i in filtered if i.severity == "conflict"]
         elif self._filter_severity == "warning":
             filtered = [i for i in filtered if i.severity == "warning"]
-        
+
         # Filter by category
         if self._filter_category != "all":
             filtered = [i for i in filtered if i.category == self._filter_category]
-        
+
         return filtered
-    

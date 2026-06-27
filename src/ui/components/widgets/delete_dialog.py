@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QDialog, QFrame, QVBoxLayout, QLabel, QDialogButtonBox
 
+
 class DeleteDialog(QDialog):
     def __init__(self, parent, text, *, detail: str = "", title: str = "Löschen bestätigen"):
         super().__init__(parent)

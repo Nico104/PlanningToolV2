@@ -9,6 +9,7 @@ from .import_dialog import ImportDialog
 from .catalog_import_dialog import CatalogImportDialog
 from .semester_tools_dialog import SemesterToolsDialog
 from .free_day_import_dialog import FreeDayImportDialog
+from .project_export_dialog import ProjectExportDialog, ExportFileOption
 
 __all__ = [
     "LVADialog",
@@ -22,4 +23,6 @@ __all__ = [
     "CatalogImportDialog",
     "SemesterToolsDialog",
     "FreeDayImportDialog",
+    "ProjectExportDialog",
+    "ExportFileOption",
 ]

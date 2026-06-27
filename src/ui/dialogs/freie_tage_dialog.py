@@ -37,7 +37,9 @@ class FreieTageDialog(QDialog):
         title.setObjectName("DialogTitle")
         root.addWidget(title)
 
-        subtitle = QLabel("Ein einzelner freier Tag wird mit gleichem Von- und Bis-Datum erfasst.", self)
+        subtitle = QLabel(
+            "Ein einzelner freier Tag wird mit gleichem Von- und Bis-Datum erfasst.", self
+        )
         subtitle.setObjectName("DialogSubtitle")
         subtitle.setWordWrap(True)
         root.addWidget(subtitle)

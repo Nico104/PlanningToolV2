@@ -11,6 +11,7 @@ from .data_service import DataService
 @dataclass
 class ProjectSnapshot:
     """A deep-copy snapshot of all mutable project data, used as one entry on the undo stack"""
+
     termine: List[Termin]
     lvas: List[Lehrveranstaltung]
     raeume: List[Raum]

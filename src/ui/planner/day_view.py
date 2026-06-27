@@ -39,25 +39,30 @@ class PlannerDayView:
         self.edit_by_id_cb = edit_by_id_cb
         self.on_drop_cb = on_drop_cb
         self._read_only = False
-        
+
         self._room_list: List[Raum] = []
 
         if hasattr(self.day_table, "terminDropped"):
             self.day_table.terminDropped.connect(self._on_termin_dropped)
         if hasattr(self.day_table, "set_duration_preview_provider"):
+
             def _dur_provider(tid: str) -> int:
                 t = self.state.termin_map.get(str(tid))
                 return int(t.duration) if t else 0
+
             slot_min = int(self.state.settings.get("time_slot_minutes", 30))
             self.day_table.set_duration_preview_provider(_dur_provider, slot_min)
         if hasattr(self.day_table, "set_color_provider"):
+
             def _color_provider(tid: str) -> QColor:
                 t = self.state.termin_map.get(str(tid))
                 if t:
                     return type_color_for(t.typ)
                 return type_color_for("")
+
             self.day_table.set_color_provider(_color_provider)
         if hasattr(self.day_table, "set_text_provider"):
+
             def _text_provider(tid: str) -> str:
                 t = self.state.termin_map.get(str(tid))
                 if not t or not t.start_zeit or not t.get_end_time():
@@ -65,12 +70,14 @@ class PlannerDayView:
                 lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
                 lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
                 room_s = str(t.raum_id or "").strip() or "Kein Raum"
-                gname = (t.gruppe.name if t.gruppe else "")
+                gname = t.gruppe.name if t.gruppe else ""
                 grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
                 ap = " AP" if t.anwesenheitspflicht else ""
                 return f"{fmt_time(t.start_zeit)}–{fmt_time(t.get_end_time())} {t.typ} | {room_s} | {lva_short}{grp}{ap}"
+
             self.day_table.set_text_provider(_text_provider)
         if hasattr(self.day_table, "set_conflict_checker"):
+
             def _conflict_checker_day(tid: str, row: int, col: int) -> bool:
                 if not bool(self.state.settings.get("dynamic_drag_conflict_preview", True)):
                     return False
@@ -92,6 +99,7 @@ class PlannerDayView:
                     use_dragged_room=False,
                     data_dir=self.state.ds.data_dir,
                 )
+
             self.day_table.set_conflict_checker(_conflict_checker_day)
 
         self._setup_table()
@@ -144,7 +152,9 @@ class PlannerDayView:
         self._build_day_grid(rooms, terms_day, d, free_day_info)
 
     # Build the day grid: rows=time slots, columns=rooms
-    def _build_day_grid(self, rooms: List[Raum], terms: List[Termin], d: date, free_day_info) -> None:
+    def _build_day_grid(
+        self, rooms: List[Raum], terms: List[Termin], d: date, free_day_info
+    ) -> None:
         """
         Populate the day table with time-slot rows and room columns for the given date.
 
@@ -200,11 +210,11 @@ class PlannerDayView:
             it.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
             self.day_table.setItem(r, 0, it)
 
-        free_day_badges: dict[int, tuple[str, str, str]] = {}
+        free_day_badges = {}
         if free_day_info:
             free_day_type = free_day_info.day_type
             day_label = self._free_day_provider.label_for_info(free_day_info)
-            badge_label = self._free_day_provider.badge_for_info(free_day_info)
+            badge_lines = self._free_day_provider.badge_lines_for_info(free_day_info)
 
             time_hdr = self.day_table.horizontalHeaderItem(0)
             if time_hdr is not None:
@@ -214,17 +224,15 @@ class PlannerDayView:
                 if hdr_item is not None:
                     room_tip = hdr_item.toolTip().strip()
                     hdr_item.setToolTip(f"{room_tip}\n{day_label}" if room_tip else day_label)
-                if free_day_type in {"feiertag", "vorlesungsfrei"} and badge_label:
-                    free_day_badges[c] = (badge_label, free_day_type, day_label)
+                if free_day_type in {"feiertag", "vorlesungsfrei"} and badge_lines:
+                    free_day_badges[c] = (badge_lines, day_label)
 
         header = self.day_table.horizontalHeader()
         if isinstance(header, FreeDayHeaderView):
             header.set_section_accent_colors(
                 {
                     idx: section_accent_color(
-                        str(getattr(room, "gebaeude", "") or "").strip()
-                        or room.id
-                        or room.name
+                        str(getattr(room, "gebaeude", "") or "").strip() or room.id or room.name
                     )
                     for idx, room in enumerate(rooms, start=1)
                 }
@@ -235,7 +243,7 @@ class PlannerDayView:
             self.day_table.current_day_qdate = date_to_qdate(d)
 
         room_index = {r.id: idx for idx, r in enumerate(rooms)}
-        
+
         # Store room list for drop handler
         self._room_list = rooms
 
@@ -291,7 +299,7 @@ class PlannerDayView:
         if row < 0 or row >= len(slots):
             return
         target_start = slots[row]
-        
+
         # Determine target room from column
         room_idx = col - 1  # subtract time column
         target_room_id = None
@@ -300,4 +308,3 @@ class PlannerDayView:
 
         # View only does callback
         self.on_drop_cb(str(termin_id), d, target_start, target_room_id)
-

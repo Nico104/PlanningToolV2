@@ -5,8 +5,16 @@ from typing import List
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QDockWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QScrollArea, QMenu, QFrame, QToolButton, QLineEdit, QLabel
+    QDockWidget,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QScrollArea,
+    QMenu,
+    QFrame,
+    QToolButton,
+    QLineEdit,
+    QLabel,
 )
 
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -16,9 +24,9 @@ from ..components.cards.termin_card import TerminCard
 from ..components.dragdrop.termin_drop_area import TerminDropArea
 
 
-
 class TermineDock(QDockWidget):
     """Dock widget that lists Termine as grouped cards with edit/delete/unassign signals"""
+
     termin_double_clicked = Signal(str)
     termin_delete_clicked = Signal(str)
     termin_unassign_requested = Signal(str)
@@ -44,7 +52,7 @@ class TermineDock(QDockWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(6)
 
-        #Header bar
+        # Header bar
         bar = QHBoxLayout()
         bar.setContentsMargins(8, 6, 8, 2)
         bar.setSpacing(8)
@@ -63,12 +71,11 @@ class TermineDock(QDockWidget):
         self.result_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         bar.addWidget(self.result_label)
 
-        #Scroll area with cards
+        # Scroll area with cards
         self.scroll = QScrollArea(self)
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.NoFrame)
         self.scroll.setLineWidth(0)
-
 
         self.container = TerminDropArea()
         self.container.terminDroppedToList.connect(self._on_drop_to_list)
@@ -103,7 +110,6 @@ class TermineDock(QDockWidget):
         self._raeume = list(raeume)
 
         self._build_cards()
-
 
     def _normalize(self, text: str) -> str:
         return str(text or "").strip().lower()
@@ -186,7 +192,7 @@ class TermineDock(QDockWidget):
         def _sort_key(t: Termin):
             unassigned = (t.datum is None) or (t.start_zeit is None)
             d = t.datum or date.min
-            von = (t.start_zeit if t.start_zeit else time.min)
+            von = t.start_zeit if t.start_zeit else time.min
             return (not unassigned, d, von, t.id)
 
         terms = sorted(terms, key=_sort_key)
@@ -213,7 +219,6 @@ class TermineDock(QDockWidget):
                 for key in list(self._group_states.keys()):
                     self._group_states[key] = key == group_key
 
-
             # Count assigned/total termine in group
             group_termine = lva_groups[lva_id]
             total_count = len(group_termine)
@@ -225,7 +230,9 @@ class TermineDock(QDockWidget):
             header_btn.setToolTip(header_text)
             header_btn.setCheckable(True)
             header_btn.setChecked(self._group_states[group_key])
-            header_btn.setArrowType(Qt.DownArrow if self._group_states[group_key] else Qt.RightArrow)
+            header_btn.setArrowType(
+                Qt.DownArrow if self._group_states[group_key] else Qt.RightArrow
+            )
             header_btn.setObjectName("LvaHeaderButton")
             header_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
             header_btn.setMinimumHeight(28)
@@ -285,7 +292,6 @@ class TermineDock(QDockWidget):
                 card.right_clicked.connect(self._open_menu)
                 self.list_layout.insertWidget(self.list_layout.count() - 1, card)
 
-
     def _on_drop_to_list(self, termin_id: str) -> None:
         if self._read_only:
             self._show_history_read_only_toast()
@@ -324,4 +330,3 @@ class TermineDock(QDockWidget):
             self.termin_double_clicked.emit(termin_id)
         elif chosen == act_del:
             self.termin_delete_clicked.emit(termin_id)
-            

@@ -2,8 +2,13 @@ from typing import List, Optional
 
 from PySide6.QtCore import Qt, QPoint, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget,
-    QTableWidgetItem, QMenu
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QMenu,
 )
 
 
@@ -57,7 +62,9 @@ class EditorTab(QWidget):
     edit_clicked = Signal()
     delete_clicked = Signal()
 
-    def __init__(self, title: str, columns: List[str], parent: QWidget, id_column: Optional[int] = None):
+    def __init__(
+        self, title: str, columns: List[str], parent: QWidget, id_column: Optional[int] = None
+    ):
         super().__init__(parent)
 
         root = QVBoxLayout(self)

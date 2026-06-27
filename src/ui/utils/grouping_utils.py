@@ -2,6 +2,7 @@ from typing import List, Tuple
 from ...core.models import Termin
 from ..utils.datetime_utils import mins_from_time
 
+
 def group_concurrent_appointments(items: List[Termin]) -> List[Tuple[Termin, int]]:
     """
     Group Termine that overlap in time so they can be rendered side-by-side.
@@ -20,10 +21,7 @@ def group_concurrent_appointments(items: List[Termin]) -> List[Tuple[Termin, int
     if not items:
         return []
 
-    sorted_items = sorted(
-        items,
-        key=lambda x: mins_from_time(x.start_zeit) if x.start_zeit else 0
-    )
+    sorted_items = sorted(items, key=lambda x: mins_from_time(x.start_zeit) if x.start_zeit else 0)
 
     groups: List[Tuple[Termin, int]] = []
     group_counter = 0

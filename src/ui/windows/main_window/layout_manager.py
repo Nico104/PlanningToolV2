@@ -5,8 +5,7 @@ from PySide6.QtWidgets import QInputDialog
 
 
 class LayoutManager:
-    """Manage dock/window layout presets for the main window
-    """
+    """Manage dock/window layout presets for the main window"""
 
     DEFAULT_LAYOUT = "Standard"
 
@@ -99,8 +98,7 @@ class LayoutManager:
     def _persist_layouts(self) -> None:
         settings = self.mw.ds.load_settings()
         settings["layout_presets"] = {
-            name: base64.b64encode(state).decode("ascii")
-            for name, state in self._layouts.items()
+            name: base64.b64encode(state).decode("ascii") for name, state in self._layouts.items()
         }
         settings["layout_current"] = self._current_layout_name
         self.mw.ds.save_settings(settings)

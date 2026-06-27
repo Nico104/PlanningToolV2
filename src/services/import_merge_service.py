@@ -21,8 +21,7 @@ IMPORT_FILE_SCHEMAS: dict[str, ImportFileSchema] = {
 }
 
 KNOWN_IMPORT_KEYS = {
-    schema.list_key: file_name
-    for file_name, schema in IMPORT_FILE_SCHEMAS.items()
+    schema.list_key: file_name for file_name, schema in IMPORT_FILE_SCHEMAS.items()
 }
 
 
@@ -66,10 +65,13 @@ def normalize_import_payload(data: Any) -> dict[str, dict[str, list[dict[str, An
                 for raw_key, value in data.items():
                     low = str(raw_key).lower()
                     for key, file_name in KNOWN_IMPORT_KEYS.items():
-                        if key in low or (low.endswith(".json") and low.replace(".json", "") == key):
+                        if key in low or (
+                            low.endswith(".json") and low.replace(".json", "") == key
+                        ):
                             add_payload(file_name, value)
 
             if not normalized:
+
                 def search_and_map(obj: Any) -> None:
                     if isinstance(obj, dict):
                         for key, value in obj.items():
@@ -117,7 +119,9 @@ def existing_entry_map(data_dir: Path, file_name: str) -> dict[str, dict[str, An
     }
 
 
-def classify_entry(entry: dict[str, Any], existing_by_id: dict[str, dict[str, Any]], id_field: str) -> str:
+def classify_entry(
+    entry: dict[str, Any], existing_by_id: dict[str, dict[str, Any]], id_field: str
+) -> str:
     entry_id = get_entry_id(entry, id_field)
     existing = existing_by_id.get(entry_id or "")
     if existing is None:
@@ -137,7 +141,9 @@ def is_empty_import_value(value: Any) -> bool:
     return False
 
 
-def effective_import_entry(existing: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
+def effective_import_entry(
+    existing: dict[str, Any] | None, incoming: dict[str, Any]
+) -> dict[str, Any]:
     if existing is None:
         return dict(incoming)
 
@@ -152,7 +158,9 @@ def effective_import_entry(existing: dict[str, Any] | None, incoming: dict[str, 
     return merged
 
 
-def build_payload(entries_by_file: dict[str, list[dict[str, Any]]]) -> dict[str, dict[str, list[dict[str, Any]]]]:
+def build_payload(
+    entries_by_file: dict[str, list[dict[str, Any]]],
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
     payload: dict[str, dict[str, list[dict[str, Any]]]] = {}
     for file_name, entries in entries_by_file.items():
         schema = IMPORT_FILE_SCHEMAS.get(file_name)

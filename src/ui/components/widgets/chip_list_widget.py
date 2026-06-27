@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QHBoxLayout, QWidget, QLabel, QPushButton, QSizePo
 
 from .flow_layout import FlowLayout
 
+
 class ChipListWidget(QWidget):
     """Wrapping chip list with removable items that emits the deleted chip index"""
 
@@ -36,7 +37,7 @@ class ChipListWidget(QWidget):
         label = QLabel(text, chip)
         label.setObjectName("ChipLabel")
         label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        btn = QPushButton('✕', chip)
+        btn = QPushButton("✕", chip)
         btn.setObjectName("ChipDeleteButton")
         btn.setFixedSize(18, 18)
         btn.setCursor(Qt.PointingHandCursor)

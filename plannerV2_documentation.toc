@@ -1,0 +1,48 @@
+\babel@toc {ngerman}{}\relax 
+\contentsline {section}{Kurzfassung}{1}{section*.1}%
+\contentsline {section}{Abstract}{1}{section*.2}%
+\contentsline {section}{Abkürzungsverzeichnis}{6}{section*.6}%
+\contentsline {section}{\numberline {1}Einleitung}{7}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Problemstellung}{7}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Zielsetzung}{7}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Forschungsfrage}{8}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Aufbau der Arbeit}{9}{subsection.1.4}%
+\contentsline {section}{\numberline {2}Grundlagen und Kontext}{10}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Lehrveranstaltungsplanung an einem Institut}{10}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Herausforderungen manueller Planungsprozesse}{10}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Softwaregestützte Planung}{11}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Eingesetzte Technologien}{11}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Python}{12}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}PySide6 und Qt}{12}{subsubsection.2.4.2}%
+\contentsline {subsubsection}{\numberline {2.4.3}JSON als Datenformat}{13}{subsubsection.2.4.3}%
+\contentsline {section}{\numberline {3}Anforderungsanalyse}{14}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Ableitung der Anforderungen}{14}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Funktionale Anforderungen}{14}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Nicht-funktionale Anforderungen}{14}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Abgrenzung der Software}{14}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Konzeption des Planungstools}{16}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Gesamtarchitektur der Anwendung}{16}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Aufbau der Benutzeroberfläche}{17}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Datenmodell und Datenbeziehungen}{18}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Planungsworkflow}{18}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Aktualisierung und Zusammenspiel der Komponenten}{19}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Implementierung}{20}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Entwicklungsumgebung und Projektstruktur}{20}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Hauptfenster und zentrale Steuerung}{20}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Kalenderansichten}{22}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Termin- und Stammdatenverwaltung}{24}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Drag-and-Drop-Funktionalität}{25}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Filterfunktion}{28}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Konflikterkennung}{29}{subsection.5.7}%
+\contentsline {subsection}{\numberline {5.8}Import, Export und Speicherung}{31}{subsection.5.8}%
+\contentsline {subsection}{\numberline {5.9}Semester-Werkzeuge}{33}{subsection.5.9}%
+\contentsline {subsection}{\numberline {5.10}Undo/Redo, Shortcuts und Layout-Verwaltung}{33}{subsection.5.10}%
+\contentsline {section}{\numberline {6}Test und Evaluation}{35}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Teststrategie}{35}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Durchführung der Tests}{35}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Bewertung der Ergebnisse}{40}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Diskussion}{41}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Zielerreichung}{41}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Grenzen der Software}{41}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Erweiterungsmöglichkeiten}{41}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Fazit und Ausblick}{42}{section.8}%

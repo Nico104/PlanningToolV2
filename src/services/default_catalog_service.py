@@ -7,7 +7,6 @@ from typing import Any
 
 from .import_merge_service import build_payload
 
-
 DEFAULT_CATALOG_LABEL = "TISS-Daten TU Wien ETIT, Juni 2026"
 
 
@@ -53,7 +52,9 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
         return [dict(row) for row in csv.DictReader(handle)]
 
 
-def load_default_catalog_payload(default_dir: Path | None = None) -> dict[str, dict[str, list[dict[str, Any]]]]:
+def load_default_catalog_payload(
+    default_dir: Path | None = None,
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
     base = default_dir or _default_tables_dir()
     entries_by_file: dict[str, list[dict[str, Any]]] = {}
 

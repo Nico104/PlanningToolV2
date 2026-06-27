@@ -7,7 +7,8 @@ from ...services.filter_service import filter_termine
 from ...services.termin_occurrence_service import expand_termine
 from ...services.termin_service import TerminService
 
-#Manages data and filtering for the planner UI
+# Manages data and filtering for the planner UI
+
 
 @dataclass
 class PlannerState:
@@ -15,6 +16,7 @@ class PlannerState:
     Holds all loaded planner data and settings for the UI.
     Provides methods to reload data and filter Termine.
     """
+
     ds: DataService
 
     raeume: List[Raum] = field(default_factory=list)
@@ -36,7 +38,17 @@ class PlannerState:
         self.settings = self.ds.load_settings()
         self.ts = TerminService(self.settings)
 
-    def filtered_termine(self, raum_id: Optional[str], typ: Optional[str] = None, dozent: Optional[str] = None, semester_id: Optional[str] = None, studiensemester: Optional[str] = None, lva_id: Optional[str] = None, studienrichtung: Optional[str] = None, zu_besprechen: bool = False) -> List[Termin]:
+    def filtered_termine(
+        self,
+        raum_id: Optional[str],
+        typ: Optional[str] = None,
+        dozent: Optional[str] = None,
+        semester_id: Optional[str] = None,
+        studiensemester: Optional[str] = None,
+        lva_id: Optional[str] = None,
+        studienrichtung: Optional[str] = None,
+        zu_besprechen: bool = False,
+    ) -> List[Termin]:
         lva_dict = {lva.id: lva for lva in self.lvas}
         out = filter_termine(
             self.termine,

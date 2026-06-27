@@ -73,7 +73,9 @@ class TimeGridDragPreviewOverlay(QWidget):
                 label = metrics.elidedText(label, Qt.ElideRight, max(1, content_rect.width() - 8))
                 label_height = min(18, max(14, content_rect.height()))
                 label_width = min(content_rect.width(), metrics.horizontalAdvance(label) + 12)
-                label_rect = QRect(content_rect.left(), content_rect.top(), label_width, label_height)
+                label_rect = QRect(
+                    content_rect.left(), content_rect.top(), label_width, label_height
+                )
 
                 painter.setBrush(qss_color("planner-drop-conflict-bg"))
                 painter.setPen(Qt.NoPen)
@@ -84,14 +86,18 @@ class TimeGridDragPreviewOverlay(QWidget):
                 label_font.setPointSize(max(7, label_font.pointSize() - 1))
                 painter.setFont(label_font)
                 painter.setPen(qss_color("planner-drop-conflict-text"))
-                painter.drawText(label_rect.adjusted(6, 0, -6, 0), Qt.AlignLeft | Qt.AlignVCenter, label)
+                painter.drawText(
+                    label_rect.adjusted(6, 0, -6, 0), Qt.AlignLeft | Qt.AlignVCenter, label
+                )
 
                 content_rect.setTop(content_rect.top() + label_height + 4)
                 painter.setFont(base_font)
 
             if self._text:
                 painter.setPen(qss_color("planner-text"))
-                painter.drawText(content_rect, Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, self._text)
+                painter.drawText(
+                    content_rect, Qt.TextWordWrap | Qt.AlignLeft | Qt.AlignTop, self._text
+                )
 
             border_color = (
                 qss_color("planner-drop-conflict-bg")

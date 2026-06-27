@@ -1,6 +1,7 @@
 from typing import Iterable
 import re
 
+
 def next_id(prefix: str, existing_ids: Iterable[str], width: int = 3) -> str:
     """
     Erzeugt eine neue ID wie T001, T002... basierend auf existierenden IDs.

@@ -4,7 +4,6 @@ from pathlib import Path
 
 from .app_config_service import load_default_config, load_user_config, save_user_config
 
-
 REQUIRED_DATA_FILES = {
     "raeume.json": ("raeume", []),
     "lehrveranstaltungen.json": ("lehrveranstaltungen", []),
@@ -16,9 +15,30 @@ REQUIRED_DATA_FILES = {
 PROJECT_REFERENCE_RULES = [
     ("termine.json", None, "lva_id", "lehrveranstaltungen.json", "lehrveranstaltungen", "LVA-IDs"),
     ("termine.json", None, "raum_id", "raeume.json", "raeume", "Raum-IDs"),
-    ("termine.json", "serien_ausnahmen", "raum_id", "raeume.json", "raeume", "Raum-IDs in Serienausnahmen"),
-    ("lehrveranstaltungen.json", None, "studienrichtung", "studienrichtungen.json", "studienrichtungen", "Studienrichtungs-IDs"),
-    ("lehrveranstaltungen.json", None, "studiensemester", "studiensemester.json", "studiensemester", "Studiensemester-IDs"),
+    (
+        "termine.json",
+        "serien_ausnahmen",
+        "raum_id",
+        "raeume.json",
+        "raeume",
+        "Raum-IDs in Serienausnahmen",
+    ),
+    (
+        "lehrveranstaltungen.json",
+        None,
+        "studienrichtung",
+        "studienrichtungen.json",
+        "studienrichtungen",
+        "Studienrichtungs-IDs",
+    ),
+    (
+        "lehrveranstaltungen.json",
+        None,
+        "studiensemester",
+        "studiensemester.json",
+        "studiensemester",
+        "Studiensemester-IDs",
+    ),
 ]
 
 
@@ -76,7 +96,14 @@ def clean_json_id(value) -> str:
 def _reference_errors(loaded_items: dict[str, list], missing_files: list[str]) -> list[str]:
     errors: list[str] = []
 
-    for source_file, child_list_key, source_key, target_file, target_root_key, label in PROJECT_REFERENCE_RULES:
+    for (
+        source_file,
+        child_list_key,
+        source_key,
+        target_file,
+        target_root_key,
+        label,
+    ) in PROJECT_REFERENCE_RULES:
         source_items = loaded_items.get(source_file)
         if not source_items:
             continue
@@ -106,7 +133,9 @@ def _reference_errors(loaded_items: dict[str, list], missing_files: list[str]) -
             target_items = REQUIRED_DATA_FILES[target_file][1]
         elif target_file not in REQUIRED_DATA_FILES:
             default_target = load_default_config(target_file, {})
-            target_items = default_target.get(target_root_key, []) if isinstance(default_target, dict) else []
+            target_items = (
+                default_target.get(target_root_key, []) if isinstance(default_target, dict) else []
+            )
         else:
             continue
 

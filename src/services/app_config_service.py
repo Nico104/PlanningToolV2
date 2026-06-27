@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 APP_NAME = "Planungstool"
 CONFIG_DIR_ENV = "PLANUNGSTOOL_CONFIG_DIR"
 

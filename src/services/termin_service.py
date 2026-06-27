@@ -52,7 +52,8 @@ class TerminService:
         # relevante Termine
         expanded_termine = expand_termine(termine)
         rel = [
-            t for t in expanded_termine
+            t
+            for t in expanded_termine
             if t.raum_id == raum_id
             and t.datum == datum
             and t.start_zeit is not None
@@ -61,7 +62,6 @@ class TerminService:
         ]
         rel = sorted(rel, key=lambda x: x.start_zeit)
 
-
         start_dt = self._to_dt(datum, day_start)
         end_dt = self._to_dt(datum, day_end)
         slot = timedelta(minutes=int(self.settings.get("time_slot_minutes", 15)))
@@ -69,7 +69,8 @@ class TerminService:
 
         # belegte Intervalle als dt
         busy: List[Tuple[datetime, datetime]] = [
-            (self._to_dt(datum, t.start_zeit), self._to_dt(datum, t.get_end_time() or t.start_zeit)) for t in rel
+            (self._to_dt(datum, t.start_zeit), self._to_dt(datum, t.get_end_time() or t.start_zeit))
+            for t in rel
         ]
 
         # Merge busy
@@ -78,9 +79,9 @@ class TerminService:
             if not merged_tmp or b[0] > merged_tmp[-1][1]:
                 merged_tmp.append(list(b))  # add new interval
             else:
-                merged_tmp[-1][1] = max(merged_tmp[-1][1], b[1]) 
-        #convert it to a list of tuples from a list of lists because tuples are not mutable
-        merged: List[Tuple[datetime, datetime]] = [(a,b) for a,b in merged_tmp]
+                merged_tmp[-1][1] = max(merged_tmp[-1][1], b[1])
+        # convert it to a list of tuples from a list of lists because tuples are not mutable
+        merged: List[Tuple[datetime, datetime]] = [(a, b) for a, b in merged_tmp]
 
         # Erzeuge freie Fenster
         free: List[Tuple[datetime, datetime]] = []

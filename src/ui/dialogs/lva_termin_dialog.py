@@ -4,15 +4,47 @@ from typing import List, Optional, Dict
 from PySide6.QtCore import QTime, QDate, Qt, QEvent, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit, QTabWidget, QScrollArea, QLabel, QPushButton,
-    QHBoxLayout, QMenu,
-    QTableWidget, QTableWidgetItem, QHeaderView, QFrame, QSizePolicy
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QComboBox,
+    QDateEdit,
+    QTimeEdit,
+    QSpinBox,
+    QTextEdit,
+    QTabWidget,
+    QScrollArea,
+    QLabel,
+    QPushButton,
+    QHBoxLayout,
+    QMenu,
+    QTableWidget,
+    QTableWidgetItem,
+    QHeaderView,
+    QFrame,
+    QSizePolicy,
 )
 
-from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum, Vortragende, Studiensemester, SerienAusnahme
+from ...core.models import (
+    Termin,
+    Gruppe,
+    Lehrveranstaltung,
+    Semester,
+    Raum,
+    Vortragende,
+    Studiensemester,
+    SerienAusnahme,
+)
 from ...services.semester_rules import semester_for_date, semester_from_id
-from ...services.termin_occurrence_service import SUPPORTED_PERIODIZITAET, occurrence_id, series_date_sequence
+from ...services.termin_occurrence_service import (
+    SUPPORTED_PERIODIZITAET,
+    occurrence_id,
+    series_date_sequence,
+)
 from ..utils.datetime_utils import date_to_qdate, qdate_to_date
 
 from ..components.widgets.tick_checkbox import TickCheckBox
@@ -84,17 +116,21 @@ def _scrollable_sections(*sections: QWidget) -> QScrollArea:
 
 class LVATerminDialog(QDialog):
     """Dialog for editing LVA master data and Termin planning in one window."""
-    def __init__(self, parent: QWidget, *,
-                 lvas: List[Lehrveranstaltung],
-                 semester: Optional[List[Semester]] = None,
-                 raeume: List[Raum],
-                 studiensemester: List[Studiensemester] = None,
-                 studienrichtungen: List[dict] = None,
-                 termin: Optional[Termin] = None,
-                 settings: Optional[Dict] = None,
-                 new_id = None,
-                 default_semester_id: Optional[str] = None,
-                 ):
+
+    def __init__(
+        self,
+        parent: QWidget,
+        *,
+        lvas: List[Lehrveranstaltung],
+        semester: Optional[List[Semester]] = None,
+        raeume: List[Raum],
+        studiensemester: List[Studiensemester] = None,
+        studienrichtungen: List[dict] = None,
+        termin: Optional[Termin] = None,
+        settings: Optional[Dict] = None,
+        new_id=None,
+        default_semester_id: Optional[str] = None,
+    ):
         super().__init__(parent)
         self.new_id = new_id
         self.termin = termin
@@ -119,7 +155,7 @@ class LVATerminDialog(QDialog):
         # Sentinel for unassigned date
         self._unassigned_qdate = QDate(1900, 1, 1)
 
-        self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
+        self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, "name")) else "")
         self.name_le.setObjectName("Field")
         lay = QVBoxLayout(self)
         lay.setContentsMargins(14, 14, 14, 14)
@@ -136,7 +172,6 @@ class LVATerminDialog(QDialog):
         lay.addWidget(title)
         lay.addWidget(subtitle)
         self._result: Optional[Termin] = None
-
 
         self.lva_cb = TightComboBox()
         self.lva_cb.setObjectName("HeaderCombo")
@@ -176,11 +211,15 @@ class LVATerminDialog(QDialog):
             lva = self._lva_by_id.get(str(self.lva_cb.currentData()))
             self.lva_id_le.setText(getattr(lva, "id", "") if lva else "")
             self.lva_name_le.setText(getattr(lva, "name", "") if lva else "")
-            self.lva_ects_le.setText(str(getattr(lva, "ects", "")) if lva and getattr(lva, "ects", "") else "")
+            self.lva_ects_le.setText(
+                str(getattr(lva, "ects", "")) if lva and getattr(lva, "ects", "") else ""
+            )
             teacher = getattr(lva, "vortragende", None)
             self.lva_teacher_le.setText(getattr(teacher, "name", "") if teacher else "")
             self.lva_email_le.setText(getattr(teacher, "email", "") if teacher else "")
-            self._set_lva_studienrichtung(getattr(lva, "studienrichtung", "ETIT") if lva else "ETIT")
+            self._set_lva_studienrichtung(
+                getattr(lva, "studienrichtung", "ETIT") if lva else "ETIT"
+            )
             self._set_lva_studiensemester_chips(getattr(lva, "studiensemester", []) if lva else [])
 
         self.lva_cb.currentIndexChanged.connect(_sync_lva_fields)
@@ -192,9 +231,7 @@ class LVATerminDialog(QDialog):
         for s in self._semester:
             self._semester_by_id[str(s.id)] = s
         preferred_semester_id = (
-            getattr(termin, "semester_id", None)
-            if termin is not None
-            else default_semester_id
+            getattr(termin, "semester_id", None) if termin is not None else default_semester_id
         )
         if not preferred_semester_id:
             preferred_semester_id = semester_for_date(date.today()).id
@@ -204,12 +241,11 @@ class LVATerminDialog(QDialog):
             default_semester_id=str(preferred_semester_id) if preferred_semester_id else None,
         )
 
-
         self.typ_cb = TightComboBox()
         self.typ_cb.setObjectName("HeaderCombo")
         self.typ_cb.setMinimumWidth(120)
         self._refresh_termin_type_options(getattr(termin, "typ", "VO") if termin else "VO")
-        
+
         self.date_de = QDateEdit()
         self.date_de.setCalendarPopup(True)
         self.date_de.setObjectName("DateEdit")
@@ -287,17 +323,23 @@ class LVATerminDialog(QDialog):
         self.duration_sb.setObjectName("Field")
 
         self.repeat_cb = QComboBox()
-        self.repeat_cb.addItems(["wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich", "täglich"])
+        self.repeat_cb.addItems(
+            ["wöchentlich", "2-wöchentlich", "monatlich", "2-monatlich", "täglich"]
+        )
         self.repeat_cb.setObjectName("HeaderCombo")
 
         self.series_cb = TickCheckBox("")
         self.series_cb.setChecked(bool(termin and getattr(termin, "datum_bis", None)))
         self._ausfall_dates: set[date] = set()
-        self._serien_ausnahmen: List[SerienAusnahme] = list(getattr(termin, "serien_ausnahmen", []) or []) if termin else []
+        self._serien_ausnahmen: List[SerienAusnahme] = (
+            list(getattr(termin, "serien_ausnahmen", []) or []) if termin else []
+        )
         self._occurrence_row_dates: List[date] = []
         self.occurrence_table = QTableWidget(0, 3)
         self.occurrence_table.setObjectName("SeriesOccurrenceTable")
-        self.occurrence_table.setHorizontalHeaderLabels(["Originaldatum", "Geplanter Termin", "Aktion"])
+        self.occurrence_table.setHorizontalHeaderLabels(
+            ["Originaldatum", "Geplanter Termin", "Aktion"]
+        )
         self.occurrence_table.verticalHeader().hide()
         self.occurrence_table.setSelectionMode(QTableWidget.NoSelection)
         self.occurrence_table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -334,7 +376,9 @@ class LVATerminDialog(QDialog):
         self.note_te.setPlainText(termin.notiz if termin else "")
 
         self.zu_besprechen_cb = TickCheckBox("")
-        self.zu_besprechen_cb.setChecked(bool(getattr(termin, "zu_besprechen", False)) if termin else False)
+        self.zu_besprechen_cb.setChecked(
+            bool(getattr(termin, "zu_besprechen", False)) if termin else False
+        )
 
         self.besprechungshinweis_te = QTextEdit()
         self.besprechungshinweis_te.setObjectName("DiscussionField")
@@ -389,8 +433,8 @@ class LVATerminDialog(QDialog):
             self._set_cb(self.lva_cb, termin.lva_id)
             self._set_cb(self.raum_cb, termin.raum_id)
             # Set semester combobox if semester_id is present
-            if hasattr(termin, 'semester_id'):
-                self.semester_selector.set_semester_id(getattr(termin, 'semester_id', None))
+            if hasattr(termin, "semester_id"):
+                self.semester_selector.set_semester_id(getattr(termin, "semester_id", None))
             for ausfall_date in getattr(termin, "ausfall_daten", []) or []:
                 self._add_ausfall_date(ausfall_date)
         else:
@@ -425,7 +469,10 @@ class LVATerminDialog(QDialog):
                 if self.date_de.date() == self._unassigned_qdate:
                     self.series_cb.setChecked(False)
                     return
-                if self.date_to_de.date() == self._unassigned_qdate or self.date_to_de.date() <= self.date_de.date():
+                if (
+                    self.date_to_de.date() == self._unassigned_qdate
+                    or self.date_to_de.date() <= self.date_de.date()
+                ):
                     self._set_series_end_date(self._suggested_series_end_date(), auto=True)
             else:
                 self._set_series_end_date(None, auto=True)
@@ -437,11 +484,14 @@ class LVATerminDialog(QDialog):
             self._sync_series_occurrences_tab()
 
         def _on_date_changed():
-            #When date changes from unassigned, jump to today
+            # When date changes from unassigned, jump to today
             current_date = self.date_de.date()
-            
-            if current_date != self._unassigned_qdate and current_date == self._unassigned_qdate.addDays(1):
-                
+
+            if (
+                current_date != self._unassigned_qdate
+                and current_date == self._unassigned_qdate.addDays(1)
+            ):
+
                 today = date.today()
                 self.date_de.setDate(date_to_qdate(today))
             self._maybe_update_series_end_date(force_if_invalid=True)
@@ -450,9 +500,23 @@ class LVATerminDialog(QDialog):
             self._render_occurrence_table()
 
         self.date_de.dateChanged.connect(_on_date_changed)
-        self.date_to_de.dateChanged.connect(lambda *_: (self._on_series_end_changed(), _sync_time_enabled(), self._update_semester_warning(), self._render_occurrence_table()))
+        self.date_to_de.dateChanged.connect(
+            lambda *_: (
+                self._on_series_end_changed(),
+                _sync_time_enabled(),
+                self._update_semester_warning(),
+                self._render_occurrence_table(),
+            )
+        )
         self.series_cb.toggled.connect(_on_series_toggled)
-        self.repeat_cb.currentIndexChanged.connect(lambda *_: (self._maybe_update_series_end_date(), self._update_semester_warning(), self._sync_ausfall_controls(), self._render_occurrence_table()))
+        self.repeat_cb.currentIndexChanged.connect(
+            lambda *_: (
+                self._maybe_update_series_end_date(),
+                self._update_semester_warning(),
+                self._sync_ausfall_controls(),
+                self._render_occurrence_table(),
+            )
+        )
         self.time_from.timeChanged.connect(lambda *_: self._sync_duration_from_times())
         self.time_to.timeChanged.connect(lambda *_: self._sync_duration_from_times())
 
@@ -518,7 +582,9 @@ class LVATerminDialog(QDialog):
         series_section_layout.setSpacing(10)
         series_title = QLabel("Serientermine")
         series_title.setObjectName("SettingsSectionTitle")
-        series_help = QLabel("Doppelklick auf eine Zeile oder Rechtsklick für das Kontextmenü bearbeitet eine einzelne Instanz. Zurücksetzen entfernt Ausfall oder Verschiebung.")
+        series_help = QLabel(
+            "Doppelklick auf eine Zeile oder Rechtsklick für das Kontextmenü bearbeitet eine einzelne Instanz. Zurücksetzen entfernt Ausfall oder Verschiebung."
+        )
         series_help.setObjectName("SettingsHelp")
         series_help.setWordWrap(True)
         series_section_layout.addWidget(series_title)
@@ -570,11 +636,13 @@ class LVATerminDialog(QDialog):
             "Raum",
         )
 
-        self.semester_selector.semesterChanged.connect(lambda *_: (self._maybe_update_series_end_date(), self._update_semester_warning()))
+        self.semester_selector.semesterChanged.connect(
+            lambda *_: (self._maybe_update_series_end_date(), self._update_semester_warning())
+        )
         self._update_semester_warning()
         self._render_occurrence_table()
         self._sync_series_occurrences_tab()
-        
+
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
@@ -590,8 +658,6 @@ class LVATerminDialog(QDialog):
             cancel_btn.setText("Abbrechen")
 
         lay.addWidget(bb)
-
-
 
     def _set_cb(self, cb: QComboBox, data_value: str):
         for i in range(cb.count()):
@@ -657,7 +723,9 @@ class LVATerminDialog(QDialog):
     def _set_series_end_date(self, value: Optional[date], *, auto: bool) -> None:
         self._updating_series_end = True
         try:
-            self.date_to_de.setDate(date_to_qdate(value) if value is not None else self._unassigned_qdate)
+            self.date_to_de.setDate(
+                date_to_qdate(value) if value is not None else self._unassigned_qdate
+            )
         finally:
             self._updating_series_end = False
         if auto:
@@ -686,7 +754,11 @@ class LVATerminDialog(QDialog):
             and current == self._auto_series_end_date
         )
 
-        if self._series_end_manually_changed and not follows_previous_auto and not (force_if_invalid and current_is_invalid):
+        if (
+            self._series_end_manually_changed
+            and not follows_previous_auto
+            and not (force_if_invalid and current_is_invalid)
+        ):
             return
 
         suggested = self._suggested_series_end_date()
@@ -701,7 +773,9 @@ class LVATerminDialog(QDialog):
         self.lva_ects_le.clear()
         self.lva_teacher_le.clear()
         self.lva_email_le.clear()
-        self._set_lva_studienrichtung(str(self.settings.get("start_studienrichtung", "ETIT")).strip() or "ETIT")
+        self._set_lva_studienrichtung(
+            str(self.settings.get("start_studienrichtung", "ETIT")).strip() or "ETIT"
+        )
         self._set_lva_studiensemester_chips([])
         self.lva_id_le.setFocus()
 
@@ -716,11 +790,20 @@ class LVATerminDialog(QDialog):
             if not studienrichtung_id or studienrichtung_id in seen_ids:
                 continue
             seen_ids.add(studienrichtung_id)
-            label = f"{studienrichtung_id} - {studienrichtung_name}" if studienrichtung_name else studienrichtung_id
+            label = (
+                f"{studienrichtung_id} - {studienrichtung_name}"
+                if studienrichtung_name
+                else studienrichtung_id
+            )
             self.lva_studienrichtung_cb.addItem(label, studienrichtung_id)
 
-        default_studienrichtung = str(self.settings.get("start_studienrichtung", "ETIT")).strip() or "ETIT"
-        if default_studienrichtung and self.lva_studienrichtung_cb.findData(default_studienrichtung) < 0:
+        default_studienrichtung = (
+            str(self.settings.get("start_studienrichtung", "ETIT")).strip() or "ETIT"
+        )
+        if (
+            default_studienrichtung
+            and self.lva_studienrichtung_cb.findData(default_studienrichtung) < 0
+        ):
             self.lva_studienrichtung_cb.addItem(default_studienrichtung, default_studienrichtung)
         self._set_lva_studienrichtung(default_studienrichtung)
 
@@ -747,8 +830,14 @@ class LVATerminDialog(QDialog):
             semester_id = str(raw_id).strip()
             if not semester_id:
                 continue
-            studiensemester_item = next((s for s in self._studiensemester if str(s.id) == semester_id), None)
-            display = self._studiensemester_display(studiensemester_item) if studiensemester_item else semester_id
+            studiensemester_item = next(
+                (s for s in self._studiensemester if str(s.id) == semester_id), None
+            )
+            display = (
+                self._studiensemester_display(studiensemester_item)
+                if studiensemester_item
+                else semester_id
+            )
             if display and display not in chips:
                 chips.append(display)
         self.lva_studiensemester_chips.setItems(chips)
@@ -769,7 +858,9 @@ class LVATerminDialog(QDialog):
         semester_id = self.lva_studiensemester_cb.currentData()
         if semester_id is None or self.lva_studiensemester_cb.currentIndex() < 0:
             return
-        studiensemester_item = next((s for s in self._studiensemester if str(s.id) == str(semester_id)), None)
+        studiensemester_item = next(
+            (s for s in self._studiensemester if str(s.id) == str(semester_id)), None
+        )
         if studiensemester_item is None:
             return
         display = self._studiensemester_display(studiensemester_item)
@@ -787,7 +878,9 @@ class LVATerminDialog(QDialog):
             name = str(chip_name).strip()
             if not name:
                 continue
-            studiensemester_item = next((s for s in self._studiensemester if self._studiensemester_display(s) == name), None)
+            studiensemester_item = next(
+                (s for s in self._studiensemester if self._studiensemester_display(s) == name), None
+            )
             if studiensemester_item and studiensemester_item.id not in out:
                 out.append(studiensemester_item.id)
         return out
@@ -891,9 +984,7 @@ class LVATerminDialog(QDialog):
             for item in self._serien_ausnahmen
             if item.original_datum in valid_dates and item.datum is not None
         ]
-        exceptions_by_date = {
-            item.original_datum: item for item in self._serien_ausnahmen
-        }
+        exceptions_by_date = {item.original_datum: item for item in self._serien_ausnahmen}
 
         self._clear_occurrence_table_widgets()
         self.occurrence_table.clearSpans()
@@ -919,11 +1010,15 @@ class LVATerminDialog(QDialog):
             self.occurrence_table.setItem(row, 0, original_item)
             self.occurrence_table.setItem(row, 1, detail_item)
 
-            self.occurrence_table.setCellWidget(row, 2, self._occurrence_action_widget(value, hidden, exception))
+            self.occurrence_table.setCellWidget(
+                row, 2, self._occurrence_action_widget(value, hidden, exception)
+            )
         self.occurrence_table.resizeRowsToContents()
         for row, value in enumerate(dates):
             if value in self._ausfall_dates or exceptions_by_date.get(value):
-                self.occurrence_table.setRowHeight(row, max(self.occurrence_table.rowHeight(row), 40))
+                self.occurrence_table.setRowHeight(
+                    row, max(self.occurrence_table.rowHeight(row), 40)
+                )
         self.occurrence_table.viewport().update()
 
     def _occurrence_action_widget(
@@ -944,8 +1039,14 @@ class LVATerminDialog(QDialog):
             reset_btn.setObjectName("SecondaryButton")
             reset_btn.setFixedWidth(142)
             reset_btn.setFixedHeight(32)
-            reset_btn.setToolTip("Ausfall oder Verschiebung entfernen und wieder den normalen Serientermin verwenden")
-            reset_btn.clicked.connect(lambda _checked=False, occurrence_date=value: self._reset_series_occurrence_override(occurrence_date))
+            reset_btn.setToolTip(
+                "Ausfall oder Verschiebung entfernen und wieder den normalen Serientermin verwenden"
+            )
+            reset_btn.clicked.connect(
+                lambda _checked=False, occurrence_date=value: self._reset_series_occurrence_override(
+                    occurrence_date
+                )
+            )
             layout.addWidget(reset_btn)
 
         layout.addStretch(1)
@@ -985,10 +1086,20 @@ class LVATerminDialog(QDialog):
             key=lambda item: item.original_datum,
         )
 
-    def _occurrence_detail_text(self, original_date: date, exception: Optional[SerienAusnahme]) -> str:
+    def _occurrence_detail_text(
+        self, original_date: date, exception: Optional[SerienAusnahme]
+    ) -> str:
         target_date = exception.datum if exception else original_date
-        start = exception.start_zeit if exception and exception.start_zeit is not None else self._current_start_time()
-        room_id = exception.raum_id if exception and exception.raum_id is not None else self.raum_id_le.text().strip()
+        start = (
+            exception.start_zeit
+            if exception and exception.start_zeit is not None
+            else self._current_start_time()
+        )
+        room_id = (
+            exception.raum_id
+            if exception and exception.raum_id is not None
+            else self.raum_id_le.text().strip()
+        )
 
         parts = [target_date.strftime("%d.%m.%Y")]
         if start is not None:
@@ -1239,9 +1350,9 @@ class LVATerminDialog(QDialog):
         raum_name_value = self.raum_name_le.text().strip()
         semester_name_value = selected_semester.name if selected_semester else ""
 
-        #Validierung
+        # Validierung
         errors = []
-        if not lva_id or lva_id == 'None':
+        if not lva_id or lva_id == "None":
             errors.append("LVA-Nr. fehlt.")
         if not lva_name_value:
             errors.append("LVA-Name fehlt.")
@@ -1276,7 +1387,9 @@ class LVATerminDialog(QDialog):
         if date_to is not None and d is None:
             errors.append("Datum bis braucht ein Datum von.")
         if errors:
-            QMessageBox.warning(self, "Fehler", "Bitte füllen Sie alle Pflichtfelder aus:\n" + "\n".join(errors))
+            QMessageBox.warning(
+                self, "Fehler", "Bitte füllen Sie alle Pflichtfelder aus:\n" + "\n".join(errors)
+            )
             return
 
         existing_lva = self._lva_by_id.get(lva_id)
@@ -1327,12 +1440,18 @@ class LVATerminDialog(QDialog):
             QMessageBox.warning(self, "Fehler", "Neue Raumnummer existiert bereits.")
             return
 
-        self._source_lva_id = None if self._creating_lva else str(self.lva_cb.currentData()).strip() if self.lva_cb.currentData() is not None else None
+        self._source_lva_id = (
+            None
+            if self._creating_lva
+            else (
+                str(self.lva_cb.currentData()).strip()
+                if self.lva_cb.currentData() is not None
+                else None
+            )
+        )
         current_raum_data = self.raum_cb.currentData()
         self._source_raum_id = (
-            None
-            if self._creating_raum or not current_raum_data
-            else str(current_raum_data).strip()
+            None if self._creating_raum or not current_raum_data else str(current_raum_data).strip()
         )
         self._result_lva = Lehrveranstaltung(
             id=lva_id,
@@ -1353,7 +1472,11 @@ class LVATerminDialog(QDialog):
             else None
         )
 
-        termin_id = self.termin.id if self.termin is not None and hasattr(self.termin, "id") else self.new_id
+        termin_id = (
+            self.termin.id
+            if self.termin is not None and hasattr(self.termin, "id")
+            else self.new_id
+        )
         ausfall_dates = self._current_ausfall_dates() if date_to is not None else []
         serien_ausnahmen = self._current_series_exceptions() if date_to is not None else []
 
@@ -1400,7 +1523,7 @@ class LVATerminDialog(QDialog):
         return self._source_raum_id
 
     def eventFilter(self, obj, event):
-        #Handle calendar popup to show today's date when unassigned
+        # Handle calendar popup to show today's date when unassigned
         if obj in (self.date_de, self.date_to_de) and not self._calendar_shown:
             if event.type() == QEvent.Type.MouseButtonPress or event.type() == QEvent.Type.KeyPress:
                 # User is about to open the calendar
@@ -1408,10 +1531,14 @@ class LVATerminDialog(QDialog):
                     # Set calendar to show today
                     self._calendar_shown = True
                     try:
+
                         def set_calendar():
                             cal = obj.calendarWidget()
                             if cal:
-                                if obj == self.date_to_de and self.date_de.date() != self._unassigned_qdate:
+                                if (
+                                    obj == self.date_to_de
+                                    and self.date_de.date() != self._unassigned_qdate
+                                ):
                                     target_date = qdate_to_date(self.date_de.date())
                                 else:
                                     target_date = date.today()
@@ -1419,6 +1546,7 @@ class LVATerminDialog(QDialog):
                                 cal.setCurrentPage(target_date.year, target_date.month)
                                 cal.setSelectedDate(qd)
                             self._calendar_shown = False
+
                         QTimer.singleShot(0, set_calendar)
                     except Exception:
                         self._calendar_shown = False

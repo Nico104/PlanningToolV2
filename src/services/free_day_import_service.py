@@ -13,7 +13,6 @@ from urllib.request import Request, urlopen
 
 from .id_service import next_id
 
-
 OPEN_HOLIDAYS_PUBLIC_URL = "https://openholidaysapi.org/PublicHolidays"
 OPEN_HOLIDAYS_MAX_DAYS = 1095
 TUWIEN_ACADEMIC_CALENDAR_URL = "https://www.tuwien.at/studium/zulassung/akademischer-kalender"
@@ -137,7 +136,11 @@ def fetch_open_holidays_public_holidays(
     if not isinstance(payload, list):
         raise RuntimeError("OpenHolidays hat ein unerwartetes Antwortformat geliefert.")
 
-    return [_candidate_from_open_holidays(item, subdivision_code) for item in payload if isinstance(item, dict)]
+    return [
+        _candidate_from_open_holidays(item, subdivision_code)
+        for item in payload
+        if isinstance(item, dict)
+    ]
 
 
 def fetch_tuwien_academic_free_days(timeout_seconds: int = 12) -> list[FreeDayCandidate]:
@@ -154,7 +157,9 @@ def fetch_tuwien_academic_free_days(timeout_seconds: int = 12) -> list[FreeDayCa
     except URLError as exc:
         raise RuntimeError(f"TU-Wien-Kalender ist nicht erreichbar: {exc.reason}") from exc
     except ssl.SSLError as exc:
-        raise RuntimeError(f"TU-Wien-Kalender konnte wegen TLS/Zertifikat nicht geladen werden: {exc}") from exc
+        raise RuntimeError(
+            f"TU-Wien-Kalender konnte wegen TLS/Zertifikat nicht geladen werden: {exc}"
+        ) from exc
 
     candidates = parse_tuwien_academic_free_days(html)
     if not candidates:
@@ -225,7 +230,9 @@ def prepare_free_day_preview(
     seen_candidates: list[dict[str, Any]] = []
     for candidate in candidates:
         status = classify_free_day_candidate(candidate, [*existing, *seen_candidates])
-        preview.append(FreeDayPreviewItem(candidate=candidate, status=status, checked=status != STATUS_EXISTS))
+        preview.append(
+            FreeDayPreviewItem(candidate=candidate, status=status, checked=status != STATUS_EXISTS)
+        )
         seen_candidates.append(candidate.to_item())
     return preview
 
@@ -246,7 +253,9 @@ def append_free_day_candidates(
     return updated, changed
 
 
-def classify_free_day_candidate(candidate: FreeDayCandidate, existing_items: Iterable[dict[str, Any]]) -> str:
+def classify_free_day_candidate(
+    candidate: FreeDayCandidate, existing_items: Iterable[dict[str, Any]]
+) -> str:
     candidate_type = _normalize(candidate.typ)
     candidate_name = _normalize(candidate.beschreibung)
 
@@ -308,8 +317,6 @@ def _parse_tuwien_dates(line: str) -> list[date]:
         month_number = _TUWIEN_MONTHS[month.lower()]
         dates.append(date(int(year), month_number, int(day)))
     return dates
-
-
 
 
 def _localized_name(names: Any, language: str) -> str:

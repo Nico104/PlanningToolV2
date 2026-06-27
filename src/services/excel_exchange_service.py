@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import re
 from pathlib import Path
@@ -16,7 +17,6 @@ from openpyxl.utils import get_column_letter
 
 from .termin_occurrence_service import SUPPORTED_PERIODIZITAET, series_date_sequence
 from .semester_rules import semester_from_id
-
 
 _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
     "raeume.json": {
@@ -89,6 +89,11 @@ _EXCEL_HEADER_LABELS: Dict[str, str] = {
     "termine.json:lva_id": "LVA-Nr.",
     "termine.json:zu_besprechen": "Zu besprechen",
     "termine.json:besprechungshinweis": "Hinweis",
+    "freie_tage.json:id": "ID",
+    "freie_tage.json:typ": "Typ",
+    "freie_tage.json:beschreibung": "Beschreibung",
+    "freie_tage.json:von_datum": "Von",
+    "freie_tage.json:bis_datum": "Bis",
 }
 
 _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
@@ -129,6 +134,20 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
         "Besprechen": "zu_besprechen",
         "Hinweis": "besprechungshinweis",
         "Besprechungshinweis": "besprechungshinweis",
+    },
+    "freie_tage.json": {
+        "ID": "id",
+        "Typ": "typ",
+        "Beschreibung": "beschreibung",
+        "Name": "beschreibung",
+        "Von": "von_datum",
+        "Von Datum": "von_datum",
+        "Von-Datum": "von_datum",
+        "Start": "von_datum",
+        "Bis": "bis_datum",
+        "Bis Datum": "bis_datum",
+        "Bis-Datum": "bis_datum",
+        "Ende": "bis_datum",
     },
 }
 
@@ -181,7 +200,9 @@ class LvaExportOption:
             return 1, self.term_count
 
         selected_ids = {_safe_text(item) for item in semester_ids}
-        term_count = sum(int(self.semester_term_counts.get(semester_id, 0)) for semester_id in selected_ids)
+        term_count = sum(
+            int(self.semester_term_counts.get(semester_id, 0)) for semester_id in selected_ids
+        )
         return (1 if term_count > 0 else 0), term_count
 
     def counts_for_filters(
@@ -493,7 +514,11 @@ def _expand_termin_entries(termine: Iterable[Dict[str, Any]]) -> Iterable[Dict[s
         if not dates:
             yield termin
             continue
-        skipped = {d for d in (_safe_date(item) for item in _parse_list(termin.get("ausfall_daten"))) if d is not None}
+        skipped = {
+            d
+            for d in (_safe_date(item) for item in _parse_list(termin.get("ausfall_daten")))
+            if d is not None
+        }
         exceptions = _series_exceptions_by_original_date(termin)
         if len(dates) == 1:
             item = dict(termin)
@@ -501,7 +526,7 @@ def _expand_termin_entries(termine: Iterable[Dict[str, Any]]) -> Iterable[Dict[s
             if original in skipped:
                 continue
             exception = exceptions.get(original)
-            item["datum"] = (exception.get("datum") if exception else original.isoformat())
+            item["datum"] = exception.get("datum") if exception else original.isoformat()
             if exception:
                 if exception.get("start_zeit"):
                     item["start_zeit"] = exception.get("start_zeit")
@@ -584,12 +609,18 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
     return entry
 
 
-def export_project_to_excel(data_dir: Path, output_path: Path) -> None:
+def export_project_to_excel(
+    data_dir: Path, output_path: Path, file_names: Optional[Iterable[str]] = None
+) -> None:
     wb = Workbook()
     default_sheet = wb.active
     wb.remove(default_sheet)
 
-    for file_name, cfg in _FILE_SCHEMAS.items():
+    selected = list(file_names) if file_names is not None else list(_FILE_SCHEMAS.keys())
+    for file_name in selected:
+        cfg = _FILE_SCHEMAS.get(file_name)
+        if cfg is None:
+            continue
         sheet = wb.create_sheet(cfg["sheet"])
         columns: List[str] = cfg["columns"]
         list_key = cfg["list_key"]
@@ -606,7 +637,106 @@ def export_project_to_excel(data_dir: Path, output_path: Path) -> None:
             row = [_serialize_cell(_get_nested(item, col)) for col in columns]
             sheet.append(row)
 
+    if not wb.sheetnames:
+        wb.create_sheet("Export")
     wb.save(output_path)
+
+
+def export_project_file_to_csv(data_dir: Path, file_name: str, output_path: Path) -> None:
+    cfg = _FILE_SCHEMAS.get(file_name)
+    if cfg is None:
+        raise ValueError(f"Unbekannte Projektdatei: {file_name}")
+
+    columns: List[str] = cfg["columns"]
+    list_key = cfg["list_key"]
+    payload = _read_json_file(data_dir / file_name)
+    rows = payload.get(list_key, []) if isinstance(payload, dict) else []
+    if not isinstance(rows, list):
+        rows = []
+
+    with output_path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.writer(handle, delimiter=";")
+        writer.writerow([_EXCEL_HEADER_LABELS.get(f"{file_name}:{col}", col) for col in columns])
+        for item in rows:
+            if not isinstance(item, dict):
+                continue
+            writer.writerow([_serialize_cell(_get_nested(item, col)) for col in columns])
+
+
+def import_project_file_from_csv(csv_path: Path, file_name: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+    detected_file = file_name or _file_name_from_csv_path(csv_path)
+    if detected_file is None:
+        detected_file = _detect_project_file_from_csv_header(csv_path)
+    if detected_file is None:
+        return {}
+
+    cfg = _FILE_SCHEMAS.get(detected_file)
+    if cfg is None:
+        return {}
+
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        sample = handle.read(4096)
+        handle.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=";,")
+            reader = csv.DictReader(handle, dialect=dialect)
+        except Exception:
+            reader = csv.DictReader(handle, delimiter=";")
+        entries: List[Dict[str, Any]] = []
+        for row in reader:
+            if not row or _is_empty_row(tuple(row.values())):
+                continue
+            entry: Dict[str, Any] = {}
+            for header, raw in row.items():
+                col = _column_from_excel_header(detected_file, header)
+                if not col or raw is None:
+                    continue
+                txt = str(raw).strip()
+                if txt == "":
+                    continue
+                _set_nested(entry, col, txt)
+            if entry:
+                entries.append(_normalize_entry(detected_file, entry))
+
+    return {detected_file: {cfg["list_key"]: entries}} if entries else {}
+
+
+def _file_name_from_csv_path(csv_path: Path) -> Optional[str]:
+    stem = _normalize_excel_header(csv_path.stem)
+    for file_name, cfg in _FILE_SCHEMAS.items():
+        candidates = {
+            _normalize_excel_header(file_name.replace(".json", "")),
+            _normalize_excel_header(str(cfg.get("sheet", ""))),
+            _normalize_excel_header(str(cfg.get("list_key", ""))),
+        }
+        if stem in candidates:
+            return file_name
+    return None
+
+
+def _detect_project_file_from_csv_header(csv_path: Path) -> Optional[str]:
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as handle:
+        sample = handle.read(4096)
+        handle.seek(0)
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=";,")
+            reader = csv.reader(handle, dialect=dialect)
+        except Exception:
+            reader = csv.reader(handle, delimiter=";")
+        headers = next(reader, [])
+
+    best_file = None
+    best_count = 0
+    for file_name in _FILE_SCHEMAS:
+        mapped = {
+            col
+            for header in headers
+            if (col := _column_from_excel_header(file_name, header)) is not None
+        }
+        if len(mapped) > best_count:
+            best_file = file_name
+            best_count = len(mapped)
+    return best_file if best_count >= 2 else None
 
 
 def export_week_calendar_to_excel(
@@ -626,14 +756,15 @@ def export_week_calendar_to_excel(
         date_from, date_to = date_to, date_from
 
     teacher_filter_set = (
-        {(_safe_text(item[0]), _safe_text(item[1] if len(item) > 1 else "")) for item in teacher_filter}
+        {
+            (_safe_text(item[0]), _safe_text(item[1] if len(item) > 1 else ""))
+            for item in teacher_filter
+        }
         if teacher_filter is not None
         else None
     )
     semester_filter_set = (
-        {_safe_text(item) for item in semester_filter}
-        if semester_filter is not None
-        else None
+        {_safe_text(item) for item in semester_filter} if semester_filter is not None else None
     )
     lva_filter_set = (
         {_safe_text(item) for item in lva_filter if _safe_text(item)}
@@ -661,7 +792,10 @@ def export_week_calendar_to_excel(
     for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
-        if semester_filter_set is not None and _safe_text(termin.get("semester_id")) not in semester_filter_set:
+        if (
+            semester_filter_set is not None
+            and _safe_text(termin.get("semester_id")) not in semester_filter_set
+        ):
             continue
         lva_id = _safe_text(termin.get("lva_id"))
         if lva_filter_set is not None and lva_id not in lva_filter_set:
@@ -676,7 +810,10 @@ def export_week_calendar_to_excel(
             continue
 
         teacher_name, teacher_email = lva_teacher.get(lva_id, ("", ""))
-        if teacher_filter_set is not None and (teacher_name, teacher_email) not in teacher_filter_set:
+        if (
+            teacher_filter_set is not None
+            and (teacher_name, teacher_email) not in teacher_filter_set
+        ):
             continue
 
         lva = lva_map.get(lva_id, {})
@@ -693,7 +830,11 @@ def export_week_calendar_to_excel(
                 "end_minutes": max(start_minutes + duration, start_minutes + 15),
                 "duration": duration,
                 "lva_id": lva_id,
-                "lva_name": _safe_text(lva.get("name")) if isinstance(lva, dict) else _safe_text(termin.get("name")),
+                "lva_name": (
+                    _safe_text(lva.get("name"))
+                    if isinstance(lva, dict)
+                    else _safe_text(termin.get("name"))
+                ),
                 "room": _safe_text(room.get("name")) if isinstance(room, dict) else room_id,
                 "gruppe": _safe_text(gruppe.get("name")) if isinstance(gruppe, dict) else "",
                 "typ": _safe_text(termin.get("typ")),
@@ -775,11 +916,18 @@ def _write_week_calendar_sheet(
     day_lane_counts: Dict[int, int] = {}
     for day_index, day_rows in rows_by_day.items():
         lane_end_minutes: List[int] = []
-        for item in sorted(day_rows, key=lambda row: (int(row["start_minutes"]), int(row["end_minutes"]), row["lva_id"])):
+        for item in sorted(
+            day_rows,
+            key=lambda row: (int(row["start_minutes"]), int(row["end_minutes"]), row["lva_id"]),
+        ):
             start_minutes = int(item["start_minutes"])
             end_minutes = int(item["end_minutes"])
             lane_index = next(
-                (index for index, lane_end in enumerate(lane_end_minutes) if lane_end <= start_minutes),
+                (
+                    index
+                    for index, lane_end in enumerate(lane_end_minutes)
+                    if lane_end <= start_minutes
+                ),
                 None,
             )
             if lane_index is None:
@@ -806,10 +954,14 @@ def _write_week_calendar_sheet(
     title_row = start_row
     header_row = start_row + 1
     first_slot_row = start_row + 2
-    sheet.merge_cells(start_row=title_row, start_column=1, end_row=title_row, end_column=last_column)
+    sheet.merge_cells(
+        start_row=title_row, start_column=1, end_row=title_row, end_column=last_column
+    )
     sheet.cell(row=title_row, column=1).value = title
     sheet.cell(row=title_row, column=1).font = Font(bold=True, size=12, color="1F2933")
-    sheet.cell(row=title_row, column=1).alignment = Alignment(horizontal="center", vertical="center")
+    sheet.cell(row=title_row, column=1).alignment = Alignment(
+        horizontal="center", vertical="center"
+    )
     sheet.row_dimensions[title_row].height = 22
 
     header_fill = PatternFill("solid", fgColor="1F4E78")
@@ -842,7 +994,12 @@ def _write_week_calendar_sheet(
         start_column = day_column_starts[day_index]
         end_column = start_column + day_lane_counts.get(day_index, 1) - 1
         if end_column > start_column:
-            sheet.merge_cells(start_row=header_row, start_column=start_column, end_row=header_row, end_column=end_column)
+            sheet.merge_cells(
+                start_row=header_row,
+                start_column=start_column,
+                end_row=header_row,
+                end_column=end_column,
+            )
         sheet.cell(row=header_row, column=start_column).value = f"{day_name}\n{current:%d.%m.%Y}"
 
     for slot_index in range(slot_count + 1):
@@ -870,7 +1027,9 @@ def _write_week_calendar_sheet(
     fallback_key_colors: Dict[str, str] = {}
     for day_index, day_rows in rows_by_day.items():
         day_start_column = day_column_starts[day_index]
-        for item in sorted(day_rows, key=lambda row: (row["start_minutes"], row.get("_lane", 0), row["lva_id"])):
+        for item in sorted(
+            day_rows, key=lambda row: (row["start_minutes"], row.get("_lane", 0), row["lva_id"])
+        ):
             col = day_start_column + int(item.get("_lane", 0))
             typ_key = _safe_text(item.get("typ")).upper()
             if typ_key in type_colors:
@@ -878,12 +1037,17 @@ def _write_week_calendar_sheet(
             else:
                 fallback_key = typ_key or item["lva_id"] or item["lva_name"]
                 if fallback_key not in fallback_key_colors:
-                    fallback_key_colors[fallback_key] = fallback_colors[len(fallback_key_colors) % len(fallback_colors)]
+                    fallback_key_colors[fallback_key] = fallback_colors[
+                        len(fallback_key_colors) % len(fallback_colors)
+                    ]
                 fill_color = fallback_key_colors[fallback_key]
             fill = PatternFill("solid", fgColor=fill_color)
 
             start_slot = (item["start_minutes"] - min_minutes) // slot_minutes
-            end_slot = max(start_slot + 1, (item["end_minutes"] - min_minutes + slot_minutes - 1) // slot_minutes)
+            end_slot = max(
+                start_slot + 1,
+                (item["end_minutes"] - min_minutes + slot_minutes - 1) // slot_minutes,
+            )
             block_start_row = first_slot_row + max(0, start_slot)
             block_end_row = first_slot_row + min(slot_count, end_slot) - 1
 
@@ -903,7 +1067,12 @@ def _write_week_calendar_sheet(
             text = " | ".join(part for part in text_parts if part)
             hint = _safe_text(item.get("besprechungshinweis"))
             if block_end_row > block_start_row:
-                sheet.merge_cells(start_row=block_start_row, start_column=col, end_row=block_end_row, end_column=col)
+                sheet.merge_cells(
+                    start_row=block_start_row,
+                    start_column=col,
+                    end_row=block_end_row,
+                    end_column=col,
+                )
             top_cell = sheet.cell(row=block_start_row, column=col)
             if item.get("zu_besprechen") and hint:
                 top_cell.value = CellRichText(
@@ -939,9 +1108,47 @@ def _is_empty_row(values: Tuple[Any, ...]) -> bool:
     return True
 
 
+def _project_sheet_required_columns(file_name: str) -> set[str]:
+    if file_name == "raeume.json":
+        return {"id", "name", "kapazitaet"}
+    if file_name == "lehrveranstaltungen.json":
+        return {"id", "name"}
+    if file_name == "termine.json":
+        return {"id", "lva_id"}
+    if file_name == "studienrichtungen.json":
+        return {"id", "name"}
+    if file_name == "freie_tage.json":
+        return {"typ", "beschreibung", "von_datum", "bis_datum"}
+    return set()
+
+
+def _sheet_header_columns(file_name: str, ws) -> dict[int, str]:
+    header_columns: Dict[int, str] = {}
+    for col_idx in range(1, (ws.max_column or 0) + 1):
+        mapped = _column_from_excel_header(file_name, ws.cell(row=1, column=col_idx).value)
+        if mapped and mapped not in header_columns.values():
+            header_columns[col_idx] = mapped
+    return header_columns
+
+
+def _find_project_sheet_by_header(file_name: str, worksheets, used_sheet_names: set[str]):
+    required = _project_sheet_required_columns(file_name)
+    if not required:
+        return None
+
+    for ws in worksheets:
+        if ws.title in used_sheet_names:
+            continue
+        mapped_columns = set(_sheet_header_columns(file_name, ws).values())
+        if required.issubset(mapped_columns):
+            return ws
+    return None
+
+
 def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
     wb = load_workbook(excel_path, data_only=True)
     result: Dict[str, Dict[str, Any]] = {}
+    used_sheet_names: set[str] = set()
 
     for file_name, cfg in _FILE_SCHEMAS.items():
         sheet_name = cfg["sheet"]
@@ -949,18 +1156,21 @@ def import_project_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
         list_key = cfg["list_key"]
 
         if sheet_name not in wb.sheetnames:
-            sheet_name = next((alias for alias in cfg.get("sheet_aliases", []) if alias in wb.sheetnames), sheet_name)
-        if sheet_name not in wb.sheetnames:
+            sheet_name = next(
+                (alias for alias in cfg.get("sheet_aliases", []) if alias in wb.sheetnames),
+                sheet_name,
+            )
+        if sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+        else:
+            ws = _find_project_sheet_by_header(file_name, wb.worksheets, used_sheet_names)
+        if ws is None:
             continue
+        used_sheet_names.add(ws.title)
 
-        ws = wb[sheet_name]
         entries: List[Dict[str, Any]] = []
 
-        header_columns: Dict[int, str] = {}
-        for col_idx in range(1, (ws.max_column or 0) + 1):
-            mapped = _column_from_excel_header(file_name, ws.cell(row=1, column=col_idx).value)
-            if mapped and mapped not in header_columns.values():
-                header_columns[col_idx] = mapped
+        header_columns = _sheet_header_columns(file_name, ws)
 
         if header_columns:
             row_iter = ws.iter_rows(min_row=2, max_col=ws.max_column, values_only=True)
@@ -1078,8 +1288,12 @@ def import_tiss_rooms_from_excel(excel_path: Path) -> Dict[str, Dict[str, Any]]:
                 "name": name,
                 "kapazitaet": capacity,
             }
-            building = _safe_text(ws.cell(row=row_idx, column=building_col).value) if building_col else ""
-            address = _safe_text(ws.cell(row=row_idx, column=address_col).value) if address_col else ""
+            building = (
+                _safe_text(ws.cell(row=row_idx, column=building_col).value) if building_col else ""
+            )
+            address = (
+                _safe_text(ws.cell(row=row_idx, column=address_col).value) if address_col else ""
+            )
             if building:
                 room["gebaeude"] = building
                 room["__catalog_gebaeude"] = building
@@ -1195,8 +1409,12 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
             teacher_lvas[key]
 
     teacher_terms: Dict[tuple[str, str], int] = defaultdict(int)
-    teacher_semester_terms: Dict[tuple[str, str], Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-    teacher_semester_lvas: Dict[tuple[str, str], Dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    teacher_semester_terms: Dict[tuple[str, str], Dict[str, int]] = defaultdict(
+        lambda: defaultdict(int)
+    )
+    teacher_semester_lvas: Dict[tuple[str, str], Dict[str, set[str]]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     for termin in _expand_termin_entries(termine):
         if not isinstance(termin, dict):
             continue
@@ -1221,7 +1439,9 @@ def get_teacher_export_options(data_dir: Path) -> List[TeacherExportOption]:
                 for semester_id, lva_ids in teacher_semester_lvas[(name, email)].items()
             },
         )
-        for name, email in sorted(teacher_lvas.keys(), key=lambda item: (item[0].lower(), item[1].lower()))
+        for name, email in sorted(
+            teacher_lvas.keys(), key=lambda item: (item[0].lower(), item[1].lower())
+        )
     ]
 
 
@@ -1286,7 +1506,9 @@ def get_lva_export_options(data_dir: Path) -> List[LvaExportOption]:
             )
         )
 
-    return sorted(options, key=lambda item: (item.teacher_name.lower(), item.id.lower(), item.name.lower()))
+    return sorted(
+        options, key=lambda item: (item.teacher_name.lower(), item.id.lower(), item.name.lower())
+    )
 
 
 def export_terms_for_teachers_to_excel(
@@ -1317,14 +1539,15 @@ def export_terms_for_teachers_to_excel(
     ]
 
     teacher_filter_set = (
-        {(_safe_text(item[0]), _safe_text(item[1] if len(item) > 1 else "")) for item in teacher_filter}
+        {
+            (_safe_text(item[0]), _safe_text(item[1] if len(item) > 1 else ""))
+            for item in teacher_filter
+        }
         if teacher_filter is not None
         else None
     )
     semester_filter_set = (
-        {_safe_text(item) for item in semester_filter}
-        if semester_filter is not None
-        else None
+        {_safe_text(item) for item in semester_filter} if semester_filter is not None else None
     )
     lva_filter_set = (
         {_safe_text(item) for item in lva_filter if _safe_text(item)}
@@ -1340,7 +1563,9 @@ def export_terms_for_teachers_to_excel(
 
     lva_map = {_safe_text(item.get("id")): item for item in lvas if _safe_text(item.get("id"))}
     raum_map = {_safe_text(item.get("id")): item for item in raeume if _safe_text(item.get("id"))}
-    semester_map = {_safe_text(item.get("id")): item for item in semester if _safe_text(item.get("id"))}
+    semester_map = {
+        _safe_text(item.get("id")): item for item in semester if _safe_text(item.get("id"))
+    }
 
     rows_by_teacher: Dict[tuple[str, str], List[Dict[str, Any]]] = defaultdict(list)
     rows_without_teacher: List[Dict[str, Any]] = []
@@ -1353,7 +1578,10 @@ def export_terms_for_teachers_to_excel(
         if not isinstance(termin, dict):
             continue
 
-        if semester_filter_set is not None and _safe_text(termin.get("semester_id")) not in semester_filter_set:
+        if (
+            semester_filter_set is not None
+            and _safe_text(termin.get("semester_id")) not in semester_filter_set
+        ):
             continue
 
         lva_id = _safe_text(termin.get("lva_id"))
@@ -1361,9 +1589,16 @@ def export_terms_for_teachers_to_excel(
             continue
 
         lva = lva_map.get(lva_id)
-        teacher_name = _safe_text(lva.get("vortragende", {}).get("name")) if isinstance(lva, dict) else ""
-        teacher_email = _safe_text(lva.get("vortragende", {}).get("email")) if isinstance(lva, dict) else ""
-        if teacher_filter_set is not None and (teacher_name, teacher_email) not in teacher_filter_set:
+        teacher_name = (
+            _safe_text(lva.get("vortragende", {}).get("name")) if isinstance(lva, dict) else ""
+        )
+        teacher_email = (
+            _safe_text(lva.get("vortragende", {}).get("email")) if isinstance(lva, dict) else ""
+        )
+        if (
+            teacher_filter_set is not None
+            and (teacher_name, teacher_email) not in teacher_filter_set
+        ):
             continue
         room_item = raum_map.get(_safe_text(termin.get("raum_id")))
         semester_item = semester_map.get(_safe_text(termin.get("semester_id")))
@@ -1377,29 +1612,55 @@ def export_terms_for_teachers_to_excel(
             continue
 
         row = {
-            "LVA-Nr.": _safe_text(lva.get("id")) if isinstance(lva, dict) else _safe_text(termin.get("lva_id")),
-            "Lehrveranstaltung": _safe_text(lva.get("name")) if isinstance(lva, dict) else _safe_text(termin.get("name")),
+            "LVA-Nr.": (
+                _safe_text(lva.get("id"))
+                if isinstance(lva, dict)
+                else _safe_text(termin.get("lva_id"))
+            ),
+            "Lehrveranstaltung": (
+                _safe_text(lva.get("name"))
+                if isinstance(lva, dict)
+                else _safe_text(termin.get("name"))
+            ),
             "Lehrperson": teacher_name,
             "E-Mail": teacher_email,
             "Typ": _safe_text(termin.get("typ")),
-            "Semester": _safe_text(semester_item.get("name")) if isinstance(semester_item, dict) else _safe_text(termin.get("semester_id")),
+            "Semester": (
+                _safe_text(semester_item.get("name"))
+                if isinstance(semester_item, dict)
+                else _safe_text(termin.get("semester_id"))
+            ),
             "Gruppe": _safe_text(gruppe.get("name")) if isinstance(gruppe, dict) else "",
             "Gruppengröße": gruppe.get("groesse", "") if isinstance(gruppe, dict) else "",
-            "Raum": _safe_text(room_item.get("name")) if isinstance(room_item, dict) else _safe_text(termin.get("raum_id")),
+            "Raum": (
+                _safe_text(room_item.get("name"))
+                if isinstance(room_item, dict)
+                else _safe_text(termin.get("raum_id"))
+            ),
             "Datum": datum.isoformat() if datum else "",
             "Beginn": start.strftime("%H:%M") if start else "",
             "Ende": ende.strftime("%H:%M") if ende else "",
-            "Anwesenheitspflicht": "Ja" if bool(termin.get("anwesenheitspflicht", False)) else "Nein",
+            "Anwesenheitspflicht": (
+                "Ja" if bool(termin.get("anwesenheitspflicht", False)) else "Nein"
+            ),
             "Zu besprechen": "Ja" if _parse_bool(termin.get("zu_besprechen")) else "Nein",
             "Hinweis": _safe_text(termin.get("besprechungshinweis")),
         }
 
-        (rows_by_teacher[(teacher_name, teacher_email)] if teacher_name else rows_without_teacher).append(row)
+        (
+            rows_by_teacher[(teacher_name, teacher_email)] if teacher_name else rows_without_teacher
+        ).append(row)
 
     def sort_key(row: Dict[str, Any]) -> tuple:
         datum = _safe_date(row.get("Datum"))
         start = _safe_time(row.get("Beginn"))
-        return (datum is None, datum or date.max, start is None, start or time.max, _safe_text(row.get("LVA-Nr.")))
+        return (
+            datum is None,
+            datum or date.max,
+            start is None,
+            start or time.max,
+            _safe_text(row.get("LVA-Nr.")),
+        )
 
     def write_sheet(sheet, data_rows: List[Dict[str, Any]]) -> None:
         sheet.append(headers)
@@ -1424,9 +1685,19 @@ def export_terms_for_teachers_to_excel(
                 value = cell.value
                 if value is None:
                     continue
-                text = value.strftime("%H:%M") if isinstance(value, time) else value.isoformat() if isinstance(value, date) and not isinstance(value, datetime) else str(value)
+                text = (
+                    value.strftime("%H:%M")
+                    if isinstance(value, time)
+                    else (
+                        value.isoformat()
+                        if isinstance(value, date) and not isinstance(value, datetime)
+                        else str(value)
+                    )
+                )
                 width = max(width, len(text))
-            sheet.column_dimensions[get_column_letter(column_cells[0].column)].width = min(max(width + 2, 10), 36)
+            sheet.column_dimensions[get_column_letter(column_cells[0].column)].width = min(
+                max(width + 2, 10), 36
+            )
 
     wb = Workbook()
     wb.remove(wb.active)
@@ -1437,12 +1708,18 @@ def export_terms_for_teachers_to_excel(
         write_sheet(sheet, sorted(rows_without_teacher, key=sort_key))
 
     teacher_counts: Dict[str, int] = defaultdict(int)
-    for (teacher_name, teacher_email), data_rows in sorted(rows_by_teacher.items(), key=lambda item: (item[0][0].lower(), item[0][1].lower())):
+    for (teacher_name, teacher_email), data_rows in sorted(
+        rows_by_teacher.items(), key=lambda item: (item[0][0].lower(), item[0][1].lower())
+    ):
         if not data_rows:
             continue
         base_name = teacher_name or teacher_email or "Ohne Lehrperson"
         teacher_counts[base_name] += 1
-        display_name = base_name if teacher_counts[base_name] == 1 else f"{base_name} {teacher_counts[base_name]}"
+        display_name = (
+            base_name
+            if teacher_counts[base_name] == 1
+            else f"{base_name} {teacher_counts[base_name]}"
+        )
         sheet = wb.create_sheet(_excel_compatible_sheet_name(display_name, used_names))
         write_sheet(sheet, sorted(data_rows, key=sort_key))
 

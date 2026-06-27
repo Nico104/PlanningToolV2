@@ -4,8 +4,16 @@ from typing import Any
 
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QWidget, QFrame,
-    QMessageBox, QApplication,
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTextEdit,
+    QWidget,
+    QFrame,
+    QMessageBox,
+    QApplication,
 )
 
 from ...services.import_merge_service import (
@@ -15,11 +23,15 @@ from ...services.import_merge_service import (
     payload_list,
 )
 from ...services.app_config_service import load_default_config
+from ...services.id_service import next_id
+
 
 class ImportDialog(QDialog):
     """Steps through every changed entry across all imported files and lets the user merge or ignore each."""
 
-    def __init__(self, parent: QWidget, data_dir: Path, imported_data: dict, *, auto_import_new: bool = False):
+    def __init__(
+        self, parent: QWidget, data_dir: Path, imported_data: dict, *, auto_import_new: bool = False
+    ):
         super().__init__(parent)
         self.setWindowTitle("Import prüfen")
         self.setObjectName("importDialog")
@@ -190,15 +202,25 @@ class ImportDialog(QDialog):
                     continue
                 exception_room = str(exception.get("raum_id") or "").strip()
                 if exception_room and exception_room not in known_rooms:
-                    warnings.append(f"Termin {item_label}: Serien-Ausnahme mit unbekanntem Raum {exception_room}")
+                    warnings.append(
+                        f"Termin {item_label}: Serien-Ausnahme mit unbekanntem Raum {exception_room}"
+                    )
 
         if fname == "lehrveranstaltungen.json":
             item_label = get_entry_id(item, "id") or str(item.get("name") or "LVA")
             studienrichtung = str(item.get("studienrichtung") or "").strip()
-            if studienrichtung and known_studienrichtungen and studienrichtung not in known_studienrichtungen:
+            if (
+                studienrichtung
+                and known_studienrichtungen
+                and studienrichtung not in known_studienrichtungen
+            ):
                 warnings.append(f"LVA {item_label}: unbekannte Studienrichtung {studienrichtung}")
             raw_studiensemester = item.get("studiensemester") or []
-            studiensemester_values = raw_studiensemester if isinstance(raw_studiensemester, list) else [raw_studiensemester]
+            studiensemester_values = (
+                raw_studiensemester
+                if isinstance(raw_studiensemester, list)
+                else [raw_studiensemester]
+            )
             unknown_studiensemester = [
                 value
                 for raw_value in studiensemester_values
@@ -355,7 +377,7 @@ class ImportDialog(QDialog):
 
         @classmethod
         def _format_value(cls, value, field: str = "", fname: str = "") -> str:
-            if value == '<missing>':
+            if value == "<missing>":
                 return "(leer)"
             if value is None:
                 return "(leer)"
@@ -392,7 +414,7 @@ class ImportDialog(QDialog):
 
         @classmethod
         def _is_empty_display_value(cls, value) -> bool:
-            if value == '<missing>' or value is None:
+            if value == "<missing>" or value is None:
                 return True
             if isinstance(value, str):
                 return value.strip() == ""
@@ -419,11 +441,13 @@ class ImportDialog(QDialog):
             blocks = []
             for field, old_value, new_value in diffs:
                 blocks.append(
-                    "\n".join([
-                        f"{cls._humanize_key(str(field), fname)}",
-                        f"Alt: {cls._format_value(old_value, str(field), fname)}",
-                        f"Neu: {cls._format_value(new_value, str(field), fname)}",
-                    ])
+                    "\n".join(
+                        [
+                            f"{cls._humanize_key(str(field), fname)}",
+                            f"Alt: {cls._format_value(old_value, str(field), fname)}",
+                            f"Neu: {cls._format_value(new_value, str(field), fname)}",
+                        ]
+                    )
                 )
             return "\n\n".join(blocks)
 
@@ -437,7 +461,9 @@ class ImportDialog(QDialog):
                     continue
                 if key.startswith("__"):
                     continue
-                lines.append(f"{cls._humanize_key(str(key), fname)}: {cls._format_value(value, str(key), fname)}")
+                lines.append(
+                    f"{cls._humanize_key(str(key), fname)}: {cls._format_value(value, str(key), fname)}"
+                )
             lines = lines[:40]
             return "\n".join(lines)
 
@@ -445,7 +471,7 @@ class ImportDialog(QDialog):
             super().__init__(parent)
             self.choice = None
             self.setObjectName("ImportEntryMergePrompt")
-            entry_id = new.get('id') or new.get('datum') or new.get('key') or new.get('name') or '-'
+            entry_id = new.get("id") or new.get("datum") or new.get("key") or new.get("name") or "-"
             file_label = self._file_label(fname)
             self.setWindowTitle(f"{file_label}: {entry_id}")
             self.resize(980, 620)
@@ -472,8 +498,11 @@ class ImportDialog(QDialog):
             # left: field-level diff
             effective_new = ImportDialog._merge_import_entry(fname, old, new)
             keys = sorted(set((old or {}).keys()) | set(effective_new.keys()))
-            diffs = [(k, (old or {}).get(k, '<missing>'), effective_new.get(k, '<missing>'))
-                     for k in keys if (old or {}).get(k, '<missing>') != effective_new.get(k, '<missing>')]
+            diffs = [
+                (k, (old or {}).get(k, "<missing>"), effective_new.get(k, "<missing>"))
+                for k in keys
+                if (old or {}).get(k, "<missing>") != effective_new.get(k, "<missing>")
+            ]
 
             content_row = QHBoxLayout()
             content_row.setSpacing(10)
@@ -525,10 +554,10 @@ class ImportDialog(QDialog):
             h.addStretch()
             primary_btn = None
             for label, obj_name, choice in [
-                ("Importieren",        "PrimaryButton",   "import"),
-                ("Ignorieren",         "SecondaryButton", "ignore"),
+                ("Importieren", "PrimaryButton", "import"),
+                ("Ignorieren", "SecondaryButton", "ignore"),
                 ("Importieren (alle)", "SecondaryButton", "import_all"),
-                ("Ignorieren (alle)",  "SecondaryButton", "ignore_all"),
+                ("Ignorieren (alle)", "SecondaryButton", "ignore_all"),
             ]:
                 btn = QPushButton(label)
                 btn.setObjectName(obj_name)
@@ -562,23 +591,27 @@ class ImportDialog(QDialog):
             existing_raw = None
             if target.exists():
                 try:
-                    existing_raw = json.loads(target.read_text(encoding='utf-8'))
+                    existing_raw = json.loads(target.read_text(encoding="utf-8"))
                 except Exception as exc:
-                    QMessageBox.warning(self, "Import Fehler", f"{fname} konnte nicht gelesen werden: {exc}")
+                    QMessageBox.warning(
+                        self, "Import Fehler", f"{fname} konnte nicht gelesen werden: {exc}"
+                    )
                     self.reject()
                     return
 
             # skip if file content is identical
             try:
-                if existing_raw is not None and json.dumps(existing_raw, sort_keys=True) == json.dumps(content, sort_keys=True):
+                if existing_raw is not None and json.dumps(
+                    existing_raw, sort_keys=True
+                ) == json.dumps(content, sort_keys=True):
                     continue
             except Exception:
                 pass
 
-
             incoming_list = payload_list(content, schema)
-            existing_list = existing_raw.get(schema.list_key, []) if isinstance(existing_raw, dict) else []
-
+            existing_list = (
+                existing_raw.get(schema.list_key, []) if isinstance(existing_raw, dict) else []
+            )
 
             existing_map = {
                 get_entry_id(e, schema.id_field): e
@@ -612,29 +645,37 @@ class ImportDialog(QDialog):
                     continue
 
                 if import_all:
-                    ch = 'import'
+                    ch = "import"
                 elif ignore_all:
-                    ch = 'ignore'
+                    ch = "ignore"
                 elif ex is None:
-                    ch = 'import'
+                    ch = "import"
                 else:
                     prompt = ImportDialog._EntryMergePrompt(self, fname, effective_inc, ex)
                     prompt.exec()
                     ch = prompt.choice
 
-                if ch == 'import_all':
+                if ch == "import_all":
                     import_all = True
-                    ch = 'import'
-                elif ch == 'ignore_all':
+                    ch = "import"
+                elif ch == "ignore_all":
                     ignore_all = True
-                    ch = 'ignore'
+                    ch = "ignore"
 
-                if ch == 'import':
+                if ch == "import":
                     if eid and eid in existing_map:
                         existing_map[eid].clear()
                         existing_map[eid].update(effective_inc)
                         counts["changed"] += 1
                     else:
+                        if not eid and fname == "freie_tage.json":
+                            effective_inc = dict(effective_inc)
+                            effective_inc["id"] = next_id(
+                                "FT",
+                                [str(item.get("id", "")) for item in existing_list],
+                                width=3,
+                            )
+                            eid = get_entry_id(effective_inc, schema.id_field)
                         existing_list.append(effective_inc)
                         if eid:
                             existing_map[eid] = effective_inc
@@ -650,10 +691,14 @@ class ImportDialog(QDialog):
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 tmp = target.with_suffix(".tmp")
-                tmp.write_text(json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+                tmp.write_text(
+                    json.dumps(existing_raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                )
                 tmp.replace(target)
             except Exception as exc:
-                QMessageBox.warning(self, "Import Fehler", f"{fname} konnte nicht gespeichert werden: {exc}")
+                QMessageBox.warning(
+                    self, "Import Fehler", f"{fname} konnte nicht gespeichert werden: {exc}"
+                )
                 self.reject()
                 return
 

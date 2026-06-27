@@ -33,7 +33,9 @@ class _PreviousYearShortcutFilter(QObject):
     def _handle_key_press(self, event) -> bool:
         if event.isAutoRepeat() or event.key() != Qt.Key.Key_V:
             return False
-        if event.modifiers() != (Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier):
+        if event.modifiers() != (
+            Qt.KeyboardModifier.ControlModifier | Qt.KeyboardModifier.AltModifier
+        ):
             return False
         if self._editable_widget_has_focus():
             return False

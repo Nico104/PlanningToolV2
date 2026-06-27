@@ -63,7 +63,7 @@ class TerminCard(QFrame):
         marker_count = int(self._zu_besprechen) + int(self._missing_room)
         root = QVBoxLayout(self)
         root.setContentsMargins(16, 10, 12 + (13 * marker_count), 10)
-        
+
         root.setSpacing(6)
 
         if name:
@@ -173,7 +173,6 @@ class TerminCard(QFrame):
             self._press_pos = e.pos()
         super().mousePressEvent(e)
 
-
     def mouseMoveEvent(self, e: QMouseEvent) -> None:
         if self._read_only:
             if (
@@ -205,8 +204,7 @@ class TerminCard(QFrame):
 
             scale = 0.6
 
-            p.translate(pm.width() * (1 - scale) / 2,
-                        pm.height() * (1 - scale) / 2)
+            p.translate(pm.width() * (1 - scale) / 2, pm.height() * (1 - scale) / 2)
             p.scale(scale, scale)
 
             radius = 4
@@ -218,12 +216,10 @@ class TerminCard(QFrame):
         finally:
             p.end()
 
-
         drag.setPixmap(pm)
         drag.setHotSpot(self._press_pos)
 
         drag.exec(Qt.CopyAction)
-
 
     def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
         if self._read_only:

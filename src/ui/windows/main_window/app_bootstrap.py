@@ -24,9 +24,7 @@ def _set_windows_app_id() -> None:
     try:
         import ctypes
 
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-            "plannerV2.planungstool"
-        )
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("plannerV2.planungstool")
     except Exception:
         pass
 
@@ -54,7 +52,10 @@ def _choose_data_path(settings: dict, current_data_dir: Path):
     folder = _choose_project_folder("Projektordner wählen", current_data_dir)
     if folder is None:
         return settings, current_data_dir
-    if prepare_project_folder(None, folder, title="Projekt öffnen", require_existing_project=True) is None:
+    if (
+        prepare_project_folder(None, folder, title="Projekt öffnen", require_existing_project=True)
+        is None
+    ):
         return settings, current_data_dir
     settings, data_dir, _created_new = _save_project_folder(folder)
     return settings, data_dir
@@ -140,7 +141,9 @@ def _choose_initial_project(project_root: Path) -> tuple[dict, Path, bool] | Non
             continue
 
         if action == "create":
-            prepared = prepare_project_folder(None, folder, title="Neues Projekt", creating_new=True)
+            prepared = prepare_project_folder(
+                None, folder, title="Neues Projekt", creating_new=True
+            )
         else:
             prepared = prepare_project_folder(
                 None,
@@ -220,7 +223,12 @@ def run_gui() -> None:
                 continue
             return
 
-        if prepare_project_folder(None, data_dir, title="Datenordner prüfen", require_existing_project=True) is not None:
+        if (
+            prepare_project_folder(
+                None, data_dir, title="Datenordner prüfen", require_existing_project=True
+            )
+            is not None
+        ):
             break
 
         action = _invalid_data_dir_action(data_dir, prepared=True)

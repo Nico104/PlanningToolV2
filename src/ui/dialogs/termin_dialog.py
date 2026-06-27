@@ -5,8 +5,18 @@ from typing import List, Optional, Dict
 
 from PySide6.QtCore import QTime, QDate, Qt, QEvent, QTimer
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QComboBox, QDateEdit, QTimeEdit, QSpinBox, QTextEdit
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QComboBox,
+    QDateEdit,
+    QTimeEdit,
+    QSpinBox,
+    QTextEdit,
 )
 
 from ...core.models import Termin, Gruppe, Lehrveranstaltung, Semester, Raum
@@ -21,14 +31,18 @@ class TerminDialog(QDialog):
 
     Kept only as a reference backup. The application uses LVATerminDialog.
     """
-    def __init__(self, parent: QWidget, *,
-                 lvas: List[Lehrveranstaltung],
-                 semester: List[Semester],
-                 raeume: List[Raum],
-                 termin: Optional[Termin] = None,
-                 settings: Optional[Dict] = None,
-                 new_id = None,
-                 ):
+
+    def __init__(
+        self,
+        parent: QWidget,
+        *,
+        lvas: List[Lehrveranstaltung],
+        semester: List[Semester],
+        raeume: List[Raum],
+        termin: Optional[Termin] = None,
+        settings: Optional[Dict] = None,
+        new_id=None,
+    ):
         super().__init__(parent)
         self.new_id = new_id
         self.termin = termin
@@ -39,7 +53,7 @@ class TerminDialog(QDialog):
         # Sentinel for unassigned date
         self._unassigned_qdate = QDate(1900, 1, 1)
 
-        self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, 'name')) else "")
+        self.name_le = QLineEdit(termin.name if (termin and hasattr(termin, "name")) else "")
         self.name_le.setObjectName("Field")
         lay = QVBoxLayout(self)
         lay.setContentsMargins(16, 16, 16, 16)
@@ -157,8 +171,8 @@ class TerminDialog(QDialog):
             self._set_cb(self.lva_cb, termin.lva_id)
             self._set_cb(self.raum_cb, termin.raum_id)
             # Set semester combobox if semester_id is present
-            if hasattr(termin, 'semester_id'):
-                self._set_cb(self.semester_cb, getattr(termin, 'semester_id', None))
+            if hasattr(termin, "semester_id"):
+                self._set_cb(self.semester_cb, getattr(termin, "semester_id", None))
         else:
             # New termin: start with today
             today = date.today()
@@ -170,10 +184,13 @@ class TerminDialog(QDialog):
             self.time_from.setEnabled(has_date)
 
         def _on_date_changed():
-            #When date changes from unassigned, jump to today
+            # When date changes from unassigned, jump to today
             current_date = self.date_de.date()
 
-            if current_date != self._unassigned_qdate and current_date == self._unassigned_qdate.addDays(1):
+            if (
+                current_date != self._unassigned_qdate
+                and current_date == self._unassigned_qdate.addDays(1)
+            ):
 
                 today = date.today()
                 self.date_de.setDate(date_to_qdate(today))
@@ -241,9 +258,15 @@ class TerminDialog(QDialog):
 
     def _accept(self):
         lva_id = "" if self.lva_cb.currentData() is None else str(self.lva_cb.currentData()).strip()
-        raum_id = "" if self.raum_cb.currentData() is None else str(self.raum_cb.currentData()).strip()
+        raum_id = (
+            "" if self.raum_cb.currentData() is None else str(self.raum_cb.currentData()).strip()
+        )
         typ = self.typ_le.text().strip().upper()
-        semester_id = "" if self.semester_cb.currentData() is None else str(self.semester_cb.currentData()).strip()
+        semester_id = (
+            ""
+            if self.semester_cb.currentData() is None
+            else str(self.semester_cb.currentData()).strip()
+        )
 
         qd = self.date_de.date()
         d = None if qd == self._unassigned_qdate else qdate_to_date(qd)
@@ -263,18 +286,20 @@ class TerminDialog(QDialog):
         notiz_value = self.note_te.toPlainText().strip()
         anwesenheitspflicht = bool(self.ap_cb.isChecked())
 
-        #Validierung
+        # Validierung
         errors = []
         if not name_value:
             errors.append("Name fehlt.")
-        if not lva_id or lva_id == 'None':
+        if not lva_id or lva_id == "None":
             errors.append("LVA fehlt.")
         if not typ:
             errors.append("Typ fehlt.")
         if duration_value <= 0:
             errors.append("Dauer fehlt oder ist 0.")
         if errors:
-            QMessageBox.warning(self, "Fehler", "Bitte füllen Sie alle Pflichtfelder aus:\n" + "\n".join(errors))
+            QMessageBox.warning(
+                self, "Fehler", "Bitte füllen Sie alle Pflichtfelder aus:\n" + "\n".join(errors)
+            )
             return
 
         # Serientermin-Logik
@@ -294,6 +319,7 @@ class TerminDialog(QDialog):
                     current += delta
 
             elif period == "monatlich":
+
                 def add_month(dt):
                     month = dt.month + 1
                     year = dt.year
@@ -304,8 +330,10 @@ class TerminDialog(QDialog):
                         return dt.replace(year=year, month=month)
                     except ValueError:
                         from calendar import monthrange
+
                         last_day = monthrange(year, month)[1]
                         return dt.replace(year=year, month=month, day=last_day)
+
                 dates = []
                 current = d
                 while current <= end_date:
@@ -321,27 +349,33 @@ class TerminDialog(QDialog):
 
             self._result = []
             for idx, date_val in enumerate(dates):
-                #Eindeutige ID: BasisID + Serienkürzel + Laufnummer
-                termin_id = f"{self.new_id}_{serien_id_short}_r{idx+1}" if len(dates) > 1 else f"{self.new_id}_{serien_id_short}"
+                # Eindeutige ID: BasisID + Serienkürzel + Laufnummer
+                termin_id = (
+                    f"{self.new_id}_{serien_id_short}_r{idx+1}"
+                    if len(dates) > 1
+                    else f"{self.new_id}_{serien_id_short}"
+                )
 
-                self._result.append(Termin(
-                    name=name_value,
-                    id=termin_id,
-                    lva_id=lva_id,
-                    typ=typ,
-                    datum=date_val,
-                    start_zeit=start_zeit,
-                    raum_id=raum_id,
-                    gruppe=gruppe,
-                    anwesenheitspflicht=anwesenheitspflicht,
-                    notiz=notiz_value,
-                    duration=duration_value,
-                    semester_id=semester_id,
-                    serien_id=serien_id,
-                ))
+                self._result.append(
+                    Termin(
+                        name=name_value,
+                        id=termin_id,
+                        lva_id=lva_id,
+                        typ=typ,
+                        datum=date_val,
+                        start_zeit=start_zeit,
+                        raum_id=raum_id,
+                        gruppe=gruppe,
+                        anwesenheitspflicht=anwesenheitspflicht,
+                        notiz=notiz_value,
+                        duration=duration_value,
+                        semester_id=semester_id,
+                        serien_id=serien_id,
+                    )
+                )
         else:
             serien_id = ""
-            if self.termin is not None and hasattr(self.termin, 'id'):
+            if self.termin is not None and hasattr(self.termin, "id"):
                 self._result = Termin(
                     name=name_value,
                     id=self.termin.id,
@@ -380,7 +414,7 @@ class TerminDialog(QDialog):
         return self._result
 
     def eventFilter(self, obj, event):
-        #Handle calendar popup to show today's date when unassigned
+        # Handle calendar popup to show today's date when unassigned
         if obj == self.date_de and not self._calendar_shown:
             if event.type() == QEvent.Type.MouseButtonPress or event.type() == QEvent.Type.KeyPress:
                 # User is about to open the calendar
@@ -388,6 +422,7 @@ class TerminDialog(QDialog):
                     # Set calendar to show today
                     self._calendar_shown = True
                     try:
+
                         def set_calendar():
                             cal = self.date_de.calendarWidget()
                             if cal:
@@ -396,6 +431,7 @@ class TerminDialog(QDialog):
                                 cal.setCurrentPage(today.year, today.month)
                                 cal.setSelectedDate(qd)
                             self._calendar_shown = False
+
                         QTimer.singleShot(0, set_calendar)
                     except Exception:
                         self._calendar_shown = False

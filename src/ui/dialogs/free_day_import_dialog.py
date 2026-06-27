@@ -79,7 +79,9 @@ class FreeDayImportDialog(QDialog):
         controls = QHBoxLayout()
         controls.setSpacing(16)
         controls.setAlignment(Qt.AlignTop)
-        api_panel = self._build_api_panel(default_from or date(today.year, 1, 1), default_to or date(today.year, 12, 31))
+        api_panel = self._build_api_panel(
+            default_from or date(today.year, 1, 1), default_to or date(today.year, 12, 31)
+        )
         manual_panel = self._build_manual_panel()
         controls.addWidget(api_panel, 1, Qt.AlignTop)
         controls.addWidget(manual_panel, 1, Qt.AlignTop)
@@ -87,7 +89,9 @@ class FreeDayImportDialog(QDialog):
 
         self.table = QTableWidget(0, 7, self)
         self.table.setObjectName("FreeDayImportTable")
-        self.table.setHorizontalHeaderLabels(["", "Typ", "Beschreibung", "Von", "Bis", "Quelle", "Status"])
+        self.table.setHorizontalHeaderLabels(
+            ["", "Typ", "Beschreibung", "Von", "Bis", "Quelle", "Status"]
+        )
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -202,7 +206,9 @@ class FreeDayImportDialog(QDialog):
         label = QLabel("Manuell ergänzen", panel)
         label.setObjectName("FreeDayImportPanelTitle")
         layout.addWidget(label)
-        help_label = QLabel("Eigene vorlesungsfreie Zeiträume oder Feiertage in die Vorschau aufnehmen.", panel)
+        help_label = QLabel(
+            "Eigene vorlesungsfreie Zeiträume oder Feiertage in die Vorschau aufnehmen.", panel
+        )
         help_label.setObjectName("FreeDayImportHelp")
         help_label.setWordWrap(True)
         layout.addWidget(help_label)
@@ -259,7 +265,9 @@ class FreeDayImportDialog(QDialog):
             self.load_btn.setEnabled(False)
             self.load_btn.setText("Lade...")
             try:
-                self._api_candidates = fetch_open_holidays_public_holidays(valid_from=valid_from, valid_to=valid_to)
+                self._api_candidates = fetch_open_holidays_public_holidays(
+                    valid_from=valid_from, valid_to=valid_to
+                )
             except Exception as exc:
                 self._api_candidates = []
                 errors.append(f"OpenHolidays: {exc}")
@@ -352,7 +360,9 @@ class FreeDayImportDialog(QDialog):
         checkbox.setData(Qt.UserRole, row)
         self.table.setItem(row, 0, checkbox)
 
-    def _set_text_item(self, row: int, column: int, text: str, alignment=Qt.AlignVCenter | Qt.AlignLeft) -> None:
+    def _set_text_item(
+        self, row: int, column: int, text: str, alignment=Qt.AlignVCenter | Qt.AlignLeft
+    ) -> None:
         item = QTableWidgetItem(text)
         item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
         item.setTextAlignment(alignment)
@@ -381,7 +391,9 @@ class FreeDayImportDialog(QDialog):
     def _accept_selection(self) -> None:
         selected = self._checked_candidates()
         if not selected:
-            QMessageBox.warning(self, "Keine Auswahl", "Es sind keine neuen freien Tage ausgewählt.")
+            QMessageBox.warning(
+                self, "Keine Auswahl", "Es sind keine neuen freien Tage ausgewählt."
+            )
             return
         self._result_candidates = selected
         self.accept()

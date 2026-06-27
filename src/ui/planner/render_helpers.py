@@ -13,9 +13,9 @@ from ..utils.datetime_utils import fmt_date, fmt_time, mins_from_time
 from ..utils.grouping_utils import group_concurrent_appointments
 from ..utils.color_constants import planner_text_color, type_accent_color_for, type_color_for
 from ..utils.qss_tokens import qss_color
+from .free_day_provider import FreeDayBadgeLine
 from .timeslotcell import TimeSlotCell
 from .termincard import TerminCard
-
 
 _SECTION_ACCENT_PALETTE = (
     "#2f80ed",
@@ -63,12 +63,14 @@ def is_series_instance(termin: Termin) -> bool:
 class FreeDayHeaderView(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, parent=None):
         super().__init__(orientation, parent)
-        self._badges: dict[int, tuple[str, str, str]] = {}
+        self._badges: dict[int, tuple[tuple[FreeDayBadgeLine, ...], str]] = {}
         self._accent_colors: dict[int, QColor] = {}
 
-    def set_free_day_badges(self, badges: dict[int, tuple[str, str, str]]) -> None:
+    def set_free_day_badges(
+        self, badges: dict[int, tuple[tuple[FreeDayBadgeLine, ...], str]]
+    ) -> None:
         self._badges = dict(badges)
-        self.setMinimumHeight(64 if self._badges else 44)
+        self.setMinimumHeight(self._minimum_height_for_badges() if self._badges else 44)
         self.viewport().update()
 
     def set_section_accent_colors(self, colors: dict[int, QColor]) -> None:
@@ -82,8 +84,19 @@ class FreeDayHeaderView(QHeaderView):
     def sizeHint(self) -> QSize:
         hint = super().sizeHint()
         if self._badges:
-            hint.setHeight(max(hint.height(), 64))
+            hint.setHeight(max(hint.height(), self._minimum_height_for_badges()))
         return hint
+
+    def _badge_height(self, lines: tuple[FreeDayBadgeLine, ...]) -> int:
+        line_count = max(1, len(lines))
+        return 7 + (line_count * 17) + max(0, line_count - 1) * 3
+
+    def _minimum_height_for_badges(self) -> int:
+        max_badge_height = max(
+            (self._badge_height(badge[0]) for badge in self._badges.values()),
+            default=0,
+        )
+        return max(64, 40 + max_badge_height)
 
     def paintSection(self, painter, rect, logical_index: int) -> None:
         if not rect.isValid():
@@ -106,20 +119,24 @@ class FreeDayHeaderView(QHeaderView):
         text = self.model().headerData(logical_index, self.orientation(), Qt.DisplayRole)
         text = "" if text is None else str(text)
         badge = self._badges.get(logical_index)
-        text_rect = rect.adjusted(4, 8 if accent else 4, -4, -24 if badge else -4)
+        reserved_badge_height = self._badge_height(badge[0]) + 4 if badge else 0
+        text_rect = rect.adjusted(
+            4,
+            8 if accent else 4,
+            -4,
+            -(reserved_badge_height + 4) if badge else -4,
+        )
 
         painter.setPen(planner_text_color())
         painter.drawText(text_rect, Qt.AlignCenter | Qt.TextWordWrap, text)
 
         if badge:
-            badge_text, day_type, _tooltip = badge
-            self._paint_badge(painter, rect, badge_text, day_type)
+            badge_lines, _tooltip = badge
+            self._paint_badge(painter, rect, badge_lines)
 
         painter.restore()
 
-    def _paint_badge(self, painter, section_rect, text: str, day_type: str) -> None:
-        badge_rect = section_rect.adjusted(4, section_rect.height() - 24, -4, -4)
-
+    def _badge_colors(self, day_type: str) -> tuple[QColor, QColor, QColor]:
         if day_type == "feiertag":
             bg = qss_color("free-day-holiday-badge-bg")
             border = qss_color("free-day-holiday-badge-border")
@@ -128,18 +145,34 @@ class FreeDayHeaderView(QHeaderView):
             bg = qss_color("free-day-lecture-badge-bg")
             border = qss_color("free-day-lecture-badge-border")
             fg = qss_color("free-day-lecture-badge-text")
+        return bg, border, fg
 
-        painter.setBrush(bg)
-        painter.setPen(QPen(border, 0.5))
-        painter.drawRoundedRect(badge_rect, 0, 0)
-
+    def _paint_badge(
+        self, painter, section_rect, lines: tuple[FreeDayBadgeLine, ...]
+    ) -> None:
+        if not lines:
+            return
+        badge_height = self._badge_height(lines)
+        badge_rect = section_rect.adjusted(5, section_rect.height() - badge_height - 5, -5, -5)
         font = painter.font()
         font.setBold(True)
         painter.setFont(font)
-        painter.setPen(fg)
         metrics = painter.fontMetrics()
-        label = metrics.elidedText(text, Qt.ElideRight, max(1, badge_rect.width() - 10))
-        painter.drawText(badge_rect.adjusted(5, 0, -5, 0), Qt.AlignLeft | Qt.AlignVCenter, label)
+        line_height = 17
+        gap = 3
+        top = badge_rect.top() + 4
+        for index, line in enumerate(lines):
+            bg, border, fg = self._badge_colors(line.day_type)
+            line_rect = badge_rect.adjusted(0, 0, 0, 0)
+            line_rect.setTop(top + index * (line_height + gap))
+            line_rect.setHeight(line_height)
+            painter.setBrush(bg)
+            painter.setPen(QPen(border, 0.5))
+            painter.drawRoundedRect(line_rect, 4, 4)
+            painter.setPen(fg)
+            label = metrics.elidedText(line.text, Qt.ElideRight, max(1, line_rect.width() - 12))
+            line_rect = line_rect.adjusted(6, 0, -6, 0)
+            painter.drawText(line_rect, Qt.AlignLeft | Qt.AlignVCenter, label)
 
 
 def format_termin_text(t: Termin, lvas) -> str:
@@ -147,7 +180,7 @@ def format_termin_text(t: Termin, lvas) -> str:
     lva = next((l for l in lvas if l.id == t.lva_id), None)
     lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
     room_s = str(t.raum_id or "").strip() or "Kein Raum"
-    gname = (t.gruppe.name if t.gruppe else "")
+    gname = t.gruppe.name if t.gruppe else ""
     grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
     ap = " AP" if t.anwesenheitspflicht else ""
 
@@ -189,7 +222,9 @@ def format_termin_tooltip(t: Termin, lvas) -> str:
             )
         )
     if missing_room:
-        badge_lines.append(badge_line("R", "Kein Raum zugewiesen", qss_color("planner-missing-room-border").name()))
+        badge_lines.append(
+            badge_line("R", "Kein Raum zugewiesen", qss_color("planner-missing-room-border").name())
+        )
     if discuss:
         text = "Zu besprechen" + (f": {discuss_hint}" if discuss_hint else "")
         badge_lines.append(badge_line("!", text, qss_color("planner-discuss-border").name()))
@@ -309,9 +344,7 @@ def render_grouped_termine_column(
     for termin, group_id in appointment_groups:
         groups_by_id[group_id].append(termin)
 
-    group_entries = (
-        sorted(groups_by_id.items()) if sort_group_ids else groups_by_id.items()
-    )
+    group_entries = sorted(groups_by_id.items()) if sort_group_ids else groups_by_id.items()
 
     for _, group_appointments in group_entries:
         valid_apps = [
@@ -365,7 +398,9 @@ def render_grouped_termine_column(
             card_pixel_height = max(1, bottom_offset_px - top_offset_px)
 
             offset_rows = max(0, offset_minutes // slot_min)
-            app_span_rows = max(1, (offset_minutes % slot_min + visual_app_dur + slot_min - 1) // slot_min)
+            app_span_rows = max(
+                1, (offset_minutes % slot_min + visual_app_dur + slot_min - 1) // slot_min
+            )
             app_span_rows = min(app_span_rows, len(slots) - row - offset_rows)
 
             app_text = format_termin_text(app, lvas)

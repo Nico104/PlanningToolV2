@@ -54,7 +54,9 @@ class DayEventsDialog(QDialog):
             date_lbl.setObjectName("DialogDate")
             hdr_layout.addWidget(date_lbl)
         lay.addWidget(hdr)
-        subtitle = QLabel("Einträge des ausgewählten Kalendertags. Doppelklick öffnet den Termin.", self)
+        subtitle = QLabel(
+            "Einträge des ausgewählten Kalendertags. Doppelklick öffnet den Termin.", self
+        )
         subtitle.setObjectName("DialogSubtitle")
         subtitle.setWordWrap(True)
         lay.addWidget(subtitle)

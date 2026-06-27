@@ -41,7 +41,7 @@ class TerminCard(QLabel):
         self._is_series_exception = bool(is_series_exception)
         self._missing_room = bool(missing_room)
         self._needs_attention = self._zu_besprechen or self._missing_room
-        self._focused = False 
+        self._focused = False
         self._highlighted = False
         self._read_only = False
 
@@ -68,25 +68,31 @@ class TerminCard(QLabel):
     def _badge_items(self) -> list[tuple[str, QColor, QColor]]:
         items = []
         if self._zu_besprechen:
-            items.append((
-                "!",
-                qss_color("planner-discuss-border"),
-                qss_color("planner-discuss-badge-text"),
-            ))
+            items.append(
+                (
+                    "!",
+                    qss_color("planner-discuss-border"),
+                    qss_color("planner-discuss-badge-text"),
+                )
+            )
         if self._missing_room:
-            items.append((
-                "R",
-                qss_color("planner-missing-room-border"),
-                qss_color("planner-missing-room-badge-text"),
-            ))
+            items.append(
+                (
+                    "R",
+                    qss_color("planner-missing-room-border"),
+                    qss_color("planner-missing-room-badge-text"),
+                )
+            )
         if self._is_series:
             marker_color = QColor(self.accent_color)
             marker_color.setAlpha(42)
-            items.append((
-                "SA" if self._is_series_exception else "S",
-                marker_color,
-                self.accent_color,
-            ))
+            items.append(
+                (
+                    "SA" if self._is_series_exception else "S",
+                    marker_color,
+                    self.accent_color,
+                )
+            )
         return items
 
     def set_read_only(self, read_only: bool) -> None:
@@ -227,7 +233,7 @@ class TerminCard(QLabel):
         if not (event.buttons() & Qt.LeftButton):
             return
 
-        if not hasattr(self, '_drag_start_pos'):
+        if not hasattr(self, "_drag_start_pos"):
             return
 
         distance = (event.pos() - self._drag_start_pos).manhattanLength()

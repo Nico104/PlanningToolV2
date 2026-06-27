@@ -4,7 +4,11 @@ from datetime import datetime, date, time
 from typing import Dict, List, Any
 
 from ..core.models import Raum, Vortragende, Lehrveranstaltung, Gruppe, SerienAusnahme, Termin
-from .data_folder_service import clean_json_id, load_settings as load_app_settings, save_settings as save_app_settings
+from .data_folder_service import (
+    clean_json_id,
+    load_settings as load_app_settings,
+    save_settings as save_app_settings,
+)
 
 
 class DataService:
@@ -139,23 +143,24 @@ class DataService:
                     continue
                 seen.add(semester_id)
                 studiensemester.append(semester_id)
-            out.append(Lehrveranstaltung(
-                id=clean_json_id(x.get("id")),
-                name=str(x.get("name", "") or "").strip(),
-                vortragende=Vortragende(
-                    name=str(v.get("name", "") or "").strip(),
-                    email=str(v.get("email", "") or "").strip(),
-                ),
-                studiensemester=studiensemester,
-                studienrichtung=(
-                    clean_json_id(x.get("studienrichtung"))
-                    if "studienrichtung" in x
-                    else clean_json_id(studienrichtung) or "ETIT"
-                ),
-                ects=str(x.get("ects", "")).strip(),
-            ))
+            out.append(
+                Lehrveranstaltung(
+                    id=clean_json_id(x.get("id")),
+                    name=str(x.get("name", "") or "").strip(),
+                    vortragende=Vortragende(
+                        name=str(v.get("name", "") or "").strip(),
+                        email=str(v.get("email", "") or "").strip(),
+                    ),
+                    studiensemester=studiensemester,
+                    studienrichtung=(
+                        clean_json_id(x.get("studienrichtung"))
+                        if "studienrichtung" in x
+                        else clean_json_id(studienrichtung) or "ETIT"
+                    ),
+                    ects=str(x.get("ects", "")).strip(),
+                )
+            )
         return out
-
 
     def load_termine(self) -> List[Termin]:
         # Load all termine from the single termine.json file.
@@ -182,7 +187,9 @@ class DataService:
                 Gruppe(
                     name=g.get("name", "-") if g else "-",
                     groesse=int(g.get("groesse", 0)) if g else 0,
-                ) if g is not None else None
+                )
+                if g is not None
+                else None
             ),
             anwesenheitspflicht=self._parse_bool(x.get("anwesenheitspflicht", False)),
             notiz=x.get("notiz", ""),
@@ -196,7 +203,6 @@ class DataService:
             serien_ausnahmen=self._parse_series_exceptions(x.get("serien_ausnahmen")),
         )
 
-
     def load_settings(self) -> Dict[str, Any]:
         return load_app_settings()
 
@@ -208,71 +214,87 @@ class DataService:
             if gebaeude:
                 item["gebaeude"] = gebaeude
             rows.append(item)
-        self._write("raeume.json", {
-            "raeume": rows
-        })
+        self._write("raeume.json", {"raeume": rows})
 
     def save_lvas(self, lvas: List[Lehrveranstaltung]) -> None:
         settings = self.load_settings()
         studienrichtung = settings.get("start_studienrichtung", "ETIT")
-        self._write("lehrveranstaltungen.json", {
-            "lehrveranstaltungen": [{
-                "id": clean_json_id(l.id),
-                "name": l.name,
-                "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
-                "studiensemester": [clean_json_id(item) for item in l.studiensemester if clean_json_id(item)],
-                "studienrichtung": clean_json_id(getattr(l, "studienrichtung", "")),
-                "ects": str(getattr(l, "ects", "")).strip(),
-            } for l in lvas]
-        })
+        self._write(
+            "lehrveranstaltungen.json",
+            {
+                "lehrveranstaltungen": [
+                    {
+                        "id": clean_json_id(l.id),
+                        "name": l.name,
+                        "vortragende": {"name": l.vortragende.name, "email": l.vortragende.email},
+                        "studiensemester": [
+                            clean_json_id(item) for item in l.studiensemester if clean_json_id(item)
+                        ],
+                        "studienrichtung": clean_json_id(getattr(l, "studienrichtung", "")),
+                        "ects": str(getattr(l, "ects", "")).strip(),
+                    }
+                    for l in lvas
+                ]
+            },
+        )
 
     def save_termine(self, termine: List[Termin]) -> None:
         # Save all termine into a single termine.json file (with semester_id per termin)
-        self._write("termine.json", {
-            "termine": [{
-                "name": t.name,
-                "id": t.id,
-                "lva_id": clean_json_id(t.lva_id),
-                "typ": t.typ,
-                "datum": self._fmt_date(t.datum) if t.datum is not None else None,
-                "start_zeit": self._fmt_time(t.start_zeit) if t.start_zeit else None,
-                "raum_id": clean_json_id(t.raum_id),
-                "gruppe": (
+        self._write(
+            "termine.json",
+            {
+                "termine": [
                     {
-                        "name": t.gruppe.name,
-                        "groesse": t.gruppe.groesse,
+                        "name": t.name,
+                        "id": t.id,
+                        "lva_id": clean_json_id(t.lva_id),
+                        "typ": t.typ,
+                        "datum": self._fmt_date(t.datum) if t.datum is not None else None,
+                        "start_zeit": self._fmt_time(t.start_zeit) if t.start_zeit else None,
+                        "raum_id": clean_json_id(t.raum_id),
+                        "gruppe": (
+                            {
+                                "name": t.gruppe.name,
+                                "groesse": t.gruppe.groesse,
+                            }
+                            if t.gruppe is not None
+                            else None
+                        ),
+                        "anwesenheitspflicht": t.anwesenheitspflicht,
+                        "notiz": t.notiz,
+                        "zu_besprechen": bool(getattr(t, "zu_besprechen", False)),
+                        "besprechungshinweis": str(getattr(t, "besprechungshinweis", "") or ""),
+                        "duration": t.duration,
+                        "semester_id": clean_json_id(t.semester_id),
+                        "datum_bis": (
+                            self._fmt_date(t.datum_bis) if t.datum_bis is not None else None
+                        ),
+                        "periodizitaet": (
+                            getattr(t, "periodizitaet", None) if t.datum_bis is not None else None
+                        ),
+                        "ausfall_daten": [
+                            self._fmt_date(d) for d in (getattr(t, "ausfall_daten", []) or [])
+                        ],
+                        "serien_ausnahmen": [
+                            {
+                                "original_datum": self._fmt_date(a.original_datum),
+                                "datum": self._fmt_date(a.datum),
+                                "start_zeit": (
+                                    self._fmt_time(a.start_zeit) if a.start_zeit else None
+                                ),
+                                "raum_id": clean_json_id(a.raum_id) or None,
+                                "duration": a.duration,
+                            }
+                            for a in (getattr(t, "serien_ausnahmen", []) or [])
+                        ],
                     }
-                    if t.gruppe is not None
-                    else None
-                ),
-                "anwesenheitspflicht": t.anwesenheitspflicht,
-                "notiz": t.notiz,
-                "zu_besprechen": bool(getattr(t, "zu_besprechen", False)),
-                "besprechungshinweis": str(getattr(t, "besprechungshinweis", "") or ""),
-                "duration": t.duration,
-                "semester_id": clean_json_id(t.semester_id),
-                "datum_bis": self._fmt_date(t.datum_bis) if t.datum_bis is not None else None,
-                "periodizitaet": getattr(t, "periodizitaet", None) if t.datum_bis is not None else None,
-                "ausfall_daten": [
-                    self._fmt_date(d) for d in (getattr(t, "ausfall_daten", []) or [])
-                ],
-                "serien_ausnahmen": [
-                    {
-                        "original_datum": self._fmt_date(a.original_datum),
-                        "datum": self._fmt_date(a.datum),
-                        "start_zeit": self._fmt_time(a.start_zeit) if a.start_zeit else None,
-                        "raum_id": clean_json_id(a.raum_id) or None,
-                        "duration": a.duration,
-                    }
-                    for a in (getattr(t, "serien_ausnahmen", []) or [])
-                ],
-            } for t in termine]
-        })
+                    for t in termine
+                ]
+            },
+        )
 
     def save_settings(self, settings: Dict[str, Any]) -> None:
         save_app_settings(settings)
-
-    
 
     def load_studienrichtungen(self) -> List[Dict[str, Any]]:
         path = self.data_dir / "studienrichtungen.json"
@@ -293,12 +315,9 @@ class DataService:
 
     def save_studienrichtungen(self, studienrichtungen: List[Dict[str, Any]]) -> None:
         cleaned_items = [
-            {**dict(item), "id": clean_json_id(dict(item).get("id"))}
-            for item in studienrichtungen
+            {**dict(item), "id": clean_json_id(dict(item).get("id"))} for item in studienrichtungen
         ]
         self._write("studienrichtungen.json", {"studienrichtungen": cleaned_items})
-
-   
 
     def load_freie_tage(self) -> List[Dict[str, Any]]:
         path = self.data_dir / "freie_tage.json"
@@ -329,8 +348,6 @@ class DataService:
             cleaned["id"] = clean_json_id(cleaned.get("id"))
             cleaned_items.append(cleaned)
         self._write("freie_tage.json", {"freie_tage": cleaned_items})
-
-    
 
     def load_studiensemester(self) -> List[Dict[str, Any]]:
         path = self._src_json_path("studiensemester.json")

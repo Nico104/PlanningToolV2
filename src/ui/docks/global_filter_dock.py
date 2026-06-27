@@ -112,7 +112,9 @@ class GlobalFilterDock(QDockWidget):
         headerBar.addWidget(self._separator())
 
         self.zu_besprechen_cb = TickCheckBox("Zu besprechen")
-        self.zu_besprechen_cb.setToolTip("Nur Termine anzeigen, die als zu besprechen markiert sind")
+        self.zu_besprechen_cb.setToolTip(
+            "Nur Termine anzeigen, die als zu besprechen markiert sind"
+        )
         self.zu_besprechen_cb.setObjectName("HeaderCheck")
         self.zu_besprechen_cb.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         headerBar.addWidget(self.zu_besprechen_cb)
@@ -139,7 +141,9 @@ class GlobalFilterDock(QDockWidget):
         hint = self._widget.sizeHint()
         self._widget.setMinimumWidth(hint.width())
         self._widget.setFixedHeight(hint.height())
-        self._scroll.setFixedHeight(hint.height() + self._scroll.horizontalScrollBar().sizeHint().height() + 2)
+        self._scroll.setFixedHeight(
+            hint.height() + self._scroll.horizontalScrollBar().sizeHint().height() + 2
+        )
 
     def _separator(self) -> QFrame:
         line = QFrame()
@@ -264,7 +268,13 @@ class GlobalFilterDock(QDockWidget):
 
         building_items = [
             (building, building)
-            for building in sorted({str(getattr(r, "gebaeude", "") or "").strip() for r in raum_list if str(getattr(r, "gebaeude", "") or "").strip()})
+            for building in sorted(
+                {
+                    str(getattr(r, "gebaeude", "") or "").strip()
+                    for r in raum_list
+                    if str(getattr(r, "gebaeude", "") or "").strip()
+                }
+            )
         ]
         self._set_combo_items(
             self.building_cb,
@@ -302,8 +312,10 @@ class GlobalFilterDock(QDockWidget):
     def _refresh_room_options(self, current_room) -> None:
         active_building = self.building_cb.currentData() or None
         rooms = [
-            r for r in self._all_rooms
-            if not active_building or str(getattr(r, "gebaeude", "") or "").strip() == active_building
+            r
+            for r in self._all_rooms
+            if not active_building
+            or str(getattr(r, "gebaeude", "") or "").strip() == active_building
         ]
         if current_room and not any(str(getattr(r, "id", "")) == str(current_room) for r in rooms):
             current_room = None

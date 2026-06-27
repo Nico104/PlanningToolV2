@@ -44,18 +44,23 @@ class PlannerWeekView:
             self.week_table.terminDropped.connect(self._on_termin_dropped)
         if hasattr(self.week_table, "set_duration_preview_provider"):
             slot_min = int(self.state.settings.get("time_slot_minutes", 30))
+
             def _dur_provider(tid: str) -> int:
                 t = self.state.termin_map.get(str(tid))
                 return int(t.duration) if t else 0
+
             self.week_table.set_duration_preview_provider(_dur_provider, slot_min)
         if hasattr(self.week_table, "set_color_provider"):
+
             def _color_provider(tid: str) -> QColor:
                 t = self.state.termin_map.get(str(tid))
                 if t:
                     return type_color_for(t.typ)
                 return type_color_for("")
+
             self.week_table.set_color_provider(_color_provider)
         if hasattr(self.week_table, "set_text_provider"):
+
             def _text_provider(tid: str) -> str:
                 t = self.state.termin_map.get(str(tid))
                 if not t or not t.start_zeit or not t.get_end_time():
@@ -63,12 +68,14 @@ class PlannerWeekView:
                 lva = next((l for l in self.state.lvas if l.id == t.lva_id), None)
                 lva_short = f"{t.lva_id}" + ("" if not lva else f" {lva.name}")
                 room_s = str(t.raum_id or "").strip() or "Kein Raum"
-                gname = (t.gruppe.name if t.gruppe else "")
+                gname = t.gruppe.name if t.gruppe else ""
                 grp = "" if (not gname or gname == "-") else f" Gr.{gname}"
                 ap = " AP" if t.anwesenheitspflicht else ""
                 return f"{fmt_time(t.start_zeit)}–{fmt_time(t.get_end_time())} {t.typ} | {room_s} | {lva_short}{grp}{ap}"
+
             self.week_table.set_text_provider(_text_provider)
         if hasattr(self.week_table, "set_conflict_checker"):
+
             def _conflict_checker_week(tid: str, row: int, col: int) -> bool:
                 if not bool(self.state.settings.get("dynamic_drag_conflict_preview", True)):
                     return False
@@ -90,6 +97,7 @@ class PlannerWeekView:
                     use_dragged_room=True,
                     data_dir=self.state.ds.data_dir,
                 )
+
             self.week_table.set_conflict_checker(_conflict_checker_week)
 
         self._setup_table()
@@ -141,7 +149,6 @@ class PlannerWeekView:
         h.setStretchLastSection(False)
         v.setSectionResizeMode(QHeaderView.Stretch)
 
-
     def refresh(self, filtered_termine: List[Termin]) -> None:
         week_mo = self._current_week_monday()
         week_su = week_mo + timedelta(days=6)
@@ -150,7 +157,8 @@ class PlannerWeekView:
         max_weekday = 6 if show_weekend else 4
 
         terms = [
-            t for t in filtered_termine
+            t
+            for t in filtered_termine
             if t.datum is not None
             and week_mo <= t.datum <= week_su
             and t.datum.weekday() <= max_weekday
@@ -169,20 +177,22 @@ class PlannerWeekView:
         - Free days: compact badge inside the day header
         """
         show_weekend = self.state.settings.get("show_weekend", True)
-        days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] if show_weekend else ["Mo", "Di", "Mi", "Do", "Fr"]
+        days = (
+            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+            if show_weekend
+            else ["Mo", "Di", "Mi", "Do", "Fr"]
+        )
         slots = self._time_slots()
         slot_min = self._day_bounds()[2]
 
         header_labels = ["Zeit"]
-        free_day_badges: dict[int, tuple[str, str, str]] = {}
+        free_day_badges = {}
         header_accents = {}
         header_tooltips = {}
         visible_term_counts_by_day = defaultdict(int)
         grid_start_min = slots[0].hour * 60 + slots[0].minute if slots else 0
         grid_end_min = (
-            slots[-1].hour * 60 + slots[-1].minute + slot_min
-            if slots
-            else grid_start_min
+            slots[-1].hour * 60 + slots[-1].minute + slot_min if slots else grid_start_min
         )
         for termin in terms:
             end_time = termin.get_end_time()
@@ -209,14 +219,11 @@ class PlannerWeekView:
                 f"{day}, {day_date.strftime('%d.%m.%Y')}",
                 f"{term_count} sichtbare Termin(e)",
             ]
-            badge_label = self._free_day_provider.badge_for_info(day_info)
-            if day_type in {"feiertag", "vorlesungsfrei"} and badge_label:
-                free_day_badges[1 + i] = (
-                    badge_label,
-                    day_type,
-                    self._free_day_provider.label_for_info(day_info),
-                )
-                tooltip_lines.append(self._free_day_provider.label_for_info(day_info))
+            badge_lines = self._free_day_provider.badge_lines_for_info(day_info)
+            if day_type in {"feiertag", "vorlesungsfrei"} and badge_lines:
+                day_label = self._free_day_provider.label_for_info(day_info)
+                free_day_badges[1 + i] = (badge_lines, day_label)
+                tooltip_lines.append(day_label)
             header_tooltips[1 + i] = "\n".join(tooltip_lines)
 
         # Clear all cell widgets before rebuilding
@@ -254,7 +261,6 @@ class PlannerWeekView:
             it.setFlags(it.flags() & ~Qt.ItemIsEditable)
             it.setTextAlignment(Qt.AlignRight | Qt.AlignTop)
             self.week_table.setItem(r, 0, it)
-        
 
         # render existing Termine into grid as blocks
         by_day = defaultdict(list)

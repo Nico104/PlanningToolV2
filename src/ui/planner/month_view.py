@@ -26,7 +26,16 @@ class PlannerMonthView:
     Clicking a day with events opens a dialog listing that day's termins
     """
 
-    def __init__(self, state, month_table: QTableWidget, day_date, free_day_provider: FreeDayProvider, month_label=None, edit_by_id_cb=None, on_drop_cb=None):
+    def __init__(
+        self,
+        state,
+        month_table: QTableWidget,
+        day_date,
+        free_day_provider: FreeDayProvider,
+        month_label=None,
+        edit_by_id_cb=None,
+        on_drop_cb=None,
+    ):
         self.state = state
         self.table = month_table
         self.day_date = day_date
@@ -70,7 +79,7 @@ class PlannerMonthView:
         self._watcher = _Watcher(self, self.table.viewport())
         self.table.viewport().installEventFilter(self._watcher)
 
-        if hasattr(self.table, 'terminDropped'):
+        if hasattr(self.table, "terminDropped"):
             self.table.terminDropped.connect(self._on_table_drop)
 
     def set_read_only(self, read_only: bool) -> None:
@@ -88,7 +97,11 @@ class PlannerMonthView:
         month = mf.month
 
         show_weekend = self.state.settings.get("show_weekend", True)
-        day_headers = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] if show_weekend else ["Mo", "Di", "Mi", "Do", "Fr"]
+        day_headers = (
+            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+            if show_weekend
+            else ["Mo", "Di", "Mi", "Do", "Fr"]
+        )
         days_in_week = len(day_headers)
         month_weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(year, month)
 
@@ -98,7 +111,7 @@ class PlannerMonthView:
 
         by_date = {}
         for t in filtered_termine:
-            if getattr(t, 'datum', None):
+            if getattr(t, "datum", None):
                 by_date.setdefault(t.datum, []).append(t)
 
         first_day = date(year, month, 1)
@@ -119,7 +132,9 @@ class PlannerMonthView:
                     self.table.setCellWidget(r, c, w)
                 else:
                     items = by_date.get(d, [])
-                    discuss_count = sum(1 for item in items if bool(getattr(item, "zu_besprechen", False)))
+                    discuss_count = sum(
+                        1 for item in items if bool(getattr(item, "zu_besprechen", False))
+                    )
                     day_info = free_days.get(d)
                     day_type = day_info.day_type if day_info else None
 
@@ -197,7 +212,7 @@ class PlannerMonthView:
             return
 
         ids = set(str(x) for x in data)
-        if hasattr(self.state, 'termin_map'):
+        if hasattr(self.state, "termin_map"):
             term_list = [t for tid in ids if (t := self.state.termin_map.get(tid))]
         else:
             term_list = [t for t in self.state.termine if str(t.id) in ids]
@@ -241,17 +256,23 @@ class PlannerMonthView:
 
         new_start = None
         try:
-            t = (self.state.termin_map.get(str(termin_id)) if hasattr(self.state, 'termin_map') else None)
+            t = (
+                self.state.termin_map.get(str(termin_id))
+                if hasattr(self.state, "termin_map")
+                else None
+            )
             if not t:
                 t = next((x for x in self.state.termine if str(x.id) == str(termin_id)), None)
 
-            room_id = getattr(t, 'raum_id', None) if t else None
-            duration = int(getattr(t, 'duration', 0) or 0) if t else 0
+            room_id = getattr(t, "raum_id", None) if t else None
+            duration = int(getattr(t, "duration", 0) or 0) if t else 0
             if duration <= 0:
-                duration = int(self.state.settings.get('time_slot_minutes', 30))
+                duration = int(self.state.settings.get("time_slot_minutes", 30))
 
-            if room_id and getattr(self.state, 'ts', None):
-                free = self.state.ts.find_free_slots_in_room(self.state.termine, room_id, new_date, duration)
+            if room_id and getattr(self.state, "ts", None):
+                free = self.state.ts.find_free_slots_in_room(
+                    self.state.termine, room_id, new_date, duration
+                )
                 if free:
                     new_start = free[0].von
         except Exception:

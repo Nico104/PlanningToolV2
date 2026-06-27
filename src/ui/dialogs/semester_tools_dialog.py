@@ -112,7 +112,9 @@ class SemesterToolsDialog(QDialog):
         layout.setContentsMargins(0, 14, 0, 0)
         layout.setSpacing(12)
 
-        intro = QLabel("Ausgewählte LVAs aus einem Quellsemester in ein Zielsemester kopieren.", self)
+        intro = QLabel(
+            "Ausgewählte LVAs aus einem Quellsemester in ein Zielsemester kopieren.", self
+        )
         intro.setObjectName("SemesterToolsHelp")
         intro.setWordWrap(True)
         layout.addWidget(intro)
@@ -143,7 +145,10 @@ class SemesterToolsDialog(QDialog):
         mode_row.addWidget(self.mode_week_rb)
         mode_row.addWidget(self.mode_year_rb)
         mode_row.addStretch(1)
-        mode_help = QLabel("Gleiche Position im Semester übernimmt den gleichen n-ten Wochentag seit Semesterbeginn, z. B. 2. Dienstag zu 2. Dienstag. Gleicher Kalendertag verschiebt das Datum um ein Jahr.", self)
+        mode_help = QLabel(
+            "Gleiche Position im Semester übernimmt den gleichen n-ten Wochentag seit Semesterbeginn, z. B. 2. Dienstag zu 2. Dienstag. Gleicher Kalendertag verschiebt das Datum um ein Jahr.",
+            self,
+        )
         mode_help.setObjectName("SemesterToolsHelp")
         mode_help.setWordWrap(True)
         mode_layout = QVBoxLayout()
@@ -180,7 +185,9 @@ class SemesterToolsDialog(QDialog):
         layout.setContentsMargins(0, 14, 0, 0)
         layout.setSpacing(12)
 
-        intro = QLabel("Alle Termine des gewählten Semesters werden zur Kontrolle aufgelistet.", self)
+        intro = QLabel(
+            "Alle Termine des gewählten Semesters werden zur Kontrolle aufgelistet.", self
+        )
         intro.setObjectName("SemesterToolsHelp")
         intro.setWordWrap(True)
         layout.addWidget(intro)
@@ -296,7 +303,9 @@ class SemesterToolsDialog(QDialog):
 
     def _refresh_clear_table(self, *_args) -> None:
         semester = self._clear_semester()
-        summaries = semester_lva_summaries(self._termine, self._lvas, semester.id if semester else "")
+        summaries = semester_lva_summaries(
+            self._termine, self._lvas, semester.id if semester else ""
+        )
 
         self.clear_table.setRowCount(len(summaries))
         for row, summary in enumerate(summaries):
@@ -343,7 +352,9 @@ class SemesterToolsDialog(QDialog):
         self.copy_summary.setText(
             f"{selected_lvas} LVA ausgewählt · {selected_terms} Termine · Ziel enthält {target_terms} Termine"
         )
-        self.copy_btn.setEnabled(bool(source and target and source.id != target.id and selected_terms > 0))
+        self.copy_btn.setEnabled(
+            bool(source and target and source.id != target.id and selected_terms > 0)
+        )
 
     def _refresh_clear_summary(self) -> None:
         semester = self._clear_semester()

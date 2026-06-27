@@ -6,8 +6,13 @@ from types import SimpleNamespace
 from PySide6.QtCore import QDate
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QStackedWidget, QTableWidget, QPushButton
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QStackedWidget,
+    QTableWidget,
+    QPushButton,
 )
 
 from ...services.data_service import DataService
@@ -25,13 +30,13 @@ from .timeslotcell import TimeSlotCell
 from ..components.dragdrop.time_grid_drop_table import TimeGridDropTable
 from ..components.dragdrop.month_drop_table import MonthDropTable
 
+
 class PlannerWorkspace(QWidget):
-    """Main planner container coordinating day/week/month views and shared state
-    """
+    """Main planner container coordinating day/week/month views and shared state"""
 
     def __init__(self, parent: QWidget, ds: DataService, on_data_changed, global_filter_dock=None):
         super().__init__(parent)
-        
+
         self.on_data_changed = on_data_changed
         self._previous_year_enabled = False
 
@@ -166,7 +171,6 @@ class PlannerWorkspace(QWidget):
         self.day_date.setObjectName("DateEdit")
         self.view_cb.setObjectName("HeaderCombo")
 
-
     def reload_and_refresh_everything(self) -> None:
         self.refresh(emit=False)
         if callable(self.on_data_changed):
@@ -214,7 +218,6 @@ class PlannerWorkspace(QWidget):
 
         max_d = max(dated)
         self.day_date.setDate(date_to_qdate(max_d))
-
 
     def current_filters(self):
         # getattr wird verwendet, falls _global_filter noch nicht gesetzt wurde
@@ -304,7 +307,9 @@ class PlannerWorkspace(QWidget):
 
     @staticmethod
     def _previous_semester_id(semester_id: str) -> str:
-        match = re.match(r"^(SS|WS)[\s_-]?(\d{2}|\d{4})$", str(semester_id or "").strip(), re.IGNORECASE)
+        match = re.match(
+            r"^(SS|WS)[\s_-]?(\d{2}|\d{4})$", str(semester_id or "").strip(), re.IGNORECASE
+        )
         if not match:
             return semester_id
         kind = match.group(1).upper()
@@ -320,7 +325,8 @@ class PlannerWorkspace(QWidget):
         rooms = self.state.raeume
         if filters.get("gebaeude"):
             rooms = [
-                r for r in rooms
+                r
+                for r in rooms
                 if str(getattr(r, "gebaeude", "") or "").strip() == filters["gebaeude"]
             ]
         if filters["raum_id"]:
@@ -330,8 +336,10 @@ class PlannerWorkspace(QWidget):
     def _filter_terms_by_building(self, termine: list, gebaeude: str) -> list:
         room_by_id = {str(room.id): room for room in self.state.raeume}
         return [
-            termin for termin in termine
-            if str(getattr(room_by_id.get(str(termin.raum_id)), "gebaeude", "") or "").strip() == gebaeude
+            termin
+            for termin in termine
+            if str(getattr(room_by_id.get(str(termin.raum_id)), "gebaeude", "") or "").strip()
+            == gebaeude
         ]
 
     def _paged_day_rooms(self, rooms: list, has_room_filter: bool) -> list:
@@ -451,7 +459,14 @@ class PlannerWorkspace(QWidget):
         self.refresh(emit=False)
 
     def _jump_to_first_termin(self, ids: set[str]) -> None:
-        t = next((self.state.termin_map.get(str(tid)) for tid in ids if self.state.termin_map.get(str(tid))), None)
+        t = next(
+            (
+                self.state.termin_map.get(str(tid))
+                for tid in ids
+                if self.state.termin_map.get(str(tid))
+            ),
+            None,
+        )
         if not t or not t.datum:
             return
 
@@ -489,7 +504,9 @@ class PlannerWorkspace(QWidget):
                                 card.setFocus()
                                 first_focused = True
 
-    def _focus_visible_termin_card(self, table: QTableWidget, ids: set[str], source_ids: set[str]) -> None:
+    def _focus_visible_termin_card(
+        self, table: QTableWidget, ids: set[str], source_ids: set[str]
+    ) -> None:
         for r in range(table.rowCount()):
             for c in range(table.columnCount()):
                 cell_widget = table.cellWidget(r, c)
@@ -521,7 +538,9 @@ class PlannerWorkspace(QWidget):
                 if cell_widget is None:
                     continue
                 day_ids = cell_widget.property("day_ids") or []
-                has_match = any(str(tid) in ids or source_termin_id(tid) in source_ids for tid in day_ids)
+                has_match = any(
+                    str(tid) in ids or source_termin_id(tid) in source_ids for tid in day_ids
+                )
                 cell_widget.setProperty("monthConflictHighlight", has_match)
                 cell_widget.style().unpolish(cell_widget)
                 cell_widget.style().polish(cell_widget)

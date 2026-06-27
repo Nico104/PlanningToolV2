@@ -30,7 +30,11 @@ class Toast(QWidget):
             screen = anchor.windowHandle().screen() if anchor.windowHandle() else None
             if screen is None:
                 screen = QApplication.screenAt(anchor_rect.center())
-            screen_rect = screen.availableGeometry() if screen else QApplication.primaryScreen().availableGeometry()
+            screen_rect = (
+                screen.availableGeometry()
+                if screen
+                else QApplication.primaryScreen().availableGeometry()
+            )
 
             w = self.sizeHint().width()
             h = self.sizeHint().height()

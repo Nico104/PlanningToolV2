@@ -3,17 +3,27 @@ from typing import Optional, Sequence
 from PySide6.QtCore import Qt
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QDialog, QDialogButtonBox, QMessageBox,
-    QPushButton, QHBoxLayout, QLabel, QFrame,
+    QWidget,
+    QVBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QDialog,
+    QDialogButtonBox,
+    QMessageBox,
+    QPushButton,
+    QHBoxLayout,
+    QLabel,
+    QFrame,
 )
 
 from ...core.models import Studiensemester, Lehrveranstaltung, Vortragende
 from ..components.widgets.chip_list_widget import ChipListWidget
 from ..components.widgets.tight_combobox import TightComboBox
 
+
 class LVADialog(QDialog):
-    """Dialog for creating or editing a LVA
-    """
+    """Dialog for creating or editing a LVA"""
+
     def __init__(
         self,
         parent: QWidget,
@@ -37,7 +47,9 @@ class LVADialog(QDialog):
         title = QLabel("Lehrveranstaltung", self)
         title.setObjectName("DialogTitle")
         lay.addWidget(title)
-        subtitle = QLabel("Stammdaten, Vortragende und Studiensemester-Zuordnung einer LVA erfassen.", self)
+        subtitle = QLabel(
+            "Stammdaten, Vortragende und Studiensemester-Zuordnung einer LVA erfassen.", self
+        )
         subtitle.setObjectName("DialogSubtitle")
         subtitle.setWordWrap(True)
         lay.addWidget(subtitle)
@@ -73,8 +85,13 @@ class LVADialog(QDialog):
             label = f"{fid} - {fname}" if fname else fid
             self.studienrichtung_cb.addItem(label, fid)
 
-        if self._studienrichtung_value and self.studienrichtung_cb.findData(self._studienrichtung_value) < 0:
-            self.studienrichtung_cb.addItem(self._studienrichtung_value, self._studienrichtung_value)
+        if (
+            self._studienrichtung_value
+            and self.studienrichtung_cb.findData(self._studienrichtung_value) < 0
+        ):
+            self.studienrichtung_cb.addItem(
+                self._studienrichtung_value, self._studienrichtung_value
+            )
 
         idx_studienrichtung = self.studienrichtung_cb.findData(self._studienrichtung_value)
         if idx_studienrichtung >= 0:
@@ -91,7 +108,7 @@ class LVADialog(QDialog):
                     continue
                 sem = next((sem for sem in self.sem_objects if sem.id == sid), None)
                 if sem:
-                    display = sem.name 
+                    display = sem.name
                     display = str(display).strip()
                     if display and display not in self.sem_chip_items:
                         self.sem_chip_items.append(display)
@@ -99,20 +116,23 @@ class LVADialog(QDialog):
                     if sid not in self.sem_chip_items:
                         self.sem_chip_items.append(sid)
         self.sem_list = ChipListWidget(self.sem_chip_items)
+
         def refresh_sem_cb():
             self.sem_cb.clear()
             chip_names = set(self.sem_list.items)
             for sem in self.sem_objects:
-                
+
                 if sem.name not in chip_names:
                     if sem.notiz:
                         display_full = f"{sem.name} - {sem.notiz}"
                     else:
                         display_full = sem.name
                     self.sem_cb.addItem(display_full, sem.id)
+
         def on_chip_deleted(idx):
             self.sem_list.removeItem(idx)
             refresh_sem_cb()
+
         self.sem_list.chipDeleted.connect(on_chip_deleted)
 
         sem_add_layout = QHBoxLayout()
@@ -135,13 +155,14 @@ class LVADialog(QDialog):
                 return
             # Always use only the name part for chips
             display_full = self.sem_cb.currentText()
-            name = display_full.split(' - ')[0]
+            name = display_full.split(" - ")[0]
             # Avoid duplicates
             for chip in self.sem_list.items:
                 if name == chip:
                     return
             self.sem_list.addItem(name)
             refresh_sem_cb()
+
         self.btn_add_sem.clicked.connect(add_sem)
 
         form.addRow("LVA-Nr.:", self.id_le)

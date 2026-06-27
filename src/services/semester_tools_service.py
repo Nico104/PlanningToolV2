@@ -7,7 +7,6 @@ from typing import Iterable, List, Sequence
 from ..core.models import Lehrveranstaltung, Semester, Termin
 from .id_service import next_id
 
-
 DATE_MODE_SEMESTER_WEEK = "semester_week"
 DATE_MODE_PLUS_YEAR = "plus_year"
 
@@ -55,7 +54,9 @@ def semester_lva_summaries(
 
 
 def count_semester_termine(termine: Iterable[Termin], semester_id: str) -> int:
-    return sum(1 for termin in termine if str(getattr(termin, "semester_id", "")) == str(semester_id))
+    return sum(
+        1 for termin in termine if str(getattr(termin, "semester_id", "")) == str(semester_id)
+    )
 
 
 def _add_years(value: date, years: int) -> date:
@@ -76,13 +77,17 @@ def map_date_to_target_semester(value: date, source: Semester, target: Semester,
     return target_week_start + timedelta(days=weekday_offset)
 
 
-def _map_optional_date(value: date | None, source: Semester, target: Semester, mode: str) -> date | None:
+def _map_optional_date(
+    value: date | None, source: Semester, target: Semester, mode: str
+) -> date | None:
     if value is None:
         return None
     return map_date_to_target_semester(value, source, target, mode)
 
 
-def _map_series_end_date(value: date | None, source: Semester, target: Semester, mode: str) -> date | None:
+def _map_series_end_date(
+    value: date | None, source: Semester, target: Semester, mode: str
+) -> date | None:
     if value is None:
         return None
     if mode == DATE_MODE_SEMESTER_WEEK and value == source.end:
@@ -125,18 +130,30 @@ def copy_semester_termine(
                 semester_id=target.id,
                 datum=_map_optional_date(termin.datum, source, target, date_mode),
                 datum_bis=_map_series_end_date(termin.datum_bis, source, target, date_mode),
-                ausfall_daten=[
-                    map_date_to_target_semester(value, source, target, date_mode)
-                    for value in (getattr(termin, "ausfall_daten", []) or [])
-                ] if copy_ausfall_daten else [],
-                serien_ausnahmen=[
-                    replace(
-                        value,
-                        original_datum=map_date_to_target_semester(value.original_datum, source, target, date_mode),
-                        datum=map_date_to_target_semester(value.datum, source, target, date_mode),
-                    )
-                    for value in (getattr(termin, "serien_ausnahmen", []) or [])
-                ] if copy_ausfall_daten else [],
+                ausfall_daten=(
+                    [
+                        map_date_to_target_semester(value, source, target, date_mode)
+                        for value in (getattr(termin, "ausfall_daten", []) or [])
+                    ]
+                    if copy_ausfall_daten
+                    else []
+                ),
+                serien_ausnahmen=(
+                    [
+                        replace(
+                            value,
+                            original_datum=map_date_to_target_semester(
+                                value.original_datum, source, target, date_mode
+                            ),
+                            datum=map_date_to_target_semester(
+                                value.datum, source, target, date_mode
+                            ),
+                        )
+                        for value in (getattr(termin, "serien_ausnahmen", []) or [])
+                    ]
+                    if copy_ausfall_daten
+                    else []
+                ),
             )
         )
 
@@ -144,6 +161,10 @@ def copy_semester_termine(
     return out, len(created)
 
 
-def delete_semester_termine(termine: Sequence[Termin], semester_id: str) -> tuple[List[Termin], int]:
-    kept = [termin for termin in termine if str(getattr(termin, "semester_id", "")) != str(semester_id)]
+def delete_semester_termine(
+    termine: Sequence[Termin], semester_id: str
+) -> tuple[List[Termin], int]:
+    kept = [
+        termin for termin in termine if str(getattr(termin, "semester_id", "")) != str(semester_id)
+    ]
     return kept, len(termine) - len(kept)

@@ -1,9 +1,16 @@
 from pathlib import Path
 
-from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import (
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+)
 
 from ...services.data_folder_service import initialize_missing_project_files, inspect_project_folder
-
 
 PROJECT_PART_LABELS = {
     "raeume.json": "Räume",
@@ -30,7 +37,9 @@ def _add_list_section(layout: QVBoxLayout, title: str, items: list[str], parent)
         layout.addWidget(row)
 
 
-def _confirm(parent, *, title: str, text: str, target_dir: Path, inspection, confirm_label: str) -> bool:
+def _confirm(
+    parent, *, title: str, text: str, target_dir: Path, inspection, confirm_label: str
+) -> bool:
     dlg = QDialog(parent)
     dlg.setObjectName("AppDialog")
     dlg.setWindowTitle(title)
@@ -64,8 +73,12 @@ def _confirm(parent, *, title: str, text: str, target_dir: Path, inspection, con
     folder_path.setWordWrap(True)
     section_layout.addWidget(folder_path)
 
-    _add_list_section(section_layout, "Bereits vorhanden", project_part_labels(inspection.valid_files), section)
-    _add_list_section(section_layout, "Wird vorbereitet", project_part_labels(inspection.missing_files), section)
+    _add_list_section(
+        section_layout, "Bereits vorhanden", project_part_labels(inspection.valid_files), section
+    )
+    _add_list_section(
+        section_layout, "Wird vorbereitet", project_part_labels(inspection.missing_files), section
+    )
     root.addWidget(section)
 
     buttons = QHBoxLayout()
@@ -89,7 +102,9 @@ def _show_invalid(parent, invalid_files: list[str]) -> None:
     msg.setIcon(QMessageBox.Critical)
     msg.setWindowTitle("Projektdateien ungültig")
     msg.setText("Der gewählte Ordner enthält ungültige Projektdateien.")
-    msg.setInformativeText("Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner.")
+    msg.setInformativeText(
+        "Die Dateien wurden nicht überschrieben. Bitte wählen Sie einen anderen Ordner."
+    )
     msg.setDetailedText("\n".join(invalid_files))
     msg.exec()
 

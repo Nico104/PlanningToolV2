@@ -6,8 +6,7 @@ from .termincard import TerminCard
 
 
 class TimeSlotCell(QWidget):
-    """Container widget for one planner table cell that can stack multiple TerminCards
-    """
+    """Container widget for one planner table cell that can stack multiple TerminCards"""
 
     def __init__(self, target_date: date, parent=None):
         super().__init__(parent)
@@ -17,7 +16,6 @@ class TimeSlotCell(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(2)
         self.setLayout(self.layout)
-
 
         self.setStyleSheet("background-color: transparent;")
 
