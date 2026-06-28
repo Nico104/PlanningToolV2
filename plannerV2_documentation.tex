@@ -4,22 +4,31 @@
 \usepackage[T1]{fontenc}
 \usepackage[ngerman]{babel}
 \usepackage{geometry}
-\usepackage{hyperref}
 \usepackage{setspace}
 \usepackage{placeins}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{lmodern}
+
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{ragged2e}
+\usepackage[hidelinks]{hyperref}
+
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\emergencystretch=2em
 
 \geometry{a4paper, margin=2.5cm}
 \onehalfspacing
 
 \title{Konzeption und Implementierung eines Python-basierten Planungstools zur Unterstützung der Lehrveranstaltungsplanung}
 \author{Nicolas Carraro}
-% \date{\today}
+\date{\today}
 
 \begin{document}
 
-%\maketitle
+\hypersetup{pageanchor=false}
 \begin{titlepage}
 \centering
 
@@ -38,6 +47,9 @@
 \begin{tabular}{ll}
 Verfasser: & Nicolas Carraro \\
 Matrikelnummer: & 12202357 \\
+Studium: & Bachelorstudium Elektrotechnik und Informationstechnik \\
+Studienkennzahl: & UE 033 235 \\
+Lehrveranstaltung: & PR Bachelorarbeit \\
 Betreuer: & Univ.Prof. Dipl.-Ing. Dr.techn. Michael Waltl \\
 \end{tabular}
 
@@ -46,6 +58,9 @@ Betreuer: & Univ.Prof. Dipl.-Ing. Dr.techn. Michael Waltl \\
 Wien, \today
 
 \end{titlepage}
+\hypersetup{pageanchor=true}
+
+\pagenumbering{Roman}
 
 \section*{Kurzfassung}
 \addcontentsline{toc}{section}{Kurzfassung}
@@ -88,6 +103,8 @@ UI & User Interface \\
 
 \newpage
 
+\clearpage
+\pagenumbering{arabic}
 \section{Einleitung}
 
 \subsection{Problemstellung}
@@ -178,7 +195,7 @@ Dadurch wird die manuelle Planung mit zunehmender Anzahl an Terminen immer aufwe
 
 \subsection{Softwaregestützte Planung}
 
-Eine softwaregestützte Planung unterstützt den Planungsprozess vor allem dadurch, dass viele einzelne Informationen besser zusammenzuführen werden. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung oder einem Raum.
+Eine softwaregestützte Planung unterstützt den Planungsprozess vor allem dadurch, dass viele einzelne Informationen besser zusammengeführt werden. Anstatt Termine nur in Tabellen einzutragen, können sie in einer Anwendung direkt mit weiteren Daten verbunden werden, zum Beispiel mit einer Lehrveranstaltung oder einem Raum.
 
 Ein Vorteil ist, dass die Daten an einer zentralen Stelle verwaltet werden können. Wenn ein Termin geändert wird, muss diese Änderung nicht in mehreren Tabellen oder Dateien nachgetragen werden. Die angepassten Daten können direkt in der Anwendung angezeigt und weiterverwendet werden.
 
@@ -295,7 +312,7 @@ Stabilität & Die Anwendung soll Daten zuverlässig speichern und laden können.
 \hline
 Responsivität & Die Anwendung soll auch bei größeren Terminmengen flüssig reagieren. Rechenintensive Komfortfunktionen sollen deshalb bei Bedarf deaktiviert werden können. \\
 \hline
-Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden können und keinen Server benötigen. \\
+Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden können und keinen Server benötigen. Optionale Importfunktionen, etwa für Feiertage oder akademische freie Zeiträume, können externe Quellen verwenden. \\
 \hline
 \end{tabular}
 \caption{Nicht-funktionale Anforderungen an das Planungstool}
@@ -321,6 +338,15 @@ Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichze
 Das Planungstool wurde als lokale Desktop-Anwendung konzipiert und besteht nicht nur aus einer einzelnen Kalenderansicht, sondern aus mehreren Bereichen, die zusammenarbeiten. Im Mittelpunkt steht das Hauptfenster, das die verschiedenen Teile der Benutzeroberfläche verbindet und die zentralen Abläufe der Anwendung steuert.
 
 Grundsätzlich lässt sich die Anwendung in drei Bereiche einteilen: die Benutzeroberfläche, die Datenverwaltung und die Planungslogik. Die Benutzeroberfläche stellt Kalenderansichten, Listen, Eingabefenster und weitere Bedienelemente bereit. Die Datenverwaltung ist dafür zuständig, Planungsdaten zu laden, zu speichern und für die anderen Teile der Anwendung verfügbar zu machen. Die Planungslogik umfasst Funktionen wie Filterung, Konflikterkennung und die Aktualisierung der Anzeige nach Änderungen.
+
+Abbildung \ref{fig:architektur} zeigt diese Aufteilung auf einer abstrakten Ebene. Dabei werden nicht einzelne Methoden oder Signal-Slot-Verbindungen dargestellt, sondern die wichtigsten Komponenten und Datenflüsse zwischen Benutzeroberfläche, Services und Datenhaltung.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{bilder/planungstool_flowchart.png}
+    \caption{Logische Architektur und zentrale Datenflüsse des Planungstools}
+    \label{fig:architektur}
+\end{figure}
 
 Der Start der Anwendung erfolgt über die zentrale GUI-Initialisierung. Dabei werden zunächst Einstellungen und Datenpfad geprüft. Anschließend wird das Hauptfenster erstellt, das die zentrale Steuerungsrolle übernimmt. Das Hauptfenster erzeugt den Kalender, die Terminliste, den Dateneditor, den globalen Filterbereich, die Datumsnavigation und die Konfliktanzeige.
 Damit ist das Hauptfenster nicht nur ein Container für die grafischen Elemente, sondern koordiniert die Abläufe innerhalb der Anwendung.
@@ -354,7 +380,9 @@ Neben den Terminen gibt es weitere Datenbereiche. Dazu zählen Lehrveranstaltung
 
 Termine, Lehrveranstaltungen, Räume und Studienrichtungen verwenden IDs, da diese Einträge entweder von anderen Daten referenziert werden oder bereits fachliche Schlüssel wie LVA-Nummern bzw. Raumcodes besitzen. Freie Zeiträume bilden eine Ausnahme: Sie werden nicht über eine eigene ID verwaltet, sondern über Typ, Beschreibung, Startdatum und Enddatum als gleicher Eintrag erkannt. Dadurch können sie einfacher in JSON-, Excel- oder CSV-Dateien bearbeitet werden. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
 
-Neben den Planungsdaten speichert die Anwendung auch Einstellungen und Konfliktpräferenzen in JSON-Dateien. So bleiben persönliche Anpassungen, etwa gespeicherte Layouts oder ausgewählte Konfliktregeln, auch beim nächsten Start erhalten.
+Neben den Projektdaten verwendet die Anwendung JSON-basierte Standard- und Benutzerkonfigurationen.
+Standardwerte liegen im Projekt, persönliche Einstellungen wie Datenpfad, Theme, Layouts und Konfliktregeln werden im Benutzer-Konfigurationsordner gespeichert und beim Laden mit den Standardwerten zusammengeführt.
+So bleiben persönliche Anpassungen, etwa gespeicherte Layouts oder ausgewählte Konfliktregeln, auch beim nächsten Start erhalten.
 
 \subsection{Planungsworkflow}
 
@@ -418,7 +446,9 @@ Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System 
 Das folgende Beispiel zeigt eine solche Signal-Verbindung. Wird in der Konfliktanzeige ein Konflikt ausgewählt, wird das entsprechende Signal an den Kalender weitergegeben.
 
 \begin{verbatim}
-self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
+self.conflicts_dock.conflict_items_highlight.connect(
+    self.planner.highlight_termine
+)
 \end{verbatim}
 
 Dadurch muss die Konfliktanzeige nicht selbst wissen, wie Termine im Kalender dargestellt werden. Sie löst nur ein Signal aus, während der Kalender die Hervorhebung übernimmt.
@@ -489,8 +519,18 @@ Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. 
 
 \begin{verbatim}
 class TerminCard(QFrame):
-    def __init__(self, termin_id: str, title: str, date: str, time: str,
-                 typ: str, raum: str, ap: bool, duration: int = 0, name: str = None, parent=None):
+    def __init__(
+        self,
+        termin_id: str,
+        title: str,
+        date: str,
+        time: str,
+        typ: str,
+        raum: str,
+        duration: int = 0,
+        name: str = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self.setObjectName("TerminCard")
 \end{verbatim}
@@ -530,7 +570,7 @@ Der Dateneditor ist in Abbildung \ref{fig:dateneditor} dargestellt.
 
 Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgeführt werden.
 
-Die Bearbeitung der Daten folgt dem CRUD-Prinzip(Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
+Die Bearbeitung der Daten folgt dem CRUD-Prinzip (Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
 
 \begin{verbatim}
 def read_studiensemester_models(self) -> List[Studiensemester]:
@@ -630,7 +670,9 @@ class FilterState:
 Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben.
 
 \begin{verbatim}
-self.global_filter_dock.filtersChanged.connect(self._on_global_filters_changed)
+self.global_filter_dock.filtersChanged.connect(
+    self._on_global_filters_changed
+)
 \end{verbatim}
 
 %Anschließend wird der Zustand an den Kalender weitergegeben. Der Kalender speichert diesen Zustand und verwendet ihn intern für die Kalenderansichten.
@@ -662,24 +704,28 @@ def detect_lecturer_conflicts(self, termine):
         for i, t1 in enumerate(terms):
             for t2 in terms[i + 1:]:
                 if self.times_overlap(t1, t2):
-                    conflicts.append(self._create_conflict("lecturer", t1, t2))
+                    conflicts.append(
+                        self._create_conflict("lecturer", t1, t2)
+                    )
 
     return conflicts
 \end{verbatim}
 Die innere Schleife verwendet \texttt{terms[i + 1:]}, damit ein Termin nur mit den nachfolgenden Terminen der Liste verglichen wird. Dadurch wird jedes Terminpaar genau einmal geprüft und doppelte oder selbstbezogene Vergleiche werden vermieden.
 
-Die Prüfung ist regelbasiert aufgebaut. Die Regeln werden aus der Datei \texttt{konflikte.json} geladen und können einzeln aktiviert, deaktiviert oder angepasst werden. Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
+Die Prüfung ist regelbasiert aufgebaut.
+Die Standardregeln liegen in \texttt{src/konflikte.json}. Beim Laden werden diese mit einer nutzerspezifischen Konfiguration zusammengeführt.
+Dadurch können einzelne Regeln aktiviert, deaktiviert oder parametrisiert werden, während neue Standardregeln weiterhin übernommen werden.
+Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
 
 \begin{verbatim}
 {
     "name": "Raum-Konflikt",
     "key": "room_conflict",
     "enabled": true,
-    "type": "conflict",
-    "description": "Zwei Termine im selben Raum zur selben Zeit.",
-    "message_template": "{left_lva} ({left_room}) $\leftrightarrow$ {right_lva} ({right_room})"
+    "type": "conflict"
 },
 \end{verbatim}
+Dieser Ausschnitt zeigt eine einzelne Konfliktregel. Über \texttt{key} wird die Regel in der Anwendung einer konkreten Prüffunktion zugeordnet.
 
 Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. 
 Die Darstellung erkannter Konflikte ist in Abbildung \ref{fig:konfliktanzeige} zu sehen.
@@ -694,10 +740,6 @@ Die Darstellung erkannter Konflikte ist in Abbildung \ref{fig:konfliktanzeige} z
 Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender hervorgehoben werden. Dadurch ist sofort erkennbar, an welcher Stelle der Planung das Problem liegt.
 
 Dafür wird die Konfliktanzeige im Hauptfenster über ein Signal mit der Kalenderansicht verbunden.
-
-\begin{verbatim}
-self.conflicts_dock.conflict_items_highlight.connect(self.planner.highlight_termine)
-\end{verbatim}
 
 Beim Anklicken einer Konfliktkarte werden die betroffenen Termin-IDs gesendet. Diese IDs dienen als eindeutige Referenz auf die Termine, die im Kalender markiert werden sollen.
 
@@ -737,20 +779,13 @@ tmp.replace(path)
 Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Export kann entweder das gesamte Projekt oder ein einzelner Projektbereich exportiert werden. Das gesamte Projekt kann als JSON- oder Excel-Datei gespeichert werden.
 Einzelne Projektbereiche, zum Beispiel freie Zeiträume, Räume oder Lehrveranstaltungen, können als JSON, Excel oder CSV exportiert und später wieder importiert werden.
 Die Excel-Datei enthält getrennte Tabellenblätter für Räume, Lehrveranstaltungen, Termine, Studienrichtungen und freie Zeiträume. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
-Neben dem vollständigen Projektexport gibt es einen speziellen Export für Lehrende. Dabei können LVAs mit den zugehörigen Lehrpersonen, ein oder mehrere Semester sowie ein Zeitraum ausgewählt werden. Die Termine werden anschließend entweder als Tabellenliste oder als Wochenkalender in eine Excel-Datei geschrieben.
+Neben dem vollständigen Projektexport gibt es einen speziellen Export für Lehrende. Dabei können LVAs mit den zugehörigen Lehrpersonen, ein oder mehrere Semester sowie ein Zeitraum ausgewählt werden.
+Die Termine werden anschließend entweder als Tabellenliste oder als Wochenkalender in eine Excel-Datei geschrieben.
 
-
-\begin{verbatim}
-files = [
-    "raeume.json",
-    "lehrveranstaltungen.json",
-    "termine.json",
-    "studienrichtungen.json",
-    "freie_tage.json",
-]
-\end{verbatim}
 
 Beim Import können JSON-, Excel- oder CSV-Dateien eingelesen werden. Die Anwendung erkennt Projektdateien, Raumlisten und LVA-Listen, zeigt neue, geänderte und bereits vorhandene Einträge an und überspringt Einträge mit fehlenden Pflichtverweisen. Danach kann entschieden werden, ob die importierten Änderungen übernommen werden sollen. Dadurch werden vorhandene Daten nicht ungeprüft ersetzt.
+
+Freie Tage können zusätzlich über einen eigenen Dialog aus OpenHolidays und dem akademischen Kalender der TU Wien importiert und vor dem Speichern mit bestehenden Einträgen abgeglichen werden.
 
 Zusätzlich enthält die Anwendung optionale Standarddaten. Diese basieren auf TISS-Daten der TU Wien für Räume und auf ETIT-LVA-Daten mit Stand Juni 2026. Beim Anlegen eines neuen Projekts können diese Daten übernommen, gezielt ausgewählt oder übersprungen werden. Sie dienen als Einstiegshilfe und ersetzen keine direkte Anbindung an TISS.
 
@@ -807,7 +842,8 @@ Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung über
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -825,14 +861,15 @@ LVA erstellen & Eine neue Lehrveranstaltung wird über den LVA-Dialog erstellt. 
 \hline
 Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird gespeichert und steht bei der Terminplanung zur Auswahl. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
 \label{tab:test-stammdaten}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -850,14 +887,15 @@ Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den K
 \hline
 Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
 \label{tab:test-kalender}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -871,14 +909,15 @@ Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Termin
 \hline
 Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Tests der Filterung und Aktualisierung}
 \label{tab:test-filter}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -900,18 +939,17 @@ Drag-and-Drop mit Konfliktvorschau & Ein Termin wird in der Tages- oder Wochenan
 \hline
 Dynamische Konfliktvorschau deaktivieren & Die Einstellung für die dynamische Konfliktvorschau wird deaktiviert und ein Termin wird per Drag-and-Drop verschoben. & Während des Ziehens wird keine rote Konfliktvorschau angezeigt, das Verschieben bleibt möglich. \\
 \hline
-Konfliktanzeige nach deaktivierter Vorschau & Nach deaktivierter Vorschau wird ein Termin so verschoben, dass ein Konflikt entsteht. & Der Konflikt wird nach der Änderung weiterhin in der Konfliktanzeige dargestellt. \\
-\hline
 Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem leistungsschwächeren Gerät mit vielen Terminen verwendet. Ein Termin wird mit aktivierter und anschließend mit deaktivierter dynamischer Konfliktvorschau per Drag-and-Drop verschoben. & Bei aktivierter Vorschau kann das Verschieben verzögert reagieren. Nach dem Deaktivieren der dynamischen Vorschau bleibt das Drag-and-Drop flüssiger. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Tests der Konflikterkennung}
 \label{tab:test-konflikte}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -921,14 +959,15 @@ Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetrage
 \hline
 Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Fehler- und Validierungstests}
 \label{tab:test-validierung}
 \end{table}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{8cm}|}
+\small
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
@@ -956,7 +995,7 @@ Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die
 \hline
 Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. \\
 \hline
-\end{tabular}
+\end{tabularx}
 \caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
 \label{tab:test-datenmanagement}
 \end{table}
@@ -965,7 +1004,7 @@ Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeicher
 
 \subsection{Bewertung der Ergebnisse}
 
-Die manuellen Tests zeigen, dass die zentralen Funktionen des Planungstools zuverlässig arbeiten. Termine lassen sich erstellen, bearbeiten, löschen, verschieben und speichern. Auch die Kalenderansichten, Filter, Konfliktanzeige sowie der Import und Export haben in den getesteten Fällen wie erwartet funktioniert.
+Die manuellen Tests zeigen, dass die zentralen Funktionen in den geprüften Szenarien zuverlässig arbeiten. Termine lassen sich erstellen, bearbeiten, löschen, verschieben und speichern. Auch die Kalenderansichten, Filter, Konfliktanzeige sowie der Import und Export haben in den getesteten Fällen wie erwartet funktioniert.
 
 Außerdem wurde deutlich, dass typische Planungskonflikte erkannt werden. Dazu gehören zum Beispiel doppelte Raumbelegungen, Überschneidungen bei Lehrpersonen oder Termine an freien Tagen.
 
