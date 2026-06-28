@@ -210,7 +210,6 @@ class PlannerWeekView:
             day_date = week_mo + timedelta(days=i)
             header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}")
             day_info = self._free_days_by_date.get(day_date)
-            day_type = day_info.day_type if day_info else None
             term_count = visible_term_counts_by_day.get(day_date, 0)
             accent = week_day_accent_color(term_count)
             if accent is not None:
@@ -220,8 +219,8 @@ class PlannerWeekView:
                 f"{term_count} sichtbare Termin(e)",
             ]
             badge_lines = self._free_day_provider.badge_lines_for_info(day_info)
-            if day_type in {"feiertag", "vorlesungsfrei"} and badge_lines:
-                day_label = self._free_day_provider.label_for_info(day_info)
+            if badge_lines:
+                day_label = "\n".join(line.text for line in badge_lines if line.text)
                 free_day_badges[1 + i] = (badge_lines, day_label)
                 tooltip_lines.append(day_label)
             header_tooltips[1 + i] = "\n".join(tooltip_lines)

@@ -3,7 +3,7 @@ import sys
 
 from PySide6.QtCore import QLibraryInfo, QLocale, QTimer, QTranslator
 from PySide6.QtGui import QPalette, QColor, QIcon
-from PySide6.QtWidgets import QApplication, QMessageBox, QFileDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
 
 from ....services.data_folder_service import (
     data_path_for_settings,
@@ -13,7 +13,7 @@ from ....services.data_folder_service import (
 )
 from ... import resources_rc  # type: ignore  # noqa: F401
 from ...components.widgets.action_dialog import ActionDialog, DialogAction
-from ...utils.project_folder_flow import prepare_project_folder
+from ...utils.project_folder_flow import clear_and_create_project_folder, prepare_project_folder
 from ...utils.qss_tokens import set_qss_tokens
 from .main_window import MainWindow
 
@@ -84,13 +84,18 @@ def _invalid_data_dir_action(data_dir: Path, *, prepared: bool) -> str | None:
         actions=[
             DialogAction(
                 "reset",
-                "Gespeicherten Pfad vergessen",
-                "Die App vergisst diesen Ordner und fragt danach erneut nach einem Projektordner.",
+                "Gespeicherten Pfad zurücksetzen",
+                "Die App entfernt diesen gespeicherten Pfad und fragt danach erneut nach einem Projektordner.",
             ),
             DialogAction(
                 "choose",
                 "Anderen Projektordner wählen",
                 "Einen vorhandenen Projektordner direkt auswählen.",
+            ),
+            DialogAction(
+                "clear_create",
+                "Ordner leeren und neues Projekt anlegen",
+                "Den Inhalt dieses Ordners löschen und darin ein leeres neues Projekt erstellen.",
             ),
         ],
     )
@@ -221,6 +226,16 @@ def run_gui() -> None:
             if action == "choose":
                 settings, data_dir = _choose_data_path(settings, data_dir)
                 continue
+            if action == "clear_create":
+                if (
+                    clear_and_create_project_folder(None, data_dir, title="Neues Projekt")
+                    is not None
+                ):
+                    settings, data_dir, initial_project_created = _save_project_folder(
+                        data_dir, created_new=True
+                    )
+                    break
+                continue
             return
 
         if (
@@ -243,6 +258,15 @@ def run_gui() -> None:
         elif action == "choose":
             settings, data_dir = _choose_data_path(settings, data_dir)
             initial_project_created = False
+        elif action == "clear_create":
+            if (
+                clear_and_create_project_folder(None, data_dir, title="Neues Projekt")
+                is not None
+            ):
+                settings, data_dir, initial_project_created = _save_project_folder(
+                    data_dir, created_new=True
+                )
+                break
         else:
             return
 

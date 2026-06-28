@@ -3,7 +3,7 @@ from datetime import date, time
 from html import escape
 from typing import Callable, Iterable, Sequence
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QRect
 from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import QHeaderView, QStyle, QStyleOptionHeader, QTableWidget, QSizePolicy
 
@@ -65,12 +65,14 @@ class FreeDayHeaderView(QHeaderView):
         super().__init__(orientation, parent)
         self._badges: dict[int, tuple[tuple[FreeDayBadgeLine, ...], str]] = {}
         self._accent_colors: dict[int, QColor] = {}
+        self.setMinimumHeight(44)
+        self.sectionResized.connect(self._sync_height)
 
     def set_free_day_badges(
         self, badges: dict[int, tuple[tuple[FreeDayBadgeLine, ...], str]]
     ) -> None:
         self._badges = dict(badges)
-        self.setMinimumHeight(self._minimum_height_for_badges() if self._badges else 44)
+        self._sync_height()
         self.viewport().update()
 
     def set_section_accent_colors(self, colors: dict[int, QColor]) -> None:
@@ -79,24 +81,49 @@ class FreeDayHeaderView(QHeaderView):
             for section, color in colors.items()
             if QColor(color).isValid()
         }
+        self._sync_height()
         self.viewport().update()
 
     def sizeHint(self) -> QSize:
         hint = super().sizeHint()
-        if self._badges:
-            hint.setHeight(max(hint.height(), self._minimum_height_for_badges()))
+        hint.setHeight(max(hint.height(), self._content_height()))
         return hint
 
     def _badge_height(self, lines: tuple[FreeDayBadgeLine, ...]) -> int:
         line_count = max(1, len(lines))
         return 7 + (line_count * 17) + max(0, line_count - 1) * 3
 
-    def _minimum_height_for_badges(self) -> int:
-        max_badge_height = max(
-            (self._badge_height(badge[0]) for badge in self._badges.values()),
-            default=0,
-        )
-        return max(64, 40 + max_badge_height)
+    def _content_height(self) -> int:
+        model = self.model()
+        metrics = self.fontMetrics()
+        if model is None:
+            return 44
+        height = 44
+        for section in range(self.count()):
+            if self.isSectionHidden(section):
+                continue
+            text = model.headerData(section, self.orientation(), Qt.DisplayRole)
+            text = "" if text is None else str(text)
+            width = max(40, self.sectionSize(section) - 8)
+            if width <= 40 and self.count():
+                width = max(40, self.viewport().width() // max(1, self.count()) - 8)
+            text_rect = metrics.boundingRect(
+                QRect(0, 0, width, 1000),
+                Qt.AlignCenter | Qt.TextWordWrap,
+                text,
+            )
+            badge = self._badges.get(section)
+            badge_reserved = self._badge_height(badge[0]) + 8 if badge else 4
+            top_padding = 8 if self._accent_colors.get(section) else 4
+            text_height = max(metrics.height(), text_rect.height())
+            height = max(height, top_padding + text_height + badge_reserved + 2)
+        return height
+
+    def _sync_height(self, *_args) -> None:
+        height = self._content_height()
+        if self.minimumHeight() != height:
+            self.setMinimumHeight(height)
+            self.updateGeometry()
 
     def paintSection(self, painter, rect, logical_index: int) -> None:
         if not rect.isValid():

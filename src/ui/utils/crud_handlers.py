@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from PySide6.QtWidgets import QDialog, QMessageBox
 
+from ...services.free_day_id_service import free_day_entry_key
 from ...services.id_service import next_id
 from ...services.termin_occurrence_service import occurrence_date_from_id, source_termin_id
 from ...services.undo_service import UndoService
@@ -282,7 +283,10 @@ class CrudHandlers:
             return
 
         item = dict(dlg.result)
-        item["id"] = self._new_freie_tage_id(freie)
+        item_key = free_day_entry_key(item)
+        if item_key and any(free_day_entry_key(existing) == item_key for existing in freie):
+            QMessageBox.warning(self.parent, "Fehler", "Dieser freie Zeitraum existiert bereits.")
+            return
         freie.append(item)
         self._record_undo_snapshot()
         self.ds.save_freie_tage(freie)
@@ -290,13 +294,13 @@ class CrudHandlers:
         self._show_toast("Freier Tag gespeichert.")
 
     def edit_freie_tage(self, year: Optional[int] = None) -> None:
-        selected_id = self._selected_freie_tage_id()
-        if not selected_id:
+        selected_key = self._selected_freie_tage_key()
+        if not selected_key:
             return
 
         freie = self.ds.load_freie_tage()
         row = next(
-            (i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None
+            (i for i, item in enumerate(freie) if free_day_entry_key(item) == selected_key), None
         )
         if row is None:
             return
@@ -307,7 +311,13 @@ class CrudHandlers:
             return
 
         item = dict(dlg.result)
-        item["id"] = selected_id
+        item_key = free_day_entry_key(item)
+        if item_key and any(
+            idx != row and free_day_entry_key(existing) == item_key
+            for idx, existing in enumerate(freie)
+        ):
+            QMessageBox.warning(self.parent, "Fehler", "Dieser freie Zeitraum existiert bereits.")
+            return
         freie[row] = item
         self._record_undo_snapshot()
         self.ds.save_freie_tage(freie)
@@ -315,8 +325,8 @@ class CrudHandlers:
         self._show_toast("Freier Tag gespeichert.")
 
     def del_freie_tage(self, year: Optional[int] = None) -> None:
-        selected_id = self._selected_freie_tage_id()
-        if not selected_id:
+        selected_key = self._selected_freie_tage_key()
+        if not selected_key:
             return
 
         if (
@@ -331,7 +341,7 @@ class CrudHandlers:
 
         freie = self.ds.load_freie_tage()
         row = next(
-            (i for i, item in enumerate(freie) if str(item.get("id", "")) == selected_id), None
+            (i for i, item in enumerate(freie) if free_day_entry_key(item) == selected_key), None
         )
         if row is None:
             return
@@ -540,7 +550,7 @@ class CrudHandlers:
             return selected_id(self.termin_dock.table)
         return None
 
-    def _selected_freie_tage_id(self) -> Optional[str]:
+    def _selected_freie_tage_key(self) -> Optional[str]:
         if not self.freie_tage_dock:
             return None
         return (
@@ -548,9 +558,6 @@ class CrudHandlers:
             if hasattr(self.freie_tage_dock, "selected_id")
             else None
         )
-
-    def _new_freie_tage_id(self, freie_tage: List[Dict[str, Any]]) -> str:
-        return next_id("FT", [str(item.get("id", "")) for item in freie_tage], width=3)
 
     def _new_termin_id(self) -> str:
         termine = self.ds.load_termine()

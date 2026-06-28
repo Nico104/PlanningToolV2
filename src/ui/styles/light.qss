@@ -3,6 +3,9 @@ QWidget#PlannerStyleTokens {
   free-day-holiday-bg: #f9e7c0;
   free-day-lecture-bg: #dbeafe;
   free-day-cell-border: #dfe6ee;
+  month-day-bg: #ffffff;
+  month-outside-bg: #f4f6f8;
+  month-outside-stripe: #e5ebf2;
   planner-text: #111111;
   planner-grid-vertical: #eeeeee;
   planner-grid-half-hour: #dddddd;

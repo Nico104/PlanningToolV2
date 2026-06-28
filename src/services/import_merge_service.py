@@ -3,26 +3,16 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
+
+from .free_day_id_service import free_day_entry_key
 
 
 @dataclass(frozen=True)
 class ImportFileSchema:
     list_key: str
-    id_field: str
-
-
-IMPORT_FILE_SCHEMAS: dict[str, ImportFileSchema] = {
-    "termine.json": ImportFileSchema("termine", "id"),
-    "raeume.json": ImportFileSchema("raeume", "id"),
-    "lehrveranstaltungen.json": ImportFileSchema("lehrveranstaltungen", "id"),
-    "studienrichtungen.json": ImportFileSchema("studienrichtungen", "id"),
-    "freie_tage.json": ImportFileSchema("freie_tage", "id"),
-}
-
-KNOWN_IMPORT_KEYS = {
-    schema.list_key: file_name for file_name, schema in IMPORT_FILE_SCHEMAS.items()
-}
+    id_field: str = "id"
+    key_func: Callable[[dict[str, Any]], str | None] | None = None
 
 
 def get_entry_id(entry: dict[str, Any], id_field: str) -> str | None:
@@ -31,6 +21,25 @@ def get_entry_id(entry: dict[str, Any], id_field: str) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+IMPORT_FILE_SCHEMAS: dict[str, ImportFileSchema] = {
+    "termine.json": ImportFileSchema("termine", "id"),
+    "raeume.json": ImportFileSchema("raeume", "id"),
+    "lehrveranstaltungen.json": ImportFileSchema("lehrveranstaltungen", "id"),
+    "studienrichtungen.json": ImportFileSchema("studienrichtungen", "id"),
+    "freie_tage.json": ImportFileSchema("freie_tage", key_func=free_day_entry_key),
+}
+
+KNOWN_IMPORT_KEYS = {
+    schema.list_key: file_name for file_name, schema in IMPORT_FILE_SCHEMAS.items()
+}
+
+
+def get_entry_key(entry: dict[str, Any], schema: ImportFileSchema) -> str | None:
+    if schema.key_func is not None:
+        return schema.key_func(entry)
+    return get_entry_id(entry, schema.id_field)
 
 
 def payload_list(content: Any, schema: ImportFileSchema) -> list[dict[str, Any]]:
@@ -113,9 +122,9 @@ def existing_entry_map(data_dir: Path, file_name: str) -> dict[str, dict[str, An
     if schema is None:
         return {}
     return {
-        entry_id: entry
+        entry_key: entry
         for entry in load_existing_entries(data_dir, file_name)
-        if (entry_id := get_entry_id(entry, schema.id_field)) is not None
+        if (entry_key := get_entry_key(entry, schema)) is not None
     }
 
 
@@ -142,7 +151,7 @@ def is_empty_import_value(value: Any) -> bool:
 
 
 def effective_import_entry(
-    existing: dict[str, Any] | None, incoming: dict[str, Any]
+    existing: dict[str, Any] | None, incoming: dict[str, Any], file_name: str = ""
 ) -> dict[str, Any]:
     if existing is None:
         return dict(incoming)
@@ -176,8 +185,8 @@ def payload_has_changes(data_dir: Path, incoming_payload: dict[str, Any]) -> boo
             continue
         existing = existing_entry_map(data_dir, file_name)
         for entry in payload_list(incoming, schema):
-            entry_id = get_entry_id(entry, schema.id_field)
-            current = existing.get(entry_id or "")
-            if entry_id is None or current != effective_import_entry(current, entry):
+            entry_key = get_entry_key(entry, schema)
+            current = existing.get(entry_key or "")
+            if entry_key is None or current != effective_import_entry(current, entry, file_name):
                 return True
     return False

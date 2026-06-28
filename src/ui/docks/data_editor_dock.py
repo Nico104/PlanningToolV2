@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDockWidget, QWidget, QVBoxLayout, QTabWidget
 
 from ...core.models import Lehrveranstaltung, Raum, Termin
+from ...services.free_day_id_service import free_day_entry_key
 from ..utils.crud_handlers import CrudHandlers
 from ..components.widgets.editor_tab_widget import EditorTab, make_item, selected_id
 from ..utils.datetime_utils import fmt_date, fmt_time
@@ -54,7 +55,7 @@ class DataEditorDock(QDockWidget):
         )
         self.tab_free = EditorTab(
             "Freie Tage",
-            ["Typ", "Von", "Bis", "Beschreibung", "ID"],
+            ["Typ", "Von", "Bis", "Beschreibung", "Schlüssel"],
             self.tabs,
             id_column=4,
         )
@@ -211,7 +212,7 @@ class DataEditorDock(QDockWidget):
             von = str(it.get("von_datum", ""))
             bis = str(it.get("bis_datum", ""))
             beschr = str(it.get("beschreibung", ""))
-            rows.append([typ, von, bis, beschr, str(it.get("id", ""))])
+            rows.append([typ, von, bis, beschr, free_day_entry_key(it) or ""])
         self._fill_table(self.tab_free.table, rows)
 
     def _refresh_termine(self) -> None:

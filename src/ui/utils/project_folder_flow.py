@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 
 from PySide6.QtWidgets import (
     QDialog,
@@ -10,7 +11,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ...services.data_folder_service import initialize_missing_project_files, inspect_project_folder
+from ...services.data_folder_service import (
+    REQUIRED_DATA_FILES,
+    ProjectFolderInspection,
+    initialize_missing_project_files,
+    inspect_project_folder,
+)
 
 PROJECT_PART_LABELS = {
     "raeume.json": "Räume",
@@ -168,3 +174,53 @@ def prepare_project_folder(
             return None
 
     return initialize_missing_project_files(folder, inspection.missing_files)
+
+
+def clear_and_create_project_folder(parent, folder: Path, *, title: str) -> list[str] | None:
+    try:
+        folder = folder.expanduser().resolve()
+        if folder.parent == folder:
+            QMessageBox.warning(parent, title, "Dieser Ordner kann nicht geleert werden.")
+            return None
+        if folder.exists() and not folder.is_dir():
+            QMessageBox.warning(parent, title, "Dieser Pfad ist kein Ordner.")
+            return None
+        has_content = folder.exists() and any(folder.iterdir())
+    except Exception as exc:
+        QMessageBox.warning(parent, title, f"Projektordner konnte nicht geprüft werden: {exc}")
+        return None
+
+    project_files = list(REQUIRED_DATA_FILES.keys())
+    inspection = ProjectFolderInspection(
+        present_files=[],
+        valid_files=[],
+        missing_files=project_files,
+        invalid_files=[],
+    )
+    text = (
+        "Dieser Ordner wird geleert und als neues Planungsprojekt eingerichtet. "
+        "Alle vorhandenen Dateien und Unterordner in diesem Ordner werden gelöscht."
+        if has_content
+        else "Die App richtet diesen Ordner als neues Planungsprojekt ein."
+    )
+    if not _confirm(
+        parent,
+        title=title,
+        text=text,
+        target_dir=folder,
+        inspection=inspection,
+        confirm_label="Projekt anlegen",
+    ):
+        return None
+
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        for child in folder.iterdir():
+            if child.is_symlink() or child.is_file():
+                child.unlink()
+            elif child.is_dir():
+                shutil.rmtree(child)
+        return initialize_missing_project_files(folder, project_files)
+    except Exception as exc:
+        QMessageBox.warning(parent, title, f"Projektordner konnte nicht vorbereitet werden: {exc}")
+        return None

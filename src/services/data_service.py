@@ -9,6 +9,7 @@ from .data_folder_service import (
     load_settings as load_app_settings,
     save_settings as save_app_settings,
 )
+from .free_day_id_service import free_day_entry_key
 
 
 class DataService:
@@ -331,13 +332,16 @@ class DataService:
             cleaned = []
             for item in items:
                 if isinstance(item, dict):
-                    cleaned.append({**item, "id": clean_json_id(item.get("id"))})
+                    cleaned_item = dict(item)
+                    cleaned_item.pop("id", None)
+                    cleaned.append(cleaned_item)
             return cleaned
         except Exception:
             return []
 
     def save_freie_tage(self, freie_tage: List[Dict[str, Any]]) -> None:
         cleaned_items: List[Dict[str, Any]] = []
+        seen_keys: set[str] = set()
         for item in freie_tage:
             cleaned = {
                 key: value
@@ -345,7 +349,17 @@ class DataService:
                 if key not in {"quelle", "quelle_id"}
             }
             cleaned.pop("datum", None)
-            cleaned["id"] = clean_json_id(cleaned.get("id"))
+            cleaned.pop("id", None)
+            cleaned = {
+                field: str(cleaned.get(field, "")).strip()
+                for field in ("typ", "beschreibung", "von_datum", "bis_datum")
+                if str(cleaned.get(field, "")).strip()
+            }
+            item_key = free_day_entry_key(cleaned)
+            if item_key and item_key in seen_keys:
+                continue
+            if item_key:
+                seen_keys.add(item_key)
             cleaned_items.append(cleaned)
         self._write("freie_tage.json", {"freie_tage": cleaned_items})
 

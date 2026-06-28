@@ -42,7 +42,7 @@ class ProjectExportDialog(QDialog):
         root.addWidget(title)
 
         subtitle = QLabel(
-            "Wählen Sie, welche Projektdaten als importierbare JSON-Datei exportiert werden sollen.",
+            "Wählen Sie, welche Projektdaten in welchem Format exportiert werden sollen.",
             self,
         )
         subtitle.setObjectName("DialogSubtitle")
@@ -61,9 +61,9 @@ class ProjectExportDialog(QDialog):
 
         self.mode_group = QButtonGroup(self)
         self.all_rb = QRadioButton("Ganzes Projekt", mode_section)
-        self.all_rb.setToolTip("Alle Projektdateien in einem JSON-Bundle exportieren.")
+        self.all_rb.setToolTip("Alle Projektbereiche zusammen als JSON oder Excel exportieren.")
         self.selected_rb = QRadioButton("Einzelne Datei", mode_section)
-        self.selected_rb.setToolTip("Genau eine Projektdatei exportieren, z.B. freie Tage.")
+        self.selected_rb.setToolTip("Genau einen Projektbereich exportieren, z.B. freie Tage.")
         self.mode_group.addButton(self.all_rb)
         self.mode_group.addButton(self.selected_rb)
         self.all_rb.setChecked(True)
@@ -112,7 +112,8 @@ class ProjectExportDialog(QDialog):
         root.addWidget(files_section)
 
         hint = QLabel(
-            "Das ganze Projekt wird als Bundle exportiert. Eine einzelne Datei wird direkt als normale JSON-Datei exportiert und kann später über Importieren wieder eingelesen werden.",
+            "Ganzes Projekt: JSON oder Excel. Einzelne Datei: JSON, Excel oder CSV. "
+            "Die exportierten Daten können später über Importieren wieder eingelesen werden.",
             self,
         )
         hint.setObjectName("DialogSubtitle")

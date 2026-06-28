@@ -70,7 +70,7 @@ _FILE_SCHEMAS: Dict[str, Dict[str, Any]] = {
     "freie_tage.json": {
         "sheet": "FreieTage",
         "list_key": "freie_tage",
-        "columns": ["id", "typ", "beschreibung", "von_datum", "bis_datum"],
+        "columns": ["typ", "beschreibung", "von_datum", "bis_datum"],
     },
 }
 
@@ -89,7 +89,6 @@ _EXCEL_HEADER_LABELS: Dict[str, str] = {
     "termine.json:lva_id": "LVA-Nr.",
     "termine.json:zu_besprechen": "Zu besprechen",
     "termine.json:besprechungshinweis": "Hinweis",
-    "freie_tage.json:id": "ID",
     "freie_tage.json:typ": "Typ",
     "freie_tage.json:beschreibung": "Beschreibung",
     "freie_tage.json:von_datum": "Von",
@@ -136,7 +135,6 @@ _EXCEL_HEADER_ALIASES: Dict[str, Dict[str, str]] = {
         "Besprechungshinweis": "besprechungshinweis",
     },
     "freie_tage.json": {
-        "ID": "id",
         "Typ": "typ",
         "Beschreibung": "beschreibung",
         "Name": "beschreibung",
@@ -598,12 +596,15 @@ def _normalize_entry(file_name: str, entry: Dict[str, Any]) -> Dict[str, Any]:
         if entry.get("start_zeit") in (None, ""):
             entry["start_zeit"] = None
     elif file_name == "freie_tage.json":
-        if not str(entry.get("id", "")).strip():
-            entry.pop("id", None)
-        von = str(entry.get("von_datum", "")).strip()
-        bis = str(entry.get("bis_datum", "")).strip()
+        entry.pop("id", None)
+        von_date = _safe_date(entry.get("von_datum"))
+        bis_date = _safe_date(entry.get("bis_datum"))
+        von = von_date.isoformat() if von_date else str(entry.get("von_datum", "")).strip()
+        bis = bis_date.isoformat() if bis_date else str(entry.get("bis_datum", "")).strip()
         entry.pop("datum", None)
         if von and bis:
+            if von_date and bis_date and bis_date < von_date:
+                von, bis = bis, von
             entry["von_datum"] = von
             entry["bis_datum"] = bis
     return entry

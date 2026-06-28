@@ -22,7 +22,7 @@ from ..utils.qss_tokens import qss_color
 from .state import PlannerState
 from .day_view import PlannerDayView
 from .week_view import PlannerWeekView
-from .month_view import PlannerMonthView
+from .month_view import PlannerMonthView, MONTH_CONFLICT_ROLE, MONTH_DAY_IDS_ROLE
 from .free_day_provider import FreeDayProvider
 from ..utils.crud_handlers import CrudHandlers
 from .termincard import TerminCard
@@ -534,31 +534,27 @@ class PlannerWorkspace(QWidget):
         cols = self.month_table.columnCount()
         for r in range(rows):
             for c in range(cols):
-                cell_widget = self.month_table.cellWidget(r, c)
-                if cell_widget is None:
+                item = self.month_table.item(r, c)
+                if item is None:
                     continue
-                day_ids = cell_widget.property("day_ids") or []
+                day_ids = item.data(MONTH_DAY_IDS_ROLE) or []
                 has_match = any(
                     str(tid) in ids or source_termin_id(tid) in source_ids for tid in day_ids
                 )
-                cell_widget.setProperty("monthConflictHighlight", has_match)
-                cell_widget.style().unpolish(cell_widget)
-                cell_widget.style().polish(cell_widget)
-                cell_widget.update()
+                item.setData(MONTH_CONFLICT_ROLE, has_match)
+        self.month_table.viewport().update()
 
     def _clear_month_highlights(self) -> None:
         rows = self.month_table.rowCount()
         cols = self.month_table.columnCount()
         for r in range(rows):
             for c in range(cols):
-                cell_widget = self.month_table.cellWidget(r, c)
-                if cell_widget is None:
+                item = self.month_table.item(r, c)
+                if item is None:
                     continue
-                if cell_widget.property("monthConflictHighlight"):
-                    cell_widget.setProperty("monthConflictHighlight", False)
-                    cell_widget.style().unpolish(cell_widget)
-                    cell_widget.style().polish(cell_widget)
-                    cell_widget.update()
+                if item.data(MONTH_CONFLICT_ROLE):
+                    item.setData(MONTH_CONFLICT_ROLE, False)
+        self.month_table.viewport().update()
 
     def _on_week_drop(self, termin_id, new_date, new_start):
         self._move_termin_and_refresh(str(termin_id), new_date=new_date, new_start=new_start)

@@ -20,10 +20,10 @@ from ...services.import_merge_service import (
     IMPORT_FILE_SCHEMAS,
     effective_import_entry,
     get_entry_id,
+    get_entry_key,
     payload_list,
 )
 from ...services.app_config_service import load_default_config
-from ...services.id_service import next_id
 
 
 class ImportDialog(QDialog):
@@ -95,7 +95,7 @@ class ImportDialog(QDialog):
 
     @staticmethod
     def _merge_import_entry(file_name: str, existing: dict | None, incoming: dict) -> dict:
-        return effective_import_entry(existing, incoming)
+        return effective_import_entry(existing, incoming, file_name)
 
     def _build_import_summary(self) -> str:
         parts = []
@@ -114,8 +114,8 @@ class ImportDialog(QDialog):
                 if self._entry_reference_warnings(fname, item):
                     skipped_count += 1
                     continue
-                item_id = get_entry_id(item, schema.id_field)
-                existing = existing_map.get(item_id or "")
+                item_key = get_entry_key(item, schema)
+                existing = existing_map.get(item_key or "")
                 merged = self._merge_import_entry(fname, existing, item)
                 if existing is None:
                     new_count += 1
@@ -138,9 +138,9 @@ class ImportDialog(QDialog):
         except Exception:
             return {}
         return {
-            entry_id: item
+            entry_key: effective_import_entry(None, item, fname)
             for item in payload_list(raw, schema)
-            if (entry_id := get_entry_id(item, schema.id_field)) is not None
+            if (entry_key := get_entry_key(item, schema)) is not None
         }
 
     def _incoming_ids(self, fname: str) -> set[str]:
@@ -148,9 +148,9 @@ class ImportDialog(QDialog):
         if schema is None:
             return set()
         return {
-            entry_id
+            entry_key
             for item in payload_list(self.imported_data.get(fname), schema)
-            if (entry_id := get_entry_id(item, schema.id_field)) is not None
+            if (entry_key := get_entry_key(item, schema)) is not None
         }
 
     def _known_ids_after_import(self, fname: str) -> set[str]:
@@ -346,7 +346,7 @@ class ImportDialog(QDialog):
                 "ects",
             ],
             "raeume.json": ["id", "name", "kapazitaet", "gebaeude"],
-            "freie_tage.json": ["typ", "beschreibung", "von_datum", "bis_datum", "id"],
+            "freie_tage.json": ["typ", "beschreibung", "von_datum", "bis_datum"],
         }
 
         _OPTIONAL_EMPTY_FIELDS = {
@@ -471,7 +471,14 @@ class ImportDialog(QDialog):
             super().__init__(parent)
             self.choice = None
             self.setObjectName("ImportEntryMergePrompt")
-            entry_id = new.get("id") or new.get("datum") or new.get("key") or new.get("name") or "-"
+            entry_id = (
+                new.get("id")
+                or new.get("beschreibung")
+                or new.get("datum")
+                or new.get("key")
+                or new.get("name")
+                or "-"
+            )
             file_label = self._file_label(fname)
             self.setWindowTitle(f"{file_label}: {entry_id}")
             self.resize(980, 620)
@@ -614,9 +621,9 @@ class ImportDialog(QDialog):
             )
 
             existing_map = {
-                get_entry_id(e, schema.id_field): e
+                entry_key: e
                 for e in existing_list
-                if get_entry_id(e, schema.id_field) is not None
+                if (entry_key := get_entry_key(e, schema)) is not None
             }
 
             import_all = False
@@ -630,11 +637,11 @@ class ImportDialog(QDialog):
                 if index % 25 == 0:
                     QApplication.processEvents()
 
-                eid = get_entry_id(inc, schema.id_field)
-                ex = existing_map.get(eid) if eid else None
+                entry_key = get_entry_key(inc, schema)
+                ex = existing_map.get(entry_key) if entry_key else None
                 effective_inc = self._merge_import_entry(fname, ex, inc)
 
-                different = ex is None or ex != effective_inc
+                different = ex is None or effective_import_entry(None, ex, fname) != effective_inc
 
                 if not different:
                     counts["identical"] += 1
@@ -663,22 +670,16 @@ class ImportDialog(QDialog):
                     ch = "ignore"
 
                 if ch == "import":
-                    if eid and eid in existing_map:
-                        existing_map[eid].clear()
-                        existing_map[eid].update(effective_inc)
+                    effective_inc = effective_import_entry(None, effective_inc, fname)
+                    if entry_key and entry_key in existing_map:
+                        existing_map[entry_key].clear()
+                        existing_map[entry_key].update(effective_inc)
                         counts["changed"] += 1
                     else:
-                        if not eid and fname == "freie_tage.json":
-                            effective_inc = dict(effective_inc)
-                            effective_inc["id"] = next_id(
-                                "FT",
-                                [str(item.get("id", "")) for item in existing_list],
-                                width=3,
-                            )
-                            eid = get_entry_id(effective_inc, schema.id_field)
                         existing_list.append(effective_inc)
-                        if eid:
-                            existing_map[eid] = effective_inc
+                        new_key = get_entry_key(effective_inc, schema)
+                        if new_key:
+                            existing_map[new_key] = effective_inc
                         counts["new"] += 1
                 else:
                     counts["ignored"] += 1
@@ -686,6 +687,11 @@ class ImportDialog(QDialog):
             # write back
             if not isinstance(existing_raw, dict):
                 existing_raw = {}
+            existing_list = [
+                effective_import_entry(None, item, fname)
+                for item in existing_list
+                if isinstance(item, dict)
+            ]
             existing_raw[schema.list_key] = existing_list
 
             try:

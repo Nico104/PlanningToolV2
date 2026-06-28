@@ -4,10 +4,6 @@ from pathlib import Path
 from typing import Optional
 import json
 
-from PySide6.QtGui import QColor
-
-from ..utils.qss_tokens import qss_color
-
 
 @dataclass(frozen=True)
 class FreeDayBadgeLine:
@@ -17,8 +13,6 @@ class FreeDayBadgeLine:
 
 @dataclass(frozen=True)
 class FreeDayInfo:
-    day_type: str
-    descriptions: tuple[str, ...] = ()
     badge_lines: tuple[FreeDayBadgeLine, ...] = ()
 
 
@@ -27,10 +21,6 @@ class FreeDayProvider:
 
     def __init__(self, data_dir: Path):
         self._data_dir = Path(data_dir)
-        self._styles = self._load_free_day_styles()
-
-    def get_styles(self) -> dict[str, object]:
-        return self._styles
 
     def get_info_for_date(self, target: date) -> Optional[FreeDayInfo]:
         return self.get_infos_for_range(target, target).get(target)
@@ -67,47 +57,8 @@ class FreeDayProvider:
 
         return {day: self._merge_infos(items) for day, items in raw.items()}
 
-    @staticmethod
-    def label_for_type(day_type: Optional[str]) -> str:
-        if day_type == "feiertag":
-            return "Feiertag"
-        if day_type == "vorlesungsfrei":
-            return "Vorlesungsfrei"
-        return ""
-
-    def label_for_info(self, info: Optional[FreeDayInfo]) -> str:
-        if info is None:
-            return ""
-        descriptions = [text for text in info.descriptions if text]
-        if descriptions:
-            return ", ".join(descriptions)
-        return self.label_for_type(info.day_type)
-
-    def badge_for_info(self, info: Optional[FreeDayInfo]) -> str:
-        if info is None:
-            return ""
-        badge_lines = self.badge_lines_for_info(info)
-        if badge_lines:
-            return "\n".join(line.text for line in badge_lines[:3])
-        return self.label_for_type(info.day_type)
-
     def badge_lines_for_info(self, info: Optional[FreeDayInfo]) -> tuple[FreeDayBadgeLine, ...]:
-        if info is None:
-            return ()
-        if info.badge_lines:
-            return info.badge_lines
-        return tuple(
-            FreeDayBadgeLine(info.day_type, text)
-            for text in info.descriptions
-            if text
-        )
-
-    def _load_free_day_styles(self) -> dict[str, object]:
-        styles: dict[str, object] = {}
-        styles["holiday_bg"] = qss_color("free-day-holiday-bg")
-        styles["lecture_bg"] = qss_color("free-day-lecture-bg")
-        styles["cell_border"] = qss_color("free-day-cell-border")
-        return styles
+        return info.badge_lines if info is not None else ()
 
     def _parse_iso_date(self, raw: str) -> Optional[date]:
         try:
@@ -118,18 +69,11 @@ class FreeDayProvider:
     def _merge_infos(self, items: list[tuple[str, str]]) -> FreeDayInfo:
         priority = {"feiertag": 0, "vorlesungsfrei": 1}
         sorted_items = sorted(items, key=lambda item: (priority.get(item[0], 9), item[0], item[1]))
-        day_type = sorted_items[0][0]
-        descriptions: list[str] = []
         badge_lines: list[FreeDayBadgeLine] = []
         seen = set()
         for item_type, description in sorted_items:
             if not description or description in seen:
                 continue
             seen.add(description)
-            descriptions.append(description)
             badge_lines.append(FreeDayBadgeLine(item_type, description))
-        return FreeDayInfo(
-            day_type=day_type,
-            descriptions=tuple(descriptions),
-            badge_lines=tuple(badge_lines),
-        )
+        return FreeDayInfo(badge_lines=tuple(badge_lines))

@@ -11,8 +11,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-from .id_service import next_id
-
 OPEN_HOLIDAYS_PUBLIC_URL = "https://openholidaysapi.org/PublicHolidays"
 OPEN_HOLIDAYS_MAX_DAYS = 1095
 TUWIEN_ACADEMIC_CALENDAR_URL = "https://www.tuwien.at/studium/zulassung/akademischer-kalender"
@@ -247,7 +245,6 @@ def append_free_day_candidates(
         if classify_free_day_candidate(candidate, updated) == STATUS_EXISTS:
             continue
         item = candidate.to_item()
-        item["id"] = next_id("FT", [str(existing.get("id", "")) for existing in updated], width=3)
         updated.append(item)
         changed += 1
     return updated, changed

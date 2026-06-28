@@ -212,9 +212,8 @@ class PlannerDayView:
 
         free_day_badges = {}
         if free_day_info:
-            free_day_type = free_day_info.day_type
-            day_label = self._free_day_provider.label_for_info(free_day_info)
             badge_lines = self._free_day_provider.badge_lines_for_info(free_day_info)
+            day_label = "\n".join(line.text for line in badge_lines if line.text)
 
             time_hdr = self.day_table.horizontalHeaderItem(0)
             if time_hdr is not None:
@@ -224,7 +223,7 @@ class PlannerDayView:
                 if hdr_item is not None:
                     room_tip = hdr_item.toolTip().strip()
                     hdr_item.setToolTip(f"{room_tip}\n{day_label}" if room_tip else day_label)
-                if free_day_type in {"feiertag", "vorlesungsfrei"} and badge_lines:
+                if badge_lines:
                     free_day_badges[c] = (badge_lines, day_label)
 
         header = self.day_table.horizontalHeader()

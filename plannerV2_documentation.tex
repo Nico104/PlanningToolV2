@@ -352,7 +352,7 @@ Das Datenmodell bildet die Grundlage des Planungstools. Im Mittelpunkt stehen di
 
 Neben den Terminen gibt es weitere Datenbereiche. Dazu zählen Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume. Lehrveranstaltungen können einer Studienrichtung und mehreren Studiensemestern zugeordnet werden. Termine speichern zusätzlich eine Semester-ID, zum Beispiel \texttt{SS26} oder \texttt{WS26}. Diese Daten werden getrennt gespeichert, damit sie nicht bei jedem Termin erneut eingetragen werden müssen. Stammdaten können dadurch einmal angelegt und anschließend mehrfach verwendet werden.
 
-Die Verbindung zwischen den Daten erfolgt über IDs. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
+Termine, Lehrveranstaltungen, Räume und Studienrichtungen verwenden IDs, da diese Einträge entweder von anderen Daten referenziert werden oder bereits fachliche Schlüssel wie LVA-Nummern bzw. Raumcodes besitzen. Freie Zeiträume bilden eine Ausnahme: Sie werden nicht über eine eigene ID verwaltet, sondern über Typ, Beschreibung, Startdatum und Enddatum als gleicher Eintrag erkannt. Dadurch können sie einfacher in JSON-, Excel- oder CSV-Dateien bearbeitet werden. Ein Termin speichert also nicht alle Informationen direkt ab, sondern verweist auf den passenden Eintrag. Dadurch können Änderungen an Stammdaten zentral vorgenommen werden.
 
 Neben den Planungsdaten speichert die Anwendung auch Einstellungen und Konfliktpräferenzen in JSON-Dateien. So bleiben persönliche Anpassungen, etwa gespeicherte Layouts oder ausgewählte Konfliktregeln, auch beim nächsten Start erhalten.
 
@@ -498,14 +498,18 @@ class TerminCard(QFrame):
 Hier wird sichtbar, dass die Karte als eigenes Qt-Widget umgesetzt ist, das von \texttt{QFrame} erbt. \texttt{QFrame} ist ein einfaches Container-Widget von Qt, das hier als sichtbarer Rahmen für die Termin-Karte dient.
 Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop verschoben werden und dabei während des Verschiebens geprüft werden, ob ein Konflikt entstehen würde.
 
-Zusätzlich kann ein als vorlesungsfrei oder als Feiertag eingetragener Tag in der Kalenderansicht visuell markiert werden. In der Ansicht wird dafür je nach Typ eine Hintergrundfarbe gesetzt:
+%Zusätzlich kann ein als vorlesungsfrei oder als Feiertag eingetragener Tag in der Kalenderansicht visuell markiert werden. In der Ansicht wird dafür je nach Typ eine Hintergrundfarbe gesetzt:
+Zusätzlich werden Feiertage und vorlesungsfreie Zeiträume in den Kalenderansichten visuell hervorgehoben. Dafür werden die Beschreibungen der freien Zeiträume als kompakte farbige Markierungen dargestellt. In der Tages- und Wochenansicht erscheinen diese Markierungen im Kopfbereich der jeweiligen Spalten. In der Monatsansicht werden sie direkt innerhalb der Tageszellen angezeigt.
+Liegen mehrere freie Einträge auf demselben Datum, werden mehrere Markierungen angezeigt.
 
-\begin{verbatim}
-if free_day_type == "feiertag":
-    bg = self._free_day_styles.get("holiday_bg")
-else:
-    bg = self._free_day_styles.get("lecture_bg")
-\end{verbatim}
+Ein Beispiel für die Darstellung freier Zeiträume zeigt Abbildung \ref{fig:freie-tage}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{bilder/freie_tage.png}
+    \caption{Darstellung von Feiertagen und vorlesungsfreien Zeiträumen in der Kalenderansicht}
+    \label{fig:freie-tage}
+\end{figure}
 
 Dadurch erkennt der Nutzer sofort, dass an diesem Datum keine reguläre Planung erfolgen soll.
 
@@ -730,7 +734,9 @@ tmp.write_text(json_text, encoding="utf-8")
 tmp.replace(path)
 \end{verbatim}
 
-Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Projektexport können die aktuellen Projektdaten als JSON oder als Excel-Datei gespeichert werden. Die Excel-Datei enthält getrennte Tabellenblätter für Räume, Lehrveranstaltungen, Termine, Studienrichtungen und freie Zeiträume. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
+Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Export kann entweder das gesamte Projekt oder ein einzelner Projektbereich exportiert werden. Das gesamte Projekt kann als JSON- oder Excel-Datei gespeichert werden.
+Einzelne Projektbereiche, zum Beispiel freie Zeiträume, Räume oder Lehrveranstaltungen, können als JSON, Excel oder CSV exportiert und später wieder importiert werden.
+Die Excel-Datei enthält getrennte Tabellenblätter für Räume, Lehrveranstaltungen, Termine, Studienrichtungen und freie Zeiträume. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
 Neben dem vollständigen Projektexport gibt es einen speziellen Export für Lehrende. Dabei können LVAs mit den zugehörigen Lehrpersonen, ein oder mehrere Semester sowie ein Zeitraum ausgewählt werden. Die Termine werden anschließend entweder als Tabellenliste oder als Wochenkalender in eine Excel-Datei geschrieben.
 
 
