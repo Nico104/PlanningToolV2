@@ -839,6 +839,8 @@ Im Mittelpunkt standen dabei die zentralen Funktionen des Tools. Dazu zählen vo
 \subsection{Durchführung der Tests}
 
 Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung überprüft.
+Als Testgrundlage wurde ein realistisches ETIT-Testprojekt verwendet, das TISS-basierte Standarddaten für Räume und Lehrveranstaltungen sowie importierte bzw. angelegte Termine und freie Zeiträume enthielt.
+Dadurch konnten nicht nur einzelne Dialoge, sondern auch zusammenhängende Arbeitsabläufe mit mehreren hundert Terminen geprüft werden.
 
 \begin{table}[h]
 \centering
@@ -1026,9 +1028,11 @@ Damit lässt sich die Forschungsfrage beantworten: Ein solches Planungstool kann
 
 Die Software unterstützt den Nutzer bei der Planung, erstellt jedoch keinen Stundenplan automatisch. Die endgültigen Entscheidungen müssen weiterhin manuell getroffen werden.
 
-Außerdem ist die Anwendung für die lokale Nutzung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen.
+Außerdem ist die Anwendung für die lokale Nutzung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer, eine Rechte- oder Rollenverwaltung und eine gemeinsame serverbasierte Datenhaltung sind in dieser Version nicht vorgesehen.
 
+Die Anwendung enthält Importfunktionen und TISS-basierte Standarddaten, besitzt jedoch keine produktive Live-Schnittstelle zu TISS oder anderen Universitätssystemen. Auch eine automatische Raumreservierung wird nicht durchgeführt.
 Die Speicherung in JSON-Dateien reicht für den aktuellen Umfang aus, könnte bei größeren Datenmengen jedoch unübersichtlich oder unpraktisch werden.
+
 
 \subsection{Erweiterungsmöglichkeiten}
 
