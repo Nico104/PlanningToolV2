@@ -1,124 +1,322 @@
 {
   "freie_tage": [
     {
-      "beschreibung": "Weihnachtsferien",
+      "typ": "Feiertag",
+      "beschreibung": "Neujahr",
+      "von_datum": "2025-01-01",
+      "bis_datum": "2025-01-01"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Heilige drei Könige",
+      "von_datum": "2025-01-06",
+      "bis_datum": "2025-01-06"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Ostermontag",
+      "von_datum": "2025-04-21",
+      "bis_datum": "2025-04-21"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Staatsfeiertag",
+      "von_datum": "2025-05-01",
+      "bis_datum": "2025-05-01"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Christi Himmelfahrt",
+      "von_datum": "2025-05-29",
+      "bis_datum": "2025-05-29"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Pfingstmontag",
+      "von_datum": "2025-06-09",
+      "bis_datum": "2025-06-09"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Fronleichnam",
+      "von_datum": "2025-06-19",
+      "bis_datum": "2025-06-19"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Mariä Himmelfahrt",
+      "von_datum": "2025-08-15",
+      "bis_datum": "2025-08-15"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Nationalfeiertag",
+      "von_datum": "2025-10-26",
+      "bis_datum": "2025-10-26"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Allerheiligen",
+      "von_datum": "2025-11-01",
+      "bis_datum": "2025-11-01"
+    },
+    {
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Allerseelen",
+      "von_datum": "2025-11-02",
+      "bis_datum": "2025-11-02"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Tag des Landespatrons",
+      "von_datum": "2025-11-15",
+      "bis_datum": "2025-11-15"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Mariä Empfängnis",
+      "von_datum": "2025-12-08",
+      "bis_datum": "2025-12-08"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Weihnachtsferien",
       "von_datum": "2025-12-22",
       "bis_datum": "2026-01-06"
     },
     {
-      "beschreibung": "Neujahr",
       "typ": "Feiertag",
+      "beschreibung": "Christtag",
+      "von_datum": "2025-12-25",
+      "bis_datum": "2025-12-25"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Stefanitag",
+      "von_datum": "2025-12-26",
+      "bis_datum": "2025-12-26"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Neujahr",
       "von_datum": "2026-01-01",
       "bis_datum": "2026-01-01"
     },
     {
-      "beschreibung": "Heilige drei Könige",
       "typ": "Feiertag",
+      "beschreibung": "Heilige drei Könige",
       "von_datum": "2026-01-06",
       "bis_datum": "2026-01-06"
     },
     {
-      "beschreibung": "Osterferien",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Osterferien",
       "von_datum": "2026-03-30",
       "bis_datum": "2026-04-12"
     },
     {
-      "beschreibung": "Ostermontag",
       "typ": "Feiertag",
+      "beschreibung": "Ostermontag",
       "von_datum": "2026-04-06",
       "bis_datum": "2026-04-06"
     },
     {
-      "beschreibung": "Staatsfeiertag",
       "typ": "Feiertag",
+      "beschreibung": "Staatsfeiertag",
       "von_datum": "2026-05-01",
       "bis_datum": "2026-05-01"
     },
     {
-      "beschreibung": "Christi Himmelfahrt",
       "typ": "Feiertag",
+      "beschreibung": "Christi Himmelfahrt",
       "von_datum": "2026-05-14",
       "bis_datum": "2026-05-14"
     },
     {
-      "beschreibung": "Rektorstag",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Rektorstag",
       "von_datum": "2026-05-15",
       "bis_datum": "2026-05-15"
     },
     {
-      "beschreibung": "Pfingstmontag",
       "typ": "Feiertag",
+      "beschreibung": "Pfingstmontag",
       "von_datum": "2026-05-25",
       "bis_datum": "2026-05-25"
     },
     {
-      "beschreibung": "Pfingstferien",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Pfingstferien",
       "von_datum": "2026-05-26",
       "bis_datum": "2026-05-26"
     },
     {
-      "beschreibung": "Fronleichnam",
       "typ": "Feiertag",
+      "beschreibung": "Fronleichnam",
       "von_datum": "2026-06-04",
       "bis_datum": "2026-06-04"
     },
     {
-      "beschreibung": "Sommerferien",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Sommerferien",
       "von_datum": "2026-07-01",
       "bis_datum": "2026-09-30"
     },
     {
-      "beschreibung": "Mariä Himmelfahrt",
       "typ": "Feiertag",
+      "beschreibung": "Mariä Himmelfahrt",
       "von_datum": "2026-08-15",
       "bis_datum": "2026-08-15"
     },
     {
-      "beschreibung": "Nationalfeiertag",
       "typ": "Feiertag",
+      "beschreibung": "Nationalfeiertag",
       "von_datum": "2026-10-26",
       "bis_datum": "2026-10-26"
     },
     {
-      "beschreibung": "Allerheiligen",
       "typ": "Feiertag",
+      "beschreibung": "Allerheiligen",
       "von_datum": "2026-11-01",
       "bis_datum": "2026-11-01"
     },
     {
-      "beschreibung": "Allerseelen",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Allerseelen",
       "von_datum": "2026-11-02",
       "bis_datum": "2026-11-02"
     },
     {
-      "beschreibung": "Mariä Empfängnis",
       "typ": "Feiertag",
+      "beschreibung": "Mariä Empfängnis",
       "von_datum": "2026-12-08",
       "bis_datum": "2026-12-08"
     },
     {
-      "beschreibung": "Weihnachtsferien",
       "typ": "Vorlesungsfrei",
+      "beschreibung": "Weihnachtsferien",
       "von_datum": "2026-12-21",
       "bis_datum": "2027-01-06"
     },
     {
-      "beschreibung": "Christtag",
       "typ": "Feiertag",
+      "beschreibung": "Christtag",
       "von_datum": "2026-12-25",
       "bis_datum": "2026-12-25"
     },
     {
-      "beschreibung": "Stefanitag",
       "typ": "Feiertag",
+      "beschreibung": "Stefanitag",
       "von_datum": "2026-12-26",
       "bis_datum": "2026-12-26"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Neujahr",
+      "von_datum": "2027-01-01",
+      "bis_datum": "2027-01-01"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Heilige drei Könige",
+      "von_datum": "2027-01-06",
+      "bis_datum": "2027-01-06"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Semesterferien",
+      "von_datum": "2027-01-29",
+      "bis_datum": "2027-02-28"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Osterferien",
+      "von_datum": "2027-03-22",
+      "bis_datum": "2027-04-04"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Ostermontag",
+      "von_datum": "2027-03-29",
+      "bis_datum": "2027-03-29"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Staatsfeiertag",
+      "von_datum": "2027-05-01",
+      "bis_datum": "2027-05-01"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Christi Himmelfahrt",
+      "von_datum": "2027-05-06",
+      "bis_datum": "2027-05-06"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Pfingstmontag",
+      "von_datum": "2027-05-17",
+      "bis_datum": "2027-05-17"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Pfingstferien",
+      "von_datum": "2027-05-18",
+      "bis_datum": "2027-05-18"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Fronleichnam",
+      "von_datum": "2027-05-27",
+      "bis_datum": "2027-05-27"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Rektorstag",
+      "von_datum": "2027-05-28",
+      "bis_datum": "2027-05-28"
+    },
+    {
+      "typ": "Vorlesungsfrei",
+      "beschreibung": "Sommerferien",
+      "von_datum": "2027-07-01",
+      "bis_datum": "2027-09-30"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Mariä Himmelfahrt",
+      "von_datum": "2027-08-15",
+      "bis_datum": "2027-08-15"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Nationalfeiertag",
+      "von_datum": "2027-10-26",
+      "bis_datum": "2027-10-26"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Allerheiligen",
+      "von_datum": "2027-11-01",
+      "bis_datum": "2027-11-01"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Mariä Empfängnis",
+      "von_datum": "2027-12-08",
+      "bis_datum": "2027-12-08"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Christtag",
+      "von_datum": "2027-12-25",
+      "bis_datum": "2027-12-25"
+    },
+    {
+      "typ": "Feiertag",
+      "beschreibung": "Stefanitag",
+      "von_datum": "2027-12-26",
+      "bis_datum": "2027-12-26"
     }
   ]
 }

@@ -1,23 +1,6 @@
 {
   "termine": [
     {
-      "name": "Test Termin",
-      "id": "T001",
-      "lva_id": "100.001",
-      "typ": "VO",
-      "datum": null,
-      "start_zeit": null,
-      "raum_id": "",
-      "gruppe": null,
-      "anwesenheitspflicht": false,
-      "notiz": "",
-      "duration": 60,
-      "semester_id": "testsem",
-      "datum_bis": null,
-      "periodizitaet": null,
-      "ausfall_daten": []
-    },
-    {
       "id": "TISS-0001",
       "name": "Welcome Day - Nachmittag",
       "lva_id": "350.002",
@@ -399,6 +382,7 @@
     },
     {
       "id": "TISS-0052",
+      "name": "Elektrotechnik 1",
       "lva_id": "363.014",
       "typ": "VO",
       "datum": "2025-10-02",
@@ -409,15 +393,19 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0053",
+      "name": "Elektrotechnik 1",
       "lva_id": "363.014",
       "typ": "VO",
       "datum": "2025-10-08",
@@ -428,10 +416,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -452,10 +443,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -498,10 +494,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -521,7 +522,7 @@
       "semester_id": "WS25",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Reservetermin aus TISS",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -544,10 +545,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -566,8 +571,8 @@
       "duration": 120,
       "semester_id": "WS25",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "Scraper-Text wirkt wie Ausfall/kein regulärer Termin",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -590,10 +595,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -613,10 +622,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -636,10 +648,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -659,10 +674,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-26",
+        "2026-01-02"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
+      "besprechungshinweis": "Reservetermin aus TISS",
       "serien_ausnahmen": []
     },
     {
@@ -1338,14 +1356,14 @@
       "lva_id": "363.015",
       "typ": "UE",
       "datum": "2026-01-22",
-      "start_zeit": "08:00",
+      "start_zeit": "15:00",
       "raum_id": "LABORR_UME_DES_INSTITUTS_STIEGE_",
       "gruppe": {
         "name": "Labor L4/6: Do, 22.01.2026, 15:00-18:00, Aufgabe A4.3",
         "groesse": 0
       },
       "anwesenheitspflicht": false,
-      "duration": 780,
+      "duration": 180,
       "semester_id": "WS25",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
@@ -1406,7 +1424,7 @@
       "name": "363.015 Elektrotechnik 1 Labor L4/8: Mo, 26.01.2026, 15:00-18:00 Uhr, Aufgabe A4.2",
       "lva_id": "363.015",
       "typ": "UE",
-      "datum": "2026-01-05",
+      "datum": "2026-01-26",
       "start_zeit": "15:00",
       "raum_id": "LABORR_UME_DES_INSTITUTS_STIEGE_",
       "gruppe": {
@@ -1453,14 +1471,14 @@
       "lva_id": "363.015",
       "typ": "UE",
       "datum": "2026-02-25",
-      "start_zeit": "08:00",
+      "start_zeit": "10:00",
       "raum_id": "LABORR_UME_DES_INSTITUTS_STIEGE_",
       "gruppe": {
         "name": "Nachtrag L4, Mi, 25.02.2026, 10:00 bis 13:00 Uhr, Aufgabe A4.1",
         "groesse": 0
       },
       "anwesenheitspflicht": false,
-      "duration": 300,
+      "duration": 180,
       "semester_id": "WS25",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
@@ -1483,10 +1501,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1503,10 +1524,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1543,10 +1569,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1623,10 +1652,14 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1643,10 +1676,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1663,10 +1699,15 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -1677,26 +1718,6 @@
       "typ": "VO",
       "datum": "2026-03-06",
       "datum_bis": "2026-03-13",
-      "periodizitaet": "wöchentlich",
-      "start_zeit": "08:00",
-      "raum_id": "E8",
-      "anwesenheitspflicht": false,
-      "duration": 120,
-      "semester_id": "SS26",
-      "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2026-03-20\"]",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
-    },
-    {
-      "id": "TISS-0171_S2",
-      "name": "VO Höhere Mathematik 1 bei Quereinstieg",
-      "lva_id": "101.998",
-      "typ": "VO",
-      "datum": "2026-03-27",
-      "datum_bis": "2026-06-26",
       "periodizitaet": "wöchentlich",
       "start_zeit": "08:00",
       "raum_id": "E8",
@@ -1740,15 +1761,23 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "12:00",
       "raum_id": "325/2",
+      "gruppe": {
+        "name": "Gruppe F",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-0194",
@@ -1760,15 +1789,22 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "12:00",
       "raum_id": "101A",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-0216",
@@ -1787,10 +1823,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1810,10 +1850,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1833,10 +1877,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1856,10 +1904,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1879,10 +1932,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1902,10 +1960,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1945,10 +2008,15 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1968,10 +2036,15 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -1991,10 +2064,15 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2014,10 +2092,15 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2037,14 +2120,20 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
       "id": "TISS-0229",
+      "name": "Digitale Systeme",
       "lva_id": "384.193",
       "typ": "VO",
       "datum": "2025-10-07",
@@ -2055,15 +2144,20 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0230",
+      "name": "Digitale Systeme",
       "lva_id": "384.193",
       "typ": "VO",
       "datum": "2025-10-08",
@@ -2074,10 +2168,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -2255,10 +2352,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -2275,10 +2375,12 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -2299,10 +2401,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2322,10 +2429,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2345,10 +2457,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2368,10 +2484,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2391,10 +2511,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2414,10 +2537,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2437,10 +2563,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2460,14 +2589,18 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
       "id": "TISS-0289",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.016",
       "typ": "VO",
       "datum": "2026-03-04",
@@ -2478,15 +2611,19 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0290",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.016",
       "typ": "VO",
       "datum": "2026-03-05",
@@ -2497,15 +2634,21 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0311",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-03-12",
@@ -2515,8 +2658,8 @@
       "duration": 180,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "UE/LU ohne Gruppe; keine sichere Zuordnung aus Scraper-Daten",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -2525,6 +2668,7 @@
     },
     {
       "id": "TISS-0312",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-03-19",
@@ -2534,8 +2678,8 @@
       "duration": 180,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "UE/LU ohne Gruppe; keine sichere Zuordnung aus Scraper-Daten",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -2544,6 +2688,7 @@
     },
     {
       "id": "TISS-0313",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-05-07",
@@ -2554,15 +2699,18 @@
       "anwesenheitspflicht": false,
       "duration": 300,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-05-14"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
+      "zu_besprechen": true,
+      "besprechungshinweis": "UE/LU ohne Gruppe; keine sichere Zuordnung aus Scraper-Daten",
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0314",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-06-11",
@@ -2572,8 +2720,8 @@
       "duration": 180,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "UE/LU ohne Gruppe; keine sichere Zuordnung aus Scraper-Daten",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -2582,6 +2730,7 @@
     },
     {
       "id": "TISS-0315",
+      "name": "Elektrotechnik 2",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-06-25",
@@ -2591,8 +2740,8 @@
       "duration": 180,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "UE/LU ohne Gruppe; keine sichere Zuordnung aus Scraper-Daten",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -2616,10 +2765,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2026-04-27\", \"2026-06-22\"]",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2639,10 +2791,12 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2026-04-27\", \"2026-06-22\"]",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2731,10 +2885,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2754,10 +2912,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2777,10 +2938,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2799,8 +2963,8 @@
       "duration": 120,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "Scraper-Text wirkt wie Ausfall/kein regulärer Termin",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -2869,10 +3033,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2892,10 +3061,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -2960,8 +3134,8 @@
       "duration": 180,
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "zu_besprechen": true,
+      "besprechungshinweis": "Raum ist UNBEKANNTER_RAUM, bitte prüfen",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -3222,14 +3396,14 @@
     },
     {
       "id": "TISS-0347",
-      "name": "363.017 Elektrotechnik 2 Labor L6/5: Fr, 08.05.2026, 15:00-13:00 Uhr",
+      "name": "363.017 Elektrotechnik 2 Labor L6/5: Fr, 08.05.2026, 15:00-18:00 Uhr",
       "lva_id": "363.017",
       "typ": "UE",
       "datum": "2026-05-08",
       "start_zeit": "15:00",
       "raum_id": "LABORR_UME_DES_INSTITUTS_STIEGE_",
       "gruppe": {
-        "name": "Labor L6/5: Fr, 08.05.2026, 15:00-13:00 Uhr",
+        "name": "Labor L6/5: Fr, 08.05.2026, 15:00-18:00 Uhr",
         "groesse": 0
       },
       "anwesenheitspflicht": false,
@@ -3843,6 +4017,7 @@
     },
     {
       "id": "TISS-0377",
+      "name": "Materialien der Elektrotechnik",
       "lva_id": "366.109",
       "typ": "VO",
       "datum": "2026-03-09",
@@ -3853,10 +4028,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -3893,10 +4072,14 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -3913,10 +4096,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -3933,10 +4119,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -3953,10 +4142,15 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -3990,15 +4184,22 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "12:00",
       "raum_id": "E11",
+      "gruppe": {
+        "name": "Ersatzgruppe G",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-0432",
@@ -4017,10 +4218,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4040,10 +4245,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4063,10 +4272,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4086,10 +4299,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4109,10 +4326,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4132,10 +4353,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4155,10 +4380,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4178,10 +4407,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4197,10 +4430,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4217,10 +4454,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4281,10 +4523,14 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4304,10 +4550,14 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4327,10 +4577,13 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4350,10 +4603,13 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4373,10 +4629,13 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4488,10 +4747,13 @@
       "anwesenheitspflicht": false,
       "duration": 150,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4639,10 +4901,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4663,10 +4929,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4686,10 +4955,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4709,10 +4981,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4732,10 +5007,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
+      "besprechungshinweis": "Reservetermin aus TISS",
       "serien_ausnahmen": []
     },
     {
@@ -4755,10 +5033,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4778,10 +5059,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4801,10 +5085,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4824,10 +5111,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4843,10 +5133,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4863,10 +5156,15 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4883,10 +5181,14 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -4927,10 +5229,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -4973,10 +5280,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5042,10 +5354,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2025-11-25\"]",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5088,10 +5404,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5111,10 +5430,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5130,10 +5452,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5150,10 +5475,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5310,10 +5640,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5330,15 +5663,21 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0588",
+      "name": "Zeitkontinuierliche Signale und Systeme",
       "lva_id": "387.098",
       "typ": "VU",
       "datum": "2025-10-02",
@@ -5349,15 +5688,19 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0589",
+      "name": "Zeitkontinuierliche Signale und Systeme",
       "lva_id": "387.098",
       "typ": "VU",
       "datum": "2025-10-23",
@@ -5377,6 +5720,7 @@
     },
     {
       "id": "TISS-0610",
+      "name": "Technik und Gesellschaft",
       "lva_id": "351.018",
       "typ": "VO",
       "datum": "2025-12-05",
@@ -5396,6 +5740,7 @@
     },
     {
       "id": "TISS-0611",
+      "name": "Technik und Gesellschaft",
       "lva_id": "351.018",
       "typ": "VO",
       "datum": "2025-12-19",
@@ -5415,6 +5760,7 @@
     },
     {
       "id": "TISS-0612",
+      "name": "Technik und Gesellschaft",
       "lva_id": "351.018",
       "typ": "VO",
       "datum": "2026-01-09",
@@ -5434,6 +5780,7 @@
     },
     {
       "id": "TISS-0613",
+      "name": "Technik und Gesellschaft",
       "lva_id": "351.018",
       "typ": "VO",
       "datum": "2026-01-16",
@@ -5453,6 +5800,7 @@
     },
     {
       "id": "TISS-0614",
+      "name": "Technik und Gesellschaft",
       "lva_id": "351.018",
       "typ": "VO",
       "datum": "2026-01-23",
@@ -5483,10 +5831,14 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5503,10 +5855,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5523,10 +5879,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5543,10 +5902,15 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5587,10 +5951,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5656,10 +6025,15 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5679,10 +6053,15 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5702,10 +6081,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5771,10 +6155,15 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5794,10 +6183,15 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5817,10 +6211,15 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5840,10 +6239,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -5859,10 +6263,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5879,10 +6286,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5919,10 +6329,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5939,10 +6352,13 @@
       "anwesenheitspflicht": false,
       "duration": 360,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -5983,10 +6399,13 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6006,10 +6425,13 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6108,10 +6530,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6128,10 +6553,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6172,10 +6602,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6195,10 +6630,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6218,10 +6658,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6264,10 +6709,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6287,10 +6737,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
@@ -6310,14 +6765,20 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": []
     },
     {
       "id": "TISS-0726",
+      "name": "Modellbildung",
       "lva_id": "376.104",
       "typ": "VO",
       "datum": "2026-03-04",
@@ -6328,10 +6789,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6348,10 +6812,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6368,10 +6835,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6397,6 +6868,7 @@
     },
     {
       "id": "TISS-0765",
+      "name": "Photonik",
       "lva_id": "387.096",
       "typ": "VO",
       "datum": "2025-10-02",
@@ -6407,15 +6879,19 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0766",
+      "name": "Photonik",
       "lva_id": "387.096",
       "typ": "VO",
       "datum": "2026-01-29",
@@ -6466,10 +6942,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -6499,8 +6978,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-03-09",
-      "datum_bis": "2026-03-12",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6513,8 +6990,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0802",
@@ -6522,8 +7001,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-03-16",
-      "datum_bis": "2026-03-19",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6536,8 +7013,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0803",
@@ -6545,8 +7024,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-03-23",
-      "datum_bis": "2026-03-26",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6559,8 +7036,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0804",
@@ -6568,8 +7047,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-04-13",
-      "datum_bis": "2026-04-16",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6582,8 +7059,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0805",
@@ -6591,8 +7070,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-04-20",
-      "datum_bis": "2026-04-23",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6605,8 +7082,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0806",
@@ -6614,8 +7093,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-05-04",
-      "datum_bis": "2026-05-07",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6628,8 +7105,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0807",
@@ -6637,8 +7116,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-05-18",
-      "datum_bis": "2026-05-21",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6651,8 +7128,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0808",
@@ -6660,8 +7139,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-06-01",
-      "datum_bis": "2026-06-03",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6674,8 +7151,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0809",
@@ -6683,8 +7162,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-06-08",
-      "datum_bis": "2026-06-11",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6697,8 +7174,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0810",
@@ -6706,8 +7185,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-06-15",
-      "datum_bis": "2026-06-18",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6720,8 +7197,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0811",
@@ -6729,8 +7208,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-10-06",
-      "datum_bis": "2025-10-09",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6743,8 +7220,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0812",
@@ -6752,8 +7231,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-10-13",
-      "datum_bis": "2025-10-16",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6766,8 +7243,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0813",
@@ -6775,8 +7254,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-10-20",
-      "datum_bis": "2025-10-23",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6789,8 +7266,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0814",
@@ -6798,8 +7277,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-10-27",
-      "datum_bis": "2025-10-30",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6811,9 +7288,11 @@
       "semester_id": "WS25",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Reservetermin aus TISS",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0815",
@@ -6821,8 +7300,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-11-10",
-      "datum_bis": "2025-11-13",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6835,8 +7312,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0816",
@@ -6844,8 +7323,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-11-17",
-      "datum_bis": "2025-11-20",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6858,8 +7335,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0817",
@@ -6867,8 +7346,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-11-24",
-      "datum_bis": "2025-11-28",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6881,8 +7358,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0818",
@@ -6890,8 +7369,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-12-01",
-      "datum_bis": "2025-12-04",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6904,8 +7381,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0819",
@@ -6913,8 +7392,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-12-09",
-      "datum_bis": "2025-12-12",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6927,8 +7404,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0820",
@@ -6936,8 +7415,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2025-12-15",
-      "datum_bis": "2025-12-18",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6950,8 +7427,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0821",
@@ -6959,8 +7438,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-01-12",
-      "datum_bis": "2026-01-15",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6973,8 +7450,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0822",
@@ -6982,8 +7461,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-01-19",
-      "datum_bis": "2026-01-22",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -6996,8 +7473,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0823",
@@ -7005,8 +7484,6 @@
       "lva_id": "362.128",
       "typ": "LU",
       "datum": "2026-01-26",
-      "datum_bis": "2026-01-29",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "CH0213",
       "gruppe": {
@@ -7019,11 +7496,14 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0824",
+      "name": "Automatisierung",
       "lva_id": "376.103",
       "typ": "VO",
       "datum": "2025-10-02",
@@ -7034,15 +7514,19 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0825",
+      "name": "Automatisierung",
       "lva_id": "376.103",
       "typ": "VO",
       "datum": "2025-10-07",
@@ -7053,10 +7537,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7073,10 +7561,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7093,10 +7586,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7113,10 +7611,13 @@
       "anwesenheitspflicht": false,
       "duration": 90,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7162,6 +7663,7 @@
     },
     {
       "id": "TISS-0851",
+      "name": "Elektrische Energiesysteme",
       "lva_id": "370.103",
       "typ": "VO",
       "datum": "2026-03-05",
@@ -7172,15 +7674,20 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0852",
+      "name": "Elektrische Energiesysteme",
       "lva_id": "370.103",
       "typ": "VO",
       "datum": "2026-06-18",
@@ -7200,6 +7707,7 @@
     },
     {
       "id": "TISS-0864",
+      "name": "Sensorik und Sensorsysteme",
       "lva_id": "366.071",
       "typ": "VO",
       "datum": "2026-03-04",
@@ -7210,15 +7718,19 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
     {
       "id": "TISS-0880",
+      "name": "Telekommunikation",
       "lva_id": "389.231",
       "typ": "VU",
       "datum": "2026-03-05",
@@ -7229,10 +7741,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7249,10 +7766,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7262,8 +7783,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-04-08",
-      "datum_bis": "2026-04-10",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_CD0112",
       "gruppe": {
@@ -7275,9 +7794,11 @@
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Info: Einzeltermin liegt in Ferienzeit laut FreieTage",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0903",
@@ -7285,8 +7806,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-06-30",
-      "datum_bis": "2026-07-02",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_GUSSHAUSST",
       "gruppe": {
@@ -7299,8 +7818,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0904",
@@ -7308,8 +7829,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-07-06",
-      "datum_bis": "2026-07-08",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "122",
       "gruppe": {
@@ -7321,9 +7840,11 @@
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Info: Einzeltermin liegt in Ferienzeit laut FreieTage",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0905",
@@ -7331,8 +7852,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-07-13",
-      "datum_bis": "2026-07-15",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_GUSSHAUSST",
       "gruppe": {
@@ -7344,9 +7863,11 @@
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Info: Einzeltermin liegt in Ferienzeit laut FreieTage",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0906",
@@ -7354,8 +7875,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-07-20",
-      "datum_bis": "2026-07-22",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_GUSSHAUSST",
       "gruppe": {
@@ -7367,9 +7886,11 @@
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Info: Einzeltermin liegt in Ferienzeit laut FreieTage",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0907",
@@ -7377,8 +7898,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2025-10-13",
-      "datum_bis": "2025-10-15",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_CD0112",
       "gruppe": {
@@ -7391,8 +7910,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0908",
@@ -7400,8 +7921,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-02-04",
-      "datum_bis": "2026-02-06",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_CD0112",
       "gruppe": {
@@ -7414,8 +7933,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0909",
@@ -7423,8 +7944,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-02-11",
-      "datum_bis": "2026-02-13",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_CD0112",
       "gruppe": {
@@ -7437,8 +7956,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0910",
@@ -7446,8 +7967,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-02-18",
-      "datum_bis": "2026-02-20",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "ISAS_BESPRECHUNGSRAUM_CD0112",
       "gruppe": {
@@ -7460,8 +7979,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0911",
@@ -7469,8 +7990,6 @@
       "lva_id": "366.111",
       "typ": "UE",
       "datum": "2026-02-23",
-      "datum_bis": "2026-02-25",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "09:00",
       "raum_id": "122",
       "gruppe": {
@@ -7483,8 +8002,10 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
-      "serien_ausnahmen": []
+      "serien_ausnahmen": [],
+      "datum_bis": null
     },
     {
       "id": "TISS-0912",
@@ -7519,10 +8040,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7539,10 +8064,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7579,10 +8108,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-26",
+        "2026-01-02"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7679,10 +8211,14 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-31",
+        "2026-04-07",
+        "2026-05-26"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7699,10 +8235,13 @@
       "anwesenheitspflicht": false,
       "duration": 60,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
+      "zu_besprechen": true,
+      "besprechungshinweis": "Raum ist UNBEKANNTER_RAUM, bitte prüfen",
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7719,10 +8258,14 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -7736,6 +8279,10 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "13:00",
       "raum_id": "Ch0217",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 300,
       "semester_id": "WS25",
@@ -7743,8 +8290,7 @@
       "zu_besprechen": false,
       "besprechungshinweis": "",
       "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-0983",
@@ -7756,6 +8302,10 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "13:00",
       "raum_id": "Ch0217",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "WS25",
@@ -7763,8 +8313,7 @@
       "zu_besprechen": false,
       "besprechungshinweis": "",
       "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-0984",
@@ -7776,6 +8325,10 @@
       "periodizitaet": "wöchentlich",
       "start_zeit": "13:00",
       "raum_id": "Ch0217",
+      "gruppe": {
+        "name": "Gruppe C",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "WS25",
@@ -7783,8 +8336,7 @@
       "zu_besprechen": false,
       "besprechungshinweis": "",
       "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
+      "serien_ausnahmen": []
     },
     {
       "id": "TISS-1005",
@@ -7792,8 +8344,6 @@
       "lva_id": "362.138",
       "typ": "VU",
       "datum": "2026-03-03",
-      "datum_bis": "2026-03-04",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "13:00",
       "raum_id": "351",
       "anwesenheitspflicht": false,
@@ -7802,9 +8352,11 @@
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
+      "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null
+      "gruppe": null,
+      "datum_bis": null
     },
     {
       "id": "TISS-1007",
@@ -8380,7 +8932,7 @@
       "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
-      "besprechungshinweis": "",
+      "besprechungshinweis": "Reservetermin aus TISS",
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
@@ -8400,10 +8952,14 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-23",
+        "2025-12-30",
+        "2026-01-06"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -8420,10 +8976,13 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-24",
+        "2025-12-31"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -8440,10 +8999,13 @@
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-01",
+        "2026-04-08"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -8500,10 +9062,13 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-25",
+        "2026-01-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -8517,7 +9082,7 @@
       "raum_id": "COMPUTERLABOR_E376_CA0426",
       "anwesenheitspflicht": false,
       "duration": 540,
-      "semester_id": "WS25",
+      "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
@@ -8537,7 +9102,7 @@
       "raum_id": "COMPUTERLABOR_E376_CA0426",
       "anwesenheitspflicht": false,
       "duration": 540,
-      "semester_id": "WS25",
+      "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
@@ -8557,7 +9122,7 @@
       "raum_id": "COMPUTERLABOR_E376_CA0426",
       "anwesenheitspflicht": false,
       "duration": 540,
-      "semester_id": "WS25",
+      "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
@@ -8577,7 +9142,7 @@
       "raum_id": "COMPUTERLABOR_E376_CA0426",
       "anwesenheitspflicht": false,
       "duration": 540,
-      "semester_id": "WS25",
+      "semester_id": "SS26",
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
@@ -8953,48 +9518,12 @@
       "lva_id": "384.139",
       "typ": "VU",
       "datum": "2026-05-18",
-      "datum_bis": "2026-05-20",
-      "periodizitaet": "wöchentlich",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
-      "anwesenheitspflicht": false,
-      "duration": 180,
-      "semester_id": "SS26",
-      "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
-    },
-    {
-      "id": "TISS-1122",
-      "name": "Gruppe A - Vorlesung und Labor",
-      "lva_id": "384.139",
-      "typ": "VU",
-      "datum": "2026-05-18",
-      "datum_bis": "2026-05-20",
-      "periodizitaet": "wöchentlich",
-      "start_zeit": "15:00",
-      "raum_id": "RECHNERRAUM_CA208",
-      "anwesenheitspflicht": false,
-      "duration": 180,
-      "semester_id": "SS26",
-      "notiz": "Aus TISS-Testdaten erzeugt",
-      "zu_besprechen": false,
-      "besprechungshinweis": "",
-      "ausfall_daten": [],
-      "serien_ausnahmen": [],
-      "gruppe": null
-    },
-    {
-      "id": "TISS-1123",
-      "name": "Gruppe B - Support Session",
-      "lva_id": "384.139",
-      "typ": "VU",
-      "datum": "2026-05-22",
-      "start_zeit": "10:00",
-      "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9004,7 +9533,52 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
+      "datum_bis": null
+    },
+    {
+      "id": "TISS-1122",
+      "name": "Gruppe A - Vorlesung und Labor",
+      "lva_id": "384.139",
+      "typ": "VU",
+      "datum": "2026-05-18",
+      "start_zeit": "15:00",
+      "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
+      "anwesenheitspflicht": false,
+      "duration": 180,
+      "semester_id": "SS26",
+      "notiz": "Aus TISS-Testdaten erzeugt",
+      "zu_besprechen": false,
+      "besprechungshinweis": "",
+      "periodizitaet": null,
+      "ausfall_daten": [],
+      "serien_ausnahmen": [],
+      "datum_bis": null
+    },
+    {
+      "id": "TISS-1123",
+      "name": "Gruppe B - Support Session",
+      "lva_id": "384.139",
+      "typ": "VU",
+      "datum": "2026-05-22",
+      "start_zeit": "10:00",
+      "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
+      "anwesenheitspflicht": false,
+      "duration": 180,
+      "semester_id": "SS26",
+      "notiz": "Aus TISS-Testdaten erzeugt",
+      "zu_besprechen": false,
+      "besprechungshinweis": "",
+      "periodizitaet": null,
+      "ausfall_daten": [],
+      "serien_ausnahmen": [],
       "datum_bis": null
     },
     {
@@ -9015,6 +9589,10 @@
       "datum": "2026-05-22",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9024,7 +9602,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9035,6 +9612,10 @@
       "datum": "2026-05-27",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9044,7 +9625,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9055,6 +9635,10 @@
       "datum": "2026-05-27",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9064,7 +9648,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9075,6 +9658,10 @@
       "datum": "2026-05-29",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9084,7 +9671,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9095,6 +9681,10 @@
       "datum": "2026-05-29",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9104,7 +9694,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9115,6 +9704,10 @@
       "datum": "2026-06-01",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9124,7 +9717,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9135,6 +9727,10 @@
       "datum": "2026-06-01",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9144,7 +9740,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9155,6 +9750,10 @@
       "datum": "2026-06-02",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9164,7 +9763,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9175,6 +9773,10 @@
       "datum": "2026-06-02",
       "start_zeit": "14:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9184,7 +9786,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9195,6 +9796,10 @@
       "datum": "2026-06-03",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9204,7 +9809,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9215,6 +9819,10 @@
       "datum": "2026-06-03",
       "start_zeit": "14:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9224,7 +9832,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9235,6 +9842,10 @@
       "datum": "2026-06-05",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9244,7 +9855,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9255,6 +9865,10 @@
       "datum": "2026-06-05",
       "start_zeit": "14:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
@@ -9264,7 +9878,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9275,6 +9888,10 @@
       "datum": "2026-06-08",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9284,7 +9901,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9295,6 +9911,10 @@
       "datum": "2026-06-08",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9304,7 +9924,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9315,6 +9934,10 @@
       "datum": "2026-06-09",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9324,7 +9947,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9335,6 +9957,10 @@
       "datum": "2026-06-09",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9344,7 +9970,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9355,6 +9980,10 @@
       "datum": "2026-05-19",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9364,7 +9993,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9375,6 +10003,10 @@
       "datum": "2026-05-19",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9384,7 +10016,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9395,6 +10026,10 @@
       "datum": "2026-05-20",
       "start_zeit": "10:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe B",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9404,7 +10039,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9415,6 +10049,10 @@
       "datum": "2026-05-20",
       "start_zeit": "15:00",
       "raum_id": "RECHNERRAUM_CA208",
+      "gruppe": {
+        "name": "Gruppe A",
+        "groesse": 0
+      },
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
@@ -9424,7 +10062,6 @@
       "periodizitaet": null,
       "ausfall_daten": [],
       "serien_ausnahmen": [],
-      "gruppe": null,
       "datum_bis": null
     },
     {
@@ -9500,10 +10137,14 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2026-05-08\"]",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -9520,10 +10161,12 @@
       "anwesenheitspflicht": false,
       "duration": 180,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-05-15"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "Serie wegen Einzeltermin-Ausnahmen gesplittet; ausgeschlossene Daten: [\"2026-05-08\"]",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -9549,6 +10192,7 @@
     },
     {
       "id": "TISS-1179",
+      "name": "Fachvertiefung - Signale und Systeme",
       "lva_id": "389.142",
       "typ": "VU",
       "datum": "2025-10-06",
@@ -9559,10 +10203,15 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "WS25",
+      "ausfall_daten": [
+        "2025-12-08",
+        "2025-12-22",
+        "2025-12-29",
+        "2026-01-05"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -9659,10 +10308,15 @@
       "anwesenheitspflicht": false,
       "duration": 240,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-02",
+        "2026-04-09",
+        "2026-05-14",
+        "2026-06-04"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
       "serien_ausnahmen": [],
       "gruppe": null
     },
@@ -9679,10 +10333,39 @@
       "anwesenheitspflicht": false,
       "duration": 120,
       "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-03-30",
+        "2026-04-06",
+        "2026-05-25"
+      ],
       "notiz": "Aus TISS-Testdaten erzeugt",
       "zu_besprechen": false,
       "besprechungshinweis": "",
-      "ausfall_daten": [],
+      "serien_ausnahmen": [],
+      "gruppe": null
+    },
+    {
+      "id": "TISS-0171_S2",
+      "name": "VO Höhere Mathematik 1 bei Quereinstieg",
+      "lva_id": "101.998",
+      "typ": "VO",
+      "datum": "2026-03-27",
+      "datum_bis": "2026-06-26",
+      "periodizitaet": "wöchentlich",
+      "start_zeit": "08:00",
+      "raum_id": "E8",
+      "anwesenheitspflicht": false,
+      "duration": 120,
+      "semester_id": "SS26",
+      "ausfall_daten": [
+        "2026-04-03",
+        "2026-04-10",
+        "2026-05-01",
+        "2026-05-15"
+      ],
+      "notiz": "Aus TISS-Testdaten erzeugt",
+      "zu_besprechen": false,
+      "besprechungshinweis": "",
       "serien_ausnahmen": [],
       "gruppe": null
     }

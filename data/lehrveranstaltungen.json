@@ -1,19 +1,6 @@
 {
   "lehrveranstaltungen": [
     {
-      "id": "100.001",
-      "name": "Test LVA",
-      "vortragende": {
-        "name": "Test Vortragender",
-        "email": "Test Email"
-      },
-      "studiensemester": [
-        "sem6",
-        "qs4"
-      ],
-      "studienrichtung": "ETIT"
-    },
-    {
       "id": "350.002",
       "name": "Orientierung ETIT",
       "vortragende": {

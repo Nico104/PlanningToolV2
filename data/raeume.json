@@ -1,11 +1,6 @@
 {
   "raeume": [
     {
-      "id": "test_room",
-      "name": "Test Raum",
-      "kapazitaet": 120
-    },
-    {
       "id": "BB05C01",
       "name": "Analytische Chemie Hörerlabor links",
       "kapazitaet": 32,
