@@ -41,7 +41,7 @@ Planungsdaten können als Excel- oder JSON-Dateien importiert werden. Der Import
 
 Der Export unterstützt vollständige Projektdateien sowie spezielle Ausgaben, zum Beispiel für Lehrende oder als Wochenkalender.
 
-Das Beispielprojekt `Beispiel_Projekt.xlsx` ist als Test- und Demonstrationsdatei beigelegt.
+Das Beispielprojekt `BeispielProjektDaten.xlsx` ist als Test- und Demonstrationsdatei beigelegt.
 
 ## Konfliktprüfung
 

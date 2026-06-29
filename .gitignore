@@ -10,3 +10,8 @@ venv/
 .pytest_cache/
 build/
 data_test/
+*.aux
+*.lof
+*.lot
+*.out
+*.toc
