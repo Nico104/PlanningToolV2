@@ -2,7 +2,7 @@
 
 Das Planungstool ist eine Desktop-Anwendung zur Verwaltung und Planung von Lehrveranstaltungsterminen. Es wurde im Rahmen einer Bachelorarbeit entwickelt und unterstützt das Erfassen, Importieren, Prüfen und Exportieren von Termindaten.
 
-Die Anwendung arbeitet mit lokalen Projektordnern. Ein Projektordner enthält die Stammdaten und Termine eines Planungsstands. Zusätzlich können Projektdaten als Excel-Datei ausgetauscht werden.
+Die Anwendung arbeitet mit lokalen Projektordnern. Ein Projektordner enthält die Stammdaten und Termine eines Planungsstands. Zusätzlich können Projektdaten als JSON- oder Excel-Datei ausgetauscht werden.
 
 ## Funktionsumfang
 
@@ -16,6 +16,19 @@ Die Anwendung umfasst im Wesentlichen:
 - Konfliktprüfung für relevante Planungsfälle
 - Import und Export von Planungsdaten
 - Export von Terminlisten für Lehrende
+- Semester-Werkzeuge zum Kopieren oder Entfernen von Terminen eines Semesters
+- Undo/Redo und speicherbare Layouts
+
+## Start aus dem Quellcode
+
+Die Anwendung kann mit Python gestartet werden:
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+Optional liegt unter `dist/Planungstool.exe` eine gebaute Windows-Version bei.
 
 ## Projektstruktur
 
