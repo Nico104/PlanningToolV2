@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
     QTableWidget,
     QPushButton,
+    QMenu,
 )
 
 from ...services.data_service import DataService
@@ -127,6 +128,7 @@ class PlannerWorkspace(QWidget):
             day_date=self.day_date,
             free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
+            context_menu_cb=self._open_calendar_termin_menu,
             on_drop_cb=self._on_day_drop,
         )
         self.week_view = PlannerWeekView(
@@ -135,6 +137,7 @@ class PlannerWorkspace(QWidget):
             day_date=self.day_date,
             free_day_provider=self.free_day_provider,
             edit_by_id_cb=self._edit_termin_by_id,
+            context_menu_cb=self._open_calendar_termin_menu,
             on_drop_cb=self._on_week_drop,
         )
         self.month_view = PlannerMonthView(
@@ -393,6 +396,28 @@ class PlannerWorkspace(QWidget):
             return
         if saved:
             self.reload_and_refresh_everything()
+
+    def _open_calendar_termin_menu(self, tid: str) -> None:
+        if not tid:
+            return
+        if self._previous_year_enabled:
+            self._show_history_read_only_toast()
+            return
+
+        menu = QMenu(self)
+        act_edit = menu.addAction("Bearbeiten")
+        act_unassign = menu.addAction("Zurück in Terminliste")
+        act_delete = menu.addAction("Löschen")
+
+        chosen = menu.exec(self.cursor().pos())
+        if chosen == act_edit:
+            self._edit_termin_by_id(tid)
+        elif chosen == act_unassign:
+            if self.crud.unassign_termin(tid):
+                self.reload_and_refresh_everything()
+        elif chosen == act_delete:
+            if self.crud.del_termin_by_id(tid):
+                self.reload_and_refresh_everything()
 
     def _show_history_read_only_toast(self) -> None:
         cb = getattr(self.window(), "_show_history_read_only_toast", None)

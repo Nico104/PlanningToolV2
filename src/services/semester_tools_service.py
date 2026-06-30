@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from datetime import date, timedelta
-from typing import Iterable, List, Sequence
+from datetime import date, datetime, timedelta
+from typing import Any, Iterable, List, Sequence
 
 from ..core.models import Lehrveranstaltung, Semester, Termin
 from .id_service import next_id
+from .termin_occurrence_service import series_date_sequence
 
 DATE_MODE_SEMESTER_WEEK = "semester_week"
 DATE_MODE_PLUS_YEAR = "plus_year"
@@ -17,6 +18,14 @@ class LvaTermSummary:
     lva_name: str
     typ: str
     count: int
+
+
+@dataclass(frozen=True)
+class CopySemesterResult:
+    termine: List[Termin]
+    created_count: int
+    target_free_day_occurrences: int = 0
+    auto_cancelled_occurrences: int = 0
 
 
 def semester_lva_summaries(
@@ -95,6 +104,82 @@ def _map_series_end_date(
     return map_date_to_target_semester(value, source, target, mode)
 
 
+def _parse_free_day_date(value: Any) -> date | None:
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _free_day_dates(freie_tage: Iterable[dict] | None) -> set[date]:
+    days: set[date] = set()
+    for item in freie_tage or []:
+        if not isinstance(item, dict):
+            continue
+        start = _parse_free_day_date(item.get("von_datum"))
+        end = _parse_free_day_date(item.get("bis_datum"))
+        if start is None or end is None or end < start:
+            continue
+        current = start
+        while current <= end:
+            days.add(current)
+            current += timedelta(days=1)
+    return days
+
+
+def _apply_target_free_day_cancellations(
+    termin: Termin,
+    free_day_dates: set[date],
+    *,
+    auto_cancel: bool,
+) -> tuple[Termin, int, int]:
+    if not free_day_dates:
+        return termin, 0, 0
+
+    if not termin.is_series():
+        is_affected = termin.datum in free_day_dates if termin.datum is not None else False
+        return termin, int(is_affected), 0
+
+    skipped = set(getattr(termin, "ausfall_daten", []) or [])
+    exceptions = {
+        item.original_datum: item
+        for item in (getattr(termin, "serien_ausnahmen", []) or [])
+        if getattr(item, "original_datum", None) is not None
+    }
+    affected = 0
+    auto_cancelled_originals: set[date] = set()
+
+    for original_date in series_date_sequence(termin.datum, termin.datum_bis, termin.periodizitaet):
+        if original_date in skipped:
+            continue
+        exception = exceptions.get(original_date)
+        actual_date = getattr(exception, "datum", None) if exception else original_date
+        if actual_date in free_day_dates:
+            affected += 1
+            if auto_cancel:
+                auto_cancelled_originals.add(original_date)
+
+    if not auto_cancelled_originals:
+        return termin, affected, 0
+
+    new_skipped = sorted(skipped | auto_cancelled_originals)
+    new_exceptions = [
+        item
+        for item in (getattr(termin, "serien_ausnahmen", []) or [])
+        if getattr(item, "original_datum", None) not in auto_cancelled_originals
+    ]
+    return (
+        replace(termin, ausfall_daten=new_skipped, serien_ausnahmen=new_exceptions),
+        affected,
+        len(auto_cancelled_originals),
+    )
+
+
 def copy_semester_termine(
     termine: Sequence[Termin],
     *,
@@ -103,17 +188,22 @@ def copy_semester_termine(
     lva_ids: Iterable[str],
     date_mode: str = DATE_MODE_SEMESTER_WEEK,
     copy_ausfall_daten: bool = False,
-) -> tuple[List[Termin], int]:
+    freie_tage: Iterable[dict] | None = None,
+    auto_cancel_target_free_days: bool = False,
+) -> CopySemesterResult:
     if source.id == target.id:
         raise ValueError("Quell- und Zielsemester müssen unterschiedlich sein.")
 
     selected_lva_ids = {str(lva_id) for lva_id in lva_ids if str(lva_id).strip()}
     if not selected_lva_ids:
-        return list(termine), 0
+        return CopySemesterResult(list(termine), 0)
 
     out = list(termine)
     existing_ids = [str(termin.id) for termin in out]
     created: List[Termin] = []
+    free_days = _free_day_dates(freie_tage)
+    target_free_day_occurrences = 0
+    auto_cancelled_occurrences = 0
 
     for termin in termine:
         if str(getattr(termin, "semester_id", "")) != str(source.id):
@@ -123,42 +213,51 @@ def copy_semester_termine(
 
         new_id = next_id("T", existing_ids, width=3)
         existing_ids.append(new_id)
-        created.append(
-            replace(
-                termin,
-                id=new_id,
-                semester_id=target.id,
-                datum=_map_optional_date(termin.datum, source, target, date_mode),
-                datum_bis=_map_series_end_date(termin.datum_bis, source, target, date_mode),
-                ausfall_daten=(
-                    [
-                        map_date_to_target_semester(value, source, target, date_mode)
-                        for value in (getattr(termin, "ausfall_daten", []) or [])
-                    ]
-                    if copy_ausfall_daten
-                    else []
-                ),
-                serien_ausnahmen=(
-                    [
-                        replace(
-                            value,
-                            original_datum=map_date_to_target_semester(
-                                value.original_datum, source, target, date_mode
-                            ),
-                            datum=map_date_to_target_semester(
-                                value.datum, source, target, date_mode
-                            ),
-                        )
-                        for value in (getattr(termin, "serien_ausnahmen", []) or [])
-                    ]
-                    if copy_ausfall_daten
-                    else []
-                ),
-            )
+        copied = replace(
+            termin,
+            id=new_id,
+            semester_id=target.id,
+            datum=_map_optional_date(termin.datum, source, target, date_mode),
+            datum_bis=_map_series_end_date(termin.datum_bis, source, target, date_mode),
+            ausfall_daten=(
+                [
+                    map_date_to_target_semester(value, source, target, date_mode)
+                    for value in (getattr(termin, "ausfall_daten", []) or [])
+                ]
+                if copy_ausfall_daten
+                else []
+            ),
+            serien_ausnahmen=(
+                [
+                    replace(
+                        value,
+                        original_datum=map_date_to_target_semester(
+                            value.original_datum, source, target, date_mode
+                        ),
+                        datum=map_date_to_target_semester(value.datum, source, target, date_mode),
+                    )
+                    for value in (getattr(termin, "serien_ausnahmen", []) or [])
+                ]
+                if copy_ausfall_daten
+                else []
+            ),
         )
+        copied, affected, cancelled = _apply_target_free_day_cancellations(
+            copied,
+            free_days,
+            auto_cancel=auto_cancel_target_free_days,
+        )
+        target_free_day_occurrences += affected
+        auto_cancelled_occurrences += cancelled
+        created.append(copied)
 
     out.extend(created)
-    return out, len(created)
+    return CopySemesterResult(
+        out,
+        len(created),
+        target_free_day_occurrences=target_free_day_occurrences,
+        auto_cancelled_occurrences=auto_cancelled_occurrences,
+    )
 
 
 def delete_semester_termine(

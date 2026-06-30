@@ -32,6 +32,7 @@ from ...services.semester_tools_service import (
     semester_lva_summaries,
 )
 from ..components.widgets.semester_selector import SemesterSelector
+from ..components.widgets.tick_checkbox import TickCheckBox
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class SemesterToolRequest:
     lva_ids: tuple[str, ...] = ()
     date_mode: str = DATE_MODE_SEMESTER_WEEK
     copy_ausfall_daten: bool = False
+    auto_cancel_target_free_days: bool = False
 
 
 class SemesterToolsDialog(QDialog):
@@ -156,6 +158,22 @@ class SemesterToolsDialog(QDialog):
         mode_layout.setSpacing(8)
         mode_layout.addLayout(mode_row)
         mode_layout.addWidget(mode_help)
+        self.copy_ausfall_cb = TickCheckBox(
+            "Ausfalltermine und einzelne Serien-Verschiebungen mitkopieren"
+        )
+        self.copy_ausfall_cb.setChecked(True)
+        self.copy_ausfall_cb.setToolTip(
+            "Übernimmt manuell markierte Ausfälle und Serien-Ausnahmen in das Zielsemester."
+        )
+        mode_layout.addWidget(self.copy_ausfall_cb)
+        self.auto_cancel_free_days_cb = TickCheckBox(
+            "Serienvorkommen auf freien Tagen im Zielsemester automatisch als Ausfall markieren"
+        )
+        self.auto_cancel_free_days_cb.setChecked(True)
+        self.auto_cancel_free_days_cb.setToolTip(
+            "Betrifft nur Serientermine. Einzeltermine auf freien Tagen bleiben sichtbar und werden als Konflikt gemeldet."
+        )
+        mode_layout.addWidget(self.auto_cancel_free_days_cb)
         layout.addWidget(self._section("Datumsübernahme", mode_layout))
 
         tools = QHBoxLayout()
@@ -397,7 +415,8 @@ class SemesterToolsDialog(QDialog):
             target=target,
             lva_ids=lva_ids,
             date_mode=self._date_mode(),
-            copy_ausfall_daten=False,
+            copy_ausfall_daten=self.copy_ausfall_cb.isChecked(),
+            auto_cancel_target_free_days=self.auto_cancel_free_days_cb.isChecked(),
         )
         self.accept()
 

@@ -30,6 +30,7 @@ class PlannerDayView:
         day_date: QDateEdit,
         free_day_provider: FreeDayProvider,
         edit_by_id_cb: Callable[[str], None],
+        context_menu_cb: Callable[[str], None],
         on_drop_cb: Callable[[str, date, time, Optional[str]], None],
     ):
         self.state = state
@@ -37,6 +38,7 @@ class PlannerDayView:
         self.day_date = day_date
         self._free_day_provider = free_day_provider
         self.edit_by_id_cb = edit_by_id_cb
+        self.context_menu_cb = context_menu_cb
         self.on_drop_cb = on_drop_cb
         self._read_only = False
 
@@ -268,6 +270,7 @@ class PlannerDayView:
                 lvas=self.state.lvas,
                 edit_by_id_cb=self.edit_by_id_cb,
                 card_parent=self.day_table,
+                context_menu_cb=self.context_menu_cb,
                 border_px=2,
                 sort_group_ids=False,
                 read_only=self._read_only,

@@ -1789,6 +1789,33 @@ QDockWidget#dock_global_filters QScrollArea#HeaderScrollArea QWidget#HeaderBar {
   background: #ffffff;
 }
 
+QDockWidget#dock_global_filters QWidget#FilterDockTitleBar {
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+QDockWidget#dock_global_filters QLabel#FilterDockTitle {
+  color: #111111;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+QDockWidget#dock_global_filters QPushButton#FilterResetButton {
+  background: transparent;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  color: #555555;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+
+QDockWidget#dock_global_filters QPushButton#FilterResetButton:hover {
+  background: #f0f0f0;
+  border-color: #c8c8c8;
+  color: #111111;
+}
+
 QDockWidget#dock_global_filters QScrollBar:horizontal {
   background: transparent;
   height: 7px;

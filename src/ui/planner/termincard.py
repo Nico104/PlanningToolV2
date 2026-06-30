@@ -14,6 +14,7 @@ class TerminCard(QLabel):
 
     DRAG_THRESHOLD = 5
     doubleClicked = Signal(str)
+    rightClicked = Signal(str)
     _focused_card_ref: weakref.ref | None = None
     _highlighted_refs: list[weakref.ref] = []
 
@@ -219,6 +220,11 @@ class TerminCard(QLabel):
             event.accept()
         else:
             super().mouseDoubleClickEvent(event)
+
+    def contextMenuEvent(self, event):
+        self.setFocus()
+        self.rightClicked.emit(self.termin_id)
+        event.accept()
 
     def mouseMoveEvent(self, event):
         if self._read_only:

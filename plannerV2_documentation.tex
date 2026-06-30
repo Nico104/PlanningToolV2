@@ -688,6 +688,7 @@ def _on_global_filters_changed(self, fs: FilterState) -> None:
 
 Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabei, die Planung in kleineren Ausschnitten zu betrachten.
 Ergänzend zu den globalen Filtern besitzt die Terminliste eine Suchfunktion. Damit kann nach Terminname, Termin-ID, LVA, Raum, Lehrperson oder Besprechungshinweis gesucht werden. Wenn ein passender Termin bereits eingeplant ist, kann über das Kontextmenü der Terminliste direkt zu diesem Termin im Kalender gesprungen werden.
+Auch eingeplante Terminkarten in der Tages- und Wochenansicht besitzen ein Kontextmenü, über das Termine bearbeitet, zurück in die Terminliste verschoben oder gelöscht werden können.
 
 \subsection{Konflikterkennung}
 
@@ -793,7 +794,10 @@ Außerdem kann in den Einstellungen festgelegt werden, welcher Projektordner ver
 
 \subsection{Semester-Werkzeuge}
 
-Für wiederkehrende Planungsarbeiten wurden Semester-Werkzeuge umgesetzt. Damit können Termine eines Quellsemesters in ein Zielsemester kopiert oder Termine eines ausgewählten Semesters gelöscht werden. Beim Kopieren kann das Datum entweder nach der Position im Semester oder nach dem gleichen Kalendertag übertragen werden. Dadurch können bestehende Planungsstände als Grundlage für ein neues Semester verwendet werden, ohne Lehrveranstaltungen, Räume oder andere Stammdaten neu anzulegen.
+Für wiederkehrende Planungsarbeiten wurden Semester-Werkzeuge umgesetzt. Damit können Termine eines Quellsemesters in ein Zielsemester kopiert oder Termine eines ausgewählten Semesters gelöscht werden.
+Beim Kopieren kann das Datum entweder nach der Position im Semester oder nach dem gleichen Kalendertag übertragen werden. Zusätzlich können Ausfalltermine und einzelne Serien-Ausnahmen übernommen werden.
+Serientermine, deren Vorkommen im Zielsemester auf freie Tage fallen, können automatisch als Ausfall markiert werden. Nach dem Kopieren meldet die Anwendung, wie viele Vorkommen auf freie Tage gefallen sind.
+Dadurch können bestehende Planungsstände als Grundlage für ein neues Semester verwendet werden, ohne Lehrveranstaltungen, Räume oder andere Stammdaten neu anzulegen.
 
 \subsection{Undo/Redo, Shortcuts und Layout-Verwaltung}
 
@@ -859,9 +863,9 @@ Termin löschen & Ein bestehender Termin wird gelöscht. & Der Termin wird aus d
 \hline
 Termin-Zuweisung entfernen & Ein eingeplanter Termin wird aus dem Kalender entfernt (über Drag-and-Drop) & Der Termin ist nicht mehr im Kalender eingeplant, bleibt aber in der Terminliste vorhanden. \\
 \hline
-LVA erstellen & Eine neue Lehrveranstaltung wird über den LVA-Dialog erstellt. & Die Lehrveranstaltung wird gespeichert und kann im Termin-Dialog ausgewählt werden. \\
+LVA erstellen & Eine neue Lehrveranstaltung wird über den Termin-Dialog bzw. über den Dateneditor erstellt. & Die Lehrveranstaltung wird gespeichert und kann im Termin-Dialog ausgewählt werden. \\
 \hline
-Raum erstellen & Ein neuer Raum wird in den Stammdaten erstellt. & Der Raum wird gespeichert und steht bei der Terminplanung zur Auswahl. \\
+Raum erstellen & Ein neuer Raum wird über den Termin-Dialog bzw. über den Dateneditor erstellt. & Der Raum wird gespeichert und kann im Termin-Dialog ausgewählt werden. \\
 \hline
 \end{tabularx}
 \caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
@@ -883,7 +887,7 @@ Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des 
 \hline
 Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. \\
 \hline
-Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Tag wird in der Kalenderansicht sichtbar dargestellt. \\
+Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Zeitraum wird in der Kalenderansicht sichtbar dargestellt. \\
 \hline
 Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. \\
 \hline
@@ -905,7 +909,7 @@ Filterfunktion & Es werden verschiedene Filter ausgewählt, zum Beispiel nach Se
 \hline
 Terminsuche & In der Terminliste wird nach einer LVA, einem Raum oder einer Lehrperson gesucht. & Die Terminliste zeigt nur passende Treffer an und ein eingeplanter Treffer kann im Kalender angesprungen werden. \\
 \hline
-Filter zurücksetzen & Ein gesetzter Filter wird entfernt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. \\
+Filter zurücksetzen & Ein gesetzter Filter wird entfernt bzw. alle Filter werden gemeinsam über den "Zurücksetzen"-Button zurückgesetzt. & Die zuvor ausgeblendeten Termine werden wieder angezeigt. \\
 \hline
 Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Terminliste kontrolliert. & Die Terminliste zeigt den aktualisierten Termin an. \\
 \hline
@@ -957,7 +961,7 @@ Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem
 \hline
 Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. \\
 \hline
-Dauerberechnung prüfen & Im Termin-Dialog werden Startzeit und Dauer eingetragen. & Die Dauer bzw. die zeitliche Einordnung wird korrekt übernommen. \\
+Dauerberechnung prüfen & Im Termin-Dialog werden Start- und Endzeit eingetragen. & Die Dauer wird automatisch aus der Zeitspanne berechnet und korrekt übernommen. \\
 \hline
 Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
@@ -987,7 +991,7 @@ Raum-Liste importieren & Eine Excel-Datei mit Raum-Daten wird importiert. & Die 
 \hline
 Export für Lehrende & Für ausgewählte LVAs bzw. Lehrende und einen Zeitraum wird ein Export für Lehrende erstellt. & Eine Excel-Datei als Terminliste oder Wochenkalender wird erzeugt. \\
 \hline
-Semester-Werkzeuge verwenden & Termine eines Semesters werden in ein anderes Semester kopiert oder aus einem Semester entfernt. & Die betroffenen Termine werden korrekt kopiert bzw. gelöscht, ohne Stammdaten zu entfernen. \\
+Semester-Werkzeuge verwenden & Termine eines Semesters werden in ein anderes Semester kopiert oder aus einem Semester entfernt. Dabei werden auch Serientermine mit Ausfallterminen und freien Tagen im Zielsemester geprüft.& Die betroffenen Termine werden korrekt kopiert bzw. gelöscht, ohne Stammdaten zu entfernen. Serienvorkommen auf freien Tagen können automatisch als Ausfall markiert werden.\\
 \hline
 Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. \\
 \hline

@@ -223,6 +223,7 @@ class LVATerminDialog(QDialog):
             self._set_lva_studiensemester_chips(getattr(lva, "studiensemester", []) if lva else [])
 
         self.lva_cb.currentIndexChanged.connect(_sync_lva_fields)
+        self.lva_id_le.editingFinished.connect(self._select_existing_lva_from_entered_id)
         self.lva_studiensemester_chips.chipDeleted.connect(self._remove_lva_studiensemester_chip)
         self.btn_add_lva_studiensemester.clicked.connect(self._add_lva_studiensemester_chip)
         self._refresh_lva_studiensemester_cb()
@@ -307,6 +308,7 @@ class LVATerminDialog(QDialog):
             self.raum_building_le.setText(getattr(raum, "gebaeude", "") if raum else "")
 
         self.raum_cb.currentIndexChanged.connect(_sync_raum_fields)
+        self.raum_id_le.editingFinished.connect(self._select_existing_raum_from_entered_id)
 
         self.grp_name = QLineEdit((termin.gruppe.name if (termin and termin.gruppe) else ""))
         self.grp_name.setObjectName("Field")
@@ -599,6 +601,15 @@ class LVATerminDialog(QDialog):
 
         lva_select_form = _dialog_form()
         lva_select_form.addRow("Auswahl:", self.lva_cb)
+        lva_help = QLabel(
+            "Änderungen an einer ausgewählten LVA werden in den Stammdaten gespeichert. "
+            "Für eine neue LVA wählen Sie '+ Neue Lehrveranstaltung'. "
+            "Wird dort eine bereits vorhandene LVA-Nr. eingetragen, wählt der Dialog automatisch den bestehenden Eintrag aus. "
+            "Die LVA-Nr. sollte nur bei einer tatsächlichen Umnummerierung geändert werden."
+        )
+        lva_help.setObjectName("SettingsHelp")
+        lva_help.setWordWrap(True)
+        lva_select_form.addRow(lva_help)
 
         lva_data_form = _dialog_form()
         lva_data_form.addRow("LVA-Nr. *:", self.lva_id_le)
@@ -622,6 +633,15 @@ class LVATerminDialog(QDialog):
 
         raum_select_form = _dialog_form()
         raum_select_form.addRow("Auswahl:", self.raum_cb)
+        raum_help = QLabel(
+            "Änderungen an einem ausgewählten Raum werden in den Stammdaten gespeichert. "
+            "Für einen neuen Raum wählen Sie '+ Neuer Raum'. "
+            "Wird dort eine bereits vorhandene Raumnummer eingetragen, wählt der Dialog automatisch den bestehenden Eintrag aus. "
+            "Die Raumnummer sollte nur bei einer tatsächlichen Umnummerierung geändert werden."
+        )
+        raum_help.setObjectName("SettingsHelp")
+        raum_help.setWordWrap(True)
+        raum_select_form.addRow(raum_help)
 
         raum_data_form = _dialog_form()
         raum_data_form.addRow("Raumnummer *:", self.raum_id_le)
@@ -664,6 +684,30 @@ class LVATerminDialog(QDialog):
             if cb.itemData(i) == data_value:
                 cb.setCurrentIndex(i)
                 return
+
+    def _select_existing_lva_from_entered_id(self) -> bool:
+        if not self._creating_lva:
+            return False
+        lva_id = self._current_lva_id()
+        if not lva_id or lva_id not in self._lva_by_id:
+            return False
+        idx = self.lva_cb.findData(lva_id)
+        if idx < 0:
+            return False
+        self.lva_cb.setCurrentIndex(idx)
+        return True
+
+    def _select_existing_raum_from_entered_id(self) -> bool:
+        if not self._creating_raum:
+            return False
+        raum_id = self.raum_id_le.text().strip()
+        if not raum_id or raum_id not in self._raum_by_id:
+            return False
+        idx = self.raum_cb.findData(raum_id)
+        if idx < 0:
+            return False
+        self.raum_cb.setCurrentIndex(idx)
+        return True
 
     def _selected_semester(self) -> Optional[Semester]:
         semester_id = self.semester_selector.current_semester_id()
@@ -1317,6 +1361,9 @@ class LVATerminDialog(QDialog):
             self._update_semester_warning()
 
     def _accept(self):
+        self._select_existing_lva_from_entered_id()
+        self._select_existing_raum_from_entered_id()
+
         lva_id = self._current_lva_id()
         raum_id = self.raum_id_le.text().strip()
         typ = self._current_termin_type()

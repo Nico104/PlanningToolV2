@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QFrame,
     QScrollArea,
+    QLabel,
+    QPushButton,
 )
 
 from ..components.widgets.tight_combobox import TightComboBox
@@ -29,6 +31,24 @@ class GlobalFilterDock(QDockWidget):
         self.setAllowedAreas(Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
         self.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self._all_rooms = []
+
+        title_bar = QWidget(self)
+        title_bar.setObjectName("FilterDockTitleBar")
+        title_layout = QHBoxLayout(title_bar)
+        title_layout.setContentsMargins(10, 5, 8, 5)
+        title_layout.setSpacing(8)
+
+        title_label = QLabel("Filter", title_bar)
+        title_label.setObjectName("FilterDockTitle")
+        title_layout.addWidget(title_label)
+        title_layout.addStretch()
+
+        self.reset_btn = QPushButton("Zurücksetzen", title_bar)
+        self.reset_btn.setObjectName("FilterResetButton")
+        self.reset_btn.setToolTip("Alle Filter zurücksetzen")
+        self.reset_btn.setFixedHeight(24)
+        title_layout.addWidget(self.reset_btn)
+        self.setTitleBarWidget(title_bar)
 
         self._container = QWidget(self)
         self._container.setObjectName("HeaderBarContainer")
@@ -128,6 +148,7 @@ class GlobalFilterDock(QDockWidget):
         self.room_cb.currentIndexChanged.connect(self._on_room_change)
         self.studiensemester_cb.currentIndexChanged.connect(self._on_change)
         self.zu_besprechen_cb.toggled.connect(self._on_change)
+        self.reset_btn.clicked.connect(self.reset_filters)
 
         self._scroll.setWidget(self._widget)
         self.setWidget(self._container)
@@ -173,6 +194,42 @@ class GlobalFilterDock(QDockWidget):
         self._on_change()
 
     def _on_room_change(self, *_) -> None:
+        self._update_room_filter_visibility()
+        self._on_change()
+
+    def reset_filters(self) -> None:
+        widgets = (
+            self.studienrichtung_cb,
+            self.studiensemester_cb,
+            self.lva_cb,
+            self.dozent_cb,
+            self.typ_cb,
+            self.building_cb,
+            self.room_cb,
+            self.zu_besprechen_cb,
+        )
+        for widget in widgets:
+            widget.blockSignals(True)
+        try:
+            self.semester_selector.set_semester_id(None)
+            for combo in (
+                self.studienrichtung_cb,
+                self.studiensemester_cb,
+                self.lva_cb,
+                self.dozent_cb,
+                self.typ_cb,
+                self.building_cb,
+            ):
+                if combo.count() > 0:
+                    combo.setCurrentIndex(0)
+            self._refresh_room_options(None)
+            if self.room_cb.count() > 0:
+                self.room_cb.setCurrentIndex(0)
+            self.zu_besprechen_cb.setChecked(False)
+        finally:
+            for widget in widgets:
+                widget.blockSignals(False)
+
         self._update_room_filter_visibility()
         self._on_change()
 

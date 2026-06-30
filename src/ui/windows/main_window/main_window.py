@@ -548,15 +548,27 @@ class MainWindow(QMainWindow):
         try:
             termine = self.ds.load_termine()
             if request.action == "copy" and request.source and request.target:
-                updated, changed_count = copy_semester_termine(
+                result = copy_semester_termine(
                     termine,
                     source=request.source,
                     target=request.target,
                     lva_ids=request.lva_ids,
                     date_mode=request.date_mode,
                     copy_ausfall_daten=request.copy_ausfall_daten,
+                    freie_tage=self.ds.load_freie_tage(),
+                    auto_cancel_target_free_days=request.auto_cancel_target_free_days,
                 )
+                updated = result.termine
+                changed_count = result.created_count
                 message = f"{changed_count} Termine nach {request.target.name} kopiert."
+                if result.target_free_day_occurrences:
+                    message += (
+                        f" {result.target_free_day_occurrences} Vorkommen lagen auf freien Tagen."
+                    )
+                    if result.auto_cancelled_occurrences:
+                        message += (
+                            f" {result.auto_cancelled_occurrences} davon wurden als Ausfall markiert."
+                        )
             elif request.action == "clear" and request.semester:
                 updated, changed_count = delete_semester_termine(termine, request.semester.id)
                 message = f"{changed_count} Termine aus {request.semester.name} gelöscht."

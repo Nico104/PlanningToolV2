@@ -335,6 +335,7 @@ def render_grouped_termine_column(
     lvas: Iterable,
     edit_by_id_cb: Callable[[str], None],
     card_parent,
+    context_menu_cb: Callable[[str], None] | None = None,
     border_px: int = 2,
     sort_group_ids: bool = False,
     read_only: bool = False,
@@ -450,6 +451,8 @@ def render_grouped_termine_column(
             )
             card.set_read_only(read_only)
             card.doubleClicked.connect(edit_by_id_cb)
+            if context_menu_cb is not None:
+                card.rightClicked.connect(context_menu_cb)
 
             place_termin_card(
                 table=table,
