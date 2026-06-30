@@ -194,6 +194,7 @@ def load_global_style(app: QApplication, theme: str = "light") -> None:
 
 def run_gui() -> None:
     _set_windows_app_id()
+    QLocale.setDefault(QLocale(QLocale.German, QLocale.Austria))
     app = QApplication([])
     _install_german_qt_translations(app)
     icon_path = _app_icon_path()

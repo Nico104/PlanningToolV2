@@ -1978,17 +1978,18 @@ QCalendarWidget QWidget {
 
 QCalendarWidget {
   background: #1b1f24;
-  border: 1px solid #333a43;
+  border: 1px solid #3f4650;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   padding: 8px;
+  min-width: 380px;
 }
 
 QCalendarWidget QToolButton {
   background: #1f2328;
   color: #e5e7eb;
   font-size: 13px;
-  border: 1px solid #333a43;
+  border: 1px solid #3f4650;
   border-radius: 8px;
   padding: 6px 10px;
   font-weight: 500;
@@ -2002,7 +2003,14 @@ QCalendarWidget QToolButton:hover {
 
 QCalendarWidget QToolButton#qt_calendar_prevmonth,
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
-  icon-size: 24px;
+  background: transparent;
+  border: none;
+  min-width: 30px;
+  max-width: 30px;
+  min-height: 28px;
+  max-height: 28px;
+  padding: 0px;
+  icon-size: 16px;
 }
 
 QCalendarWidget QToolButton#qt_calendar_prevmonth {
@@ -2011,6 +2019,18 @@ QCalendarWidget QToolButton#qt_calendar_prevmonth {
 
 QCalendarWidget QToolButton#qt_calendar_nextmonth {
   qproperty-icon: url(":/assets/icons/caret-right-lined_white.svg");
+}
+
+QCalendarWidget QToolButton#qt_calendar_prevmonth:hover,
+QCalendarWidget QToolButton#qt_calendar_nextmonth:hover {
+  background: #2a3038;
+  border: none;
+}
+
+QCalendarWidget QToolButton#qt_calendar_monthbutton {
+  min-width: 92px;
+  min-height: 28px;
+  padding: 4px 8px;
 }
 
 QCalendarWidget QMenu {
@@ -2058,14 +2078,54 @@ QCalendarWidget QWidget#qt_calendar_navigationbar {
   background: #1f2328;
   border-radius: 8px 8px 0 0;
   padding: 8px 0 4px 0;
+  min-width: 360px;
 }
 
 QCalendarWidget QSpinBox {
   background: #1b1f24;
-  border: 1px solid #333a43;
+  border: 1px solid #3f4650;
   border-radius: 6px;
   font-size: 13px;
   color: #e5e7eb;
+  min-width: 88px;
+  min-height: 28px;
+  padding: 2px 24px 2px 8px;
+}
+
+QCalendarWidget QSpinBox::up-button {
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 18px;
+  background: transparent;
+  border-left: 1px solid #3f4650;
+  border-top-right-radius: 6px;
+}
+
+QCalendarWidget QSpinBox::down-button {
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 18px;
+  background: transparent;
+  border-left: 1px solid #3f4650;
+  border-bottom-right-radius: 6px;
+}
+
+QCalendarWidget QSpinBox:focus {
+  border: 1px solid #f1f5f9;
+}
+
+QCalendarWidget QSpinBox::up-arrow {
+  image: url(":/assets/icons/chevron-up_white.svg");
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+}
+
+QCalendarWidget QSpinBox::down-arrow {
+  image: url(":/assets/icons/chevron-down_white.svg");
+  width: 8px;
+  height: 8px;
+  margin-bottom: 4px;
 }
 
 /* Toast */
