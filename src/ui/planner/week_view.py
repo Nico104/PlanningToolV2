@@ -213,7 +213,12 @@ class PlannerWeekView:
             header_labels.append(f"{day}\n{day_date.strftime('%d.%m.%Y')}")
             day_info = self._free_days_by_date.get(day_date)
             term_count = visible_term_counts_by_day.get(day_date, 0)
-            accent = week_day_accent_color(term_count)
+            accent = week_day_accent_color(
+                term_count,
+                enabled=bool(self.state.settings.get("week_day_load_indicator_enabled", True)),
+                warning_threshold=self.state.settings.get("week_day_load_warning_threshold", 3),
+                high_threshold=self.state.settings.get("week_day_load_high_threshold", 6),
+            )
             if accent is not None:
                 header_accents[1 + i] = accent
             tooltip_lines = [

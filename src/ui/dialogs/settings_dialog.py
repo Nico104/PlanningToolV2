@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
+from ...services.app_config_service import load_default_config
 from ...services.conflict_service import load_conflicts, save_conflicts
 from ..components.widgets.tick_checkbox import TickCheckBox
 from ..components.widgets.tight_combobox import TightComboBox
@@ -39,7 +40,7 @@ class SettingsDialog(QDialog):
         root = QVBoxLayout(self)
         root.setContentsMargins(18, 18, 18, 18)
         root.setSpacing(14)
-        self.setMinimumWidth(760)
+        self.setMinimumWidth(620)
 
         title = QLabel("Einstellungen")
         title.setObjectName("SettingsTitle")
@@ -104,19 +105,22 @@ class SettingsDialog(QDialog):
 
         self.show_weekend_cb = TickCheckBox()
         self.show_weekend_cb.setObjectName("Field")
+        self.week_day_load_indicator_cb = TickCheckBox()
+        self.week_day_load_indicator_cb.setObjectName("Field")
+        self.week_day_load_warning_threshold_sb = QSpinBox()
+        self.week_day_load_warning_threshold_sb.setRange(1, 49)
+        self.week_day_load_warning_threshold_sb.setObjectName("Field")
+        self.week_day_load_high_threshold_sb = QSpinBox()
+        self.week_day_load_high_threshold_sb.setRange(2, 50)
+        self.week_day_load_high_threshold_sb.setObjectName("Field")
+        self.week_day_load_threshold_widget = self._week_load_threshold_widget()
 
-        content = QHBoxLayout()
+        content = QVBoxLayout()
         content.setSpacing(12)
         lay.addLayout(content)
-        left_col = QVBoxLayout()
-        left_col.setSpacing(12)
-        right_col = QVBoxLayout()
-        right_col.setSpacing(12)
-        content.addLayout(left_col, 1)
-        content.addLayout(right_col, 1)
 
         calendar_section, calendar_grid = self._section("Kalender")
-        left_col.addWidget(calendar_section)
+        content.addWidget(calendar_section)
         self._add_field(
             calendar_grid,
             0,
@@ -140,9 +144,23 @@ class SettingsDialog(QDialog):
             self.show_weekend_cb,
             "Samstag und Sonntag in Wochen- und Monatsansicht einblenden.",
         )
+        self._add_field(
+            calendar_grid,
+            5,
+            "Auslastungsleiste",
+            self.week_day_load_indicator_cb,
+            "Farbige Leiste im Kopf der Wochenansicht anzeigen.",
+        )
+        self._add_field(
+            calendar_grid,
+            6,
+            "Schwellenwerte",
+            self.week_day_load_threshold_widget,
+            "Grün unter Gelb, Gelb ab dem ersten Wert, Orange ab dem zweiten Wert.",
+        )
 
         view_section, view_grid = self._section("Planungsansicht")
-        left_col.addWidget(view_section)
+        content.addWidget(view_section)
         self._add_field(
             view_grid,
             0,
@@ -171,10 +189,9 @@ class SettingsDialog(QDialog):
             self.jump_to_semester_start_cb,
             "Beim Auswählen eines Semesters zur ersten passenden Woche springen.",
         )
-        left_col.addStretch(1)
 
         app_section, app_grid = self._section("Projekt und App")
-        right_col.addWidget(app_section)
+        content.addWidget(app_section)
         self._add_field(
             app_grid,
             0,
@@ -190,7 +207,7 @@ class SettingsDialog(QDialog):
             "Legt fest, ob Strg+Alt+V gehalten oder umgeschaltet wird.",
         )
         self._add_field(app_grid, 2, "Design", self.theme_cb)
-        right_col.addStretch(1)
+        content.addStretch(1)
 
         conflicts_page = self._build_conflicts_page()
         self.tabs.addTab(conflicts_page, "Konflikte")
@@ -200,6 +217,12 @@ class SettingsDialog(QDialog):
         btns = QHBoxLayout()
         btns.setSpacing(10)
         root.addLayout(btns)
+        self.reset_btn = QPushButton("Standardwerte")
+        self.reset_btn.setObjectName("SecondaryButton")
+        self.reset_btn.setToolTip(
+            "Setzt die sichtbaren Einstellungen auf Standardwerte zurück. Der Datenpfad bleibt erhalten."
+        )
+        btns.addWidget(self.reset_btn)
         btns.addStretch(1)
 
         self.cancel_btn = QPushButton("Abbrechen")
@@ -209,11 +232,21 @@ class SettingsDialog(QDialog):
         btns.addWidget(self.cancel_btn)
         btns.addWidget(self.ok_btn)
 
+        self.reset_btn.clicked.connect(self._reset_to_defaults)
         self.cancel_btn.clicked.connect(self.reject)
         self.ok_btn.clicked.connect(self._on_ok)
         self.slot_cb.currentIndexChanged.connect(self._on_slot_changed)
         self.day_start_te.timeChanged.connect(lambda *_: self._enforce_hour_times())
         self.day_end_te.timeChanged.connect(lambda *_: self._enforce_hour_times())
+        self.week_day_load_indicator_cb.stateChanged.connect(
+            lambda *_: self._sync_week_load_controls()
+        )
+        self.week_day_load_warning_threshold_sb.valueChanged.connect(
+            lambda *_: self._sync_week_load_controls()
+        )
+        self.week_day_load_high_threshold_sb.valueChanged.connect(
+            lambda *_: self._sync_week_load_controls()
+        )
 
         self.load(settings or {})
         self._fit_to_screen()
@@ -228,10 +261,10 @@ class SettingsDialog(QDialog):
             return
         available = screen.availableGeometry()
         max_height = max(520, available.height() - 80)
-        max_width = max(720, available.width() - 80)
+        max_width = max(620, available.width() - 80)
         self.setMaximumSize(max_width, max_height)
         self.resize(
-            min(max(self.width(), 760), max_width), min(max(self.height(), 640), max_height)
+            min(max(self.width(), 680), max_width), min(max(self.height(), 640), max_height)
         )
 
     def _scrollable_page(self) -> QScrollArea:
@@ -279,6 +312,26 @@ class SettingsDialog(QDialog):
             grid.addWidget(help_label, base_row + 1, 1)
             grid.setRowMinimumHeight(base_row + 1, 16)
 
+    def _week_load_threshold_widget(self) -> QWidget:
+        box = QWidget()
+        layout = QHBoxLayout(box)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        for label_text, spin in (
+            ("Gelb ab", self.week_day_load_warning_threshold_sb),
+            ("Orange ab", self.week_day_load_high_threshold_sb),
+        ):
+            label = QLabel(label_text)
+            label.setObjectName("SettingsHelp")
+            unit = QLabel("Termine")
+            unit.setObjectName("SettingsHelp")
+            spin.setFixedWidth(72)
+            layout.addWidget(label)
+            layout.addWidget(spin)
+            layout.addWidget(unit)
+        layout.addStretch(1)
+        return box
+
     def _build_conflicts_page(self) -> QWidget:
         page = QWidget()
         page.setObjectName("SettingsPage")
@@ -308,6 +361,7 @@ class SettingsDialog(QDialog):
         return page
 
     def _populate_conflict_settings(self) -> None:
+        self._clear_conflict_settings()
         self._conflict_controls = []
         for idx, conflict in enumerate(self.conflicts):
             row = QFrame()
@@ -342,6 +396,15 @@ class SettingsDialog(QDialog):
             self._conflict_controls.append(controls)
             self.conflict_layout.addWidget(row)
         self.conflict_layout.addStretch(1)
+
+    def _clear_conflict_settings(self) -> None:
+        if not hasattr(self, "conflict_layout"):
+            return
+        while self.conflict_layout.count():
+            item = self.conflict_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
 
     def _conflict_options_widget(self, conflict: Dict, controls: Dict) -> Optional[QWidget]:
         key = str(conflict.get("key", ""))
@@ -449,6 +512,19 @@ class SettingsDialog(QDialog):
         theme_idx = self.theme_cb.findData(theme)
         self.theme_cb.setCurrentIndex(theme_idx if theme_idx >= 0 else 0)
         self.show_weekend_cb.setChecked(bool(s.get("show_weekend", False)))
+        self.week_day_load_indicator_cb.setChecked(
+            bool(s.get("week_day_load_indicator_enabled", True))
+        )
+        warning_threshold = self._clamped_int(
+            s.get("week_day_load_warning_threshold", 3), 3, 1, 49
+        )
+        self.week_day_load_warning_threshold_sb.setValue(warning_threshold)
+        self.week_day_load_high_threshold_sb.setValue(
+            self._clamped_int(
+                s.get("week_day_load_high_threshold", 6), 6, warning_threshold + 1, 50
+            )
+        )
+        self._sync_week_load_controls()
 
     def _on_ok(self) -> None:
         self.result_settings = {
@@ -465,9 +541,26 @@ class SettingsDialog(QDialog):
             or "hold",
             "theme": self.theme_cb.currentData() or "light",
             "show_weekend": self.show_weekend_cb.isChecked(),
+            "week_day_load_indicator_enabled": self.week_day_load_indicator_cb.isChecked(),
+            "week_day_load_warning_threshold": int(
+                self.week_day_load_warning_threshold_sb.value()
+            ),
+            "week_day_load_high_threshold": int(self.week_day_load_high_threshold_sb.value()),
         }
         save_conflicts(self._collect_conflicts())
         self.accept()
+
+    def _reset_to_defaults(self) -> None:
+        defaults = load_default_config("settings.json", {})
+        if not isinstance(defaults, dict):
+            defaults = {}
+        defaults = dict(defaults)
+        defaults["data_path"] = self.data_path_le.text()
+        self.load(defaults)
+
+        default_conflicts = load_default_config("konflikte.json", [])
+        self.conflicts = default_conflicts if isinstance(default_conflicts, list) else []
+        self._populate_conflict_settings()
 
     def _on_slot_changed(self, *_args) -> None:
         self._sync_time_edit_constraints()
@@ -513,3 +606,21 @@ class SettingsDialog(QDialog):
         except Exception:
             parsed = 8
         return max(4, min(24, parsed))
+
+    def _clamped_int(self, value, default: int, minimum: int, maximum: int) -> int:
+        try:
+            parsed = int(value)
+        except Exception:
+            parsed = default
+        return max(minimum, min(maximum, parsed))
+
+    def _sync_week_load_controls(self) -> None:
+        enabled = self.week_day_load_indicator_cb.isChecked()
+        warning_threshold = int(self.week_day_load_warning_threshold_sb.value())
+        self.week_day_load_high_threshold_sb.setMinimum(min(50, warning_threshold + 1))
+        for widget in (
+            self.week_day_load_threshold_widget,
+            self.week_day_load_warning_threshold_sb,
+            self.week_day_load_high_threshold_sb,
+        ):
+            widget.setEnabled(enabled)

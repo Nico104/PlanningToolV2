@@ -15,5 +15,8 @@
     "Standard": "AAAA/wAAAAD9AAAAAgAAAAAAAAAAAAAAAPwCAAAAAfwAAAAA/////wAAAOkBAAAj+gAAAAACAAAAA/sAAAAYAGQAbwBjAGsAXwB0AGUAcgBtAGkAbgBlAQAAAAD/////AAAAWQD////7AAAAHABkAG8AYwBrAF8AYwBvAG4AZgBsAGkAYwB0AHMBAAAAAP////8AAAC9AP////sAAAAgAGQAbwBjAGsAXwBkAGEAdABhAF8AZQBkAGkAdABvAHIBAAAAAP////8AAADFAP///wAAAAIAAAAAAAAAAPwBAAAAAvsAAAAmAGQAbwBjAGsAXwBnAGwAbwBiAGEAbABfAGYAaQBsAHQAZQByAHMBAAAAAP////8AAAOiAP////sAAAAoAGQAbwBjAGsAXwBkAGEAdABlAF8AbgBhAHYAaQBnAGEAdABpAG8AbgEAAAAA/////wAAAewA////AAAAAAAAAAAAAAAEAAAABAAAAAgAAAAI/AAAAAA="
   },
   "layout_current": "Standard",
-  "show_weekend": false
+  "show_weekend": false,
+  "week_day_load_indicator_enabled": true,
+  "week_day_load_warning_threshold": 3,
+  "week_day_load_high_threshold": 6
 }

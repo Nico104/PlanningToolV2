@@ -36,14 +36,33 @@ def section_accent_color(key: str, index: int = 0) -> QColor:
     return QColor(color)
 
 
-def week_day_accent_color(term_count: int) -> QColor | None:
-    if term_count >= 6:
+def _clamped_int(value, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except Exception:
+        parsed = default
+    return max(minimum, min(maximum, parsed))
+
+
+def week_day_accent_color(
+    term_count: int,
+    *,
+    enabled: bool = True,
+    warning_threshold: int = 3,
+    high_threshold: int = 6,
+) -> QColor | None:
+    term_count = _clamped_int(term_count, 0, 0, 999)
+    if not enabled or term_count <= 0:
+        return None
+
+    warning_threshold = _clamped_int(warning_threshold, 3, 1, 998)
+    high_threshold = _clamped_int(high_threshold, 6, warning_threshold + 1, 999)
+
+    if term_count >= high_threshold:
         return QColor("#f2994a")
-    if term_count >= 3:
+    if term_count >= warning_threshold:
         return QColor("#f2c94c")
-    if term_count > 0:
-        return QColor("#27ae60")
-    return None
+    return QColor("#27ae60")
 
 
 def is_series_exception_instance(termin: Termin) -> bool:
