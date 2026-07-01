@@ -197,7 +197,7 @@ class ConflictsDock(QDockWidget):
         self.conflict_summary_chip.style().polish(self.conflict_summary_chip)
         self.warning_summary_chip.style().polish(self.warning_summary_chip)
 
-        # Update cards with filtered results
+        # Update cards mit filtered results
         self._populate_cards()
 
     def _set_summary_chip(
@@ -209,7 +209,7 @@ class ConflictsDock(QDockWidget):
     def _update_title_indicator(self, conflict_count: int, warning_count: int) -> None:
         total = int(conflict_count) + int(warning_count)
         self.setWindowTitle(self._base_title)
-        #Diese setWindowIcon sollte es nicht brauchen, da die BAdges QLabel sind, aber es schadet nicht die Line drinnen zu haben
+        # Diese setWindowIcon sollte es nicht brauchen, da die BAdges QLabel sind, aber es schadet nicht die Line drinnen zu haben
         self.setWindowIcon(QIcon())
         self._tab_badge_total = total
         self._tab_badge_has_conflicts = conflict_count > 0
