@@ -538,7 +538,8 @@ QLabel#CardSub {
 }
 
 QLabel#ConflictsSummary {
-  font-weight: bold;
+  font-weight: 650;
+  padding: 2px 0;
 }
 
 QLabel#ConflictsSummary[state="ok"] {
@@ -551,6 +552,25 @@ QLabel#ConflictsSummary[state="warning"] {
 
 QLabel#ConflictsSummary[state="conflict"] {
   color: #d32f2f;
+}
+
+QLabel#ConflictsSummaryChip {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 2px 8px;
+}
+
+QLabel#ConflictsSummaryChip[severity="conflict"] {
+  background: #fee4e2;
+  border: 1px solid #fecdca;
+  color: #b42318;
+}
+
+QLabel#ConflictsSummaryChip[severity="warning"] {
+  background: #fef0c7;
+  border: 1px solid #fedf89;
+  color: #93370d;
 }
 
 QLabel[chip="true"] {

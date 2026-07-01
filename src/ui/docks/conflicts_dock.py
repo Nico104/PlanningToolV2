@@ -95,12 +95,24 @@ class ConflictsDock(QDockWidget):
 
         # Header
         header = QHBoxLayout()
-        header.setSpacing(8)
+        header.setSpacing(6)
 
         self.summary_label = QLabel("Keine Konflikte")
         self.summary_label.setObjectName("ConflictsSummary")
         self.summary_label.setProperty("state", "ok")
         header.addWidget(self.summary_label)
+
+        self.conflict_summary_chip = QLabel()
+        self.conflict_summary_chip.setObjectName("ConflictsSummaryChip")
+        self.conflict_summary_chip.setProperty("severity", "conflict")
+        self.conflict_summary_chip.hide()
+        header.addWidget(self.conflict_summary_chip)
+
+        self.warning_summary_chip = QLabel()
+        self.warning_summary_chip.setObjectName("ConflictsSummaryChip")
+        self.warning_summary_chip.setProperty("severity", "warning")
+        self.warning_summary_chip.hide()
+        header.addWidget(self.warning_summary_chip)
 
         header.addStretch()
 
@@ -159,21 +171,40 @@ class ConflictsDock(QDockWidget):
         self._update_title_indicator(len(conflicts), len(warnings))
 
         if not self._issues:
-            summary = "✓ Keine Konflikte"
-            state = "ok"
+            self.summary_label.setProperty("state", "ok")
+            self.summary_label.setText("Keine Konflikte")
+            self.summary_label.show()
+            self.conflict_summary_chip.hide()
+            self.warning_summary_chip.hide()
         else:
-            summary = f"⚠ {len(conflicts)} Konflikt(e), {len(warnings)} Warnung(en)"
-            if conflicts:
-                state = "conflict"
-            else:
-                state = "warning"
+            state = "conflict" if conflicts else "warning"
+            self.summary_label.setProperty("state", state)
+            self.summary_label.hide()
+            self._set_summary_chip(
+                self.conflict_summary_chip,
+                len(conflicts),
+                "Konflikt",
+                "Konflikte",
+            )
+            self._set_summary_chip(
+                self.warning_summary_chip,
+                len(warnings),
+                "Warnung",
+                "Warnungen",
+            )
 
-        self.summary_label.setProperty("state", state)
         self.summary_label.style().polish(self.summary_label)
-        self.summary_label.setText(summary)
+        self.conflict_summary_chip.style().polish(self.conflict_summary_chip)
+        self.warning_summary_chip.style().polish(self.warning_summary_chip)
 
         # Update cards with filtered results
         self._populate_cards()
+
+    def _set_summary_chip(
+        self, chip: QLabel, count: int, singular: str, plural: str
+    ) -> None:
+        chip.setText(f"{count} {singular if count == 1 else plural}")
+        chip.setVisible(count > 0)
 
     def _update_title_indicator(self, conflict_count: int, warning_count: int) -> None:
         total = int(conflict_count) + int(warning_count)
@@ -182,7 +213,8 @@ class ConflictsDock(QDockWidget):
         self._tab_badge_total = total
         self._tab_badge_has_conflicts = conflict_count > 0
         self.setToolTip(
-            f"{conflict_count} Konflikt(e), {warning_count} Warnung(en)"
+            f"{conflict_count} {'Konflikt' if conflict_count == 1 else 'Konflikte'}, "
+            f"{warning_count} {'Warnung' if warning_count == 1 else 'Warnungen'}"
             if total
             else "Keine Konflikte"
         )
