@@ -209,6 +209,7 @@ class ConflictsDock(QDockWidget):
     def _update_title_indicator(self, conflict_count: int, warning_count: int) -> None:
         total = int(conflict_count) + int(warning_count)
         self.setWindowTitle(self._base_title)
+        #Diese setWindowIcon sollte es nicht brauchen, da die BAdges QLabel sind, aber es schadet nicht die Line drinnen zu haben
         self.setWindowIcon(QIcon())
         self._tab_badge_total = total
         self._tab_badge_has_conflicts = conflict_count > 0
