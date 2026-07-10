@@ -80,9 +80,13 @@ The developed tool uses PySide6 for the graphical user interface and stores proj
 \tableofcontents
 \newpage
 
+\phantomsection
+\addcontentsline{toc}{section}{Abbildungsverzeichnis}
 \listoffigures
 \newpage
 
+\phantomsection
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
 \listoftables
 \newpage
 
@@ -123,7 +127,7 @@ Durch die manuelle Planung können auch weitere Probleme auftreten wie doppelte 
 Beispiele für mögliche Konflikte könnten sein: doppelt belegte Räume, Lehrperson zeitgleich eingeplant oder ein Termin an einem Feiertag angesetzt.
 
 Aufgrund dieser Probleme und dadurch dass dies eine jährlich wiederkehrende Aufgabe ist besteht ein Bedarf an einer zentralen Softwarelösung. Diese Software soll die Planung der Termine übersichtlicher, strukturierter und nachvollziehbarer machen.
-Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstools für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software am Institut.
+Daher geht es in dieser Arbeit um die Entwicklung eines Python-basierten Planungstools für die Unterstützung der LVA-Jahresplanung. Der Fokus liegt dabei auf der praktischen Anwendbarkeit dieser Software auf Fakultätsebene.
 
 \subsection{Zielsetzung}
 
@@ -166,22 +170,26 @@ Um diese Frage zu beantworten werden auch zusätzliche Teilfragen betrachtet:
 
 \subsection{Aufbau der Arbeit}
 
-Die Arbeit beginnt mit einer Beschreibung der Probleme, die bei der jährlichen Planung von Lehrveranstaltungen entstehen. Darauf werden die Ziele der Arbeit und die Forschungsfrage vorgestellt.
+Die Arbeit beginnt in Kapitel 1 mit der Problemstellung, der Zielsetzung und der Forschungsfrage. Dadurch wird zuerst geklärt, warum ein Planungstool für die Lehrveranstaltungsplanung sinnvoll ist und welchen Beitrag diese Arbeit leisten soll.
 
-Anschließend werden die Grundlagen und Anforderungen beschrieben. Danach folgen Konzeption und Implementierung des Tools. Zum Schluss werden Tests, Ergebnisse, Grenzen und mögliche Erweiterungen dargestellt.
+Kapitel 2 beschreibt die fachlichen Grundlagen und den Kontext der Lehrveranstaltungsplanung. Dabei werden typische Planungsdaten, manuelle Arbeitsabläufe und die eingesetzten Technologien eingeordnet. In Kapitel 3 werden daraus die funktionalen und nicht-funktionalen Anforderungen an das Planungstool abgeleitet.
 
-\newpage
+Kapitel 4 stellt die Konzeption des Planungstools vor. Dazu gehören die Grundidee der Anwendung, die Datenstruktur und der Aufbau der Benutzeroberfläche. Kapitel 5 beschreibt anschließend die Implementierung der zentralen Funktionen, zum Beispiel das Laden und Speichern von Projektdaten, die Kalenderansichten, Drag-and-Drop und die Konflikterkennung.
+
+Kapitel 6 dokumentiert die Tests und die Evaluation des entwickelten Tools. In Kapitel 7 werden die Ergebnisse, Grenzen und möglichen Erweiterungen diskutiert. Kapitel 8 fasst die Arbeit abschließend zusammen und gibt einen Ausblick auf mögliche Weiterentwicklungen.
+
+\clearpage
 
 \section{Grundlagen und Kontext}
 
-\subsection{Lehrveranstaltungsplanung an einem Institut}
+\subsection{Lehrveranstaltungsplanung auf Fakultätsebene}
 
-Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstaltungen eines Instituts in einen passenden zeitlichen und organisatorischen Rahmen zu bringen. Dazu müssen Veranstaltungen wie Vorlesungen, Übungen, Labore oder Prüfungen konkreten Terminen, Räumen und teilweise auch bestimmten Gruppen zugeordnet werden. Die Planung ist daher mehr als nur das Eintragen von Terminen in einen Kalender.
+Bei der Lehrveranstaltungsplanung geht es darum, die verschiedenen Lehrveranstaltungen einer Fakultät in einen passenden zeitlichen und organisatorischen Rahmen zu bringen. Dazu müssen Veranstaltungen wie Vorlesungen, Übungen, Labore oder Prüfungen konkreten Terminen, Räumen und teilweise auch bestimmten Gruppen zugeordnet werden. Die Planung ist daher mehr als nur das Eintragen von Terminen in einen Kalender.
 
 Je nach Art der Lehrveranstaltung können dabei unterschiedliche Anforderungen entstehen. Eine Vorlesung benötigt zum Beispiel oft einen größeren Raum, während ein Labor an bestimmte Ausstattung gebunden sein kann. Prüfungen wiederum finden häufig nur an einzelnen Terminen statt und müssen besonders klar geplant werden. Auch die Dauer der Termine und die Anzahl der teilnehmenden Personen können sich je nach Veranstaltung unterscheiden. Solche Anforderungen entsprechen typischen Einschränkungen der Lehrveranstaltungsplanung, bei der Veranstaltungen bestimmten Zeitfenstern und Räumen zugeordnet werden müssen \cite{babaei2015survey}.
 
 Ein Termin steht dabei meistens nicht für sich allein, sondern ist mit mehreren anderen Informationen verbunden. Dazu gehören unter anderem die Lehrveranstaltung selbst, das Semester, die zuständige Lehrperson und der Raum. Dadurch entsteht eine Struktur, bei der viele Daten miteinander zusammenhängen.
-Für ein Institut ist es wichtig, dass aus diesen Informationen ein übersichtlicher und nachvollziehbarer Plan entsteht.
+Für eine Fakultät ist es wichtig, dass aus diesen Informationen ein übersichtlicher und nachvollziehbarer Plan entsteht.
 
 In dieser Arbeit wird die Lehrveranstaltungsplanung deshalb als ein Prozess verstanden, bei dem verschiedene Planungsdaten gesammelt, miteinander verknüpft und für die weitere Bearbeitung nutzbar gemacht werden. Diese Sichtweise bildet die Grundlage für die spätere Entwicklung des Planungstools.
 
@@ -243,7 +251,7 @@ JSON ist dafür besser geeignet, weil zusammenhängende Informationen als Objekt
 
 Für die aktuelle Version und Größe der Anwendung ist diese Art der Speicherung ausreichend. Es ist also kein zentraler Server oder eine Datenbank notwendig. Für den Datenaustausch unterstützt das Tool Excel- und JSON-Projektdateien. Zusätzlich können Raum- und LVA-Listen aus Excel- oder CSV-Dateien übernommen werden. Für Lehrende können gefilterte Terminlisten oder Wochenkalender als Excel-Datei exportiert werden. Wenn das Tool später erweitert wird, könnte eine Datenbank jedoch eine sinnvolle Weiterentwicklung sein.
 
-\newpage
+\clearpage
 
 \section{Anforderungsanalyse}
 
@@ -255,10 +263,12 @@ Für die Anforderungsanalyse wurden daher vor allem das Anlegen und Bearbeiten v
 
 \subsection{Funktionale Anforderungen}
 
-Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software erfüllen bzw. bereitstellen soll \cite{sommerville2016software}. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:functional-requirements} dargestellt.
+Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software erfüllen bzw. bereitstellen soll \cite{sommerville2016software}. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:funktionale-anforderungen} dargestellt.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
+\caption{Funktionale Anforderungen an das Planungstool}
+\label{tab:funktionale-anforderungen}
 \begin{tabular}{|p{4cm}|p{9cm}|}
 \hline
 \textbf{Anforderung} & \textbf{Beschreibung} \\
@@ -282,8 +292,6 @@ Speicherung & Planungsdaten sollen gespeichert und beim erneuten Start wieder ge
 Import und Export & Projektstände sollen als JSON oder Excel ausgetauscht werden können. Zusätzlich sollen Raum- und LVA-Listen aus Excel oder CSV importiert und Terminlisten für Lehrende exportiert werden können. \\
 \hline
 \end{tabular}
-\caption{Funktionale Anforderungen an das Planungstool}
-\label{tab:functional-requirements}
 \end{table}
 
 Die funktionalen Anforderungen bilden damit die wichtigsten Arbeitsschritte der späteren Anwendung ab: Daten erfassen und speichern, Termine planen, Ansichten filtern und Konflikte erkennen.
@@ -292,8 +300,12 @@ Die funktionalen Anforderungen bilden damit die wichtigsten Arbeitsschritte der 
 
 Nicht-funktionale Anforderungen beschreiben Eigenschaften eines Systems, die sich nicht direkt auf einzelne Funktionen beziehen, sondern zum Beispiel Bedienbarkeit, Zuverlässigkeit, Wartbarkeit oder technische Einschränkungen betreffen \cite{sommerville2016software}.
 
-\begin{table}[h]
+Die nicht-funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:nichtfunktionale-anforderungen} zusammengefasst.
+
+\begin{table}[htbp]
 \centering
+\caption{Nicht-funktionale Anforderungen an das Planungstool}
+\label{tab:nichtfunktionale-anforderungen}
 \begin{tabular}{|p{4cm}|p{9cm}|}
 \hline
 \textbf{Anforderung} & \textbf{Beschreibung} \\
@@ -315,8 +327,6 @@ Responsivität & Die Anwendung soll auch bei größeren Terminmengen flüssig re
 Lokale Nutzbarkeit & Das Tool soll direkt auf einem Computer ausgeführt werden können und keinen Server benötigen. Optionale Importfunktionen, etwa für Feiertage oder akademische freie Zeiträume, können externe Quellen verwenden. \\
 \hline
 \end{tabular}
-\caption{Nicht-funktionale Anforderungen an das Planungstool}
-\label{tab:nonfunctional-requirements}
 \end{table}
 
 Die nicht-funktionalen Anforderungen sind besonders wichtig, weil das Tool nicht nur technisch funktionieren, sondern verständlich und zuverlässig nutzbar sein soll.
@@ -329,7 +339,7 @@ Nicht Teil dieser Version ist eine automatische Optimierung der gesamten Planung
 
 Die Anwendung ist außerdem als lokale Desktop-Anwendung ausgelegt. Ein gleichzeitiger Zugriff durch mehrere Nutzer ist in dieser Version nicht vorgesehen. Funktionen wie eine direkte Live-Anbindung an TISS oder andere Universitätssysteme, automatische Raumreservierung, automatische Optimierung oder Mehrnutzerbetrieb sind nicht Teil dieser Version und bleiben mögliche Erweiterungen.
 
-\newpage
+\clearpage
 
 \section{Konzeption des Planungstools}
 
@@ -339,9 +349,9 @@ Das Planungstool wurde als lokale Desktop-Anwendung konzipiert und besteht nicht
 
 Grundsätzlich lässt sich die Anwendung in drei Bereiche einteilen: die Benutzeroberfläche, die Datenverwaltung und die Planungslogik. Die Benutzeroberfläche stellt Kalenderansichten, Listen, Eingabefenster und weitere Bedienelemente bereit. Die Datenverwaltung ist dafür zuständig, Planungsdaten zu laden, zu speichern und für die anderen Teile der Anwendung verfügbar zu machen. Die Planungslogik umfasst Funktionen wie Filterung, Konflikterkennung und die Aktualisierung der Anzeige nach Änderungen.
 
-Abbildung \ref{fig:architektur} zeigt diese Aufteilung auf einer abstrakten Ebene. Dabei werden nicht einzelne Methoden oder Signal-Slot-Verbindungen dargestellt, sondern die wichtigsten Komponenten und Datenflüsse zwischen Benutzeroberfläche, Services und Datenhaltung.
+Abbildung~\ref{fig:architektur} zeigt diese Aufteilung auf einer abstrakten Ebene. Dabei werden nicht einzelne Methoden oder Signal-Slot-Verbindungen dargestellt, sondern die wichtigsten Komponenten und Datenflüsse zwischen Benutzeroberfläche, Services und Datenhaltung.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{bilder/planungstool_flowchart.png}
     \caption{Logische Architektur und zentrale Datenflüsse des Planungstools}
@@ -357,9 +367,9 @@ Die Benutzeroberfläche ist in mehrere Bereiche aufgeteilt. Der zentrale Bereich
 
 Neben den Kalenderansichten gibt es weitere Bereiche, die als sogenannte Docks umgesetzt sind.\footnote{\url{https://doc.qt.io/qt-6/qdockwidget.html}} Dazu gehören die Terminliste, der Dateneditor, die Datumsnavigation, der globale Filterbereich und die Konfliktanzeige. Durch die verschiebbaren Docks kann jeder Benutzer seinen Arbeitsbereich so einrichten, wie es für ihn am besten passt. Das gewählte Layout lässt sich speichern und später wiederverwenden.
 
-Die grundlegende Aufteilung der Benutzeroberfläche ist in Abbildung \ref{fig:hauptfenster} dargestellt.
+Die grundlegende Aufteilung der Benutzeroberfläche ist in Abbildung~\ref{fig:hauptfenster} dargestellt.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.95\textwidth]{bilder/Hauptfenster.png}
     \caption{Hauptfenster des Planungstools mit Kalenderbereich und Dock-Bereichen}
@@ -406,7 +416,7 @@ Nach relevanten Aktionen wie dem Erstellen, Bearbeiten, Löschen oder Verschiebe
 Dabei wird zunächst der Kalender mit den aktuellen Planungsdaten neu aufgebaut. Anschließend werden die Dock-Bereiche, wie Terminliste, Dateneditor, Filterbereich und Konfliktanzeige, aktualisiert. Die Konflikte werden ebenfalls neu berechnet.
 
 
-\newpage
+\clearpage
 
 \section{Implementierung}
 
@@ -415,6 +425,15 @@ Dabei wird zunächst der Kalender mit den aktuellen Planungsdaten neu aufgebaut.
 Die Anwendung wurde mit Python in der Version 3.13.2 entwickelt \cite{python3132}. Für die grafische Benutzeroberfläche wird PySide6 verwendet. Die Implementierung des Planungstools erfolgte in Visual Studio Code.
 
 Der Quellcode ist in mehrere Bereiche aufgeteilt. Im \texttt{src}-Verzeichnis befinden sich die wichtigsten Bestandteile des Programms. Dazu gehören die Benutzeroberfläche, verschiedene Services, Dialoge, Hilfsfunktionen und die zentrale Programmlogik. Gestartet wird die Anwendung über die Datei \texttt{main.py}.
+
+Die grundlegende Projektstruktur ist in Abbildung~\ref{fig:projektstruktur} dargestellt.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{bilder/directory_structure.png}
+    \caption{Vereinfachte Projektstruktur des Planungstools}
+    \label{fig:projektstruktur}
+\end{figure}
 
 Um Wartbarkeit und Übersichtlichkeit zu verbessern, wurden alle grafischen Anpassungen in einer separaten \texttt{qss}-Datei gebündelt.
 
@@ -439,6 +458,8 @@ self.addDockWidget(Qt.LeftDockWidgetArea, self.termine_dock)
 Dadurch bleibt die Kalenderansicht im Mittelpunkt der Anwendung, während ergänzende Bereiche flexibel am Rand des Fensters angeordnet werden können. Das passt gut zum Planungstool, weil die eigentliche Planung sichtbar bleibt und zusätzliche Informationen wie Termine, Filter oder Konflikte trotzdem direkt verfügbar sind.
 
 Als Grundlage wird \texttt{QMainWindow} von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/qmainwindow.html}} Der zentrale Bereich enthält den Kalender mit den Kalenderansichten. Die Dock-Bereiche enthalten die Terminliste, den Dateneditor, die Filter, die Datumsnavigation und die Konfliktanzeige.
+
+Die daraus entstehende Anordnung des zentralen Kalenderbereichs und der Dock-Bereiche entspricht der in Abbildung~\ref{fig:hauptfenster} gezeigten Benutzeroberfläche.
 
 Im Hauptfenster werden auch die Menüs und andere Aktionen, wie Aktualisieren, Einstellungen, Undo, Importieren und Exportieren angelegt. Diese Aktionen werden mit den jeweiligen Funktionen der Anwendung verbunden. Dadurch können wichtige Arbeitsschritte direkt über die Menüleiste oder über Tastenkombinationen ausgeführt werden.
 
@@ -479,9 +500,9 @@ Die Kalenderansichten sind ein zentraler Teil des Planungstools. Sie werden im \
 
 Die Tagesansicht ist für die genauere Planung einzelner Termine gedacht. Sie zeigt einen einzelnen Tag mit Uhrzeiten und Räumen. Die Wochenansicht zeigt mehrere Tage nebeneinander. Dadurch bekommt man einen besseren Überblick darüber, wie die Termine innerhalb einer Woche verteilt sind. Die Monatsansicht ist weniger detailliert, zeigt dafür aber einen größeren Zeitraum.
 
-Ein Beispiel für die genaue zeitliche Darstellung einzelner Termine zeigt Abbildung \ref{fig:tagesansicht}.
+Ein Beispiel für die genaue zeitliche Darstellung einzelner Termine zeigt Abbildung~\ref{fig:tagesansicht}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.95\textwidth]{bilder/Tagesansicht.png}
     \caption{Tagesansicht mit zeitlicher Einordnung der Termine}
@@ -542,9 +563,9 @@ Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop ve
 Zusätzlich werden Feiertage und vorlesungsfreie Zeiträume in den Kalenderansichten visuell hervorgehoben. Dafür werden die Beschreibungen der freien Zeiträume als kompakte farbige Markierungen dargestellt. In der Tages- und Wochenansicht erscheinen diese Markierungen im Kopfbereich der jeweiligen Spalten. In der Monatsansicht werden sie direkt innerhalb der Tageszellen angezeigt.
 Liegen mehrere freie Einträge auf demselben Datum, werden mehrere Markierungen angezeigt.
 
-Ein Beispiel für die Darstellung freier Zeiträume zeigt Abbildung \ref{fig:freie-tage}.
+Ein Beispiel für die Darstellung freier Zeiträume zeigt Abbildung~\ref{fig:freie-tage}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.95\textwidth]{bilder/freie_tage.png}
     \caption{Darstellung von Feiertagen und vorlesungsfreien Zeiträumen in der Kalenderansicht}
@@ -559,9 +580,9 @@ Insgesamt dienen die Kalenderansichten dazu, die Planung nicht nur als Liste von
 
 Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen eigenen Dateneditor. Dort können die wichtigsten Daten angelegt, bearbeitet und gelöscht werden. Dazu gehören einzelne Termine sowie Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume. Studiensemester werden im Editor nur als Zuordnung bei Lehrveranstaltungen verwendet, nicht als projektbezogene Stammdaten gepflegt.
 
-Der Dateneditor ist in Abbildung \ref{fig:dateneditor} dargestellt.
+Der Dateneditor ist in Abbildung~\ref{fig:dateneditor} dargestellt.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{bilder/data_editor.png}
     \caption{Dateneditor zur Verwaltung von Terminen und Stammdaten}
@@ -593,9 +614,9 @@ Die Drag-and-Drop Funktionalität wurde umgesetzt, damit Termine direkt über di
 
 Grundsätzlich gibt es dabei zwei wichtige Funktionalitäten. Einerseits können Termine aus der Terminliste in den Kalender gezogen und einem Datum, einer Uhrzeit oder einem Raum zugewiesen werden und bereits eingeplante Termine können innerhalb des Kalenders verschoben werden. Andererseits ist es auch möglich, einen Termin wieder in die Terminliste zu ziehen und in einen nicht zugewiesenen Zustand zu bringen.
 
-Abbildung \ref{fig:terminliste} zeigt die Terminliste.
+Abbildung~\ref{fig:terminliste} zeigt die Terminliste.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{bilder/terminliste.png}
     \caption{Terminliste mit noch nicht vollständig eingeplanten Terminen}
@@ -636,13 +657,13 @@ if rows >= 0 and columns >= 0 and self._conflict_checker:
 
 Während der Termin gezogen wird, prüft die Anwendung ständig, über welcher Kalenderzelle sich der Mauszeiger gerade befindet. Danach wird mit \texttt{self.\_conflict\_checker()} überprüft, ob der Termin an dieser neuen Position einen Konflikt auslösen würde.
 
-Eine solche Konfliktvorschau während des Verschiebens zeigt Abbildung \ref{fig:dragdropkonflikt}.
+Eine solche Konfliktvorschau während des Verschiebens zeigt Abbildung~\ref{fig:dragdrop-konflikt}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{bilder/Drag_and_Drop_conflict.png}
     \caption{Drag-and-Drop-Vorschau eines Termins mit erkanntem Konflikt}
-    \label{fig:dragdropkonflikt}
+    \label{fig:dragdrop-konflikt}
 \end{figure}
 
 Diese Prüfung ist nur eine Vorschau. Die eigentlichen Termindaten werden erst geändert, wenn der Termin wirklich abgelegt wird.
@@ -729,9 +750,9 @@ Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchge
 Dieser Ausschnitt zeigt eine einzelne Konfliktregel. Über \texttt{key} wird die Regel in der Anwendung einer konkreten Prüffunktion zugeordnet.
 
 Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. 
-Die Darstellung erkannter Konflikte ist in Abbildung \ref{fig:konfliktanzeige} zu sehen.
+Die Darstellung erkannter Konflikte ist in Abbildung~\ref{fig:konfliktanzeige} zu sehen.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{bilder/Konfliktanzeige.png}
     \caption{Konfliktanzeige mit aufgelisteten Planungskonflikten}
@@ -846,9 +867,13 @@ Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung über
 Als Testgrundlage wurde ein realistisches ETIT-Testprojekt verwendet, das TISS-basierte Standarddaten für Räume und Lehrveranstaltungen sowie importierte bzw. angelegte Termine und freie Zeiträume enthielt.
 Dadurch konnten nicht nur einzelne Dialoge, sondern auch zusammenhängende Arbeitsabläufe mit mehreren hundert Terminen geprüft werden.
 
-\begin{table}[h]
+Die Tabellen~\ref{tab:test-stammdaten} bis~\ref{tab:test-speicherung} zeigen eine Auswahl der durchgeführten manuellen Tests, gegliedert nach Funktionsbereichen.
+
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
+\label{tab:test-stammdaten}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -868,13 +893,13 @@ LVA erstellen & Eine neue Lehrveranstaltung wird über den Termin-Dialog bzw. ü
 Raum erstellen & Ein neuer Raum wird über den Termin-Dialog bzw. über den Dateneditor erstellt. & Der Raum wird gespeichert und kann im Termin-Dialog ausgewählt werden. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
-\label{tab:test-stammdaten}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
+\label{tab:test-kalender-dragdrop}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -894,13 +919,13 @@ Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den K
 Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
-\label{tab:test-kalender}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Tests der Filterung und Aktualisierung}
+\label{tab:test-filter}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -916,13 +941,13 @@ Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Termin
 Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Tests der Filterung und Aktualisierung}
-\label{tab:test-filter}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Tests der Konflikterkennung}
+\label{tab:test-konflikte}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -948,13 +973,13 @@ Dynamische Konfliktvorschau deaktivieren & Die Einstellung für die dynamische K
 Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem leistungsschwächeren Gerät mit vielen Terminen verwendet. Ein Termin wird mit aktivierter und anschließend mit deaktivierter dynamischer Konfliktvorschau per Drag-and-Drop verschoben. & Bei aktivierter Vorschau kann das Verschieben verzögert reagieren. Nach dem Deaktivieren der dynamischen Vorschau bleibt das Drag-and-Drop flüssiger. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Tests der Konflikterkennung}
-\label{tab:test-konflikte}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Fehler- und Validierungstests}
+\label{tab:test-validierung}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -966,13 +991,13 @@ Dauerberechnung prüfen & Im Termin-Dialog werden Start- und Endzeit eingetragen
 Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Fehler- und Validierungstests}
-\label{tab:test-validierung}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
+\caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
+\label{tab:test-speicherung}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -1002,8 +1027,6 @@ Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die
 Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. \\
 \hline
 \end{tabularx}
-\caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
-\label{tab:test-datenmanagement}
 \end{table}
 
 \FloatBarrier
@@ -1045,7 +1068,7 @@ Auch eine halbautomatische Planung wäre eine sinnvolle Ergänzung. Das Tool kö
 
 Eine Anbindung an bestehende Universitätssysteme wäre ebenfalls hilfreich, damit Daten nicht doppelt gepflegt werden müssen und die Anwendung besser in bestehende Abläufe integriert werden kann.
 
-\newpage
+\clearpage
 
 \section{Fazit und Ausblick}
 
@@ -1060,17 +1083,17 @@ Für die Zukunft wären eine Datenbankanbindung, ein Mehrbenutzerbetrieb und die
 
 \begin{thebibliography}{9}
 
+\bibitem{nistUsability}
+National Institute of Standards and Technology. (o. J.).
+\textit{Usability}.
+Computer Security Resource Center Glossary.
+https://csrc.nist.gov/glossary/term/usability
+
 \bibitem{babaei2015survey}
 Babaei, H., Karimpour, J., \& Hadidi, A. (2015). 
 A survey of approaches for university course timetabling problem. 
 \textit{Computers \& Industrial Engineering, 86}, 43--59. 
 https://doi.org/10.1016/j.cie.2014.11.010
-
-\bibitem{bray2017json}
-Bray, T. (2017). 
-\textit{The JavaScript Object Notation (JSON) Data Interchange Format}. 
-RFC 8259. 
-https://www.rfc-editor.org/rfc/rfc8259
 
 \bibitem{pythonDocs}
 Python Software Foundation. (o. J.). 
@@ -1087,21 +1110,21 @@ Qt Group. (o. J.).
 \textit{Qt for Python Documentation}. 
 https://doc.qt.io/qtforpython-6/
 
-\bibitem{python3132}
-Python Software Foundation. (2025).
-\textit{Python 3.13.2 Release}.
-https://www.python.org/downloads/release/python-3132/
+\bibitem{bray2017json}
+Bray, T. (2017). 
+\textit{The JavaScript Object Notation (JSON) Data Interchange Format}. 
+RFC 8259. 
+https://www.rfc-editor.org/rfc/rfc8259
 
 \bibitem{sommerville2016software}
 Sommerville, I. (2016).
 \textit{Software Engineering} (10th ed., Global Edition).
 Pearson.
 
-\bibitem{nistUsability}
-National Institute of Standards and Technology. (o. J.).
-\textit{Usability}.
-Computer Security Resource Center Glossary.
-https://csrc.nist.gov/glossary/term/usability
+\bibitem{python3132}
+Python Software Foundation. (2025).
+\textit{Python 3.13.2 Release}.
+https://www.python.org/downloads/release/python-3132/
 
 \end{thebibliography}
 
