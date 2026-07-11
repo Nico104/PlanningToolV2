@@ -13,6 +13,9 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{ragged2e}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{needspace}
 \usepackage[hidelinks]{hyperref}
 
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
@@ -21,6 +24,30 @@
 
 \geometry{a4paper, margin=2.5cm}
 \onehalfspacing
+
+\definecolor{codebackground}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+
+\lstdefinestyle{planner}{
+    basicstyle=\ttfamily\small,
+    numbers=left,
+    numberstyle=\scriptsize\color{gray},
+    numbersep=8pt,
+    frame=single,
+    rulecolor=\color{codeframe},
+    backgroundcolor=\color{codebackground},
+    breaklines=true,
+    breakatwhitespace=true,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=4,
+    captionpos=b,
+    aboveskip=1em,
+    belowskip=1em
+}
+\lstset{style=planner}
+\renewcommand{\lstlistingname}{Listing}
 
 \title{Konzeption und Implementierung eines Python-basierten Planungstools zur Unterstützung der Lehrveranstaltungsplanung}
 \author{Nicolas Carraro}
@@ -265,11 +292,11 @@ Für die Anforderungsanalyse wurden daher vor allem das Anlegen und Bearbeiten v
 
 Funktionale Anforderungen beschreiben, welche Aufgaben oder Dienste die Software erfüllen bzw. bereitstellen soll \cite{sommerville2016software}. Die wichtigsten funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:funktionale-anforderungen} dargestellt.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Funktionale Anforderungen an das Planungstool}
 \label{tab:funktionale-anforderungen}
-\begin{tabular}{|p{4cm}|p{9cm}|}
+\begin{tabular}{|p{4.5cm}|p{8.5cm}|}
 \hline
 \textbf{Anforderung} & \textbf{Beschreibung} \\
 \hline
@@ -302,11 +329,11 @@ Nicht-funktionale Anforderungen beschreiben Eigenschaften eines Systems, die sic
 
 Die nicht-funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:nichtfunktionale-anforderungen} zusammengefasst.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Nicht-funktionale Anforderungen an das Planungstool}
 \label{tab:nichtfunktionale-anforderungen}
-\begin{tabular}{|p{4cm}|p{9cm}|}
+\begin{tabular}{|p{4.5cm}|p{8.5cm}|}
 \hline
 \textbf{Anforderung} & \textbf{Beschreibung} \\
 \hline
@@ -430,7 +457,7 @@ Die grundlegende Projektstruktur ist in Abbildung~\ref{fig:projektstruktur} darg
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.75\textwidth]{bilder/directory_structure.png}
+    \includegraphics[width=0.45\textwidth]{bilder/directory_structure.png}
     \caption{Vereinfachte Projektstruktur des Planungstools}
     \label{fig:projektstruktur}
 \end{figure}
@@ -445,15 +472,16 @@ Für die benötigten Pakete wird eine \texttt{requirements.txt}-Datei verwendet.
 
 Das Hauptfenster der Anwendung wird durch die Klasse \texttt{MainWindow} umgesetzt. In diesem Fenster kommen die wichtigsten Teile des Planungstools zusammen. Dazu gehören der Kalenderbereich, die Terminliste, der Dateneditor, die Filter, die Konfliktanzeige und die Datumsnavigation.
 
-Das folgende Beispiel zeigt vereinfacht, wie das Hauptfenster aufgebaut ist. Der Kalenderbereich wird als zentraler Arbeitsbereich gesetzt, während zusätzliche Funktionen wie die Terminliste über Dock-Bereiche eingebunden werden.
+Listing~\ref{lst:hauptfenster-aufbau} zeigt vereinfacht, wie das Hauptfenster aufgebaut ist. Der Kalenderbereich wird als zentraler Arbeitsbereich gesetzt, während zusätzliche Funktionen wie die Terminliste über Dock-Bereiche eingebunden werden.
 
-\begin{verbatim}
+\Needspace{10\baselineskip}
+\begin{lstlisting}[caption={Vereinfachter Aufbau des Hauptfensters}, label={lst:hauptfenster-aufbau}]
 self.planner = PlannerWorkspace(self, self.ds, ...)
 self.setCentralWidget(self.planner)
 
 self.termine_dock = TermineDock(self)
 self.addDockWidget(Qt.LeftDockWidgetArea, self.termine_dock)
-\end{verbatim}
+\end{lstlisting}
 
 Dadurch bleibt die Kalenderansicht im Mittelpunkt der Anwendung, während ergänzende Bereiche flexibel am Rand des Fensters angeordnet werden können. Das passt gut zum Planungstool, weil die eigentliche Planung sichtbar bleibt und zusätzliche Informationen wie Termine, Filter oder Konflikte trotzdem direkt verfügbar sind.
 
@@ -464,33 +492,36 @@ Die daraus entstehende Anordnung des zentralen Kalenderbereichs und der Dock-Ber
 Im Hauptfenster werden auch die Menüs und andere Aktionen, wie Aktualisieren, Einstellungen, Undo, Importieren und Exportieren angelegt. Diese Aktionen werden mit den jeweiligen Funktionen der Anwendung verbunden. Dadurch können wichtige Arbeitsschritte direkt über die Menüleiste oder über Tastenkombinationen ausgeführt werden.
 
 Die Verbindung zwischen den einzelnen Bereichen erfolgt über das Signal-System von Qt.\footnote{\url{https://doc.qt.io/qt-6/signalsandslots.html}} Dadurch können Aktionen aus einem Bereich an andere Bereiche der Anwendung weitergegeben werden.
-Das folgende Beispiel zeigt eine solche Signal-Verbindung. Wird in der Konfliktanzeige ein Konflikt ausgewählt, wird das entsprechende Signal an den Kalender weitergegeben.
+Listing~\ref{lst:konflikt-signal} zeigt eine solche Signal-Verbindung. Wird in der Konfliktanzeige ein Konflikt ausgewählt, wird das entsprechende Signal an den Kalender weitergegeben.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Signal-Verbindung zwischen Konfliktanzeige und Kalender}, label={lst:konflikt-signal}]
 self.conflicts_dock.conflict_items_highlight.connect(
     self.planner.highlight_termine
 )
-\end{verbatim}
+\end{lstlisting}
 
 Dadurch muss die Konfliktanzeige nicht selbst wissen, wie Termine im Kalender dargestellt werden. Sie löst nur ein Signal aus, während der Kalender die Hervorhebung übernimmt.
 
-Eine weitere wichtige Aufgabe des Hauptfensters ist die Aktualisierung der Benutzeroberfläche. Wenn ein Termin erstellt, bearbeitet, gelöscht oder verschoben wird, müssen mehrere Bereiche den neuen Stand anzeigen. Dafür werden zentrale Aktualisierungsmethoden verwendet wie:
+Eine weitere wichtige Aufgabe des Hauptfensters ist die Aktualisierung der Benutzeroberfläche. Wenn ein Termin erstellt, bearbeitet, gelöscht oder verschoben wird, müssen mehrere Bereiche den neuen Stand anzeigen. Dafür werden zentrale Aktualisierungsmethoden verwendet, wie Listing~\ref{lst:refresh-everything} zeigt.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Zentrale Aktualisierung der Benutzeroberfläche}, label={lst:refresh-everything}]
 def refresh_everything(self) -> None:
     self.planner.refresh(emit=False)
     self.refresh_docks()
-\end{verbatim}
+\end{lstlisting}
 
 Dabei wird zuerst der Kalender aktualisiert. Anschließend werden über \texttt{refresh\_docks()} die weiteren Bereiche wie Terminliste, Filter, Dateneditor und Konfliktanzeige neu geladen.
 Das emit=False verhindert, dass der Kalender während der Aktualisierung Signale auslöst, was zu einer Kaskade von Aktualisierungen führen könnte.
 
-Auch Funktionen, die nicht direkt zur Terminplanung gehören, werden im Hauptfenster eingebunden. Dazu zählen zum Beispiel die Layoutverwaltung und die Tastenkombinationen. Der \texttt{LayoutManager} speichert und lädt verschiedene Anordnungen der Oberfläche. Die Tastenkombinationen werden in einer eigenen Datei gesammelt und beim Start des Hauptfensters registriert:
+Auch Funktionen, die nicht direkt zur Terminplanung gehören, werden im Hauptfenster eingebunden. Dazu zählen zum Beispiel die Layoutverwaltung und die Tastenkombinationen. Der \texttt{LayoutManager} speichert und lädt verschiedene Anordnungen der Oberfläche. Die Tastenkombinationen werden in einer eigenen Datei gesammelt und beim Start des Hauptfensters registriert, wie Listing~\ref{lst:layout-shortcuts} zeigt.
 
-\begin{verbatim}
+\Needspace{7\baselineskip}
+\begin{lstlisting}[caption={Initialisierung von Layoutverwaltung und Shortcuts}, label={lst:layout-shortcuts}]
 self.layout_mgr = LayoutManager(self)
 install_main_window_shortcuts(self)
-\end{verbatim}
+\end{lstlisting}
 
 Häufige Aktionen wie Aktualisieren, Ansichtswechsel oder das Erstellen neuer Termine lassen sich dadurch schneller ausführen. Außerdem können eigene Layouts der Benutzeroberfläche gespeichert und verwaltet werden.
 
@@ -509,9 +540,10 @@ Ein Beispiel für die genaue zeitliche Darstellung einzelner Termine zeigt Abbil
     \label{fig:tagesansicht}
 \end{figure}
 
-Technisch werden die verschiedenen Ansichten im \texttt{PlannerWorkspace} in einem \texttt{QStackedWidget} verwaltet.\footnote{\url{https://doc.qt.io/qt-6/qstackedwidget.html}} Dadurch kann immer eine der Ansichten angezeigt werden, während die anderen im Hintergrund vorhanden bleiben. Vereinfacht sieht dieser Aufbau folgendermaßen aus:
+Technisch werden die verschiedenen Ansichten im \texttt{PlannerWorkspace} in einem \texttt{QStackedWidget} verwaltet.\footnote{\url{https://doc.qt.io/qt-6/qstackedwidget.html}} Dadurch kann immer eine der Ansichten angezeigt werden, während die anderen im Hintergrund vorhanden bleiben. Listing~\ref{lst:kalender-stack} zeigt diesen Aufbau vereinfacht.
 
-\begin{verbatim}
+\Needspace{12\baselineskip}
+\begin{lstlisting}[caption={Verwaltung der Kalenderansichten im QStackedWidget}, label={lst:kalender-stack}]
 self.stack = QStackedWidget()
 
 self.day_table = TimeGridDropTable()
@@ -521,24 +553,15 @@ self.month_table = MonthDropTable()
 self.stack.addWidget(self.day_table)
 self.stack.addWidget(self.week_table)
 self.stack.addWidget(self.month_container)
-\end{verbatim}
+\end{lstlisting}
 
 Die Monatsansicht wird in einem eigenen Container eingebunden, da dort zusätzlich zur Tabelle ein Text mit dem aktuellen Monatsnamen angezeigt wird.
 Die Tages- und Wochenansicht verwenden jeweils eine zeitbasierte Tabelle mit Räumen oder Wochentagen als Spalten. Die Monatsansicht ist anders aufgebaut, weil sie keinen genauen Zeitraster wie die Tages- oder Wochenansicht verwendet, sondern ein kalendarisches Raster.
 
-% Beim Aktualisieren des Kalenders wird zuerst geprüft, welche Ansicht gerade ausgewählt ist. Danach wird nur die passende Ansicht neu aufgebaut. Dadurch muss nicht jedes Mal die gesamte Kalenderdarstellung gleich behandelt werden:
+Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. Dadurch können sie besser erkannt, ausgewählt und weiterverwendet werden. Je nach Terminart können die Karten unterschiedlich dargestellt werden. Der Aufbau einer Karte erfolgt dabei über die eigene \texttt{TerminCard}-Klasse, wie Listing~\ref{lst:termin-card} zeigt.
 
-% \begin{verbatim}
-% view = str(self.view_cb.currentData())
-
-% if view == "day":
-%     self.stack.setCurrentWidget(self.day_table)
-%     self.day_view.refresh(filtered, rooms)
-% \end{verbatim}
-
-Die Termine werden in den Kalenderansichten als eigene Termin-Karten angezeigt. Dadurch können sie besser erkannt, ausgewählt und weiterverwendet werden. Je nach Terminart können die Karten unterschiedlich dargestellt werden. Der Aufbau einer Karte erfolgt dabei über die eigene \texttt{TerminCard}-Klasse:
-
-\begin{verbatim}
+\Needspace{18\baselineskip}
+\begin{lstlisting}[caption={Vereinfachter Aufbau einer Termin-Karte}, label={lst:termin-card}]
 class TerminCard(QFrame):
     def __init__(
         self,
@@ -554,7 +577,7 @@ class TerminCard(QFrame):
     ):
         super().__init__(parent)
         self.setObjectName("TerminCard")
-\end{verbatim}
+\end{lstlisting}
 
 Hier wird sichtbar, dass die Karte als eigenes Qt-Widget umgesetzt ist, das von \texttt{QFrame} erbt. \texttt{QFrame} ist ein einfaches Container-Widget von Qt, das hier als sichtbarer Rahmen für die Termin-Karte dient.
 Zusätzlich können Termine in der Tages- und Wochenansicht per Drag-and-Drop verschoben werden und dabei während des Verschiebens geprüft werden, ob ein Konflikt entstehen würde.
@@ -582,18 +605,19 @@ Für die Verwaltung der Termine und Stammdaten gibt es in der Anwendung einen ei
 
 Der Dateneditor ist in Abbildung~\ref{fig:dateneditor} dargestellt.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.45\textwidth]{bilder/data_editor.png}
+    \includegraphics[width=0.75\textwidth]{bilder/data_editor.png}
     \caption{Dateneditor zur Verwaltung von Terminen und Stammdaten}
     \label{fig:dateneditor}
 \end{figure}
 
 Diese Trennung ist sinnvoll, weil viele Daten mehrfach gebraucht werden. Dadurch bleiben die Einträge einheitlicher und Änderungen können leichter durchgeführt werden.
 
-Die Bearbeitung der Daten folgt dem CRUD-Prinzip (Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt.
+Die Bearbeitung der Daten folgt dem CRUD-Prinzip (Erstellen, Anzeigen, Bearbeiten und Löschen). Im Projekt werden diese Aktionen nicht direkt an jeder Stelle neu umgesetzt, sondern über gemeinsame Funktionen im \texttt{CrudHandler} behandelt. Listing~\ref{lst:read-studiensemester} zeigt dazu ein Beispiel aus dem lesenden Teil der Datenverwaltung.
 
-\begin{verbatim}
+\Needspace{13\baselineskip}
+\begin{lstlisting}[caption={Laden der Studiensemester-Modelle}, label={lst:read-studiensemester}]
 def read_studiensemester_models(self) -> List[Studiensemester]:
     models: List[Studiensemester] = []
     for item in self.ds.load_studiensemester():
@@ -602,7 +626,7 @@ def read_studiensemester_models(self) -> List[Studiensemester]:
         except Exception:
             continue
     return models
-\end{verbatim}
+\end{lstlisting}
 
 Diese Methode gehört zum \textbf{Read}-Teil des CRUD-Prinzips. Dabei werden gespeicherte Daten geladen, in passende Modellobjekte umgewandelt und zurückgegeben. Fehlerhafte Einträge werden übersprungen.
 
@@ -625,35 +649,38 @@ Abbildung~\ref{fig:terminliste} zeigt die Terminliste.
 
 Für diese Funktion wird das Drag-and-Drop System von Qt verwendet.\footnote{\url{https://doc.qt.io/qt-6/dnd.html}} Die Terminliste dient dabei als Ausgangspunkt, aus dem Termine herausgezogen werden können. Die Kalenderansichten übernehmen die Rolle der Zielbereiche, in denen ein Termin abgelegt und dadurch neu zugewiesen werden kann.
 
-Beim Drag-and-Drop wird nur die ID des jeweiligen Termins weitergegeben. Nach dem Ablegen kann die Anwendung anhand dieser ID den passenden Termin laden und die neuen Daten speichern.
+Beim Drag-and-Drop wird nur die ID des jeweiligen Termins weitergegeben. Nach dem Ablegen kann die Anwendung anhand dieser ID den passenden Termin laden und die neuen Daten speichern. Listing~\ref{lst:drag-mimedata} zeigt die Übergabe der Termin-ID.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Übergabe der Termin-ID beim Drag-and-Drop}, label={lst:drag-mimedata}]
 md = QMimeData()
 md.setText(termin_id)
 drag = QDrag(self)
 drag.setMimeData(md)
-\end{verbatim}
+\end{lstlisting}
 
 \texttt{QMimeData} wird hier verwendet, um die Informationen für den Drag-and-Drop-Vorgang mitzugeben. In dieser Anwendung reicht es aus zu wissen, welcher Termin verschoben werden soll. Deshalb wird nur die Termin-ID als Text gespeichert und übertragen.
 \texttt{QDrag} startet anschließend den Drag-Vorgang des Termins. Beim Ablegen werden die gespeicherten Daten an das Ziel-Element übergeben. Die Anwendung kann dann über die ID den richtigen Termin wiederfinden, laden und die geänderten Daten speichern.
 
-Beim Ablegen wird die ID wieder ausgelesen:
+Beim Ablegen wird die ID wieder ausgelesen, wie Listing~\ref{lst:drop-event} zeigt.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Auslesen der Termin-ID beim Ablegen}, label={lst:drop-event}]
 def dropEvent(self, e: QDropEvent):
     md = e.mimeData()
     termin_id = md.text().strip()
     ... weitere Verarbeitung ...
-\end{verbatim}
+\end{lstlisting}
 
-Ein weiterer Teil der Drag-and-Drop Funktion ist die Vorschau während des Verschiebens. In der Tages- und Wochenansicht kann schon während des Ziehens geprüft werden, ob der Termin einen Konflikt auslösen würde. Dafür wird die neue Position nur vorübergehend simuliert.
+Ein weiterer Teil der Drag-and-Drop Funktion ist die Vorschau während des Verschiebens. In der Tages- und Wochenansicht kann schon während des Ziehens geprüft werden, ob der Termin einen Konflikt auslösen würde. Dafür wird die neue Position nur vorübergehend simuliert. Listing~\ref{lst:dragdrop-konfliktpruefung} zeigt die vereinfachte Prüfung.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Prüfung der Drag-and-Drop-Konfliktvorschau}, label={lst:dragdrop-konfliktpruefung}]
 if rows >= 0 and columns >= 0 and self._conflict_checker:
     self._hover_has_conflict = bool(
         self._conflict_checker(self._hover_termin_id, r, c)
     )
-\end{verbatim}
+\end{lstlisting}
 
 Während der Termin gezogen wird, prüft die Anwendung ständig, über welcher Kalenderzelle sich der Mauszeiger gerade befindet. Danach wird mit \texttt{self.\_conflict\_checker()} überprüft, ob der Termin an dieser neuen Position einen Konflikt auslösen würde.
 
@@ -673,9 +700,10 @@ Da diese dynamische Konfliktvorschau während des Ziehens wiederholt ausgeführt
 \subsection{Filterfunktion}
 
 %Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dort wird der aktuelle Filterzustand gespeichert und für die Anzeige verwendet. Der aktuelle Zustand aller Filter wird dabei im \texttt{FilterState} gespeichert.
-Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Dieser Zustand wird als \texttt{FilterState} gespeichert und enthält alle aktuell gesetzten Filter.
+Die Filter werden im \texttt{GlobalFilterDock} ausgewählt. Dieser Zustand wird als \texttt{FilterState} gespeichert und enthält alle aktuell gesetzten Filter. Listing~\ref{lst:filter-state} zeigt den vereinfachten Aufbau dieses Zustands.
 
-\begin{verbatim}
+\Needspace{14\baselineskip}
+\begin{lstlisting}[caption={Filterzustand der globalen Filter}, label={lst:filter-state}]
 class FilterState:
     studienrichtung: Optional[str] = None
     semester: Optional[str] = None
@@ -686,26 +714,28 @@ class FilterState:
     dozent: Optional[str] = None
     studiensemester: Optional[str] = None
     zu_besprechen: bool = False
-\end{verbatim}
+\end{lstlisting}
 
-Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben.
+Wenn der Nutzer dort einen Filter ändert, wird diese Änderung an das Hauptfenster weitergegeben. Dafür wird die in Listing~\ref{lst:filter-signal} gezeigte Signalverbindung verwendet.
 
-\begin{verbatim}
+\Needspace{7\baselineskip}
+\begin{lstlisting}[caption={Signalverbindung der globalen Filter}, label={lst:filter-signal}]
 self.global_filter_dock.filtersChanged.connect(
     self._on_global_filters_changed
 )
-\end{verbatim}
+\end{lstlisting}
 
 %Anschließend wird der Zustand an den Kalender weitergegeben. Der Kalender speichert diesen Zustand und verwendet ihn intern für die Kalenderansichten.
-Die Filter ändern nicht die gespeicherten Termindaten. Stattdessen wird nur berechnet, welche Termine zu den aktuell gesetzten Filtern passen. Diese gefilterten Termine werden an die Terminliste übergeben, während der Kalender die Ansicht anhand des gespeicherten \texttt{FilterState} aktualisiert.
+Die Filter ändern nicht die gespeicherten Termindaten. Stattdessen wird nur berechnet, welche Termine zu den aktuell gesetzten Filtern passen. Diese gefilterten Termine werden an die Terminliste übergeben, während der Kalender die Ansicht anhand des gespeicherten \texttt{FilterState} aktualisiert. Listing~\ref{lst:filter-update} zeigt diesen Ablauf vereinfacht.
 
-\begin{verbatim}
+\Needspace{10\baselineskip}
+\begin{lstlisting}[caption={Aktualisierung nach geänderten Filtern}, label={lst:filter-update}]
 def _on_global_filters_changed(self, fs: FilterState) -> None:
     self.filter_state = fs
     self.planner.set_global_filter_state(fs)
     terms = self._compute_filtered_termine(fs)
     self.termine_dock.set_rows(terms, ...)
-\end{verbatim}
+\end{lstlisting}
 
 Die Filterfunktion dient somit vor allem zur besseren Übersicht. Sie hilft dabei, die Planung in kleineren Ausschnitten zu betrachten.
 Ergänzend zu den globalen Filtern besitzt die Terminliste eine Suchfunktion. Damit kann nach Terminname, Termin-ID, LVA, Raum, Lehrperson oder Besprechungshinweis gesucht werden. Wenn ein passender Termin bereits eingeplant ist, kann über das Kontextmenü der Terminliste direkt zu diesem Termin im Kalender gesprungen werden.
@@ -715,9 +745,10 @@ Auch eingeplante Terminkarten in der Tages- und Wochenansicht besitzen ein Konte
 
 Die Konflikterkennung soll dabei helfen, mögliche Fehler in der Planung früher zu erkennen. Solche Konflikte und Warnungen können entstehen, wenn Räume, Gruppen oder Lehrpersonen zeitlich überschneiden, wenn Termine auf Feiertage oder vorlesungsfreie Zeiträume fallen, wenn Kapazitäten nicht ausreichen oder wenn Termine für dieselbe Studienrichtung und dasselbe Studiensemester parallel liegen. Solche Bedingungen werden in der Literatur zum University Course Timetabling als typische Einschränkungen beschrieben, die berücksichtigt werden müssen \cite{babaei2015survey}.
 
-Das folgende Pseudocode-Beispiel zeigt vereinfacht die Erkennung von Konflikten bei Lehrpersonen. Dafür werden Termine zuerst nach Lehrperson und Datum gruppiert. Anschließend wird jeder Termin innerhalb einer Gruppe mit jedem folgenden Termin verglichen, um zeitliche Überschneidungen zu finden.
+Listing~\ref{lst:lecturer-conflicts} zeigt vereinfacht die Erkennung von Konflikten bei Lehrpersonen. Dafür werden Termine zuerst nach Lehrperson und Datum gruppiert. Anschließend wird jeder Termin innerhalb einer Gruppe mit jedem folgenden Termin verglichen, um zeitliche Überschneidungen zu finden.
 %detect snippet
-\begin{verbatim}
+\Needspace{18\baselineskip}
+\begin{lstlisting}[caption={Vereinfachte Erkennung von Lehrpersonen-Konflikten}, label={lst:lecturer-conflicts}]
 def detect_lecturer_conflicts(self, termine):
     conflicts = []
     groups = self.group_terms_by_lecturer_and_date(termine)
@@ -731,23 +762,24 @@ def detect_lecturer_conflicts(self, termine):
                     )
 
     return conflicts
-\end{verbatim}
+\end{lstlisting}
 Die innere Schleife verwendet \texttt{terms[i + 1:]}, damit ein Termin nur mit den nachfolgenden Terminen der Liste verglichen wird. Dadurch wird jedes Terminpaar genau einmal geprüft und doppelte oder selbstbezogene Vergleiche werden vermieden.
 
 Die Prüfung ist regelbasiert aufgebaut.
 Die Standardregeln liegen in \texttt{src/konflikte.json}. Beim Laden werden diese mit einer nutzerspezifischen Konfiguration zusammengeführt.
 Dadurch können einzelne Regeln aktiviert, deaktiviert oder parametrisiert werden, während neue Standardregeln weiterhin übernommen werden.
-Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt.
+Die eigentliche Prüfung wird über die Klasse \texttt{ConflictDetector} durchgeführt. Listing~\ref{lst:conflict-rule} zeigt eine einzelne Regel aus der Konfigurationsdatei.
 
-\begin{verbatim}
+\Needspace{9\baselineskip}
+\begin{lstlisting}[caption={Beispiel einer Konfliktregel}, label={lst:conflict-rule}]
 {
     "name": "Raum-Konflikt",
     "key": "room_conflict",
     "enabled": true,
     "type": "conflict"
 },
-\end{verbatim}
-Dieser Ausschnitt zeigt eine einzelne Konfliktregel. Über \texttt{key} wird die Regel in der Anwendung einer konkreten Prüffunktion zugeordnet.
+\end{lstlisting}
+Über \texttt{key} wird die Regel in der Anwendung einer konkreten Prüffunktion zugeordnet.
 
 Die erkannten Konflikte werden in der Konfliktanzeige aufgelistet. 
 Die Darstellung erkannter Konflikte ist in Abbildung~\ref{fig:konfliktanzeige} zu sehen.
@@ -763,17 +795,19 @@ Wird ein Konflikt ausgewählt, können die dazugehörigen Termine im Kalender he
 
 Dafür wird die Konfliktanzeige im Hauptfenster über ein Signal mit der Kalenderansicht verbunden.
 
-Beim Anklicken einer Konfliktkarte werden die betroffenen Termin-IDs gesendet. Diese IDs dienen als eindeutige Referenz auf die Termine, die im Kalender markiert werden sollen.
+Beim Anklicken einer Konfliktkarte werden die betroffenen Termin-IDs gesendet. Diese IDs dienen als eindeutige Referenz auf die Termine, die im Kalender markiert werden sollen. Listing~\ref{lst:konfliktkarte-signal} zeigt die Weitergabe dieser IDs.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Weitergabe ausgewählter Konflikt-Termin-IDs}, label={lst:konfliktkarte-signal}]
 def _on_card_clicked(self, termin_ids):
     if termin_ids:
         self.conflict_items_highlight.emit(termin_ids)
-\end{verbatim}
+\end{lstlisting}
 
-In der Kalenderansicht wird zuerst zum ersten betroffenen Termin gesprungen. Danach werden alte Markierungen entfernt, damit nur der aktuell ausgewählte Konflikt sichtbar bleibt. Anschließend werden die betroffenen Termine in der Tages-, Wochen- und Monatsansicht markiert.
+In der Kalenderansicht wird zuerst zum ersten betroffenen Termin gesprungen. Danach werden alte Markierungen entfernt, damit nur der aktuell ausgewählte Konflikt sichtbar bleibt. Anschließend werden die betroffenen Termine in der Tages-, Wochen- und Monatsansicht markiert. Listing~\ref{lst:highlight-termine} zeigt diesen Ablauf.
 
-\begin{verbatim}
+\Needspace{12\baselineskip}
+\begin{lstlisting}[caption={Hervorhebung betroffener Termine im Kalender}, label={lst:highlight-termine}]
 def highlight_termine(self, ids):
     self._jump_to_first_termin(ids)
     self.clear_conflict_highlights()
@@ -781,7 +815,7 @@ def highlight_termine(self, ids):
     self._highlight_week_cards(ids)
     self._highlight_day_cells(ids)
     self._highlight_month_cells(ids)
-\end{verbatim}
+\end{lstlisting}
 
 Die Konflikterkennung wird auch beim Drag-and-Drop verwendet, wobei ein Konflikt als Vorschau angezeigt werden kann. Dafür wird derselbe \texttt{ConflictDetector} benutzt wie in der Konfliktanzeige. Die Drag-and-Drop Konfliktvorschau ist aus Performancegründen als optionale Komfortfunktion umgesetzt.
 
@@ -791,19 +825,27 @@ Die Daten des Planungstools werden in mehreren JSON-Dateien gespeichert. Für di
 
 Für das Laden und Speichern wird \texttt{DataService} verwendet. Dadurch sind die Dateizugriffe an einer zentralen Stelle gesammelt. Das macht die Speicherung übersichtlicher und erleichtert es, später Änderungen an der Datenverwaltung vorzunehmen, zum Beispiel das Hinzufügen einer Datenbank oder eines zentralen Servers.
 
-Die Anwendung überschreibt eine Datei nicht direkt, sondern schreibt die neuen Daten zuerst in eine temporäre Datei. Erst danach wird die alte Datei ersetzt. Das Ersetzen erfolgt dabei als atomare Operation auf Betriebssystemebene, sodass entweder die alte oder die neue Datei vollständig vorhanden ist. Dadurch ist die Wahrscheinlichkeit geringer, dass eine JSON-Datei beschädigt wird, falls während des Speicherns ein Fehler auftritt.
+Die Anwendung überschreibt eine Datei nicht direkt, sondern schreibt die neuen Daten zuerst in eine temporäre Datei. Erst danach wird die alte Datei ersetzt. Das Ersetzen erfolgt dabei als atomare Operation auf Betriebssystemebene, sodass entweder die alte oder die neue Datei vollständig vorhanden ist. Dadurch ist die Wahrscheinlichkeit geringer, dass eine JSON-Datei beschädigt wird, falls während des Speicherns ein Fehler auftritt. Listing~\ref{lst:atomic-save} zeigt diesen Schritt vereinfacht.
 
-\begin{verbatim}
+\Needspace{7\baselineskip}
+\begin{lstlisting}[caption={Atomare Speicherung über eine temporäre Datei}, label={lst:atomic-save}]
 tmp.write_text(json_text, encoding="utf-8")
 tmp.replace(path)
-\end{verbatim}
+\end{lstlisting}
 
 Zusätzlich zur normalen Speicherung gibt es eine Import- und Exportfunktion. Beim Export kann entweder das gesamte Projekt oder ein einzelner Projektbereich exportiert werden. Das gesamte Projekt kann als JSON- oder Excel-Datei gespeichert werden.
 Einzelne Projektbereiche, zum Beispiel freie Zeiträume, Räume oder Lehrveranstaltungen, können als JSON, Excel oder CSV exportiert und später wieder importiert werden.
 Die Excel-Datei enthält getrennte Tabellenblätter für Räume, Lehrveranstaltungen, Termine, Studienrichtungen und freie Zeiträume. So kann ein Planungsstand gesichert oder an einer anderen Stelle wieder verwendet werden.
 Neben dem vollständigen Projektexport gibt es einen speziellen Export für Lehrende. Dabei können LVAs mit den zugehörigen Lehrpersonen, ein oder mehrere Semester sowie ein Zeitraum ausgewählt werden.
 Die Termine werden anschließend entweder als Tabellenliste oder als Wochenkalender in eine Excel-Datei geschrieben.
+Abbildung~\ref{fig:export-lehrende} zeigt den Exportdialog für Lehrende. In diesem Dialog kann der Nutzer festlegen, welche LVAs bzw. Lehrpersonen exportiert werden sollen und ob die Termine als Tabellenliste oder als Wochenkalender ausgegeben werden.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.95\textwidth]{bilder/export_lehrende.png}
+    \caption{Exportdialog für Lehrende mit Auswahl von LVAs, Zeitraum, Exportformat und Semestern}
+    \label{fig:export-lehrende}
+\end{figure}
 
 Beim Import können JSON-, Excel- oder CSV-Dateien eingelesen werden. Die Anwendung erkennt Projektdateien, Raumlisten und LVA-Listen, zeigt neue, geänderte und bereits vorhandene Einträge an und überspringt Einträge mit fehlenden Pflichtverweisen. Danach kann entschieden werden, ob die importierten Änderungen übernommen werden sollen. Dadurch werden vorhandene Daten nicht ungeprüft ersetzt.
 
@@ -824,24 +866,26 @@ Dadurch können bestehende Planungsstände als Grundlage für ein neues Semester
 
 Neben den eigentlichen Planungsfunktionen wurden auch einige Bedienhilfen umgesetzt. Dazu gehören Undo und Redo, Tastenkombinationen und die Möglichkeit, die Anordnung der verschiedenen Docks zu speichern. Diese Funktionen sollen die Arbeit mit dem Tool erleichtern.
 
-Die Undo- und Redo-Funktion arbeitet mit gespeicherten Zwischenständen der Daten. Bevor eine Änderung durchgeführt wird, wird der aktuelle Zustand als Kopie aller Daten gespeichert. Wenn der Benutzer die Änderung rückgängig macht, wird der frühere Zustand wieder geladen und die Benutzeroberfläche aktualisiert.
+Die Undo- und Redo-Funktion arbeitet mit gespeicherten Zwischenständen der Daten. Bevor eine Änderung durchgeführt wird, wird der aktuelle Zustand als Kopie aller Daten gespeichert. Wenn der Benutzer die Änderung rückgängig macht, wird der frühere Zustand wieder geladen und die Benutzeroberfläche aktualisiert. Listing~\ref{lst:undo-restore} zeigt die Wiederherstellung eines solchen Zustands.
 
-\begin{verbatim}
+\Needspace{8\baselineskip}
+\begin{lstlisting}[caption={Wiederherstellung eines gespeicherten Zustands}, label={lst:undo-restore}]
 snapshot = self.undo_service.undo(self.ds)
 self.undo_service.restore(self.ds, snapshot)
 self.refresh_everything()
-\end{verbatim}
+\end{lstlisting}
 
 \texttt{undo()} erhält dabei den \texttt{DataService} als Parameter, weil es den aktuellen Zustand vor der Wiederherstellung zunächst auf dem Redo-Stack sichert und anschließend den letzten gespeicherten Snapshot zurückgibt. \texttt{restore()} schreibt diesen Snapshot zurück in den \texttt{DataService}, und \texttt{refresh\_everything()} aktualisiert anschließend alle sichtbaren Bereiche der Anwendung.
 
 
 Zusätzlich gibt es Tastenkombinationen für häufig verwendete Aktionen. Dazu gehören unter anderem das Aktualisieren der Ansicht, das Wechseln zwischen Tages-, Wochen- und Monatsansicht, das Erstellen neuer Einträge sowie Import und Export. Einige Shortcuts gelten nur in bestimmten Bereichen der Anwendung, wie das Löschen von Terminen aus dem Kalender, damit sie nicht mit normalen Eingaben in Konflikt kommen.
 
-Das folgende Beispiel zeigt die Zuweisung eines Shortcuts für die Exportfunktion:
+Listing~\ref{lst:export-shortcut} zeigt die Zuweisung eines Shortcuts für die Exportfunktion:
 
-\begin{verbatim}
+\Needspace{6\baselineskip}
+\begin{lstlisting}[caption={Shortcut für den Datenexport}, label={lst:export-shortcut}]
 mw.act_export.setShortcut(QKeySequence("Ctrl+E"))
-\end{verbatim}
+\end{lstlisting}
 
 Damit kann der Export direkt über die Tastenkombination \texttt{Ctrl+E} gestartet werden, ohne die Aktion über das Menü auswählen zu müssen.
 
@@ -869,7 +913,7 @@ Dadurch konnten nicht nur einzelne Dialoge, sondern auch zusammenhängende Arbei
 
 Die Tabellen~\ref{tab:test-stammdaten} bis~\ref{tab:test-speicherung} zeigen eine Auswahl der durchgeführten manuellen Tests, gegliedert nach Funktionsbereichen.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \caption{Manuelle Tests der Termin- und Stammdatenverwaltung}
@@ -895,7 +939,7 @@ Raum erstellen & Ein neuer Raum wird über den Termin-Dialog bzw. über den Date
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
@@ -921,7 +965,7 @@ Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im K
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \caption{Manuelle Tests der Filterung und Aktualisierung}
@@ -943,7 +987,7 @@ Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Ko
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \caption{Manuelle Tests der Konflikterkennung}
@@ -960,7 +1004,7 @@ Gruppenkonflikt erzeugen & Zwei Termine für dieselbe Gruppe werden zeitgleich e
 \hline
 Studienplan-Warnung erzeugen & Zwei Termine derselben Studienrichtung und desselben Studiensemesters werden zeitgleich eingeplant. & Die Überschneidung wird als Warnung in der Konfliktanzeige dargestellt. \\
 \hline
-Kapazitätswarnung erzeugen & Ein Termin wird in einen Raum gelegt, dessen Kapazität für die Gruppengröße nicht ausreicht. & Die Kapazitätswarnung wird in der Konfliktanzeige angezeigt. \\
+Kapazitäts\-warnung erzeugen & Ein Termin wird in einen Raum gelegt, dessen Kapazität für die Gruppengröße nicht ausreicht. & Die Kapazitätswarnung wird in der Konfliktanzeige angezeigt. \\
 \hline
 Termin auf freien Tag legen & Ein Termin wird auf einen eingetragenen freien Tag gelegt. & Der Konflikt wird erkannt und in der Konfliktanzeige dargestellt. \\
 \hline
@@ -975,7 +1019,7 @@ Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \caption{Manuelle Fehler- und Validierungstests}
@@ -993,11 +1037,13 @@ Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die A
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\small
 \caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
 \label{tab:test-speicherung}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.94}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
@@ -1047,10 +1093,9 @@ Das Ziel der Arbeit wurde im Wesentlichen erreicht. Es ist ein Python-basiertes 
 
 Durch Funktionen wie Kalenderansichten, Filter, Drag-and-Drop und Konflikterkennung wird die Planung übersichtlicher und einfacher zu bearbeiten. Das Tool erstellt die Planung zwar nicht automatisch, unterstützt den Nutzer aber bei typischen Aufgaben und hilft dabei, Fehler schneller zu erkennen.
 
-Damit lässt sich die Forschungsfrage beantworten: Ein solches Planungstool kann durch eine strukturierte Verwaltung der Daten, eine übersichtliche Benutzeroberfläche und eine regelbasierte Prüfung von Konflikten umgesetzt werden.
+Damit lässt sich die Forschungsfrage beantworten: Ein solches Planungstool kann durch eine strukturierte Verwaltung der Daten, eine übersichtliche Benutzeroberfläche und eine regelbasierte Prüfung von Konflikten umgesetzt werden. Die manuellen Tests zeigen, dass zentrale Arbeitsabläufe wie das Anlegen, Bearbeiten, Verschieben, Filtern, Importieren und Exportieren von Terminen im entwickelten Prototyp funktionieren.
 
 %\subsection{Stärken der entwickelten Lösung}
-
 \subsection{Grenzen der Software}
 
 Die Software unterstützt den Nutzer bei der Planung, erstellt jedoch keinen Stundenplan automatisch. Die endgültigen Entscheidungen müssen weiterhin manuell getroffen werden.
@@ -1079,7 +1124,162 @@ Die Daten werden dabei lokal in JSON-Dateien gespeichert. Das Tool übernimmt di
 
 Für die Zukunft wären eine Datenbankanbindung, ein Mehrbenutzerbetrieb und die Integration in bereits vorhandene Universitätssysteme sinnvolle Erweiterungen.
 
-\newpage
+\clearpage
+
+\appendix
+
+\section{Mini-How-to}
+
+Dieser Anhang fasst zwei typische Einstiegsszenarien kurz zusammen. 
+
+\subsection{Neues Projekt anlegen und eine LVA mit Termin hinzufügen}
+\label{sec:howto-neues-projekt}
+
+Dieses Beispiel beschreibt den Ablauf, wenn noch keine Projektdaten vorhanden sind und ein neues Projekt mit einer ersten Lehrveranstaltung und einem ersten Termin begonnen werden soll.
+
+\begin{enumerate}
+\item Anwendung starten.
+\item Wenn noch kein Projektordner gespeichert ist, erscheint der Dialog \textit{Projekt auswählen}. Dort \textit{Neues Projekt anlegen} auswählen. Wenn bereits ein Projekt geöffnet ist, kann derselbe Ablauf über \textit{Datei} -- \textit{Neues Projekt} gestartet werden.
+\item Einen leeren Ordner als Projektordner auswählen und das Projekt anlegen. In diesem Ordner erzeugt die Anwendung die benötigten JSON-Dateien für Termine, Lehrveranstaltungen, Räume, Studienrichtungen und freie Zeiträume.
+\item Falls gewünscht, die angebotenen Standarddaten übernehmen. Dadurch können die mitgelieferten Raum- und LVA-Daten als Ausgangspunkt verwendet werden. Alternativ kann das Projekt ohne Standarddaten gestartet werden.
+\item Eine neue Lehrveranstaltung im Dateneditor anlegen oder beim Erstellen des ersten Termins ergänzen. Dafür werden zumindest LVA-Nummer, Name und Studienrichtung eingetragen.
+\item Einen neuen Termin über \textit{Datei} -- \textit{Neuer Termin} oder über den Dateneditor erstellen.
+\item Die zuvor angelegte Lehrveranstaltung auswählen und die benötigten Termindaten eintragen, insbesondere Semester, Terminart und bei Bedarf Datum, Uhrzeit, Dauer und Raum.
+\item Den Termin speichern. Danach erscheint er je nach Vollständigkeit entweder direkt in der Kalenderansicht oder in der Terminliste.
+\item Falls der Termin noch nicht vollständig eingeplant ist, kann er per Drag-and-Drop aus der Terminliste in die Kalenderansicht gezogen werden.
+\item Nach dem Speichern bzw. Verschieben werden Kalender, Terminliste und Konfliktanzeige aktualisiert. Mögliche Konflikte können anschließend über die Konfliktanzeige kontrolliert werden.
+\end{enumerate}
+
+\subsection{Beispielprojekt laden}
+
+Dieses Beispiel beschreibt den Einstieg mit vorbereiteten Projektdaten aus der Datei \texttt{BeispielProjektDaten.xlsx}. Dafür wird zuerst ein neues Projekt angelegt und anschließend die Excel-Datei importiert.
+
+\begin{enumerate}
+\item Zunächst die Schritte~1 bis~4 aus Abschnitt~\ref{sec:howto-neues-projekt} durchführen. Dadurch wird ein neues Projekt in einem leeren Projektordner vorbereitet; die Standarddaten können übernommen oder übersprungen werden.
+\item Nach dem Anlegen des Projekts im Menü \textit{Datei} -- \textit{Importieren} den Eintrag \textit{Importieren} auswählen.
+\item Die Datei \texttt{BeispielProjektDaten.xlsx} auswählen.
+\item Die Importübersicht prüfen. Sie zeigt je Datenbereich, wie viele Einträge insgesamt erkannt wurden und wie viele davon neu, geändert, bereits vorhanden oder übersprungen sind.
+\item Bei geänderten bestehenden Einträgen öffnet sich ein Merge-Dialog. Dort werden die betroffenen Felder gegenübergestellt, sodass entschieden werden kann, ob der geänderte Eintrag übernommen oder ignoriert wird. Neue Einträge können ohne diesen Vergleich importiert werden.
+\item Nach dem Import prüfen, ob Kalenderansicht, Terminliste und Dateneditor die importierten Daten anzeigen.
+\item Über die Filter kann kontrolliert werden, ob bestimmte LVAs, Räume, Semester oder Lehrpersonen korrekt übernommen wurden.
+\item Die Konfliktanzeige kann anschließend verwendet werden, um mögliche Überschneidungen oder Warnungen im importierten Planungsstand zu kontrollieren.
+\end{enumerate}
+
+\clearpage
+
+\section{Optionsübersicht}
+
+Dieser Anhang gibt eine kurze Übersicht über Optionen, die in der Anwendung an mehreren Stellen auswählbar oder konfigurierbar sind. Die konkreten Auswahlwerte, zum Beispiel verfügbare LVAs oder Räume, hängen vom jeweils geöffneten Projekt ab.
+
+\subsection{Filter- und Suchoptionen}
+
+\begin{itemize}
+\item \textbf{Semester:} Einschränkung auf ein bestimmtes Sommer- oder Wintersemester.
+\item \textbf{Studienrichtung:} Einschränkung auf die einer LVA zugeordnete Studienrichtung.
+\item \textbf{Studiensemester:} Einschränkung auf die Studiensemester-Zuordnung der LVA.
+\item \textbf{LVA:} Einschränkung auf eine konkrete Lehrveranstaltung.
+\item \textbf{Dozent:} Einschränkung auf die hinterlegte Lehrperson.
+\item \textbf{Typ:} Einschränkung auf Veranstaltungstypen wie VO, UE, LU, PR, SE oder VU.
+\item \textbf{Gebäude:} Einschränkung der Raumliste auf ein Gebäude.
+\item \textbf{Raum:} Einschränkung auf einen konkreten Raum.
+\item \textbf{Zu besprechen:} Anzeige von Terminen, die als zu besprechen markiert sind.
+\item \textbf{Suche in der Terminliste:} Suche nach Terminname, Termin-ID, LVA, Raum, Lehrperson oder Besprechungshinweis.
+\end{itemize}
+
+\subsection{Konfliktregeln}
+
+\begin{itemize}
+\item \textbf{Raum-Konflikt:} Zwei Termine überschneiden sich im selben Raum.
+\item \textbf{Gruppen-Konflikt:} Zwei Termine derselben LVA und Gruppe überschneiden sich.
+\item \textbf{Lehrpersonen-Konflikt:} Zwei Termine mit derselben Lehrperson überschneiden sich.
+\item \textbf{Studienplan-Warnung:} Zwei Termine derselben Studienrichtung und desselben Studiensemesters überschneiden sich.
+\item \textbf{Feiertags-Konflikt:} Ein Termin liegt auf einem Feiertag.
+\item \textbf{Vorlesungsfrei-Konflikt:} Ein Termin liegt in einem vorlesungsfreien Zeitraum.
+\item \textbf{Unvollständiger Termin:} Ein Termin enthält fehlende Angaben für Datum, Startzeit, Dauer oder Raum.
+\item \textbf{Kapazitätswarnung Übung/Labor/Projekt:} Für UE, LU, PR und SE wird die Raumkapazität mit der Gruppengröße verglichen.
+\item \textbf{Kapazitätswarnung Vorlesung/VU:} Für VO und VU wird die Raumkapazität mit der Gruppengröße verglichen.
+\item \textbf{Dauerwarnung:} Die Termindauer liegt außerhalb des eingestellten Minutenbereichs.
+\item \textbf{Startzeit-Warnung:} Ein Termin beginnt nicht zu einer vollen Stunde.
+\item \textbf{Samstagswarnung:} Ein Termin liegt auf einem Samstag.
+\item \textbf{Sonntagswarnung:} Ein Termin liegt auf einem Sonntag.
+\end{itemize}
+
+\subsection{Import- und Exportoptionen}
+
+\begin{itemize}
+\item \textbf{Projektimport:} Einlesen von JSON-, Excel- oder CSV-Dateien.
+\item \textbf{Standarddatenimport:} Übernahme der mitgelieferten Raum- und LVA-Daten in ein Projekt.
+\item \textbf{Import freier Tage:} Übernahme freier Zeiträume aus externen Quellen oder manuelle Ergänzung im Dialog.
+\item \textbf{Gesamter Projektexport:} Export aller Projektbereiche als JSON- oder Excel-Datei.
+\item \textbf{Export einzelner Projektbereiche:} Export einzelner Dateien wie Räume, LVAs, Termine, Studienrichtungen oder freie Zeiträume als JSON, Excel oder CSV.
+\item \textbf{Export für Lehrende:} Export ausgewählter LVAs bzw. Lehrpersonen und Semester als Excel-Terminliste oder Wochenkalender.
+\end{itemize}
+
+\subsection{Semester-Werkzeuge}
+
+\begin{itemize}
+\item Termine eines Quellsemesters in ein Zielsemester kopieren.
+\item Termine eines ausgewählten Semesters löschen.
+\item Datum beim Kopieren nach Position im Semester oder nach gleichem Kalendertag übertragen.
+\item Ausfalltermine und einzelne Serien-Ausnahmen übernehmen.
+\item Serienvorkommen auf freien Tagen im Zielsemester automatisch als Ausfall markieren.
+\end{itemize}
+
+\subsection{Tastenkombinationen}
+
+Die standardmäßig verfügbaren Tastenkombinationen der Anwendung sind in Tabelle~\ref{tab:shortcut-overview} zusammengefasst.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Standard-Shortcuts der Anwendung}
+\label{tab:shortcut-overview}
+\begin{tabularx}{\textwidth}{|L{3.3cm}|Y|}
+\hline
+\textbf{Shortcut} & \textbf{Funktion} \\
+\hline
+\texttt{F5} & Ansicht aktualisieren \\
+\hline
+\texttt{Alt+Left} / \texttt{Alt+Right} & Zum vorherigen bzw. nächsten Zeitraum wechseln \\
+\hline
+\texttt{Ctrl+1} / \texttt{Ctrl+2} / \texttt{Ctrl+3} & Wochen-, Tages- bzw. Monatsansicht auswählen \\
+\hline
+\texttt{Ctrl+T} & Zum heutigen Datum springen \\
+\hline
+\texttt{Ctrl+N} & Neuen Termin erstellen \\
+\hline
+\texttt{Ctrl+I} & Importieren öffnen \\
+\hline
+\texttt{Ctrl+E} & Datenexport öffnen \\
+\hline
+\texttt{Ctrl+Shift+S} & Einstellungen öffnen \\
+\hline
+\texttt{Ctrl+Shift+K} & Konflikteinstellungen öffnen \\
+\hline
+\texttt{Ctrl+Shift+R} & Layouts zurücksetzen \\
+\hline
+\texttt{Ctrl+Z} / \texttt{Ctrl+Y} & Rückgängig bzw. Wiederholen \\
+\hline
+\texttt{Ctrl+Alt+T} & Neuen Termin erstellen \\
+\hline
+\texttt{Ctrl+Alt+L} & Neue LVA erstellen \\
+\hline
+\texttt{Ctrl+Alt+R} & Neuen Raum erstellen \\
+\hline
+\texttt{Ctrl+Alt+F} & Neuen freien Zeitraum erstellen \\
+\hline
+\texttt{Ctrl+Alt+H} & Neue Studienrichtung erstellen \\
+\hline
+\texttt{Ctrl+Alt+V} & Vorjahresansicht anzeigen bzw. umschalten \\
+\hline
+\texttt{Delete} / \texttt{Backspace} & Fokussierten Kalendertermin aus dem Kalender entfernen \\
+\hline
+\texttt{Ctrl+Delete} / \texttt{Ctrl+Backspace} & Fokussierten Kalendertermin löschen \\
+\hline
+\end{tabularx}
+\end{table}
+
+\clearpage
 
 \begin{thebibliography}{9}
 
@@ -1087,34 +1287,34 @@ Für die Zukunft wären eine Datenbankanbindung, ein Mehrbenutzerbetrieb und die
 National Institute of Standards and Technology. (o. J.).
 \textit{Usability}.
 Computer Security Resource Center Glossary.
-https://csrc.nist.gov/glossary/term/usability
+\url{https://csrc.nist.gov/glossary/term/usability}
 
 \bibitem{babaei2015survey}
 Babaei, H., Karimpour, J., \& Hadidi, A. (2015). 
 A survey of approaches for university course timetabling problem. 
 \textit{Computers \& Industrial Engineering, 86}, 43--59. 
-https://doi.org/10.1016/j.cie.2014.11.010
+\url{https://doi.org/10.1016/j.cie.2014.11.010}
 
 \bibitem{pythonDocs}
 Python Software Foundation. (o. J.). 
 \textit{Python Documentation}. 
-https://docs.python.org/3/
+\url{https://docs.python.org/3/}
 
 \bibitem{qtDocs}
 Qt Group. (o. J.). 
 \textit{Qt Documentation}. 
-https://doc.qt.io/qt-6/
+\url{https://doc.qt.io/qt-6/}
 
 \bibitem{qtForPython}
 Qt Group. (o. J.). 
 \textit{Qt for Python Documentation}. 
-https://doc.qt.io/qtforpython-6/
+\url{https://doc.qt.io/qtforpython-6/}
 
 \bibitem{bray2017json}
 Bray, T. (2017). 
 \textit{The JavaScript Object Notation (JSON) Data Interchange Format}. 
 RFC 8259. 
-https://www.rfc-editor.org/rfc/rfc8259
+\url{https://www.rfc-editor.org/rfc/rfc8259}
 
 \bibitem{sommerville2016software}
 Sommerville, I. (2016).
@@ -1124,7 +1324,7 @@ Pearson.
 \bibitem{python3132}
 Python Software Foundation. (2025).
 \textit{Python 3.13.2 Release}.
-https://www.python.org/downloads/release/python-3132/
+\url{https://www.python.org/downloads/release/python-3132/}
 
 \end{thebibliography}
 
