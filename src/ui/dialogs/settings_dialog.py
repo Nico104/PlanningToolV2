@@ -90,8 +90,12 @@ class SettingsDialog(QDialog):
         self.data_path_le.setObjectName("Field")
         self.show_termine_search_cb = TickCheckBox()
         self.show_termine_search_cb.setObjectName("Field")
+        self.filter_termine_list_with_global_filters_cb = TickCheckBox()
+        self.filter_termine_list_with_global_filters_cb.setObjectName("Field")
         self.dynamic_drag_conflict_preview_cb = TickCheckBox()
         self.dynamic_drag_conflict_preview_cb.setObjectName("Field")
+        self.filter_conflicts_with_global_filters_cb = TickCheckBox()
+        self.filter_conflicts_with_global_filters_cb.setObjectName("Field")
         self.jump_to_semester_start_cb = TickCheckBox()
         self.jump_to_semester_start_cb.setObjectName("Field")
         self.previous_year_shortcut_mode_cb = TightComboBox()
@@ -178,13 +182,27 @@ class SettingsDialog(QDialog):
         self._add_field(
             view_grid,
             2,
+            "Termine filtern",
+            self.filter_termine_list_with_global_filters_cb,
+            "Terminliste an die globalen Filter anpassen.",
+        )
+        self._add_field(
+            view_grid,
+            3,
             "Dynamische Konfliktvorschau",
             self.dynamic_drag_conflict_preview_cb,
             "Rote Konfliktvorschau während des Verschiebens anzeigen.",
         )
         self._add_field(
             view_grid,
-            3,
+            4,
+            "Konflikte filtern",
+            self.filter_conflicts_with_global_filters_cb,
+            "Konflikte-Dock und Badge an die globalen Filter anpassen.",
+        )
+        self._add_field(
+            view_grid,
+            5,
             "Semesterfilter springt",
             self.jump_to_semester_start_cb,
             "Beim Auswählen eines Semesters zur ersten passenden Woche springen.",
@@ -499,11 +517,17 @@ class SettingsDialog(QDialog):
         self._sync_time_edit_constraints()
         self.data_path_le.setText(s.get("data_path", ""))
         self.show_termine_search_cb.setChecked(bool(s.get("show_termine_search", True)))
+        self.filter_termine_list_with_global_filters_cb.setChecked(
+            bool(s.get("filter_termine_list_with_global_filters", True))
+        )
         self.dynamic_drag_conflict_preview_cb.setChecked(
             bool(s.get("dynamic_drag_conflict_preview", True))
         )
         self.jump_to_semester_start_cb.setChecked(
             bool(s.get("jump_to_semester_start_on_filter", True))
+        )
+        self.filter_conflicts_with_global_filters_cb.setChecked(
+            bool(s.get("filter_conflicts_with_global_filters", True))
         )
         mode = str(s.get("previous_year_shortcut_mode", "hold")).strip().lower()
         mode_idx = self.previous_year_shortcut_mode_cb.findData(mode)
@@ -535,7 +559,13 @@ class SettingsDialog(QDialog):
             "day_end": self.day_end_te.time().toString("HH:mm"),
             "data_path": self.data_path_le.text(),
             "show_termine_search": self.show_termine_search_cb.isChecked(),
+            "filter_termine_list_with_global_filters": (
+                self.filter_termine_list_with_global_filters_cb.isChecked()
+            ),
             "dynamic_drag_conflict_preview": self.dynamic_drag_conflict_preview_cb.isChecked(),
+            "filter_conflicts_with_global_filters": (
+                self.filter_conflicts_with_global_filters_cb.isChecked()
+            ),
             "jump_to_semester_start_on_filter": self.jump_to_semester_start_cb.isChecked(),
             "previous_year_shortcut_mode": self.previous_year_shortcut_mode_cb.currentData()
             or "hold",

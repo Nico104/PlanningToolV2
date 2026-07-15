@@ -27,6 +27,7 @@ from ...services.conflict_labels import (
     conflict_category_kind,
     conflict_category_label,
 )
+from ...services.termin_occurrence_service import source_termin_id
 from ..components.cards.conflict_card import ConflictCard
 from ..utils.datetime_utils import fmt_date, fmt_time
 
@@ -162,13 +163,22 @@ class ConflictsDock(QDockWidget):
         """Initialize the conflict detector with current data."""
         self._detector = ConflictDetector(lvas, raeume, data_dir=data_dir)
 
-    def refresh_conflicts(self, termine: List[Termin]) -> None:
+    def refresh_conflicts(
+        self, termine: List[Termin], visible_termin_ids: Optional[set[str]] = None
+    ) -> None:
         """Detect and display conflicts for the given Termine."""
         if not self._detector:
             return
 
         # Detect all issues
         self._issues = self._detector.detect_all(termine)
+        if visible_termin_ids is not None:
+            visible_sources = {source_termin_id(tid) for tid in visible_termin_ids}
+            self._issues = [
+                issue
+                for issue in self._issues
+                if any(source_termin_id(tid) in visible_sources for tid in issue.termin_ids)
+            ]
         self._rebuild_category_filter_options()
 
         conflicts = [i for i in self._issues if i.severity == "conflict"]

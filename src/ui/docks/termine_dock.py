@@ -185,7 +185,7 @@ class TermineDock(QDockWidget):
             if w:
                 w.deleteLater()
 
-        # MainWindow supplies already-filtered termine to set_rows()
+        # MainWindow supplies the rows according to the current Termin-list setting.
         terms = self._filtered_terms_for_search()
         self.result_label.setText(f"{len(terms)} Treffer" if self._search_query.strip() else "")
 

@@ -1469,7 +1469,7 @@ class MainWindow(QMainWindow):
         self.filter_state = fs
 
         self.planner.set_global_filter_state(fs)
-        terms = self._compute_filtered_termine(fs)
+        terms = self._termine_for_dock(fs)
         self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
 
         settings = self.ds.load_settings()
@@ -1480,6 +1480,7 @@ class MainWindow(QMainWindow):
                 if self._previous_year_enabled:
                     start_date = self._previous_year_date_for(start_date)
                 self._apply_start_date(start_date)
+        self.refresh_conflicts()
 
     def _on_unassign_termin(self, tid: str):
         if self._previous_year_enabled:
@@ -1637,7 +1638,16 @@ class MainWindow(QMainWindow):
             self.planner.state.raeume,
             data_dir=self.data_dir,
         )
-        self.conflicts_dock.refresh_conflicts(self.planner.state.termine)
+        visible_termin_ids = None
+        settings = self.ds.load_settings()
+        if bool(settings.get("filter_conflicts_with_global_filters", True)):
+            visible_termin_ids = {
+                str(t.id) for t in self._compute_filtered_termine(self.filter_state)
+            }
+        self.conflicts_dock.refresh_conflicts(
+            self.planner.state.termine,
+            visible_termin_ids=visible_termin_ids,
+        )
 
     def refresh_docks(self) -> None:
         """Refresh dock data and option lists based on current planner state/filters"""
@@ -1671,12 +1681,18 @@ class MainWindow(QMainWindow):
             zu_besprechen=bool(self.global_filter_dock.zu_besprechen_cb.isChecked()),
         )
 
-        terms = self._compute_filtered_termine(self.filter_state)
+        terms = self._termine_for_dock(self.filter_state)
 
         self.termine_dock.set_rows(terms, self.planner.state.lvas, self.planner.state.raeume)
 
         self.data_editor_dock.refresh_all()
         self.refresh_conflicts()
+
+    def _termine_for_dock(self, fs: FilterState | None):
+        settings = self.ds.load_settings()
+        if bool(settings.get("filter_termine_list_with_global_filters", True)):
+            return self._compute_filtered_termine(fs)
+        return list(getattr(self.planner.state, "termine", []) or [])
 
     def _compute_filtered_termine(self, fs: FilterState | None):
         """Return the filtered list of Termine for the given filter state"""
