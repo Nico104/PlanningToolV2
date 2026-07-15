@@ -52,6 +52,8 @@ class ConflictsDock(QDockWidget):
         self._base_title = "Konflikte"
         self._tab_badge_total = 0
         self._tab_badge_has_conflicts = False
+        self._tab_badge_sync_generation = 0
+        self._tab_badge_retry_delays_ms = (0, 50, 150, 400, 900, 1600)
 
         self._issues: List[ConflictIssue] = []
         self._detector: Optional[ConflictDetector] = None
@@ -150,6 +152,9 @@ class ConflictsDock(QDockWidget):
         layout.addWidget(self.scroll)
 
         self.setWidget(main_widget)
+        self.dockLocationChanged.connect(lambda _area: self.request_tab_badge_sync())
+        self.topLevelChanged.connect(lambda _floating: self.request_tab_badge_sync())
+        self.visibilityChanged.connect(lambda _visible: self.request_tab_badge_sync())
 
     def initialize_detector(
         self, lvas: List[Lehrveranstaltung], raeume: List[Raum], data_dir=None
@@ -219,9 +224,18 @@ class ConflictsDock(QDockWidget):
             if total
             else "Keine Konflikte"
         )
-        QTimer.singleShot(0, self._sync_tab_badge)
+        self.request_tab_badge_sync()
 
-    def _sync_tab_badge(self) -> None:
+    def request_tab_badge_sync(self) -> None:
+        self._tab_badge_sync_generation += 1
+        generation = self._tab_badge_sync_generation
+        for delay in self._tab_badge_retry_delays_ms:
+            QTimer.singleShot(delay, lambda generation=generation: self._sync_tab_badge(generation))
+
+    def _sync_tab_badge(self, generation: int | None = None) -> None:
+        if generation is not None and generation != self._tab_badge_sync_generation:
+            return
+
         tabbar = self._dock_tabbar()
         if tabbar is None:
             return

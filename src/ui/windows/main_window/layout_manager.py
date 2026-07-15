@@ -53,6 +53,7 @@ class LayoutManager:
             self._current_layout_name = name
             self._persist_layouts()
             self._rebuild_layout_menu_items()
+            self._sync_restored_layout_widgets()
 
     def _save_layout_dialog(self) -> None:
         name, ok = QInputDialog.getText(self.mw, "Layout speichern", "Name für Layout:")
@@ -77,6 +78,11 @@ class LayoutManager:
         self.mw.restoreState(std)
         self._persist_layouts()
         self._rebuild_layout_menu_items()
+        self._sync_restored_layout_widgets()
+
+    def _sync_restored_layout_widgets(self) -> None:
+        if hasattr(self.mw, "conflicts_dock"):
+            self.mw.conflicts_dock.request_tab_badge_sync()
 
     def _load_persisted_layouts(self) -> None:
         settings = self.mw.ds.load_settings()
