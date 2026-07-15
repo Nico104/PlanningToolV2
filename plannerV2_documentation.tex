@@ -327,7 +327,7 @@ Die funktionalen Anforderungen bilden damit die wichtigsten Arbeitsschritte der 
 
 Nicht-funktionale Anforderungen beschreiben Eigenschaften eines Systems, die sich nicht direkt auf einzelne Funktionen beziehen, sondern zum Beispiel Bedienbarkeit, Zuverlässigkeit, Wartbarkeit oder technische Einschränkungen betreffen \cite{sommerville2016software}.
 
-Die nicht-funktionalen Anforderungen des Planungstools sind in Tabelle~\ref{tab:nichtfunktionale-anforderungen} zusammengefasst.
+Tabelle~\ref{tab:nichtfunktionale-anforderungen} fasst diese Anforderungen zusammen.
 
 \begin{table}[H]
 \centering
@@ -911,7 +911,7 @@ Für die Testdurchführung wurden die wichtigsten Funktionen der Anwendung über
 Als Testgrundlage wurde ein realistisches ETIT-Testprojekt verwendet, das TISS-basierte Standarddaten für Räume und Lehrveranstaltungen sowie importierte bzw. angelegte Termine und freie Zeiträume enthielt.
 Dadurch konnten nicht nur einzelne Dialoge, sondern auch zusammenhängende Arbeitsabläufe mit mehreren hundert Terminen geprüft werden.
 
-Die Tabellen~\ref{tab:test-stammdaten} bis~\ref{tab:test-speicherung} zeigen eine Auswahl der durchgeführten manuellen Tests, gegliedert nach Funktionsbereichen.
+Die Tabellen~\ref{tab:test-stammdaten} bis~\ref{tab:test-kalender-dragdrop} zeigen eine Auswahl der durchgeführten manuellen Tests, gegliedert nach Funktionsbereichen.
 
 \begin{table}[H]
 \centering
@@ -941,26 +941,38 @@ Raum erstellen & Ein neuer Raum wird über den Termin-Dialog bzw. über den Date
 
 \begin{table}[H]
 \centering
-\small
-\caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
-\label{tab:test-kalender-dragdrop}
+\caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
+\label{tab:test-speicherung}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+% \renewcommand{\arraystretch}{0.94}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Tagesansicht anzeigen & Es wird in die Tagesansicht gewechselt. & Termine des ausgewählten Tages werden korrekt angezeigt. \\
+Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. \\
 \hline
-Wochenansicht anzeigen & Es wird in die Wochenansicht gewechselt. & Termine der ausgewählten Woche werden korrekt angezeigt. \\
+Neues Projekt anlegen & Ein leerer Ordner wird ausgewählt und als neues Projekt vorbereitet. & Die benötigten Projektdateien werden angelegt und der Projektordner wird als Datenpfad gespeichert. \\
 \hline
-Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des ausgewählten Monats werden übersichtlich dargestellt. \\
+Standarddaten importieren & Beim Anlegen eines Projekts werden die mitgelieferten Standarddaten ausgewählt. & Räume und ETIT-LVAs aus den TISS-basierten Standarddaten werden in das Projekt übernommen. \\
 \hline
-Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. \\
+Projekt exportieren & Ein vorhandener Planungsstand wird als Excel- und alternativ als JSON-Datei exportiert. & Die Exportdatei enthält Räume, LVAs, Termine, Studienrichtungen und freie Zeiträume. \\
 \hline
-Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Zeitraum wird in der Kalenderansicht sichtbar dargestellt. \\
+Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. \\
 \hline
-Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. \\
+Raum-Liste importieren & Eine Excel-Datei mit Raum-Daten wird importiert. & Die Anwendung erkennt die Einträge, zeigt neue oder geänderte Daten an und übernimmt die ausgewählten Räume. \\
 \hline
-Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. \\
+Export für Lehrende & Für ausgewählte LVAs bzw. Lehrende und einen Zeitraum wird ein Export für Lehrende erstellt. & Eine Excel-Datei als Terminliste oder Wochenkalender wird erzeugt. \\
+\hline
+Semester-Werkzeuge verwenden & Termine eines Semesters werden in ein anderes Semester kopiert oder aus einem Semester entfernt. Dabei werden auch Serientermine mit Ausfallterminen und freien Tagen im Zielsemester geprüft. & Die betroffenen Termine werden korrekt kopiert bzw. gelöscht, ohne Stammdaten zu entfernen. Serienvorkommen auf freien Tagen können automatisch als Ausfall markiert werden. \\
+\hline
+Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. \\
+\hline
+Undo ausführen & Nach einer Änderung wird die Rückgängig-Funktion verwendet. & Der vorherige Zustand wird wiederhergestellt und die Oberfläche aktualisiert. \\
+\hline
+Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die zuvor rückgängig gemachte Änderung wird erneut übernommen. \\
+\hline
+Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. \\
 \hline
 \end{tabularx}
 \end{table}
@@ -983,6 +995,24 @@ Filter zurücksetzen & Ein gesetzter Filter wird entfernt bzw. alle Filter werde
 Terminliste aktualisieren & Nach einer Änderung an einem Termin wird die Terminliste kontrolliert. & Die Terminliste zeigt den aktualisierten Termin an. \\
 \hline
 Konfliktanzeige aktualisieren & Nach einer Änderung an einem Termin wird die Konfliktanzeige kontrolliert. & Die Konfliktanzeige wird entsprechend aktualisiert. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Manuelle Fehler- und Validierungstests}
+\label{tab:test-validierung}
+\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
+\hline
+\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
+\hline
+Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. \\
+\hline
+Dauerberechnung prüfen & Im Termin-Dialog werden Start- und Endzeit eingetragen. & Die Dauer wird automatisch aus der Zeitspanne berechnet und korrekt übernommen. \\
+\hline
+Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1022,55 +1052,25 @@ Konfliktvorschau auf leistungsschwächerem Gerät & Die Anwendung wird auf einem
 \begin{table}[H]
 \centering
 \small
-\caption{Manuelle Fehler- und Validierungstests}
-\label{tab:test-validierung}
+\caption{Manuelle Tests der Kalenderansichten und Drag-and-Drop-Funktion}
+\label{tab:test-kalender-dragdrop}
 \begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
 \hline
 \textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
 \hline
-Pflichtfeld leer lassen & Im Termin-Dialog wird ein notwendiges Feld nicht ausgefüllt. & Der Termin wird nicht gespeichert und der Nutzer erhält einen Hinweis. \\
+Tagesansicht anzeigen & Es wird in die Tagesansicht gewechselt. & Termine des ausgewählten Tages werden korrekt angezeigt. \\
 \hline
-Dauerberechnung prüfen & Im Termin-Dialog werden Start- und Endzeit eingetragen. & Die Dauer wird automatisch aus der Zeitspanne berechnet und korrekt übernommen. \\
+Wochenansicht anzeigen & Es wird in die Wochenansicht gewechselt. & Termine der ausgewählten Woche werden korrekt angezeigt. \\
 \hline
-Löschen bestätigen & Ein Termin oder Stammdateneintrag wird gelöscht. & Die Anwendung fragt nach, ob der Eintrag wirklich gelöscht werden soll. \\
+Monatsansicht anzeigen & Es wird in die Monatsansicht gewechselt. & Termine des ausgewählten Monats werden übersichtlich dargestellt. \\
 \hline
-\end{tabularx}
-\end{table}
-
-\begin{table}[H]
-\centering
-\caption{Manuelle Tests zu Speicherung, Import/Export und Bedienhilfen}
-\label{tab:test-speicherung}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\renewcommand{\arraystretch}{0.94}
-\begin{tabularx}{\textwidth}{|L{3cm}|Y|Y|}
+Navigation im Kalender & Über die Navigation wird zwischen Zeiträumen gewechselt. & Die Kalenderansicht zeigt den neu ausgewählten Zeitraum an. Funktioniert in jeder Ansicht. \\
 \hline
-\textbf{Testfall} & \textbf{Durchführung} & \textbf{Ergebnis} \\
+Freie Tage anzeigen & Ein freier Tag wird angelegt und anschließend im Kalender betrachtet. & Der freie Zeitraum wird in der Kalenderansicht sichtbar dargestellt. \\
 \hline
-Daten speichern und laden & Änderungen an Terminen oder Stammdaten werden gespeichert und die Anwendung wird erneut geöffnet. & Die gespeicherten Daten sind nach dem erneuten Laden weiterhin vorhanden. \\
+Termin per Drag-and-Drop zuweisen & Ein Termin wird aus der Terminliste in den Kalender gezogen. & Der Termin erhält die entsprechende zeitliche Zuordnung und erscheint im Kalender. \\
 \hline
-Neues Projekt anlegen & Ein leerer Ordner wird ausgewählt und als neues Projekt vorbereitet. & Die benötigten Projektdateien werden angelegt und der Projektordner wird als Datenpfad gespeichert. \\
-\hline
-Standarddaten importieren & Beim Anlegen eines Projekts werden die mitgelieferten Standarddaten ausgewählt. & Räume und ETIT-LVAs aus den TISS-basierten Standarddaten werden in das Projekt übernommen. \\
-\hline
-Projekt exportieren & Ein vorhandener Planungsstand wird als Excel- und alternativ als JSON-Datei exportiert. & Die Exportdatei enthält Räume, LVAs, Termine, Studienrichtungen und freie Zeiträume. \\
-\hline
-Projekt importieren & Eine zuvor exportierte Datei wird wieder importiert. & Die importierten Daten können übernommen werden. \\
-\hline
-Raum-Liste importieren & Eine Excel-Datei mit Raum-Daten wird importiert. & Die Anwendung erkennt die Einträge, zeigt neue oder geänderte Daten an und übernimmt die ausgewählten Räume. \\
-\hline
-Export für Lehrende & Für ausgewählte LVAs bzw. Lehrende und einen Zeitraum wird ein Export für Lehrende erstellt. & Eine Excel-Datei als Terminliste oder Wochenkalender wird erzeugt. \\
-\hline
-Semester-Werkzeuge verwenden & Termine eines Semesters werden in ein anderes Semester kopiert oder aus einem Semester entfernt. Dabei werden auch Serientermine mit Ausfallterminen und freien Tagen im Zielsemester geprüft. & Die betroffenen Termine werden korrekt kopiert bzw. gelöscht, ohne Stammdaten zu entfernen. Serienvorkommen auf freien Tagen können automatisch als Ausfall markiert werden. \\
-\hline
-Defekte JSON-Datei importieren & Es wird eine Datei mit ungültiger JSON-Syntax importiert. & Der Import wird abgebrochen und eine Fehlermeldung wird angezeigt. \\
-\hline
-Undo ausführen & Nach einer Änderung wird die Rückgängig-Funktion verwendet. & Der vorherige Zustand wird wiederhergestellt und die Oberfläche aktualisiert. \\
-\hline
-Redo ausführen & Nach einem Undo wird die Wiederholen-Funktion verwendet. & Die zuvor rückgängig gemachte Änderung wird erneut übernommen. \\
-\hline
-Layout speichern & Die Anordnung der Dock-Bereiche wird geändert und gespeichert. & Das gespeicherte Layout kann später wieder geladen werden. \\
+Termin per Drag-and-Drop verschieben & Ein bereits eingeplanter Termin wird im Kalender an eine andere Stelle verschoben. & Datum, Uhrzeit oder Raum werden angepasst und der Termin wird an der neuen Stelle angezeigt. \\
 \hline
 \end{tabularx}
 \end{table}
